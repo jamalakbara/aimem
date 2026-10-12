@@ -5,7 +5,10 @@
     "declaration": false,
     "noEmit": true,
     "rootDir": ".",
-    "paths": { "@aimem/schema": ["./packages/schema/src/index.ts"] }
+    "paths": {
+      "@aimem/schema": ["./packages/schema/src/index.ts"],
+      "@aimem/core": ["./packages/core/src/index.ts"]
+    }
   },
   "include": ["packages/*/test/**/*.ts", "vitest.config.ts"]
 }
