@@ -107,3 +107,7 @@ Decision log in ADR style. Status: **accepted** (decided in brainstorm), **propo
 | OQ-20 | *(deferred)* Where to host the sync server if Odoo is only reachable inside the company network | Run it inside the network/VPN; CLI sync from a VPN laptop until then | M6 |
 | OQ-21 | Google auth: service account + shared inbox folder, or per-user OAuth | Service account + inbox folder (least privilege, simpler for non-developers) | M4b |
 | OQ-22 | *(deferred)* Which Odoo projects may be synced, and which fields are sensitive (client data) | Start with one allow-listed internal project; add field filters before adding others | M4b |
+| OQ-23 | V011 (conflicting accepted decisions): warn on one record of the pair or both? | Both records (as in `fixtures/projects/messy/expected.yaml`) | M1 (slice 1.2) |
+| OQ-24 | V010 (stale): does it apply to records already `superseded`/`deprecated`/`rejected`? | No; only records still current. Fixtures avoid the case until decided | M1 (slice 1.2) |
+| OQ-25 | `content_sha` (V017): exact hashing input (body as written, trimmed, LF-normalised?) | sha256 of the LF-normalised body with surrounding whitespace trimmed; document in 16 | M4b |
+| OQ-26 | Incident `started` / `resolved_at`: datetime or free text? | UTC ISO-8601 datetime like `created`; schema keeps them as strings until decided | M1 (slice 1.2) |
