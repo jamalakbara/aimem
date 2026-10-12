@@ -41,6 +41,7 @@
 - Runs: on `add`/`update`, `validate`, pre-commit hook, CI.
 - Optional: delegate to an external scanner if installed (`gitleaks`, `trufflehog`) via config.
 - On detection: command fails with `SECRET_DETECTED` and prints the line number, **never** the secret.
+- Each finding has a fingerprint `sha256:<16 hex>` of the matched text. To accept a false positive, add the fingerprint on its own line to `.aimem/secretignore` (`#` starts a comment).
 
 ## 5. Authorization model
 

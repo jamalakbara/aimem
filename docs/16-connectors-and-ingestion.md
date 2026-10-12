@@ -33,7 +33,7 @@ source:
   url: https://docs.google.com/document/d/1AbCdEf…/edit
   row: 12                     # only for spreadsheet rows
   version: "rev-87"           # revision / etag / Odoo write_date at last sync
-  content_sha: "…"            # hash of the body we wrote
+  content_sha: "…"            # sha256 of the body we wrote (LF, trimmed; 03 §9 V017)
   synced_at: 2026-10-12T03:00:00Z
   imported_by: human:rina     # who selected or uploaded it
   state: ok                   # ok | missing | error
