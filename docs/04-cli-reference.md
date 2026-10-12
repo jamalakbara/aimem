@@ -100,6 +100,7 @@ aimem search "<query>" [--type decision,memory] [--status ...] [--tag ...] [--ro
                        [--repo ...] [--paths <glob>] [--limit 10] [--include-superseded]
                        [--mode lexical|hybrid]
 ```
+By default hides records that are `superseded`, `rejected`, `cancelled`, `done` or `retired` (as `context` does, 06 §2); `--include-superseded` shows them, and an explicit `--status` shows the listed statuses.
 ### `aimem ask "<question>"`
 Retrieval-augmented answer with citations (15 §10).
 ```
