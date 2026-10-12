@@ -17,7 +17,7 @@ Environment: `AIMEM_TOKEN` (server token), `AIMEM_AUTHOR` (e.g. `agent:claude-co
 
 Exit codes: `0` ok · `1` warnings (strict mode) / not found · `2` validation or usage error · `3` conflict (e.g. claim lost, likely duplicate) · `4` network/sync failure (operation may have partially applied — see message).
 
-Author resolution: `--author` flag → `AIMEM_AUTHOR` → git `user.name` as `human:<name>`.
+Author resolution: `--author` flag → `AIMEM_AUTHOR` → git `user.name` as `human:<name>` *(git fallback arrives in v0.1 slice 1.4c; until then a missing author is a `USAGE` error)*.
 
 ## 2. Setup commands
 
@@ -126,15 +126,17 @@ aimem add decision --title "..." --summary "..." [--status accepted] [--roles de
                    [--tags a,b] [--paths "src/x/**"] [--link <ref>...] [--supersedes <ref>]
                    (--body-file <path> | --body - | --body "text")
 ```
-- `--body -` reads stdin. Without a body in non-interactive mode, a type template is written with `TODO` markers and the command exits 2 (so agents don't commit empty records).
-- Runs a **dedupe check**: searches for similar titles/summaries; if a likely duplicate exists, prints it and exits 3 unless `--force` (agents should then `aimem show` it and update/supersede instead).
+- `--body -` reads stdin. Without a body, **nothing is written**: the type template with `TODO` markers is printed (in `--json`: `error.details.template`, code `INVALID_RECORD`) and the command exits 2, so agents never commit empty records. `--body` and `--body-file` are mutually exclusive.
+- Type-specific flags: `--kind` (memory), `--priority`, `--assignee` (task).
+- Refuses (nothing written): invalid status/fields or a multi-line/over-long summary (`INVALID_RECORD`), unknown `--link`/`--supersedes` targets (`INVALID_RECORD`/`NOT_FOUND`), possible secrets (`SECRET_DETECTED`).
+- Runs a **dedupe check**: a current record of the same type whose title is very similar (word overlap ≥ 70%) or whose title + summary overlap ≥ 50% is a likely duplicate; it is named in `error.details` and the command exits 3 unless `--force` (agents should then `aimem show` it and update/supersede instead).
 - Sets `trust: agent` for `agent:*` authors, `verified` for `human:*`.
 - Applies `write_policy.agent_commits` (`none|stage|commit|pr`).
 
 Shortcuts: `aimem decide`, `aimem remember` (memory), `aimem incident`, `aimem runbook` — thin aliases for `add <type>` with type-specific flags.
 
 ### `aimem update <ref>`
-Edit fields/body of an existing record (`--set status=done`, `--body-file`). Refused for `handoff` bodies unless `--force`, and for externally-owned records (`READONLY_EXTERNAL`; edit at the source or `aimem detach` first).
+Edit fields/body of an existing record (`--set status=done`, repeatable; list fields take comma-separated values; an empty value removes the field; `--body`, `--body-file`). Only the edited lines change. Refused for `handoff` bodies unless `--force` (`PERMISSION_DENIED`), for externally-owned records (`READONLY_EXTERNAL`; edit at the source or `aimem detach` first), and for tool-managed fields `aimem id type created updated trust verified author supersedes superseded_by managed_by source` (`INVALID_RECORD`; use `supersede` / `verify`).
 ### `aimem supersede <old-ref> --by <new-ref>`
 Links both records, sets old to `superseded`.
 ### `aimem verify <ref>...`

@@ -1,0 +1,13 @@
+{
+  "ok": true,
+  "command": "update",
+  "data": {
+    "ref": "tsk-3c4d5e6f",
+    "file": ".aimem/tasks/tsk-3c4d5e6f-add-currency-column-to-ledger-entries.md",
+    "changed": [
+      ".aimem/tasks/tsk-3c4d5e6f-add-currency-column-to-ledger-entries.md",
+      ".aimem/INDEX.md"
+    ]
+  },
+  "warnings": []
+}

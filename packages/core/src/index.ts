@@ -1,5 +1,6 @@
 export * from "./errors.js";
 export * from "./index/build.js";
+export * from "./ops/write.js";
 export * from "./ports.js";
 export * from "./project/load.js";
 export * from "./records/ids.js";
