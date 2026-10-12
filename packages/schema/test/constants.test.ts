@@ -75,7 +75,7 @@ describe("constants match 03", () => {
     expect(BODY_SECTIONS.decision).toEqual(["Context", "Decision", "Consequences"]);
   });
 
-  it("04 §7 error codes are exactly the stable list", () => {
+  it("04 §7 error codes are exactly the stable list (USAGE added in slice 1.4a)", () => {
     expect(ERROR_CODES).toEqual([
       "NOT_INITIALIZED",
       "INVALID_RECORD",
@@ -89,6 +89,7 @@ describe("constants match 03", () => {
       "READONLY_EXTERNAL",
       "SOURCE_AUTH",
       "SOURCE_UNREACHABLE",
+      "USAGE",
     ]);
   });
 });

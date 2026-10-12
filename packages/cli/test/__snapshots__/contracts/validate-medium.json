@@ -1,0 +1,84 @@
+{
+  "ok": true,
+  "command": "validate",
+  "data": {
+    "errors": 0,
+    "warnings": 9,
+    "issues": [
+      {
+        "code": "V010",
+        "level": "warn",
+        "file": ".aimem/memory/mem-6vtwa627-odoo-version-still-unknown-ask-it.md",
+        "ref": "mem-6vtwa627",
+        "message": "record is expired"
+      },
+      {
+        "code": "V010",
+        "level": "warn",
+        "file": ".aimem/memory/mem-d69w1fev-temporary-ci-runs-on-linux-only.md",
+        "ref": "mem-d69w1fev",
+        "message": "record is expired"
+      },
+      {
+        "code": "V010",
+        "level": "warn",
+        "file": ".aimem/memory/mem-j4yeeebg-a-service-account-with-an-inbox-folder-is-the-simplest-googl.md",
+        "ref": "mem-j4yeeebg",
+        "message": "record is stale"
+      },
+      {
+        "code": "V010",
+        "level": "warn",
+        "file": ".aimem/memory/mem-m6e98f9k-tim-menulis-dalam-bahasa-inggris-dan-indonesia.md",
+        "ref": "mem-m6e98f9k",
+        "message": "record is stale"
+      },
+      {
+        "code": "V010",
+        "level": "warn",
+        "file": ".aimem/memory/mem-pnen53q8-candidate-embedding-families-multilingual-e5-and-bge-m3.md",
+        "ref": "mem-pnen53q8",
+        "message": "record is stale"
+      },
+      {
+        "code": "V010",
+        "level": "warn",
+        "file": ".aimem/memory/mem-q38vy3db-the-mcp-typescript-sdk-is-the-official-one.md",
+        "ref": "mem-q38vy3db",
+        "message": "record is stale"
+      },
+      {
+        "code": "V010",
+        "level": "warn",
+        "file": ".aimem/memory/mem-q9krtm0g-default-briefing-budget-is-4000-tokens.md",
+        "ref": "mem-q9krtm0g",
+        "message": "record is stale"
+      },
+      {
+        "code": "V010",
+        "level": "warn",
+        "file": ".aimem/memory/mem-wnrwrrnp-agents-forget-project-context-between-sessions.md",
+        "ref": "mem-wnrwrrnp",
+        "message": "record is stale"
+      },
+      {
+        "code": "V010",
+        "level": "warn",
+        "file": ".aimem/runbooks/run-8hmkbbjd-bootstrap-a-development-machine.md",
+        "ref": "run-8hmkbbjd",
+        "message": "record is stale"
+      }
+    ]
+  },
+  "warnings": [
+    "V010 .aimem/memory/mem-6vtwa627-odoo-version-still-unknown-ask-it.md: record is expired",
+    "V010 .aimem/memory/mem-d69w1fev-temporary-ci-runs-on-linux-only.md: record is expired",
+    "V010 .aimem/memory/mem-j4yeeebg-a-service-account-with-an-inbox-folder-is-the-simplest-googl.md: record is stale",
+    "V010 .aimem/memory/mem-m6e98f9k-tim-menulis-dalam-bahasa-inggris-dan-indonesia.md: record is stale",
+    "V010 .aimem/memory/mem-pnen53q8-candidate-embedding-families-multilingual-e5-and-bge-m3.md: record is stale",
+    "V010 .aimem/memory/mem-q38vy3db-the-mcp-typescript-sdk-is-the-official-one.md: record is stale",
+    "V010 .aimem/memory/mem-q9krtm0g-default-briefing-budget-is-4000-tokens.md: record is stale",
+    "V010 .aimem/memory/mem-wnrwrrnp-agents-forget-project-context-between-sessions.md: record is stale",
+    "V010 .aimem/runbooks/run-8hmkbbjd-bootstrap-a-development-machine.md: record is stale"
+  ]
+}

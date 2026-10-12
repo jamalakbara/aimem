@@ -6,6 +6,7 @@ export default defineConfig({
     alias: {
       "@aimem/schema": new URL("./packages/schema/src/index.ts", import.meta.url).pathname,
       "@aimem/core": new URL("./packages/core/src/index.ts", import.meta.url).pathname,
+      aimem: new URL("./packages/cli/src/index.ts", import.meta.url).pathname,
     },
   },
 });

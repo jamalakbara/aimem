@@ -31,7 +31,8 @@ aimem init [--solo | --team] [--project <slug>] [--repo <name>]
 `--upgrade` re-runs setup on an existing notebook after a mode/sync/hub change (adds missing files, members, live branch) without touching records.
 - Writes `project.yaml`, empty type dirs, `.gitignore` entry for `.aimem/.cache/`, `INDEX.md`.
 - Generates adapter blocks (see 06) in the selected files.
-- Unless `--no-intake`, runs the intake (08 §1) interactively, or prints intake questions in `--json` mode so an agent can ask the human.
+- Unless `--no-intake`, runs the intake (08 §1) interactively, or prints intake questions in `--json` mode so an agent can ask the human. *(v0.1: the questions are printed in both modes; the interactive intake comes later.)*
+- Refuses an existing notebook (`USAGE`) unless `--force`, which re-creates `project.yaml` and missing files but never touches records.
 
 ### `aimem adopt`
 Bootstrap from an existing project (08 §2).
@@ -193,7 +194,18 @@ or on failure:
 ```json
 { "ok": false, "error": { "code": "CLAIM_CONFLICT", "message": "...", "details": { "holder": "human:rina", "since": "..." } } }
 ```
-Error codes (stable): `NOT_INITIALIZED`, `INVALID_RECORD`, `DUPLICATE_LIKELY`, `CLAIM_CONFLICT`, `NOT_FOUND`, `SYNC_FAILED`, `PERMISSION_DENIED`, `SECRET_DETECTED`, `SPEC_TOO_NEW`, `READONLY_EXTERNAL`, `SOURCE_AUTH`, `SOURCE_UNREACHABLE`.
+Error codes (stable) and their exit codes:
+
+| Code | Exit | Code | Exit |
+|------|------|------|------|
+| `NOT_FOUND` | 1 | `READONLY_EXTERNAL` | 2 |
+| `NOT_INITIALIZED` | 2 | `SOURCE_AUTH` | 2 |
+| `INVALID_RECORD` | 2 | `USAGE` (unknown command/flag, bad value, missing argument) | 2 |
+| `PERMISSION_DENIED` | 2 | `DUPLICATE_LIKELY` | 3 |
+| `SECRET_DETECTED` | 2 | `CLAIM_CONFLICT` | 3 |
+| `SPEC_TOO_NEW` | 2 | `SYNC_FAILED`, `SOURCE_UNREACHABLE` | 4 |
+
+`aimem validate`: with errors it fails with `INVALID_RECORD` and `error.details = {errors, warnings, issues}` (exit 2); otherwise `ok: true` with the same `data`, exit 1 under `--strict` if there are warnings, else 0.
 
 ## 8. Example sessions
 
