@@ -1,0 +1,2137 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`JSON Schema export (03 §10) > export is stable (contract snapshot) 1`] = `
+{
+  "project": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": {},
+    "properties": {
+      "aimem": {
+        "exclusiveMinimum": 0,
+        "maximum": 9007199254740991,
+        "type": "integer",
+      },
+      "briefing": {
+        "additionalProperties": {},
+        "properties": {
+          "budget_tokens": {
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991,
+            "type": "integer",
+          },
+          "max_handoffs": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+        },
+        "type": "object",
+      },
+      "claims": {
+        "additionalProperties": {},
+        "properties": {
+          "heartbeat_minutes": {
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991,
+            "type": "integer",
+          },
+          "ttl_minutes": {
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991,
+            "type": "integer",
+          },
+        },
+        "type": "object",
+      },
+      "connectors": {
+        "additionalProperties": {},
+        "properties": {
+          "google": {
+            "additionalProperties": {},
+            "properties": {
+              "inbox_folder_id": {
+                "type": [
+                  "string",
+                  "null",
+                ],
+              },
+            },
+            "type": "object",
+          },
+        },
+        "type": "object",
+      },
+      "freshness_days": {
+        "additionalProperties": {
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "type": "integer",
+        },
+        "propertyNames": {
+          "type": "string",
+        },
+        "type": "object",
+      },
+      "hub": {
+        "additionalProperties": {},
+        "properties": {
+          "path": {
+            "type": "string",
+          },
+          "url": {
+            "minLength": 1,
+            "type": "string",
+          },
+        },
+        "required": [
+          "url",
+        ],
+        "type": "object",
+      },
+      "members": {
+        "items": {
+          "additionalProperties": {},
+          "properties": {
+            "handle": {
+              "minLength": 1,
+              "type": "string",
+            },
+            "roles": {
+              "items": {
+                "type": "string",
+              },
+              "type": "array",
+            },
+          },
+          "required": [
+            "handle",
+          ],
+          "type": "object",
+        },
+        "type": "array",
+      },
+      "mode": {
+        "enum": [
+          "solo",
+          "team",
+          "team-realtime",
+        ],
+        "type": "string",
+      },
+      "name": {
+        "type": "string",
+      },
+      "project": {
+        "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+        "type": "string",
+      },
+      "repo": {
+        "type": "string",
+      },
+      "repos": {
+        "items": {
+          "additionalProperties": {},
+          "properties": {
+            "name": {
+              "minLength": 1,
+              "type": "string",
+            },
+            "url": {
+              "type": "string",
+            },
+          },
+          "required": [
+            "name",
+          ],
+          "type": "object",
+        },
+        "type": "array",
+      },
+      "retrieval": {
+        "additionalProperties": {},
+        "properties": {
+          "embeddings": {
+            "additionalProperties": {},
+            "properties": {
+              "allow_remote": {
+                "type": "boolean",
+              },
+              "endpoint": {
+                "type": [
+                  "string",
+                  "null",
+                ],
+              },
+              "model": {
+                "type": [
+                  "string",
+                  "null",
+                ],
+              },
+              "provider": {
+                "enum": [
+                  "local",
+                  "openai-compatible",
+                  "none",
+                ],
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
+          "fusion": {
+            "enum": [
+              "weighted",
+              "rrf",
+            ],
+            "type": "string",
+          },
+          "llm": {
+            "additionalProperties": {},
+            "properties": {
+              "endpoint": {
+                "type": [
+                  "string",
+                  "null",
+                ],
+              },
+              "model": {
+                "type": [
+                  "string",
+                  "null",
+                ],
+              },
+              "provider": {
+                "enum": [
+                  "none",
+                  "openai-compatible",
+                ],
+                "type": "string",
+              },
+            },
+            "type": "object",
+          },
+          "mode": {
+            "enum": [
+              "lexical",
+              "hybrid",
+            ],
+            "type": "string",
+          },
+          "query_rewrite": {
+            "enum": [
+              "none",
+              "llm",
+            ],
+            "type": "string",
+          },
+          "rerank": {
+            "enum": [
+              "none",
+              "cross-encoder",
+              "llm",
+            ],
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "roles": {
+        "items": {
+          "minLength": 1,
+          "type": "string",
+        },
+        "minItems": 1,
+        "type": "array",
+      },
+      "server": {
+        "additionalProperties": {},
+        "properties": {
+          "project_id": {
+            "type": "string",
+          },
+          "url": {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "sync": {
+        "enum": [
+          "none",
+          "git",
+          "server",
+        ],
+        "type": "string",
+      },
+      "write_policy": {
+        "additionalProperties": {},
+        "properties": {
+          "agent_commits": {
+            "enum": [
+              "none",
+              "stage",
+              "commit",
+              "pr",
+            ],
+            "type": "string",
+          },
+          "durable_requires_review": {
+            "type": "boolean",
+          },
+          "live_push": {
+            "enum": [
+              "auto",
+              "manual",
+            ],
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+    },
+    "required": [
+      "aimem",
+      "project",
+    ],
+    "type": "object",
+  },
+  "record": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "oneOf": [
+      {
+        "additionalProperties": {},
+        "properties": {
+          "aimem": {
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991,
+            "type": "integer",
+          },
+          "author": {
+            "pattern": "^(?:human|agent):[^\\s:]+(?::\\S+)?$",
+            "type": "string",
+          },
+          "created": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$",
+            "type": "string",
+          },
+          "decided_by": {
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "evidence": {
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "expires": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "type": "string",
+          },
+          "external": {
+            "items": {
+              "additionalProperties": {},
+              "properties": {
+                "id": {
+                  "minLength": 1,
+                  "type": "string",
+                },
+                "system": {
+                  "minLength": 1,
+                  "type": "string",
+                },
+                "url": {
+                  "type": "string",
+                },
+              },
+              "required": [
+                "system",
+                "id",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "id": {
+            "pattern": "^(?:dec|tsk|mem|hnd|inc|run|sch|tst)-[0-9a-hjkmnp-tv-z]{8}$",
+            "type": "string",
+          },
+          "links": {
+            "items": {
+              "pattern": "^(?:[a-z0-9]+(?:-[a-z0-9]+)*:)?(?:dec|tsk|mem|hnd|inc|run|sch|tst)-[0-9a-hjkmnp-tv-z]{8}$",
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "managed_by": {
+            "enum": [
+              "notebook",
+              "external",
+            ],
+            "type": "string",
+          },
+          "paths": {
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "repo": {
+            "type": "string",
+          },
+          "roles": {
+            "items": {
+              "minLength": 1,
+              "type": "string",
+            },
+            "minItems": 1,
+            "type": "array",
+          },
+          "source": {
+            "additionalProperties": {},
+            "properties": {
+              "content_sha": {
+                "minLength": 1,
+                "type": "string",
+              },
+              "id": {
+                "minLength": 1,
+                "type": "string",
+              },
+              "imported_by": {
+                "minLength": 1,
+                "type": "string",
+              },
+              "row": {
+                "type": [
+                  "string",
+                  "number",
+                ],
+              },
+              "state": {
+                "enum": [
+                  "ok",
+                  "missing",
+                  "error",
+                ],
+                "type": "string",
+              },
+              "synced_at": {
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$",
+                "type": "string",
+              },
+              "system": {
+                "enum": [
+                  "google-doc",
+                  "google-sheet",
+                  "odoo",
+                  "upload",
+                ],
+                "type": "string",
+              },
+              "url": {
+                "type": "string",
+              },
+              "version": {
+                "type": [
+                  "string",
+                  "number",
+                ],
+              },
+            },
+            "required": [
+              "system",
+              "id",
+              "url",
+              "version",
+              "content_sha",
+              "synced_at",
+              "imported_by",
+              "state",
+            ],
+            "type": "object",
+          },
+          "status": {
+            "enum": [
+              "proposed",
+              "accepted",
+              "rejected",
+              "superseded",
+              "deprecated",
+            ],
+            "type": "string",
+          },
+          "summary": {
+            "minLength": 1,
+            "type": "string",
+          },
+          "superseded_by": {
+            "pattern": "^(?:[a-z0-9]+(?:-[a-z0-9]+)*:)?(?:dec|tsk|mem|hnd|inc|run|sch|tst)-[0-9a-hjkmnp-tv-z]{8}$",
+            "type": "string",
+          },
+          "supersedes": {
+            "pattern": "^(?:[a-z0-9]+(?:-[a-z0-9]+)*:)?(?:dec|tsk|mem|hnd|inc|run|sch|tst)-[0-9a-hjkmnp-tv-z]{8}$",
+            "type": "string",
+          },
+          "tags": {
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "title": {
+            "maxLength": 120,
+            "minLength": 1,
+            "type": "string",
+          },
+          "trust": {
+            "enum": [
+              "verified",
+              "agent",
+              "inferred",
+            ],
+            "type": "string",
+          },
+          "type": {
+            "const": "decision",
+            "type": "string",
+          },
+          "updated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$",
+            "type": "string",
+          },
+          "verified": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "type": "string",
+          },
+        },
+        "required": [
+          "aimem",
+          "id",
+          "type",
+          "title",
+          "summary",
+          "status",
+          "trust",
+          "roles",
+          "author",
+          "created",
+          "updated",
+        ],
+        "type": "object",
+      },
+      {
+        "additionalProperties": {},
+        "properties": {
+          "aimem": {
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991,
+            "type": "integer",
+          },
+          "assignee": {
+            "type": "string",
+          },
+          "author": {
+            "pattern": "^(?:human|agent):[^\\s:]+(?::\\S+)?$",
+            "type": "string",
+          },
+          "blocked_by": {
+            "items": {
+              "pattern": "^(?:[a-z0-9]+(?:-[a-z0-9]+)*:)?(?:dec|tsk|mem|hnd|inc|run|sch|tst)-[0-9a-hjkmnp-tv-z]{8}$",
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "created": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$",
+            "type": "string",
+          },
+          "due": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "type": "string",
+          },
+          "evidence": {
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "expires": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "type": "string",
+          },
+          "external": {
+            "items": {
+              "additionalProperties": {},
+              "properties": {
+                "id": {
+                  "minLength": 1,
+                  "type": "string",
+                },
+                "system": {
+                  "minLength": 1,
+                  "type": "string",
+                },
+                "url": {
+                  "type": "string",
+                },
+              },
+              "required": [
+                "system",
+                "id",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "id": {
+            "pattern": "^(?:dec|tsk|mem|hnd|inc|run|sch|tst)-[0-9a-hjkmnp-tv-z]{8}$",
+            "type": "string",
+          },
+          "links": {
+            "items": {
+              "pattern": "^(?:[a-z0-9]+(?:-[a-z0-9]+)*:)?(?:dec|tsk|mem|hnd|inc|run|sch|tst)-[0-9a-hjkmnp-tv-z]{8}$",
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "managed_by": {
+            "enum": [
+              "notebook",
+              "external",
+            ],
+            "type": "string",
+          },
+          "paths": {
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "priority": {
+            "enum": [
+              "p0",
+              "p1",
+              "p2",
+              "p3",
+            ],
+            "type": "string",
+          },
+          "repo": {
+            "type": "string",
+          },
+          "roles": {
+            "items": {
+              "minLength": 1,
+              "type": "string",
+            },
+            "minItems": 1,
+            "type": "array",
+          },
+          "source": {
+            "additionalProperties": {},
+            "properties": {
+              "content_sha": {
+                "minLength": 1,
+                "type": "string",
+              },
+              "id": {
+                "minLength": 1,
+                "type": "string",
+              },
+              "imported_by": {
+                "minLength": 1,
+                "type": "string",
+              },
+              "row": {
+                "type": [
+                  "string",
+                  "number",
+                ],
+              },
+              "state": {
+                "enum": [
+                  "ok",
+                  "missing",
+                  "error",
+                ],
+                "type": "string",
+              },
+              "synced_at": {
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$",
+                "type": "string",
+              },
+              "system": {
+                "enum": [
+                  "google-doc",
+                  "google-sheet",
+                  "odoo",
+                  "upload",
+                ],
+                "type": "string",
+              },
+              "url": {
+                "type": "string",
+              },
+              "version": {
+                "type": [
+                  "string",
+                  "number",
+                ],
+              },
+            },
+            "required": [
+              "system",
+              "id",
+              "url",
+              "version",
+              "content_sha",
+              "synced_at",
+              "imported_by",
+              "state",
+            ],
+            "type": "object",
+          },
+          "status": {
+            "enum": [
+              "open",
+              "in_progress",
+              "blocked",
+              "review",
+              "done",
+              "cancelled",
+            ],
+            "type": "string",
+          },
+          "summary": {
+            "minLength": 1,
+            "type": "string",
+          },
+          "superseded_by": {
+            "pattern": "^(?:[a-z0-9]+(?:-[a-z0-9]+)*:)?(?:dec|tsk|mem|hnd|inc|run|sch|tst)-[0-9a-hjkmnp-tv-z]{8}$",
+            "type": "string",
+          },
+          "supersedes": {
+            "pattern": "^(?:[a-z0-9]+(?:-[a-z0-9]+)*:)?(?:dec|tsk|mem|hnd|inc|run|sch|tst)-[0-9a-hjkmnp-tv-z]{8}$",
+            "type": "string",
+          },
+          "tags": {
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "title": {
+            "maxLength": 120,
+            "minLength": 1,
+            "type": "string",
+          },
+          "trust": {
+            "enum": [
+              "verified",
+              "agent",
+              "inferred",
+            ],
+            "type": "string",
+          },
+          "type": {
+            "const": "task",
+            "type": "string",
+          },
+          "updated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$",
+            "type": "string",
+          },
+          "verified": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "type": "string",
+          },
+        },
+        "required": [
+          "aimem",
+          "id",
+          "type",
+          "title",
+          "summary",
+          "status",
+          "trust",
+          "roles",
+          "author",
+          "created",
+          "updated",
+        ],
+        "type": "object",
+      },
+      {
+        "additionalProperties": {},
+        "properties": {
+          "aimem": {
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991,
+            "type": "integer",
+          },
+          "author": {
+            "pattern": "^(?:human|agent):[^\\s:]+(?::\\S+)?$",
+            "type": "string",
+          },
+          "created": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$",
+            "type": "string",
+          },
+          "evidence": {
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "expires": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "type": "string",
+          },
+          "external": {
+            "items": {
+              "additionalProperties": {},
+              "properties": {
+                "id": {
+                  "minLength": 1,
+                  "type": "string",
+                },
+                "system": {
+                  "minLength": 1,
+                  "type": "string",
+                },
+                "url": {
+                  "type": "string",
+                },
+              },
+              "required": [
+                "system",
+                "id",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "id": {
+            "pattern": "^(?:dec|tsk|mem|hnd|inc|run|sch|tst)-[0-9a-hjkmnp-tv-z]{8}$",
+            "type": "string",
+          },
+          "kind": {
+            "enum": [
+              "gotcha",
+              "constraint",
+              "howto",
+              "fact",
+              "preference",
+            ],
+            "type": "string",
+          },
+          "links": {
+            "items": {
+              "pattern": "^(?:[a-z0-9]+(?:-[a-z0-9]+)*:)?(?:dec|tsk|mem|hnd|inc|run|sch|tst)-[0-9a-hjkmnp-tv-z]{8}$",
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "managed_by": {
+            "enum": [
+              "notebook",
+              "external",
+            ],
+            "type": "string",
+          },
+          "paths": {
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "repo": {
+            "type": "string",
+          },
+          "roles": {
+            "items": {
+              "minLength": 1,
+              "type": "string",
+            },
+            "minItems": 1,
+            "type": "array",
+          },
+          "source": {
+            "additionalProperties": {},
+            "properties": {
+              "content_sha": {
+                "minLength": 1,
+                "type": "string",
+              },
+              "id": {
+                "minLength": 1,
+                "type": "string",
+              },
+              "imported_by": {
+                "minLength": 1,
+                "type": "string",
+              },
+              "row": {
+                "type": [
+                  "string",
+                  "number",
+                ],
+              },
+              "state": {
+                "enum": [
+                  "ok",
+                  "missing",
+                  "error",
+                ],
+                "type": "string",
+              },
+              "synced_at": {
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$",
+                "type": "string",
+              },
+              "system": {
+                "enum": [
+                  "google-doc",
+                  "google-sheet",
+                  "odoo",
+                  "upload",
+                ],
+                "type": "string",
+              },
+              "url": {
+                "type": "string",
+              },
+              "version": {
+                "type": [
+                  "string",
+                  "number",
+                ],
+              },
+            },
+            "required": [
+              "system",
+              "id",
+              "url",
+              "version",
+              "content_sha",
+              "synced_at",
+              "imported_by",
+              "state",
+            ],
+            "type": "object",
+          },
+          "status": {
+            "enum": [
+              "active",
+              "stale",
+              "superseded",
+            ],
+            "type": "string",
+          },
+          "summary": {
+            "minLength": 1,
+            "type": "string",
+          },
+          "superseded_by": {
+            "pattern": "^(?:[a-z0-9]+(?:-[a-z0-9]+)*:)?(?:dec|tsk|mem|hnd|inc|run|sch|tst)-[0-9a-hjkmnp-tv-z]{8}$",
+            "type": "string",
+          },
+          "supersedes": {
+            "pattern": "^(?:[a-z0-9]+(?:-[a-z0-9]+)*:)?(?:dec|tsk|mem|hnd|inc|run|sch|tst)-[0-9a-hjkmnp-tv-z]{8}$",
+            "type": "string",
+          },
+          "tags": {
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "title": {
+            "maxLength": 120,
+            "minLength": 1,
+            "type": "string",
+          },
+          "trust": {
+            "enum": [
+              "verified",
+              "agent",
+              "inferred",
+            ],
+            "type": "string",
+          },
+          "type": {
+            "const": "memory",
+            "type": "string",
+          },
+          "updated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$",
+            "type": "string",
+          },
+          "verified": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "type": "string",
+          },
+        },
+        "required": [
+          "aimem",
+          "id",
+          "type",
+          "title",
+          "summary",
+          "status",
+          "trust",
+          "roles",
+          "author",
+          "created",
+          "updated",
+        ],
+        "type": "object",
+      },
+      {
+        "additionalProperties": {},
+        "properties": {
+          "aimem": {
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991,
+            "type": "integer",
+          },
+          "author": {
+            "pattern": "^(?:human|agent):[^\\s:]+(?::\\S+)?$",
+            "type": "string",
+          },
+          "branch": {
+            "type": "string",
+          },
+          "created": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$",
+            "type": "string",
+          },
+          "evidence": {
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "expires": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "type": "string",
+          },
+          "external": {
+            "items": {
+              "additionalProperties": {},
+              "properties": {
+                "id": {
+                  "minLength": 1,
+                  "type": "string",
+                },
+                "system": {
+                  "minLength": 1,
+                  "type": "string",
+                },
+                "url": {
+                  "type": "string",
+                },
+              },
+              "required": [
+                "system",
+                "id",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "id": {
+            "pattern": "^(?:dec|tsk|mem|hnd|inc|run|sch|tst)-[0-9a-hjkmnp-tv-z]{8}$",
+            "type": "string",
+          },
+          "links": {
+            "items": {
+              "pattern": "^(?:[a-z0-9]+(?:-[a-z0-9]+)*:)?(?:dec|tsk|mem|hnd|inc|run|sch|tst)-[0-9a-hjkmnp-tv-z]{8}$",
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "managed_by": {
+            "enum": [
+              "notebook",
+              "external",
+            ],
+            "type": "string",
+          },
+          "paths": {
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "repo": {
+            "type": "string",
+          },
+          "roles": {
+            "items": {
+              "minLength": 1,
+              "type": "string",
+            },
+            "minItems": 1,
+            "type": "array",
+          },
+          "session": {
+            "type": "string",
+          },
+          "source": {
+            "additionalProperties": {},
+            "properties": {
+              "content_sha": {
+                "minLength": 1,
+                "type": "string",
+              },
+              "id": {
+                "minLength": 1,
+                "type": "string",
+              },
+              "imported_by": {
+                "minLength": 1,
+                "type": "string",
+              },
+              "row": {
+                "type": [
+                  "string",
+                  "number",
+                ],
+              },
+              "state": {
+                "enum": [
+                  "ok",
+                  "missing",
+                  "error",
+                ],
+                "type": "string",
+              },
+              "synced_at": {
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$",
+                "type": "string",
+              },
+              "system": {
+                "enum": [
+                  "google-doc",
+                  "google-sheet",
+                  "odoo",
+                  "upload",
+                ],
+                "type": "string",
+              },
+              "url": {
+                "type": "string",
+              },
+              "version": {
+                "type": [
+                  "string",
+                  "number",
+                ],
+              },
+            },
+            "required": [
+              "system",
+              "id",
+              "url",
+              "version",
+              "content_sha",
+              "synced_at",
+              "imported_by",
+              "state",
+            ],
+            "type": "object",
+          },
+          "status": {
+            "enum": [
+              "final",
+            ],
+            "type": "string",
+          },
+          "summary": {
+            "minLength": 1,
+            "type": "string",
+          },
+          "superseded_by": {
+            "pattern": "^(?:[a-z0-9]+(?:-[a-z0-9]+)*:)?(?:dec|tsk|mem|hnd|inc|run|sch|tst)-[0-9a-hjkmnp-tv-z]{8}$",
+            "type": "string",
+          },
+          "supersedes": {
+            "pattern": "^(?:[a-z0-9]+(?:-[a-z0-9]+)*:)?(?:dec|tsk|mem|hnd|inc|run|sch|tst)-[0-9a-hjkmnp-tv-z]{8}$",
+            "type": "string",
+          },
+          "tags": {
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "task": {
+            "pattern": "^(?:[a-z0-9]+(?:-[a-z0-9]+)*:)?(?:dec|tsk|mem|hnd|inc|run|sch|tst)-[0-9a-hjkmnp-tv-z]{8}$",
+            "type": "string",
+          },
+          "title": {
+            "maxLength": 120,
+            "minLength": 1,
+            "type": "string",
+          },
+          "trust": {
+            "enum": [
+              "verified",
+              "agent",
+              "inferred",
+            ],
+            "type": "string",
+          },
+          "type": {
+            "const": "handoff",
+            "type": "string",
+          },
+          "updated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$",
+            "type": "string",
+          },
+          "verified": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "type": "string",
+          },
+        },
+        "required": [
+          "aimem",
+          "id",
+          "type",
+          "title",
+          "summary",
+          "status",
+          "trust",
+          "roles",
+          "author",
+          "created",
+          "updated",
+        ],
+        "type": "object",
+      },
+      {
+        "additionalProperties": {},
+        "properties": {
+          "aimem": {
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991,
+            "type": "integer",
+          },
+          "author": {
+            "pattern": "^(?:human|agent):[^\\s:]+(?::\\S+)?$",
+            "type": "string",
+          },
+          "created": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$",
+            "type": "string",
+          },
+          "evidence": {
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "expires": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "type": "string",
+          },
+          "external": {
+            "items": {
+              "additionalProperties": {},
+              "properties": {
+                "id": {
+                  "minLength": 1,
+                  "type": "string",
+                },
+                "system": {
+                  "minLength": 1,
+                  "type": "string",
+                },
+                "url": {
+                  "type": "string",
+                },
+              },
+              "required": [
+                "system",
+                "id",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "id": {
+            "pattern": "^(?:dec|tsk|mem|hnd|inc|run|sch|tst)-[0-9a-hjkmnp-tv-z]{8}$",
+            "type": "string",
+          },
+          "links": {
+            "items": {
+              "pattern": "^(?:[a-z0-9]+(?:-[a-z0-9]+)*:)?(?:dec|tsk|mem|hnd|inc|run|sch|tst)-[0-9a-hjkmnp-tv-z]{8}$",
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "managed_by": {
+            "enum": [
+              "notebook",
+              "external",
+            ],
+            "type": "string",
+          },
+          "paths": {
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "repo": {
+            "type": "string",
+          },
+          "resolved_at": {
+            "type": "string",
+          },
+          "roles": {
+            "items": {
+              "minLength": 1,
+              "type": "string",
+            },
+            "minItems": 1,
+            "type": "array",
+          },
+          "root_cause_category": {
+            "type": "string",
+          },
+          "services": {
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "severity": {
+            "enum": [
+              "sev1",
+              "sev2",
+              "sev3",
+              "sev4",
+            ],
+            "type": "string",
+          },
+          "source": {
+            "additionalProperties": {},
+            "properties": {
+              "content_sha": {
+                "minLength": 1,
+                "type": "string",
+              },
+              "id": {
+                "minLength": 1,
+                "type": "string",
+              },
+              "imported_by": {
+                "minLength": 1,
+                "type": "string",
+              },
+              "row": {
+                "type": [
+                  "string",
+                  "number",
+                ],
+              },
+              "state": {
+                "enum": [
+                  "ok",
+                  "missing",
+                  "error",
+                ],
+                "type": "string",
+              },
+              "synced_at": {
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$",
+                "type": "string",
+              },
+              "system": {
+                "enum": [
+                  "google-doc",
+                  "google-sheet",
+                  "odoo",
+                  "upload",
+                ],
+                "type": "string",
+              },
+              "url": {
+                "type": "string",
+              },
+              "version": {
+                "type": [
+                  "string",
+                  "number",
+                ],
+              },
+            },
+            "required": [
+              "system",
+              "id",
+              "url",
+              "version",
+              "content_sha",
+              "synced_at",
+              "imported_by",
+              "state",
+            ],
+            "type": "object",
+          },
+          "started": {
+            "type": "string",
+          },
+          "status": {
+            "enum": [
+              "investigating",
+              "mitigated",
+              "resolved",
+              "postmortem_done",
+            ],
+            "type": "string",
+          },
+          "summary": {
+            "minLength": 1,
+            "type": "string",
+          },
+          "superseded_by": {
+            "pattern": "^(?:[a-z0-9]+(?:-[a-z0-9]+)*:)?(?:dec|tsk|mem|hnd|inc|run|sch|tst)-[0-9a-hjkmnp-tv-z]{8}$",
+            "type": "string",
+          },
+          "supersedes": {
+            "pattern": "^(?:[a-z0-9]+(?:-[a-z0-9]+)*:)?(?:dec|tsk|mem|hnd|inc|run|sch|tst)-[0-9a-hjkmnp-tv-z]{8}$",
+            "type": "string",
+          },
+          "tags": {
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "title": {
+            "maxLength": 120,
+            "minLength": 1,
+            "type": "string",
+          },
+          "trust": {
+            "enum": [
+              "verified",
+              "agent",
+              "inferred",
+            ],
+            "type": "string",
+          },
+          "type": {
+            "const": "incident",
+            "type": "string",
+          },
+          "updated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$",
+            "type": "string",
+          },
+          "verified": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "type": "string",
+          },
+        },
+        "required": [
+          "aimem",
+          "id",
+          "type",
+          "title",
+          "summary",
+          "status",
+          "trust",
+          "roles",
+          "author",
+          "created",
+          "updated",
+        ],
+        "type": "object",
+      },
+      {
+        "additionalProperties": {},
+        "properties": {
+          "aimem": {
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991,
+            "type": "integer",
+          },
+          "author": {
+            "pattern": "^(?:human|agent):[^\\s:]+(?::\\S+)?$",
+            "type": "string",
+          },
+          "created": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$",
+            "type": "string",
+          },
+          "evidence": {
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "expires": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "type": "string",
+          },
+          "external": {
+            "items": {
+              "additionalProperties": {},
+              "properties": {
+                "id": {
+                  "minLength": 1,
+                  "type": "string",
+                },
+                "system": {
+                  "minLength": 1,
+                  "type": "string",
+                },
+                "url": {
+                  "type": "string",
+                },
+              },
+              "required": [
+                "system",
+                "id",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "id": {
+            "pattern": "^(?:dec|tsk|mem|hnd|inc|run|sch|tst)-[0-9a-hjkmnp-tv-z]{8}$",
+            "type": "string",
+          },
+          "last_tested": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "type": "string",
+          },
+          "links": {
+            "items": {
+              "pattern": "^(?:[a-z0-9]+(?:-[a-z0-9]+)*:)?(?:dec|tsk|mem|hnd|inc|run|sch|tst)-[0-9a-hjkmnp-tv-z]{8}$",
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "managed_by": {
+            "enum": [
+              "notebook",
+              "external",
+            ],
+            "type": "string",
+          },
+          "owner": {
+            "type": "string",
+          },
+          "paths": {
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "repo": {
+            "type": "string",
+          },
+          "roles": {
+            "items": {
+              "minLength": 1,
+              "type": "string",
+            },
+            "minItems": 1,
+            "type": "array",
+          },
+          "source": {
+            "additionalProperties": {},
+            "properties": {
+              "content_sha": {
+                "minLength": 1,
+                "type": "string",
+              },
+              "id": {
+                "minLength": 1,
+                "type": "string",
+              },
+              "imported_by": {
+                "minLength": 1,
+                "type": "string",
+              },
+              "row": {
+                "type": [
+                  "string",
+                  "number",
+                ],
+              },
+              "state": {
+                "enum": [
+                  "ok",
+                  "missing",
+                  "error",
+                ],
+                "type": "string",
+              },
+              "synced_at": {
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$",
+                "type": "string",
+              },
+              "system": {
+                "enum": [
+                  "google-doc",
+                  "google-sheet",
+                  "odoo",
+                  "upload",
+                ],
+                "type": "string",
+              },
+              "url": {
+                "type": "string",
+              },
+              "version": {
+                "type": [
+                  "string",
+                  "number",
+                ],
+              },
+            },
+            "required": [
+              "system",
+              "id",
+              "url",
+              "version",
+              "content_sha",
+              "synced_at",
+              "imported_by",
+              "state",
+            ],
+            "type": "object",
+          },
+          "status": {
+            "enum": [
+              "active",
+              "deprecated",
+            ],
+            "type": "string",
+          },
+          "summary": {
+            "minLength": 1,
+            "type": "string",
+          },
+          "superseded_by": {
+            "pattern": "^(?:[a-z0-9]+(?:-[a-z0-9]+)*:)?(?:dec|tsk|mem|hnd|inc|run|sch|tst)-[0-9a-hjkmnp-tv-z]{8}$",
+            "type": "string",
+          },
+          "supersedes": {
+            "pattern": "^(?:[a-z0-9]+(?:-[a-z0-9]+)*:)?(?:dec|tsk|mem|hnd|inc|run|sch|tst)-[0-9a-hjkmnp-tv-z]{8}$",
+            "type": "string",
+          },
+          "tags": {
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "title": {
+            "maxLength": 120,
+            "minLength": 1,
+            "type": "string",
+          },
+          "trust": {
+            "enum": [
+              "verified",
+              "agent",
+              "inferred",
+            ],
+            "type": "string",
+          },
+          "type": {
+            "const": "runbook",
+            "type": "string",
+          },
+          "updated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$",
+            "type": "string",
+          },
+          "verified": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "type": "string",
+          },
+        },
+        "required": [
+          "aimem",
+          "id",
+          "type",
+          "title",
+          "summary",
+          "status",
+          "trust",
+          "roles",
+          "author",
+          "created",
+          "updated",
+        ],
+        "type": "object",
+      },
+      {
+        "additionalProperties": {},
+        "properties": {
+          "aimem": {
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991,
+            "type": "integer",
+          },
+          "author": {
+            "pattern": "^(?:human|agent):[^\\s:]+(?::\\S+)?$",
+            "type": "string",
+          },
+          "created": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$",
+            "type": "string",
+          },
+          "datastore": {
+            "type": "string",
+          },
+          "evidence": {
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "expires": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "type": "string",
+          },
+          "external": {
+            "items": {
+              "additionalProperties": {},
+              "properties": {
+                "id": {
+                  "minLength": 1,
+                  "type": "string",
+                },
+                "system": {
+                  "minLength": 1,
+                  "type": "string",
+                },
+                "url": {
+                  "type": "string",
+                },
+              },
+              "required": [
+                "system",
+                "id",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "id": {
+            "pattern": "^(?:dec|tsk|mem|hnd|inc|run|sch|tst)-[0-9a-hjkmnp-tv-z]{8}$",
+            "type": "string",
+          },
+          "links": {
+            "items": {
+              "pattern": "^(?:[a-z0-9]+(?:-[a-z0-9]+)*:)?(?:dec|tsk|mem|hnd|inc|run|sch|tst)-[0-9a-hjkmnp-tv-z]{8}$",
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "managed_by": {
+            "enum": [
+              "notebook",
+              "external",
+            ],
+            "type": "string",
+          },
+          "objects": {
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "paths": {
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "repo": {
+            "type": "string",
+          },
+          "roles": {
+            "items": {
+              "minLength": 1,
+              "type": "string",
+            },
+            "minItems": 1,
+            "type": "array",
+          },
+          "source": {
+            "additionalProperties": {},
+            "properties": {
+              "content_sha": {
+                "minLength": 1,
+                "type": "string",
+              },
+              "id": {
+                "minLength": 1,
+                "type": "string",
+              },
+              "imported_by": {
+                "minLength": 1,
+                "type": "string",
+              },
+              "row": {
+                "type": [
+                  "string",
+                  "number",
+                ],
+              },
+              "state": {
+                "enum": [
+                  "ok",
+                  "missing",
+                  "error",
+                ],
+                "type": "string",
+              },
+              "synced_at": {
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$",
+                "type": "string",
+              },
+              "system": {
+                "enum": [
+                  "google-doc",
+                  "google-sheet",
+                  "odoo",
+                  "upload",
+                ],
+                "type": "string",
+              },
+              "url": {
+                "type": "string",
+              },
+              "version": {
+                "type": [
+                  "string",
+                  "number",
+                ],
+              },
+            },
+            "required": [
+              "system",
+              "id",
+              "url",
+              "version",
+              "content_sha",
+              "synced_at",
+              "imported_by",
+              "state",
+            ],
+            "type": "object",
+          },
+          "status": {
+            "enum": [
+              "active",
+              "deprecated",
+              "superseded",
+            ],
+            "type": "string",
+          },
+          "summary": {
+            "minLength": 1,
+            "type": "string",
+          },
+          "superseded_by": {
+            "pattern": "^(?:[a-z0-9]+(?:-[a-z0-9]+)*:)?(?:dec|tsk|mem|hnd|inc|run|sch|tst)-[0-9a-hjkmnp-tv-z]{8}$",
+            "type": "string",
+          },
+          "supersedes": {
+            "pattern": "^(?:[a-z0-9]+(?:-[a-z0-9]+)*:)?(?:dec|tsk|mem|hnd|inc|run|sch|tst)-[0-9a-hjkmnp-tv-z]{8}$",
+            "type": "string",
+          },
+          "tags": {
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "title": {
+            "maxLength": 120,
+            "minLength": 1,
+            "type": "string",
+          },
+          "trust": {
+            "enum": [
+              "verified",
+              "agent",
+              "inferred",
+            ],
+            "type": "string",
+          },
+          "type": {
+            "const": "schema",
+            "type": "string",
+          },
+          "updated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$",
+            "type": "string",
+          },
+          "verified": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "type": "string",
+          },
+        },
+        "required": [
+          "aimem",
+          "id",
+          "type",
+          "title",
+          "summary",
+          "status",
+          "trust",
+          "roles",
+          "author",
+          "created",
+          "updated",
+        ],
+        "type": "object",
+      },
+      {
+        "additionalProperties": {},
+        "properties": {
+          "aimem": {
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991,
+            "type": "integer",
+          },
+          "author": {
+            "pattern": "^(?:human|agent):[^\\s:]+(?::\\S+)?$",
+            "type": "string",
+          },
+          "automation": {
+            "type": "string",
+          },
+          "covers": {
+            "items": {
+              "pattern": "^(?:[a-z0-9]+(?:-[a-z0-9]+)*:)?(?:dec|tsk|mem|hnd|inc|run|sch|tst)-[0-9a-hjkmnp-tv-z]{8}$",
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "created": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$",
+            "type": "string",
+          },
+          "evidence": {
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "expires": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "type": "string",
+          },
+          "external": {
+            "items": {
+              "additionalProperties": {},
+              "properties": {
+                "id": {
+                  "minLength": 1,
+                  "type": "string",
+                },
+                "system": {
+                  "minLength": 1,
+                  "type": "string",
+                },
+                "url": {
+                  "type": "string",
+                },
+              },
+              "required": [
+                "system",
+                "id",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "id": {
+            "pattern": "^(?:dec|tsk|mem|hnd|inc|run|sch|tst)-[0-9a-hjkmnp-tv-z]{8}$",
+            "type": "string",
+          },
+          "links": {
+            "items": {
+              "pattern": "^(?:[a-z0-9]+(?:-[a-z0-9]+)*:)?(?:dec|tsk|mem|hnd|inc|run|sch|tst)-[0-9a-hjkmnp-tv-z]{8}$",
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "managed_by": {
+            "enum": [
+              "notebook",
+              "external",
+            ],
+            "type": "string",
+          },
+          "paths": {
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "repo": {
+            "type": "string",
+          },
+          "roles": {
+            "items": {
+              "minLength": 1,
+              "type": "string",
+            },
+            "minItems": 1,
+            "type": "array",
+          },
+          "source": {
+            "additionalProperties": {},
+            "properties": {
+              "content_sha": {
+                "minLength": 1,
+                "type": "string",
+              },
+              "id": {
+                "minLength": 1,
+                "type": "string",
+              },
+              "imported_by": {
+                "minLength": 1,
+                "type": "string",
+              },
+              "row": {
+                "type": [
+                  "string",
+                  "number",
+                ],
+              },
+              "state": {
+                "enum": [
+                  "ok",
+                  "missing",
+                  "error",
+                ],
+                "type": "string",
+              },
+              "synced_at": {
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$",
+                "type": "string",
+              },
+              "system": {
+                "enum": [
+                  "google-doc",
+                  "google-sheet",
+                  "odoo",
+                  "upload",
+                ],
+                "type": "string",
+              },
+              "url": {
+                "type": "string",
+              },
+              "version": {
+                "type": [
+                  "string",
+                  "number",
+                ],
+              },
+            },
+            "required": [
+              "system",
+              "id",
+              "url",
+              "version",
+              "content_sha",
+              "synced_at",
+              "imported_by",
+              "state",
+            ],
+            "type": "object",
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "ready",
+              "passing",
+              "failing",
+              "retired",
+            ],
+            "type": "string",
+          },
+          "summary": {
+            "minLength": 1,
+            "type": "string",
+          },
+          "superseded_by": {
+            "pattern": "^(?:[a-z0-9]+(?:-[a-z0-9]+)*:)?(?:dec|tsk|mem|hnd|inc|run|sch|tst)-[0-9a-hjkmnp-tv-z]{8}$",
+            "type": "string",
+          },
+          "supersedes": {
+            "pattern": "^(?:[a-z0-9]+(?:-[a-z0-9]+)*:)?(?:dec|tsk|mem|hnd|inc|run|sch|tst)-[0-9a-hjkmnp-tv-z]{8}$",
+            "type": "string",
+          },
+          "tags": {
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "title": {
+            "maxLength": 120,
+            "minLength": 1,
+            "type": "string",
+          },
+          "trust": {
+            "enum": [
+              "verified",
+              "agent",
+              "inferred",
+            ],
+            "type": "string",
+          },
+          "type": {
+            "const": "testcase",
+            "type": "string",
+          },
+          "updated": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$",
+            "type": "string",
+          },
+          "verified": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "type": "string",
+          },
+        },
+        "required": [
+          "aimem",
+          "id",
+          "type",
+          "title",
+          "summary",
+          "status",
+          "trust",
+          "roles",
+          "author",
+          "created",
+          "updated",
+        ],
+        "type": "object",
+      },
+    ],
+  },
+}
+`;
