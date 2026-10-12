@@ -29,3 +29,10 @@ export function parseRef(ref: string): Ref {
   const i = ref.indexOf(":");
   return i < 0 ? { id: ref } : { project: ref.slice(0, i), id: ref.slice(i + 1) };
 }
+
+/** 03 §2: file-name slug, lowercase `a-z0-9-`, max 60 chars. */
+export const SLUG_RE = /^[a-z0-9-]{1,60}$/;
+
+export function isValidSlug(slug: string): boolean {
+  return SLUG_RE.test(slug);
+}

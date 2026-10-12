@@ -1,0 +1,27 @@
+# Expected validation codes per file (03 §9). Contract for the slice 1.2 validator.
+# Evaluate with the clock below. Files with [] must produce no issues.
+clock: 2026-10-12T00:00:00Z
+files:
+  .aimem/decisions/dec-0000000a-unclosed-flow-sequence.md: [V001]
+  .aimem/decisions/dec-0000000f-decision-with-task-status.md: [V004]
+  .aimem/decisions/dec-00000011-links-to-a-missing-record.md: [V006]
+  .aimem/decisions/dec-00000012-supersedes-without-back-link.md: [V007]
+  .aimem/decisions/dec-00000013-target-of-a-one-way-supersede.md: []
+  .aimem/decisions/dec-00000017-retry-webhooks-with-fixed-delay.md: [V011]
+  .aimem/decisions/dec-00000018-retry-webhooks-with-exponential-backoff.md: [V011]
+  .aimem/decisions/dec-0000001e-external-record-edited-locally.md: [V017]
+  .aimem/decisions/dec-0000001f-external-source-went-missing.md: [V017, V018]
+  .aimem/handoffs/hnd-00000019-20261001-handoff-without-blocked-section.md: [V012]
+  .aimem/memory/dec-0000000e-decision-filed-under-memory.md: [V003]
+  .aimem/memory/mem-0000000b-no-frontmatter.md: [V001]
+  .aimem/memory/mem-00000010-duplicate-id-first-copy.md: [V005]
+  .aimem/memory/mem-00000010-duplicate-id-second-copy.md: [V005]
+  .aimem/memory/mem-00000014-access-key-pasted-into-body.md: [V008]
+  .aimem/memory/mem-00000015-summary-equals-title.md: [V009]
+  .aimem/memory/mem-00000016-old-unverified-fact.md: [V010]
+  .aimem/memory/mem-0000001a-very-long-memory-body.md: [V013]
+  .aimem/memory/mem-0000001b-unknown-role.md: [V014]
+  .aimem/memory/mem-0000001d-written-by-a-newer-tool.md: [V016]
+  .aimem/memory/renamed-by-hand.md: [V015]
+  .aimem/tasks/tsk-0000000c-missing-summary.md: [V002]
+  .aimem/tasks/tsk-0000000d-unknown-trust-level.md: [V002]
