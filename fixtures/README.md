@@ -9,6 +9,9 @@ credentials or personal data. The one "secret" in `messy` is AWS's published doc
 | `projects/messy` | one problem per file (plus one clean supersede target) covering V001–V018 | produce exactly the codes in `expected.yaml` |
 | `projects/medium` | 127 records describing aimem itself: supersede chains, stale/expired items, inferred traps, Indonesian notes | only V010 warnings, exactly as `expected.yaml` lists |
 
+## Evals
+`fixtures/evals/medium.yaml` (24 cases: keyword, paraphrase, multilingual, trap) runs against `projects/medium`; baseline in `fixtures/evals/baseline/`. Run `pnpm eval`. Cases were written before the first run; add new cases rather than editing old ones to fit the scorer.
+
 ## Rules
 - **Clock:** evaluate fixtures at `2026-10-12T00:00:00Z` (inject it; freshness rules depend on it).
 - `messy/expected.yaml` maps every record file to its expected codes. It is the contract for the validator (slice 1.2); codes the schema alone can detect (V001–V005) are already checked in `packages/schema/test/fixtures.test.ts`.

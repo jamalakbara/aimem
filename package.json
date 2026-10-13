@@ -12,7 +12,8 @@
     "test": "vitest run",
     "typecheck": "tsc -b && tsc -p tsconfig.test.json",
     "lint": "biome check .",
-    "format": "biome format --write ."
+    "format": "biome format --write .",
+    "eval": "pnpm -s build && node scripts/eval.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",
