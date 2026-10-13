@@ -170,7 +170,12 @@ export async function run(argv: string[], deps: CliDeps): Promise<number> {
   cmd("supersede", "mark a record as replaced by another")
     .argument("<old-ref>", "record being replaced")
     .requiredOption("--by <new-ref>", "the replacement")
-    .action(action("supersede", (g, [old], o) => supersede(deps, g, old as string, o as { by: string })));
+    .option("--author <who>", "human:<handle> or agent:<tool>[:<model>]")
+    .action(
+      action("supersede", (g, [old], o) =>
+        supersede(deps, g, old as string, o as { by: string; author?: string }),
+      ),
+    );
 
   cmd("verify", "mark records as confirmed by a human")
     .argument("<refs...>", "records to verify")
@@ -179,6 +184,7 @@ export async function run(argv: string[], deps: CliDeps): Promise<number> {
 
   cmd("validate", "check records against rules V001–V018")
     .option("--strict", "exit 1 on warnings")
+    .option("--fix", "repair safe issues first (file names, one-sided supersede links, updated)")
     .action(action("validate", (g, _a, o) => validateCmd(deps, g, o)));
 
   cmd("index", "regenerate INDEX.md").action(action("index", (g) => indexCmd(deps, g)));

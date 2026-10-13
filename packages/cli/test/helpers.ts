@@ -1,7 +1,24 @@
-import { nodeFs } from "@aimem/core";
+import { type Git, nodeFs } from "@aimem/core";
 import { type CliDeps, run } from "aimem";
 
 export const FIXTURES = new URL("../../../fixtures/projects/", import.meta.url).pathname;
+
+/** Fake git: a repository where every command succeeds and user.name is unset. Records calls. */
+export function fakeGit(userName?: string): Git & { calls: string[][] } {
+  const calls: string[][] = [];
+  return {
+    calls,
+    async run(args) {
+      calls.push(args);
+      if (args[0] === "rev-parse") return { code: 0, stdout: "true\n", stderr: "" };
+      if (args[0] === "config")
+        return userName
+          ? { code: 0, stdout: `${userName}\n`, stderr: "" }
+          : { code: 1, stdout: "", stderr: "" };
+      return { code: 0, stdout: "", stderr: "" };
+    },
+  };
+}
 
 export interface CliResult {
   code: number;
@@ -22,6 +39,7 @@ export async function cli(args: string[], deps: Partial<CliDeps> = {}): Promise<
     random: { bytes: (k) => Uint8Array.from({ length: k }, () => n++ % 256) },
     env: {},
     stdin: async () => "",
+    git: fakeGit(),
     cwd: FIXTURES,
     stdout: (s) => {
       stdout += s;

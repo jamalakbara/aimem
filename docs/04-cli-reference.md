@@ -17,7 +17,7 @@ Environment: `AIMEM_TOKEN` (server token), `AIMEM_AUTHOR` (e.g. `agent:claude-co
 
 Exit codes: `0` ok · `1` warnings (strict mode) / not found · `2` validation or usage error · `3` conflict (e.g. claim lost, likely duplicate) · `4` network/sync failure (operation may have partially applied — see message).
 
-Author resolution: `--author` flag → `AIMEM_AUTHOR` → git `user.name` as `human:<name>` *(git fallback arrives in v0.1 slice 1.4c; until then a missing author is a `USAGE` error)*.
+Author resolution: `--author` flag → `AIMEM_AUTHOR` → git `user.name` as `human:<handle>` (slugified, e.g. `Dana Example` → `human:dana-example`). None of these → `USAGE`.
 
 ## 2. Setup commands
 
@@ -131,7 +131,7 @@ aimem add decision --title "..." --summary "..." [--status accepted] [--roles de
 - Refuses (nothing written): invalid status/fields or a multi-line/over-long summary (`INVALID_RECORD`), unknown `--link`/`--supersedes` targets (`INVALID_RECORD`/`NOT_FOUND`), possible secrets (`SECRET_DETECTED`).
 - Runs a **dedupe check**: a current record of the same type whose title is very similar (word overlap ≥ 70%) or whose title + summary overlap ≥ 50% is a likely duplicate; it is named in `error.details` and the command exits 3 unless `--force` (agents should then `aimem show` it and update/supersede instead).
 - Sets `trust: agent` for `agent:*` authors, `verified` for `human:*`.
-- Applies `write_policy.agent_commits` (`none|stage|commit|pr`).
+- Applies `write_policy.agent_commits` (`none|stage|commit|pr`; default `commit` in solo mode, `stage` otherwise) to **agent** writes only; human writes are left for the human to commit. Only the files the command wrote are staged/committed (`git commit --only`), so other staged work is never included. Commit message `aimem: <verb> <ref> <title>` plus a trailer `Aimem-Author: <author>`. `pr` currently stages and warns. Outside a git repo, without git, or when git refuses (e.g. a failing hook) the records stay written, a warning is added, and the exit code is 0. Write commands report `data.git`: `none | staged | committed | skipped | failed`.
 
 Shortcuts: `aimem decide`, `aimem remember` (memory), `aimem incident`, `aimem runbook` — thin aliases for `add <type>` with type-specific flags.
 
@@ -175,7 +175,7 @@ aimem live [--watch]                    # show all live claims and presence (--w
 
 | Command | Purpose |
 |---------|---------|
-| `aimem validate [--strict] [--fix] [--project]` | Run rules V001–V018 (03 §9). `--fix` repairs safe issues (slug mismatch, `updated`, back-links) |
+| `aimem validate [--strict] [--fix] [--project]` | Run rules V001–V018 (03 §9). `--fix` first repairs safe issues — renames files that do not start with `<id>-` (V015; never overwrites), adds the missing half of a one-sided supersede link (V007), raises `updated` that is earlier than `created` — and reports them in `data.fixed` / `data.skipped`; it never deletes or resolves conflicts |
 | `aimem index [--embeddings] [--rebuild]` | Regenerate `INDEX.md`; rebuild the lexical index and (re)compute embeddings; `--rebuild` discards the cache first |
 | `aimem stale [--mark]` | List stale records; `--mark` sets memory status to `stale` |
 | `aimem doctor` | Diagnose environment: git, remote access, server reachability, adapter presence, schema version, embedding provider/model status, and exactly what content would leave the machine |

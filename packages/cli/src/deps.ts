@@ -1,4 +1,4 @@
-import type { Clock, Fs, Random } from "@aimem/core";
+import type { Clock, Fs, Git, Random } from "@aimem/core";
 
 /** Everything the CLI touches, injected so commands run in-process in tests (docs/11 §3). */
 export interface CliDeps {
@@ -11,6 +11,7 @@ export interface CliDeps {
   stderr: (s: string) => void;
   /** Whole standard input, for `--body -`. */
   stdin: () => Promise<string>;
+  git: Git;
 }
 
 export interface GlobalOptions {

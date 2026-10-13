@@ -2,8 +2,10 @@ import { resolve } from "node:path";
 import {
   AimemError,
   addRecord,
+  applyWritePolicy,
   loadProject,
-  resolveAuthor,
+  type Notebook,
+  resolveAuthorWithGit,
   supersedeRecord,
   updateRecord,
   verifyRecords,
@@ -37,8 +39,12 @@ async function readBody(deps: CliDeps, o: BodyOptions): Promise<string | undefin
   return undefined;
 }
 
-const author = (deps: CliDeps, o: { author?: string }) =>
-  resolveAuthor({ ...(o.author ? { flag: o.author } : {}), env: deps.env });
+const author = (deps: CliDeps, g: GlobalOptions, o: { author?: string }) =>
+  resolveAuthorWithGit({ ...(o.author ? { flag: o.author } : {}), env: deps.env, git: deps.git, cwd: g.dir });
+
+/** Stage/commit per write_policy (04 §4); returns the action and any warnings. */
+const commit = (deps: CliDeps, nb: Notebook, who: string, files: string[], message: string) =>
+  applyWritePolicy({ git: deps.git, nb, author: who, files, message });
 const writeDeps = (deps: CliDeps) => ({ fs: deps.fs, clock: deps.clock, random: deps.random });
 
 export interface AddOptions extends BodyOptions {
@@ -65,7 +71,7 @@ export async function add(
 ): Promise<CommandResult> {
   if (!(RECORD_TYPES as readonly string[]).includes(type))
     throw new AimemError("USAGE", `unknown type '${type}' (expected one of: ${RECORD_TYPES.join(", ")})`);
-  const who = author(deps, o);
+  const who = await author(deps, g, o);
   const nb = await loadProject(deps.fs, g.dir);
   const body = await readBody(deps, o);
   const roles = csv(o.roles);
@@ -93,10 +99,19 @@ export async function add(
     },
     writeDeps(deps),
   );
+  const git = await commit(deps, nb, who, r.changed, `aimem: add ${r.ref} ${o.title.trim()}`);
   return {
-    data: { ref: r.ref, type: r.type, status: r.status, trust: r.trust, file: r.file, changed: r.changed },
+    data: {
+      ref: r.ref,
+      type: r.type,
+      status: r.status,
+      trust: r.trust,
+      file: r.file,
+      changed: r.changed,
+      git: git.action,
+    },
     text: `Added ${r.ref} (${r.type}, ${r.status}, ${r.trust}) → ${r.file}\n`,
-    warnings: r.warnings,
+    warnings: [...r.warnings, ...git.warnings],
   };
 }
 
@@ -106,7 +121,7 @@ export async function update(
   ref: string,
   o: BodyOptions & { set?: string[]; force?: boolean; author?: string },
 ): Promise<CommandResult> {
-  const who = author(deps, o);
+  const who = await author(deps, g, o);
   const set: Record<string, string> = {};
   for (const pair of o.set ?? []) {
     const i = pair.indexOf("=");
@@ -121,7 +136,12 @@ export async function update(
     { set, author: who, ...(body !== undefined ? { body } : {}), ...(o.force ? { force: true } : {}) },
     writeDeps(deps),
   );
-  return { data: { ref: r.ref, file: r.file, changed: r.changed }, text: `Updated ${r.ref} → ${r.file}\n` };
+  const git = await commit(deps, nb, who, r.changed, `aimem: update ${r.ref}`);
+  return {
+    data: { ref: r.ref, file: r.file, changed: r.changed, git: git.action },
+    text: `Updated ${r.ref} → ${r.file}\n`,
+    warnings: git.warnings,
+  };
 }
 
 export async function supersede(
@@ -144,8 +164,8 @@ export async function verify(
   refs: string[],
   o: { author?: string },
 ): Promise<CommandResult> {
-  const who = author(deps, o);
+  const who = await author(deps, g, o);
   const nb = await loadProject(deps.fs, g.dir);
   const r = await verifyRecords(nb, refs, who, writeDeps(deps));
-  return { data: r, text: `Verified ${r.refs.join(", ")}\n` };
+  return { data: { ...r, git: "none" }, text: `Verified ${r.refs.join(", ")}\n` };
 }
