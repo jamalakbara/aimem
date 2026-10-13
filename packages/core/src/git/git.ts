@@ -67,3 +67,19 @@ export async function gitDiagnostics(git: Git, cwd: string): Promise<GitDiagnost
     ...(branch ? { branch } : {}),
   };
 }
+
+/** Files changed in the working tree (tracked diffs vs HEAD plus untracked), excluding `.aimem/`. */
+export async function gitChangedFiles(git: Git, cwd: string): Promise<string[]> {
+  if (!(await isGitRepo(git, cwd))) return [];
+  const files = new Set<string>();
+  const diff = await git.run(["diff", "--name-only", "HEAD"], cwd);
+  if (diff.code === 0) for (const l of diff.stdout.split("\n")) if (l.trim()) files.add(l.trim());
+  const status = await git.run(["status", "--porcelain"], cwd);
+  if (status.code === 0) {
+    for (const l of status.stdout.split("\n")) {
+      const path = l.slice(3).trim().split(" -> ").pop();
+      if (path) files.add(path);
+    }
+  }
+  return [...files].filter((f) => !f.startsWith(".aimem/")).sort();
+}

@@ -105,7 +105,8 @@ export function freshnessOf(
   return now.getTime() - base > window * DAY ? "stale" : "fresh";
 }
 
-function pathsOverlap(a: string[], b: string[]): boolean {
+/** V011 path overlap: one glob's literal prefix contains the other's. */
+export function pathsOverlapForConflict(a: string[], b: string[]): boolean {
   return a.some((x) =>
     b.some((y) => staticPrefix(x).startsWith(staticPrefix(y)) || staticPrefix(y).startsWith(staticPrefix(x))),
   );
@@ -254,7 +255,7 @@ export function validateFiles(
           (l) => l && local(l) === other.fm.id,
         );
       });
-      if (sharedTag && pathsOverlap(strs(a.fm.paths), strs(b.fm.paths)) && !linked) {
+      if (sharedTag && pathsOverlapForConflict(strs(a.fm.paths), strs(b.fm.paths)) && !linked) {
         add(a.input, "V011", `possible conflict with ${b.fm.id} (overlapping paths and tags, no link)`, {
           ref: a.fm.id,
         });

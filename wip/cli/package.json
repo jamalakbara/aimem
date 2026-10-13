@@ -1,2 +1,0 @@
-{ "name": "aimem", "version": "0.0.1", "type": "module", "main": "dist/index.js", "types": "dist/index.d.ts","bin":{"aimem":"dist/bin.js"},
-  "scripts": { "build": "tsc -b" }, "dependencies": {"@aimem/core":"workspace:*","@aimem/schema":"workspace:*","commander":"^12.1.0"} }

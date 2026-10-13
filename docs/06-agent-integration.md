@@ -58,6 +58,14 @@ Hybrid lexical + semantic retrieval (details in 15). Works fully offline: with a
 10. **Render** markdown (default) or JSON. Every record is wrapped with its ref and trust label. Externally-owned records also show their source (e.g. `[gdoc]`, `[gsheet row 12]`) so agents know where the live version is.
 11. **Side effects**: heartbeats any active claim of this session; never writes records.
 
+### 2.2a Implementation notes (v0.1, slice 2.1)
+- Lexical-only weights: `0.50·lexical + 0.20·paths + 0.10·links + 0.10·recency + 0.05·typeBoost + 0.05·roleMatch` (15 §6).
+- `paths`: 1 when a record glob covers a touched file (or the globs match), 0.5 when they share a directory prefix.
+- `links`: seeds are the `--ref` task, else the top 5 preliminary (lexical + paths) hits; links are followed in both directions.
+- A record needs lexical, paths or links > 0 unless pinned. Pins guarantee a place; full bodies go to the top-scoring records of each section.
+- Section caps are scaled by `budget / 4000`; unused allowance flows on; the whole briefing never exceeds the budget (property-tested). Minimum budget 300.
+- Headings inside record bodies are demoted to level ≥ 4 so a record cannot pose as a briefing section (09 §3).
+
 ### 2.3 Output skeleton (markdown)
 ```
 # aimem briefing — acme-platform / backend  (team, sync: git)

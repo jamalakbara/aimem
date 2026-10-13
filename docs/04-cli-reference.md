@@ -92,8 +92,9 @@ aimem context [--task "<free text>"] [--ref <task-ref>] [--paths <glob>...]
               [--include-superseded] [--no-live] [--explain]
               [--mode lexical|hybrid] [--deep]
 ```
-Returns the briefing (algorithm in 06 §2). With no args, infers paths from `git diff --name-only` + `git status`, and the task from the current branch name.
-`--explain` prints why each record was selected and its score.
+Returns the briefing (algorithm in 06 §2). With no args, infers paths from `git diff --name-only` + `git status`, and the task from the current branch name (reported in `data.inferred`).
+`--explain` prints why each record was selected and its score (a table after the briefing, not counted in the budget; always present in JSON as `explain`).
+`--format json` prints the briefing object; `--json` wraps it in the 04 §7 envelope (the markdown is in `data.markdown`). `--budget` must be ≥ 300. v0.1: `--mode hybrid` warns and uses lexical until slice 2.3; `--no-live` is accepted (claims arrive in M3); `--deep` is reserved and ignored with a warning (OQ-30).
 
 ### `aimem search <query>`
 ```

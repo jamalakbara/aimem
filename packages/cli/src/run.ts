@@ -2,6 +2,7 @@ import { resolve } from "node:path";
 import { AimemError } from "@aimem/core";
 import { RECORD_TYPES, type RecordType } from "@aimem/schema";
 import { Command, CommanderError, InvalidArgumentError, Option } from "commander";
+import { type ContextOptions, context } from "./commands/context.js";
 import { init } from "./commands/init.js";
 import { indexCmd, validateCmd } from "./commands/maintain.js";
 import { list, searchCmd, show } from "./commands/read.js";
@@ -95,6 +96,24 @@ export async function run(argv: string[], deps: CliDeps): Promise<number> {
     .option("--force", "re-create project.yaml in an existing notebook (records untouched)")
     .option("--no-intake", "do not print the intake questions")
     .action(action("init", (g, _a, o) => init(deps, g, o as Parameters<typeof init>[2])));
+
+  cmd("context", "start-of-session briefing (06 §2)")
+    .option("--task <text>", "what you were asked to do")
+    .option("--ref <task-ref>", "task this session works on")
+    .option(
+      "--paths <globs>",
+      "files or globs you will touch (comma-separated, repeatable)",
+      (v: string, prev: string[] = []) => [...prev, v],
+    )
+    .option("--role <role>", "rank records for this role")
+    .option("--budget <tokens>", "token budget (default from project.yaml, else 4000)", positiveInt)
+    .addOption(new Option("--format <format>", "md | json").default("md"))
+    .option("--include-superseded", "include superseded/rejected/cancelled/done/retired records")
+    .option("--no-live", "skip live claims (claims arrive in M3)")
+    .option("--explain", "show why each record was selected")
+    .addOption(new Option("--mode <mode>", "lexical | hybrid").default("lexical"))
+    .option("--deep", "reserved (not defined yet)")
+    .action(action("context", (g, _a, o) => context(deps, g, o as unknown as ContextOptions)));
 
   cmd("show", "print one record")
     .argument("<ref>", "record ref, e.g. dec-7k3m9q2x")
