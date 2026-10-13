@@ -2,6 +2,27 @@
 
 Append-only session log until M1 ships `aimem handoff` (docs/17 §1 rule 5). Newest first.
 
+## 2026-10-13 — M1 slice 1.5 handoff, status, doctor, M1 e2e (branch `feat/m1-session`, stacked on `feat/m1-git`)
+
+### Done
+- core: `addHandoff` + `parseHandoffFile` (03 §3.4; derived title/summary with spec limits; task must be a task; no dedupe), `summarizeNotebook`, `gitDiagnostics` (version, repo, user, remotes, branch; no network), `applyWritePolicy({override})` for `handoff --commit`.
+- CLI: `handoff` (flags or `--from-file`, branch from git, `--commit`, `--release-claims` no-op + warning), `status`, `doctor` (9 checks, always exit 0). Contracts: handoff/status/doctor.
+- **M1 e2e** (`packages/cli/test/e2e.test.ts`): built binary as separate processes in a fresh git repo — init → decide → remember (stdin) → handoff → validate --strict, status, doctor; one commit per agent write containing only `.aimem/` files; clean tree; exit codes 1/2/3 from the real process. `vitest.global-setup.ts` builds first (mutation-checked: a source change is caught).
+- Docs 04 (handoff/status/doctor), 12 (e2e on built binary).
+
+### Not done
+- Removing `wip/` (all drafts rebuilt) — propose with the M1 close.
+- Session tracking ("sessions without handoff") needs session ids (OQ-11, M3).
+
+### Next
+- Close M1 with evidence (docs/17 prompt); then M2 slice 2.1 `context` v0.
+
+### Blocked
+- none
+
+### Notes for next agent
+- Tests now build the monorepo once per run (global setup); a broken build fails the whole test run early.
+
 ## 2026-10-13 — M1 slice 1.4c git + validate --fix (branch `feat/m1-git`, stacked on `feat/m1-cli-write`)
 
 ### Done

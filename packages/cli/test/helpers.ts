@@ -10,7 +10,11 @@ export function fakeGit(userName?: string): Git & { calls: string[][] } {
     calls,
     async run(args) {
       calls.push(args);
+      if (args[0] === "--version") return { code: 0, stdout: "git version 2.99.0\n", stderr: "" };
+      if (args[0] === "rev-parse" && args.includes("--abbrev-ref"))
+        return { code: 0, stdout: "main\n", stderr: "" };
       if (args[0] === "rev-parse") return { code: 0, stdout: "true\n", stderr: "" };
+      if (args[0] === "remote") return { code: 0, stdout: "origin\n", stderr: "" };
       if (args[0] === "config")
         return userName
           ? { code: 0, stdout: `${userName}\n`, stderr: "" }

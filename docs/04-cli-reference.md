@@ -114,7 +114,7 @@ Print one record (`--raw` for file text, `--links` to expand linked summaries).
 ### `aimem list [type]`
 Table of records with filters (`--status`, `--stale`, `--trust inferred`, `--mine`).
 ### `aimem status`
-Project overview: counts, open p0/p1 tasks, live claims, stale items, unreviewed agent records.
+Project overview: counts, open p0/p1 tasks, live claims, stale items, unreviewed agent records. `--json` data: `project, mode, sync, total, counts, urgentTasks, stale, unreviewed {agent, inferred}, problems, lastHandoff, claims`.
 ### `aimem log [--since 7d]`
 Recent record activity (from git history of `.aimem/`).
 
@@ -156,6 +156,10 @@ aimem handoff [--task <ref>] --done "..." --not-done "..." --next "..." [--block
               [--from-file <path>] [--release-claims] [--commit]
 ```
 Writes a `handoff` record, releases this session's claims (default), updates `INDEX.md`.
+- `--done`, `--not-done`, `--next` are required (from flags or `--from-file`, a markdown file with `## Done` / `## Not done` / `## Next` / `## Blocked` / `## Notes for next agent`; flags win). `--blocked` and `--notes` default to `none`.
+- Title `Handoff <date>: <first line of Done>` (≤ 120), summary `Done: … · Next: …` (≤ 200, cut with `…`), `branch` from git, `--task` must be an existing task.
+- Applies `write_policy` like other writes; `--commit` commits it regardless of policy or author.
+- v0.1: claims arrive in M3, so `--release-claims` is accepted and reports `claimsReleased: 0` with a warning.
 
 ## 5. Task and claim commands
 
@@ -178,7 +182,7 @@ aimem live [--watch]                    # show all live claims and presence (--w
 | `aimem validate [--strict] [--fix] [--project]` | Run rules V001–V018 (03 §9). `--fix` first repairs safe issues — renames files that do not start with `<id>-` (V015; never overwrites), adds the missing half of a one-sided supersede link (V007), raises `updated` that is earlier than `created` — and reports them in `data.fixed` / `data.skipped`; it never deletes or resolves conflicts |
 | `aimem index [--embeddings] [--rebuild]` | Regenerate `INDEX.md`; rebuild the lexical index and (re)compute embeddings; `--rebuild` discards the cache first |
 | `aimem stale [--mark]` | List stale records; `--mark` sets memory status to `stale` |
-| `aimem doctor` | Diagnose environment: git, remote access, server reachability, adapter presence, schema version, embedding provider/model status, and exactly what content would leave the machine |
+| `aimem doctor` | Diagnose environment: git, remote access, server reachability, adapter presence, schema version, embedding provider/model status, and exactly what content would leave the machine. Read-only, no network; each check is `ok`/`warn`/`info` in `data.checks`; always exits 0 (use `validate --strict` as the CI gate) |
 | `aimem sync [--compact]` | Fetch durable state, push/pull live branch, or reconcile with server. `--compact` (maintainers) recreates `aimem-live` from its current tree to drop heartbeat history |
 | `aimem migrate` | Upgrade files to the current spec major |
 | `aimem export [--format html\|json\|md]` | Static export of the whole notebook (backup / read-only sharing) |

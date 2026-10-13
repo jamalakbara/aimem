@@ -5,6 +5,7 @@ import { Command, CommanderError, InvalidArgumentError, Option } from "commander
 import { init } from "./commands/init.js";
 import { indexCmd, validateCmd } from "./commands/maintain.js";
 import { list, searchCmd, show } from "./commands/read.js";
+import { doctor, type HandoffOptions, handoff, status } from "./commands/session.js";
 import { type AddOptions, add, supersede, update, verify } from "./commands/write.js";
 import type { CliDeps, CommandResult, GlobalOptions } from "./deps.js";
 import { EXIT_CODES, failureEnvelope, successEnvelope } from "./output.js";
@@ -181,6 +182,27 @@ export async function run(argv: string[], deps: CliDeps): Promise<number> {
     .argument("<refs...>", "records to verify")
     .option("--author <who>", "human:<handle>")
     .action(action("verify", (g, [refs], o) => verify(deps, g, refs as string[], o)));
+
+  cmd("handoff", "write an end-of-session handoff")
+    .option("--task <ref>", "task this session worked on")
+    .option("--done <text>", "what was done")
+    .option("--not-done <text>", "what was not done")
+    .option("--next <text>", "what should happen next")
+    .option("--blocked <text>", "blockers (default: none)")
+    .option("--notes <text>", "notes for the next agent (default: none)")
+    .option(
+      "--from-file <path>",
+      "markdown with ## Done / ## Not done / ## Next / ## Blocked / ## Notes for next agent",
+    )
+    .option("--release-claims", "release this session's claims (claims arrive in M3)")
+    .option("--commit", "commit the handoff even if write_policy only stages")
+    .option("--author <who>", "human:<handle> or agent:<tool>[:<model>]")
+    .action(action("handoff", (g, _a, o) => handoff(deps, g, o as HandoffOptions)));
+
+  cmd("status", "project overview").action(action("status", (g) => status(deps, g)));
+  cmd("doctor", "diagnose the environment (read-only, no network)").action(
+    action("doctor", (g) => doctor(deps, g)),
+  );
 
   cmd("validate", "check records against rules V001–V018")
     .option("--strict", "exit 1 on warnings")

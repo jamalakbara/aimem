@@ -1,0 +1,183 @@
+{
+  "ok": true,
+  "command": "status",
+  "data": {
+    "project": "aimem",
+    "mode": "solo",
+    "sync": "git",
+    "total": 127,
+    "counts": {
+      "decision": {
+        "accepted": 23,
+        "superseded": 6,
+        "rejected": 3,
+        "proposed": 2,
+        "deprecated": 1
+      },
+      "task": {
+        "open": 16,
+        "blocked": 1,
+        "cancelled": 2,
+        "done": 4,
+        "in_progress": 1,
+        "review": 1
+      },
+      "memory": {
+        "active": 32
+      },
+      "handoff": {
+        "final": 15
+      },
+      "incident": {
+        "resolved": 3,
+        "mitigated": 1,
+        "postmortem_done": 1
+      },
+      "runbook": {
+        "active": 5
+      },
+      "schema": {
+        "active": 5
+      },
+      "testcase": {
+        "ready": 1,
+        "passing": 3,
+        "draft": 1
+      }
+    },
+    "urgentTasks": [
+      {
+        "ref": "tsk-631d60cw",
+        "type": "task",
+        "status": "open",
+        "trust": "verified",
+        "title": "Protect main on GitHub",
+        "file": ".aimem/tasks/tsk-631d60cw-protect-main-on-github.md",
+        "priority": "p0"
+      },
+      {
+        "ref": "tsk-jbnzn535",
+        "type": "task",
+        "status": "open",
+        "trust": "verified",
+        "title": "Records I/O with atomic writes",
+        "file": ".aimem/tasks/tsk-jbnzn535-records-i-o-with-atomic-writes.md",
+        "priority": "p0"
+      },
+      {
+        "ref": "tsk-2t1712d3",
+        "type": "task",
+        "status": "blocked",
+        "trust": "verified",
+        "title": "Check npm availability of the aimem name",
+        "file": ".aimem/tasks/tsk-2t1712d3-check-npm-availability-of-the-aimem-name.md",
+        "priority": "p1"
+      },
+      {
+        "ref": "tsk-47qa65h2",
+        "type": "task",
+        "status": "open",
+        "trust": "verified",
+        "title": "Validator V001–V018 and secret scanner",
+        "file": ".aimem/tasks/tsk-47qa65h2-validator-v001-v018-and-secret-scanner.md",
+        "priority": "p1"
+      },
+      {
+        "ref": "tsk-q02m86qx",
+        "type": "task",
+        "status": "in_progress",
+        "trust": "verified",
+        "title": "Medium fixture from aimem's own history",
+        "file": ".aimem/tasks/tsk-q02m86qx-medium-fixture-from-aimem-s-own-history.md",
+        "priority": "p1"
+      }
+    ],
+    "stale": [
+      {
+        "ref": "mem-6vtwa627",
+        "type": "memory",
+        "status": "active",
+        "trust": "verified",
+        "title": "Odoo version still unknown, ask IT",
+        "file": ".aimem/memory/mem-6vtwa627-odoo-version-still-unknown-ask-it.md"
+      },
+      {
+        "ref": "mem-d69w1fev",
+        "type": "memory",
+        "status": "active",
+        "trust": "agent",
+        "title": "Temporary: CI runs on Linux only",
+        "file": ".aimem/memory/mem-d69w1fev-temporary-ci-runs-on-linux-only.md"
+      },
+      {
+        "ref": "mem-j4yeeebg",
+        "type": "memory",
+        "status": "active",
+        "trust": "verified",
+        "title": "A service account with an inbox folder is the simplest Google auth",
+        "file": ".aimem/memory/mem-j4yeeebg-a-service-account-with-an-inbox-folder-is-the-simplest-googl.md"
+      },
+      {
+        "ref": "mem-m6e98f9k",
+        "type": "memory",
+        "status": "active",
+        "trust": "verified",
+        "title": "Tim menulis dalam bahasa Inggris dan Indonesia",
+        "file": ".aimem/memory/mem-m6e98f9k-tim-menulis-dalam-bahasa-inggris-dan-indonesia.md"
+      },
+      {
+        "ref": "mem-pnen53q8",
+        "type": "memory",
+        "status": "active",
+        "trust": "verified",
+        "title": "Candidate embedding families: multilingual-e5 and BGE-M3",
+        "file": ".aimem/memory/mem-pnen53q8-candidate-embedding-families-multilingual-e5-and-bge-m3.md"
+      },
+      {
+        "ref": "mem-q38vy3db",
+        "type": "memory",
+        "status": "active",
+        "trust": "verified",
+        "title": "The MCP TypeScript SDK is the official one",
+        "file": ".aimem/memory/mem-q38vy3db-the-mcp-typescript-sdk-is-the-official-one.md"
+      },
+      {
+        "ref": "mem-q9krtm0g",
+        "type": "memory",
+        "status": "active",
+        "trust": "verified",
+        "title": "Default briefing budget is 4000 tokens",
+        "file": ".aimem/memory/mem-q9krtm0g-default-briefing-budget-is-4000-tokens.md"
+      },
+      {
+        "ref": "mem-wnrwrrnp",
+        "type": "memory",
+        "status": "active",
+        "trust": "verified",
+        "title": "Agents forget project context between sessions",
+        "file": ".aimem/memory/mem-wnrwrrnp-agents-forget-project-context-between-sessions.md"
+      },
+      {
+        "ref": "run-8hmkbbjd",
+        "type": "runbook",
+        "status": "active",
+        "trust": "verified",
+        "title": "Bootstrap a development machine",
+        "file": ".aimem/runbooks/run-8hmkbbjd-bootstrap-a-development-machine.md"
+      }
+    ],
+    "unreviewed": {
+      "agent": 23,
+      "inferred": 4
+    },
+    "problems": 0,
+    "lastHandoff": {
+      "ref": "hnd-yqdkq1wv",
+      "created": "2026-10-11T18:00:00Z",
+      "author": "agent:claude-code",
+      "summary": "Done: medium fixture topic chosen: aimem itself · Next: write the records"
+    },
+    "claims": "live claims arrive in M3"
+  },
+  "warnings": []
+}

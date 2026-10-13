@@ -34,3 +34,36 @@ export async function gitUserName(git: Git, cwd: string): Promise<string | undef
   const name = r.stdout.trim();
   return r.code === 0 && name ? name : undefined;
 }
+
+export interface GitDiagnostics {
+  installed: boolean;
+  version?: string;
+  repo: boolean;
+  userName?: string;
+  remotes: string[];
+  /** Current branch, absent when detached or not a repo. */
+  branch?: string;
+}
+
+/** Read-only facts about git for `doctor` and `handoff`. Never touches the network. */
+export async function gitDiagnostics(git: Git, cwd: string): Promise<GitDiagnostics> {
+  const v = await git.run(["--version"], cwd);
+  if (v.code !== 0) return { installed: false, repo: false, remotes: [] };
+  const version = v.stdout.trim().replace(/^git version /, "");
+  if (!(await isGitRepo(git, cwd))) return { installed: true, version, repo: false, remotes: [] };
+  const userName = await gitUserName(git, cwd);
+  const remotes = (await git.run(["remote"], cwd)).stdout
+    .split("\n")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const b = await git.run(["rev-parse", "--abbrev-ref", "HEAD"], cwd);
+  const branch = b.code === 0 && b.stdout.trim() !== "HEAD" ? b.stdout.trim() : undefined;
+  return {
+    installed: true,
+    version,
+    repo: true,
+    ...(userName ? { userName } : {}),
+    remotes,
+    ...(branch ? { branch } : {}),
+  };
+}
