@@ -228,7 +228,10 @@ export async function run(argv: string[], deps: CliDeps): Promise<number> {
     .option("--fix", "repair safe issues first (file names, one-sided supersede links, updated)")
     .action(action("validate", (g, _a, o) => validateCmd(deps, g, o)));
 
-  cmd("index", "regenerate INDEX.md").action(action("index", (g) => indexCmd(deps, g)));
+  cmd("index", "regenerate INDEX.md; optionally build the vector cache")
+    .option("--embeddings", "build or update the vector cache for semantic search")
+    .option("--rebuild", "discard the vector cache and rebuild it")
+    .action(action("index", (g, _a, o) => indexCmd(deps, g, o)));
 
   try {
     await program.parseAsync(argv, { from: "user" });

@@ -1,4 +1,4 @@
-import type { Clock, Fs, Git, Random } from "@aimem/core";
+import type { Clock, EmbeddingProvider, Fs, Git, Random } from "@aimem/core";
 
 /** Everything the CLI touches, injected so commands run in-process in tests (docs/11 §3). */
 export interface CliDeps {
@@ -12,6 +12,8 @@ export interface CliDeps {
   /** Whole standard input, for `--body -`. */
   stdin: () => Promise<string>;
   git: Git;
+  /** Embedding provider when one is installed (the local model arrives in slice 2.4; tests inject a stub). */
+  embedder?: EmbeddingProvider;
 }
 
 export interface GlobalOptions {

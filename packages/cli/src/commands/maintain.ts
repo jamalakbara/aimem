@@ -1,8 +1,10 @@
 import {
+  buildVectorCache,
   exitCodeFor,
   fixNotebook,
   loadIndex,
   loadProject,
+  resolveEmbeddingProvider,
   validateNotebook,
   writeIndexMd,
 } from "@aimem/core";
@@ -50,12 +52,48 @@ export async function validateCmd(
   };
 }
 
-export async function indexCmd(deps: CliDeps, g: GlobalOptions): Promise<CommandResult> {
+export async function indexCmd(
+  deps: CliDeps,
+  g: GlobalOptions,
+  o: { embeddings?: boolean; rebuild?: boolean } = {},
+): Promise<CommandResult> {
   const nb = await loadProject(deps.fs, g.dir);
   const index = await loadIndex(nb, { fs: deps.fs });
   const written = await writeIndexMd(deps.fs, nb, index, deps.random);
+  const lines = [
+    `${written ? "INDEX.md updated" : "INDEX.md already up to date"} (${index.records.length} records${index.problems.length ? `, ${index.problems.length} unreadable; run aimem validate` : ""}).`,
+  ];
+  const warnings: string[] = [];
+  let embeddings: Record<string, unknown> | undefined;
+  if (o.embeddings || o.rebuild) {
+    const status = resolveEmbeddingProvider(nb.config, deps.embedder);
+    if (!status.available) {
+      embeddings = { available: false, reason: status.reason };
+      warnings.push(`semantic search is off: ${status.reason}; keyword search still works`);
+      lines.push(`Embeddings: unavailable (${status.reason}).`);
+    } else {
+      const r = await buildVectorCache(
+        nb,
+        index,
+        status.provider,
+        { fs: deps.fs, random: deps.random },
+        { rebuild: Boolean(o.rebuild) },
+      );
+      embeddings = { available: true, ...r };
+      lines.push(
+        `Embeddings (${r.provider}): ${r.chunks} chunks, ${r.built} embedded, ${r.reused} reused, ${r.removed} removed${r.rebuilt && r.reason ? ` — full rebuild: ${r.reason}` : ""}.`,
+      );
+      for (const e of r.excluded) lines.push(`  not embedded: ${e.ref} (${e.reason})`);
+    }
+  }
   return {
-    data: { written, records: index.records.length, problems: index.problems },
-    text: `${written ? "INDEX.md updated" : "INDEX.md already up to date"} (${index.records.length} records${index.problems.length ? `, ${index.problems.length} unreadable; run aimem validate` : ""}).\n`,
+    data: {
+      written,
+      records: index.records.length,
+      problems: index.problems,
+      ...(embeddings ? { embeddings } : {}),
+    },
+    text: `${lines.join("\n")}\n`,
+    warnings,
   };
 }
