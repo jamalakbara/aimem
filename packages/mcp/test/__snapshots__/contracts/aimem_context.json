@@ -1,0 +1,28 @@
+{
+  "ok": true,
+  "data": {
+    "header": {
+      "project": "acme-ledger",
+      "mode": "solo",
+      "sync": "none",
+      "semanticSearch": "off",
+      "semanticReason": "no local model in tests",
+      "fusion": "weighted",
+      "live": "off",
+      "budget": 4000,
+      "used": 693
+    },
+    "warnings": [],
+    "refs": [
+      "hnd-8h9j0k1m",
+      "tsk-3c4d5e6f",
+      "dec-1a2b3c4d",
+      "mem-5e6f7g8h",
+      "mem-6f7g8h9j",
+      "tsk-4d5e6f7g",
+      "hnd-7g8h9j0k"
+    ],
+    "more": [],
+    "moreOmitted": 0
+  }
+}

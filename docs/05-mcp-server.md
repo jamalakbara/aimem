@@ -38,6 +38,14 @@ All tools return structured JSON plus a short human-readable text. Write tools r
 
 Tool descriptions must tell the model *when* to call them (e.g. "Call at the start of every session before reading code").
 
+**v0.1 (slice 2.6):**
+- Served over stdio by `aimem serve mcp` (official `@modelcontextprotocol/sdk`). HTTP arrives with the sync server (M6).
+- `aimem_task_claim`, `aimem_task_release` and `aimem_live` are **not listed until claims exist (M3)**; agents only see tools that work.
+- `aimem_task_create` takes `title`, `summary`, `goal`, optional `acceptance[]`, `priority`, `assignee`, `roles`, `paths` (a task needs a summary and a body). `aimem_search` and `aimem_get` accept `budget_tokens` for the output cap. `aimem_update` cannot change handoff bodies (no `force` over MCP).
+- `structuredContent` is `{ok: true, data}` or `{ok: false, error: {code, message, details?}}` with `isError: true`.
+- `aimem_context` returns the briefing markdown (safety notice, trust labels, demoted headings — 06 §2.2a); `aimem_get` and resources wrap bodies in `<aimem-record>` tags, with any such tag inside a record escaped so it cannot close its wrapper.
+- `client_request_id` is remembered for the lifetime of the server process.
+
 ## 3. Resources (read-only)
 
 | URI | Content |

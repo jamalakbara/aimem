@@ -190,7 +190,7 @@ aimem live [--watch]                    # show all live claims and presence (--w
 | `aimem migrate` | Upgrade files to the current spec major |
 | `aimem export [--format html\|json\|md]` | Static export of the whole notebook (backup / read-only sharing) |
 | `aimem config get\|set\|list` | Edit `project.yaml` safely |
-| `aimem serve mcp [--http <port>]` | Start the MCP server (05) |
+| `aimem serve mcp [--http <port>]` | Start the MCP server (05). v0.1: stdio only; stdout carries the protocol, so nothing else is printed |
 | `aimem serve web` | Start the web viewer locally against the working tree |
 
 ## 7. Output contracts (for agents)

@@ -24,6 +24,8 @@ export interface CliDeps {
   embedder?: EmbeddingProvider;
   /** Loads the configured provider (local model or remote endpoint). Only `index --embeddings` may download. */
   loadEmbedder?: (config: ResolvedProject, allowDownload: boolean) => Promise<EmbeddingStatus>;
+  /** Runs the MCP server on this process's stdio until the client disconnects (bin only). */
+  serveMcp?: () => Promise<void>;
 }
 
 export interface GlobalOptions {

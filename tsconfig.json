@@ -11,6 +11,9 @@
       "path": "packages/adapters"
     },
     {
+      "path": "packages/mcp"
+    },
+    {
       "path": "packages/cli"
     }
   ]

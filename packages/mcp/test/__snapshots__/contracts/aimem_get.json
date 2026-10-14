@@ -1,0 +1,61 @@
+{
+  "ok": true,
+  "data": {
+    "ref": "dec-1a2b3c4d",
+    "type": "decision",
+    "status": "accepted",
+    "trust": "verified",
+    "title": "Store money as integer minor units",
+    "summary": "All amounts are stored and computed as integer minor units (cents) with an explicit currency code.",
+    "file": ".aimem/decisions/dec-1a2b3c4d-store-money-as-integer-minor-units.md",
+    "frontmatter": {
+      "aimem": 1,
+      "id": "dec-1a2b3c4d",
+      "type": "decision",
+      "title": "Store money as integer minor units",
+      "summary": "All amounts are stored and computed as integer minor units (cents) with an explicit currency code.",
+      "status": "accepted",
+      "trust": "verified",
+      "roles": [
+        "dev",
+        "db",
+        "analyst"
+      ],
+      "tags": [
+        "money",
+        "ledger",
+        "pinned"
+      ],
+      "paths": [
+        "src/ledger/**",
+        "db/migrations/**"
+      ],
+      "author": "human:dana",
+      "created": "2026-09-14T10:30:00Z",
+      "updated": "2026-09-14T10:30:00Z",
+      "verified": "2026-09-14",
+      "links": [
+        "tsk-3c4d5e6f",
+        "mem-5e6f7g8h"
+      ],
+      "supersedes": "dec-2b3c4d5e"
+    },
+    "body": "## Context\nFloat storage produced off-by-one-cent differences between the ledger and bank statements.\n\n## Decision\nUse `BIGINT` minor units plus a three-letter `currency` column. Convert only at the API edge.\n\n## Consequences\nEvery amount needs a currency. Division (splits, fees) must use the shared rounding helper.\n\n## Alternatives\nDecimal columns: exact, but slower in our reporting queries and awkward in JavaScript.",
+    "links": [
+      {
+        "ref": "tsk-3c4d5e6f",
+        "title": "Add currency column to ledger entries",
+        "summary": "Migrate ledger_entries to integer minor units with a non-null currency column.",
+        "trust": "verified",
+        "status": "in_progress"
+      },
+      {
+        "ref": "mem-5e6f7g8h",
+        "title": "Payment provider sends amounts as strings",
+        "summary": "Webhook payloads carry amounts as decimal strings like \"12.50\"; parse them, never cast to float.",
+        "trust": "verified",
+        "status": "active"
+      }
+    ]
+  }
+}

@@ -238,6 +238,18 @@ export async function run(argv: string[], deps: CliDeps): Promise<number> {
       ),
     );
 
+  cmd("serve", "run a server: mcp (stdio) — web arrives in M5")
+    .argument("<what>", "mcp")
+    .action(
+      action("serve", async (_g, [what]) => {
+        if (what !== "mcp")
+          throw new AimemError("USAGE", `aimem serve ${String(what)} is not available (only: mcp)`);
+        if (!deps.serveMcp) throw new AimemError("USAGE", "the MCP server is not available in this build");
+        await deps.serveMcp();
+        return { data: null, text: "" };
+      }),
+    );
+
   cmd("validate", "check records against rules V001–V018")
     .option("--strict", "exit 1 on warnings")
     .option("--fix", "repair safe issues first (file names, one-sided supersede links, updated)")
