@@ -1,5 +1,14 @@
 import { basename, join } from "node:path";
-import { AimemError, loadIndex, loadProject, slugify, writeFileAtomic, writeIndexMd } from "@aimem/core";
+import { defaultTargets, syncAdapters, TARGET_NAMES, type TargetName } from "@aimem/adapters";
+import {
+  AimemError,
+  loadIndex,
+  loadProject,
+  setProjectValue,
+  slugify,
+  writeFileAtomic,
+  writeIndexMd,
+} from "@aimem/core";
 import { PROJECT_DEFAULTS, PROJECT_SLUG_RE, RECORD_TYPES, TYPE_DIR } from "@aimem/schema";
 import type { CliDeps, CommandResult, GlobalOptions } from "../deps.js";
 
@@ -54,6 +63,7 @@ export async function init(
     roles?: string;
     force?: boolean;
     intake: boolean;
+    adapters?: string;
   },
 ): Promise<CommandResult> {
   const root = g.dir;
@@ -76,7 +86,7 @@ export async function init(
     : [...PROJECT_DEFAULTS.roles];
   if (!roles.length) throw new AimemError("USAGE", "--roles needs at least one role");
   const team = Boolean(o.team);
-  const warnings = team
+  const warnings: string[] = team
     ? ["team mode: the aimem-live branch and claims arrive in M3; sync is set to git"]
     : [];
 
@@ -108,7 +118,30 @@ export async function init(
     const prefix = current ? (current.endsWith("\n") ? current : `${current}\n`) : "";
     await write(file, `${prefix}${line}\n`);
   }
-  const nb = await loadProject(deps.fs, root);
+  let nb = await loadProject(deps.fs, root);
+  // Adapters (08 §1 step 4): default AGENTS.md, plus CLAUDE.md when it exists without importing AGENTS.md.
+  let targets: TargetName[];
+  if (o.adapters === undefined) targets = await defaultTargets(nb, deps.fs);
+  else {
+    const names =
+      o.adapters === "none"
+        ? []
+        : o.adapters
+            .split(",")
+            .map((t) => t.trim())
+            .filter(Boolean);
+    for (const n of names) {
+      if (!(TARGET_NAMES as string[]).includes(n))
+        throw new AimemError("USAGE", `unknown adapter target '${n}' (known: ${TARGET_NAMES.join(", ")})`);
+    }
+    targets = names as TargetName[];
+  }
+  await setProjectValue(deps.fs, nb, ["adapters", "targets"], targets, deps.random);
+  nb = await loadProject(deps.fs, root);
+  for (const r of await syncAdapters(nb, { fs: deps.fs, random: deps.random }, { targets })) {
+    if (r.action === "created" || r.action === "updated") files.push(r.file);
+    if (r.action === "broken") warnings.push(`${r.file}: ${r.note}; not changed`);
+  }
   if (await writeIndexMd(deps.fs, nb, await loadIndex(nb, { fs: deps.fs }), deps.random))
     files.push(".aimem/INDEX.md");
   files.sort();

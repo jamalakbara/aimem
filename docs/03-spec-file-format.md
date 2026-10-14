@@ -222,6 +222,10 @@ connectors:                       # full reference: 16 §8 (no secrets here)
     inbox_folder_id: null
   # odoo: ...                     # deferred (ADR-016); see 16 §6
 
+adapters:                         # agent instruction files carrying the aimem block (06 §4)
+  targets: [agents, claude]       # agents | claude | cursor | copilot | gemini
+  files: []                       # extra files (aimem adapters add --file)
+
 claims:
   ttl_minutes: 180                # claim expires if not heartbeated
   heartbeat_minutes: 20

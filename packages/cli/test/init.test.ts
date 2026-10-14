@@ -31,9 +31,10 @@ describe("init --solo", () => {
       ".aimem/tests/.gitkeep",
       ".gitattributes",
       ".gitignore",
+      "AGENTS.md",
     ]);
     expect(readFileSync(join(dir, ".aimem/project.yaml"), "utf8")).toBe(
-      "aimem: 1\nproject: my-cool-project\nname: My Cool_Project\nmode: solo\nsync: none\nroles: [dev, pm, qa, db, devops, analyst]\n",
+      "aimem: 1\nproject: my-cool-project\nname: My Cool_Project\nmode: solo\nsync: none\nroles: [dev, pm, qa, db, devops, analyst]\nadapters:\n  targets: [agents]\n",
     );
     expect(readFileSync(join(dir, ".gitignore"), "utf8")).toBe(".aimem/.cache/\n");
     expect(readFileSync(join(dir, ".gitattributes"), "utf8")).toBe(".aimem/INDEX.md merge=ours\n");
@@ -68,7 +69,7 @@ describe("init --solo", () => {
   it("honours --project, --repo and --roles", async () => {
     await cli(["init", "--project", "acme", "--repo", "backend", "--roles", "dev,qa", "--dir", dir]);
     expect(readFileSync(join(dir, ".aimem/project.yaml"), "utf8")).toBe(
-      "aimem: 1\nproject: acme\nname: My Cool_Project\nmode: solo\nsync: none\nrepo: backend\nroles: [dev, qa]\n",
+      "aimem: 1\nproject: acme\nname: My Cool_Project\nmode: solo\nsync: none\nrepo: backend\nroles: [dev, qa]\nadapters:\n  targets: [agents]\n",
     );
   });
 
@@ -82,6 +83,25 @@ describe("init --solo", () => {
     expect(forced.code).toBe(0);
     expect(readFileSync(join(dir, ".aimem/memory/mem-0123abcd-keep.md"), "utf8")).toBe("keep me\n");
     expect(readdirSync(join(dir, ".aimem/memory")).sort()).toEqual([".gitkeep", "mem-0123abcd-keep.md"]);
+  });
+
+  it("--adapters picks targets; none skips them; an existing CLAUDE.md gets the block too", async () => {
+    const none = await cli(["init", "--adapters", "none", "--json", "--dir", dir]);
+    expect(none.json.data.files).not.toContain("AGENTS.md");
+    expect(readFileSync(join(dir, ".aimem/project.yaml"), "utf8")).toContain("targets: []");
+    const picked = await cli(["init", "--force", "--adapters", "agents,cursor", "--json", "--dir", dir]);
+    expect(picked.json.data.files).toEqual(expect.arrayContaining(["AGENTS.md", ".cursor/rules/aimem.mdc"]));
+    rmSync(join(dir, ".aimem"), { recursive: true });
+    rmSync(join(dir, "AGENTS.md"));
+    writeFileSync(join(dir, "CLAUDE.md"), "# Claude notes\n");
+    const auto = await cli(["init", "--json", "--dir", dir]);
+    expect(auto.json.data.files).toEqual(expect.arrayContaining(["AGENTS.md", "CLAUDE.md"]));
+    expect(
+      readFileSync(join(dir, "CLAUDE.md"), "utf8").startsWith("# Claude notes\n\n<!-- aimem:begin v1 -->"),
+    ).toBe(true);
+    expect(
+      (await cli(["init", "--force", "--adapters", "vscode", "--json", "--dir", dir])).json.error.code,
+    ).toBe("USAGE");
   });
 
   it("rejects an invalid project slug", async () => {

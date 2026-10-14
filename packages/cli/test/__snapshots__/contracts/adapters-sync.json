@@ -1,0 +1,14 @@
+{
+  "ok": true,
+  "command": "adapters",
+  "data": {
+    "results": [
+      {
+        "target": "agents",
+        "file": "AGENTS.md",
+        "action": "created"
+      }
+    ]
+  },
+  "warnings": []
+}

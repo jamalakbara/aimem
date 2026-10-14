@@ -1,4 +1,5 @@
-import { join, resolve } from "node:path";
+import { resolve } from "node:path";
+import { adapterStatus } from "@aimem/adapters";
 import {
   AimemError,
   addHandoff,
@@ -128,14 +129,6 @@ export async function status(deps: CliDeps, g: GlobalOptions): Promise<CommandRe
 
 type Check = { name: string; status: "ok" | "warn" | "info"; detail: string };
 
-const ADAPTER_FILES = [
-  "AGENTS.md",
-  "CLAUDE.md",
-  "GEMINI.md",
-  ".github/copilot-instructions.md",
-  ".cursor/rules/aimem.mdc",
-];
-
 /** `aimem doctor` (04 §6). Read-only, no network; always exits 0. */
 export async function doctor(deps: CliDeps, g: GlobalOptions): Promise<CommandResult> {
   const nb = await loadProject(deps.fs, g.dir);
@@ -194,19 +187,22 @@ export async function doctor(deps: CliDeps, g: GlobalOptions): Promise<CommandRe
         }
       : { name: "notebook", status: "ok", detail: "no validation issues" },
   );
-  const withBlock: string[] = [];
-  for (const f of ADAPTER_FILES) {
-    const text = await deps.fs.readFile(join(nb.root, f)).catch(() => "");
-    if (text.includes("<!-- aimem:begin")) withBlock.push(f);
-  }
+  const adapterStates = await adapterStatus(nb, deps.fs);
+  const good = adapterStates.filter((a) => a.state === "current" || a.state === "via AGENTS.md");
+  const bad = adapterStates.filter((a) => !good.includes(a));
   checks.push(
-    withBlock.length
-      ? { name: "adapters", status: "ok", detail: `aimem block in ${withBlock.join(", ")}` }
+    adapterStates.length && !bad.length
+      ? {
+          name: "adapters",
+          status: "ok",
+          detail: `aimem block current in ${good.map((a) => a.file).join(", ")}`,
+        }
       : {
           name: "adapters",
           status: "warn",
-          detail:
-            "no aimem block in AGENTS.md or CLAUDE.md yet; agents will not follow the protocol (aimem adapters sync arrives in slice 2.5)",
+          detail: adapterStates.length
+            ? `${bad.map((a) => `${a.file} ${a.state}`).join(", ")}; run aimem adapters sync so agents follow the protocol`
+            : "no adapter targets configured; run aimem adapters sync so agents follow the protocol",
         },
   );
   const embStatus = await embeddingStatus(deps, nb, false);
