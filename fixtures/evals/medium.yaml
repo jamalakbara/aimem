@@ -114,3 +114,45 @@ cases:
     task: "what status does a new decision get by default?"
     must_include: [dec-9h7m0yg3]
     must_not_include: [dec-bcehh3ph]
+
+  # --- hard cases (added in slice 2.4a, before any run): no content words shared with the answer ---
+  - id: hard-para-erase
+    category: paraphrase
+    task: "may I wipe out an outdated entry?"
+    must_include: [dec-b0gymeq0]
+  - id: hard-para-quiet-checker
+    category: paraphrase
+    task: "style checker went silent after upgrading its settings"
+    must_include: [mem-rj2t0xj9]
+  - id: hard-para-busy
+    category: paraphrase
+    task: "track which teammate is currently busy on what"
+    must_include: [dec-g17nvbca]
+  - id: hard-para-collision
+    category: paraphrase
+    task: "avoid two people picking up identical work at once"
+    must_include: [dec-kqfc1se7]
+  - id: hard-para-offline-first
+    category: paraphrase
+    task: "should everything keep working without internet access?"
+    must_include: [dec-3by2wh28]
+  - id: hard-ml-id-hapus
+    category: multilingual
+    task: "bolehkah catatan usang dibuang begitu saja?"
+    must_include: [dec-b0gymeq0]
+  - id: hard-ml-id-rahasia
+    category: multilingual
+    task: "kunci rahasia tidak boleh masuk ke repositori"
+    must_include: [mem-nrdpy59z]
+  - id: hard-ml-id-bahasa
+    category: multilingual
+    task: "pencarian harus mengerti dua bahasa"
+    must_include: [dec-mtbcq7yr]
+  - id: hard-ml-en-oneline
+    category: multilingual
+    task: "summaries need to fit on a single row"
+    must_include: [mem-dcsz2htx]
+  - id: hard-ml-en-noninteractive
+    category: multilingual
+    task: "automated assistants must never wait for keyboard input"
+    must_include: [mem-7ktr68qw]
