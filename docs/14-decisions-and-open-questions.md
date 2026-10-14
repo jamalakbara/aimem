@@ -100,7 +100,7 @@ Decision log in ADR style. Status: **accepted** (decided in brainstorm), **propo
 | OQ-13 | Hosting for the team server (VPS, container platform, existing infra) | Single container + managed Postgres on existing infra | M6 |
 | OQ-14 | Private notes: allow `visibility: private` records that stay out of git? | No for v1 (breaks the files-in-git rule); use a private repo | post-v1 |
 | OQ-15 | Language of records (team may write in Indonesian/English) | Any language; `summary` recommended in the team's main language; search is language-agnostic BM25 (stemming off by default) | M2 |
-| OQ-16 | Default local multilingual embedding model (quality vs size vs speed) | Evaluate 2–3 candidates on the multilingual eval set; pick the smallest that meets the gate | M2 |
+| OQ-16 | Default local multilingual embedding model (quality vs size vs speed) | **Resolved (slice 2.4b):** `paraphrase-multilingual-MiniLM-L12-v2` — smallest candidate passing the gate (overall 0.93 vs lexical 0.81; e5-small 0.81; bge-m3 0.93 at 5× size). See 15 §4.2 | M2 |
 | OQ-17 | LLM provider for `ask`/rerank: hosted API, local server (e.g. Ollama), or none | Support any OpenAI-compatible endpoint; ship with `none` | M6 |
 | OQ-18 | May `context` ever call an LLM (query rewrite)? | No by default; opt-in `query_rewrite: llm` | M2 |
 | OQ-19 | *(deferred)* Odoo version, edition (Community/Enterprise), hosting (Online / Odoo.sh / self-hosted) | Ask IT; check `/web/webclient/version_info` on the Odoo host. Connector is version-tolerant meanwhile (16 §6.1) | M4b start |

@@ -1,0 +1,85 @@
+{
+  "evalSet": "medium",
+  "cases": 34,
+  "k": 10,
+  "rows": [
+    {
+      "model": "lexical-only",
+      "downloadMB": 0,
+      "keyword": 1,
+      "multilingual": 0.6364,
+      "paraphrase": 0.7727,
+      "trap": 1,
+      "overall": 0.8088,
+      "violations": 0,
+      "budgetOk": 1
+    },
+    {
+      "model": "multilingual-e5-small",
+      "downloadMB": 118,
+      "dimensions": 384,
+      "chunks": 490,
+      "loadMs": 754,
+      "buildMs": 4065,
+      "msPerQuery": 14,
+      "keyword": 1,
+      "multilingual": 0.5455,
+      "paraphrase": 0.8636,
+      "trap": 1,
+      "overall": 0.8088,
+      "violations": 0,
+      "budgetOk": 1,
+      "misses": [
+        "para-who-is-working",
+        "ml-id-agent-commit",
+        "ml-id-delete",
+        "hard-para-offline-first",
+        "hard-ml-id-hapus",
+        "hard-ml-id-bahasa",
+        "hard-ml-en-oneline"
+      ]
+    },
+    {
+      "model": "paraphrase-multilingual-minilm",
+      "downloadMB": 118,
+      "dimensions": 384,
+      "chunks": 490,
+      "loadMs": 669,
+      "buildMs": 3663,
+      "msPerQuery": 17,
+      "keyword": 1,
+      "multilingual": 0.9091,
+      "paraphrase": 0.8636,
+      "trap": 1,
+      "overall": 0.9265,
+      "violations": 0,
+      "budgetOk": 1,
+      "misses": [
+        "para-who-is-working",
+        "ml-id-agent-commit",
+        "hard-para-offline-first"
+      ]
+    },
+    {
+      "model": "bge-m3",
+      "downloadMB": 570,
+      "dimensions": 1024,
+      "chunks": 490,
+      "loadMs": 2458,
+      "buildMs": 45649,
+      "msPerQuery": 40,
+      "keyword": 1,
+      "multilingual": 0.9091,
+      "paraphrase": 0.8636,
+      "trap": 1,
+      "overall": 0.9265,
+      "violations": 0,
+      "budgetOk": 1,
+      "misses": [
+        "para-who-is-working",
+        "ml-id-agent-commit",
+        "hard-para-offline-first"
+      ]
+    }
+  ]
+}

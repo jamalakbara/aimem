@@ -18,7 +18,7 @@ describe("aimem index --embeddings", () => {
     expect(r.code).toBe(0);
     expect(r.json.data.embeddings).toEqual({
       available: false,
-      reason: "the local embedding model arrives in slice 2.4",
+      reason: "no local model in tests",
     });
     expect(r.json.warnings.join(" ")).toMatch(/semantic search is off/);
     const s = await cli(["search", "integer minor units", "--json", "--dir", dir]);
@@ -47,9 +47,7 @@ describe("aimem index --embeddings", () => {
   it("doctor reports the embedding status and cache", async () => {
     const off = await cli(["doctor", "--json", "--dir", dir], { git: fakeGit() });
     const search = (r: typeof off) => r.json.data.checks.find((c: { name: string }) => c.name === "search");
-    expect(search(off).detail).toMatch(
-      /semantic search off: the local embedding model arrives in slice 2\.4/,
-    );
+    expect(search(off).detail).toMatch(/semantic search off: no local model in tests/);
     const embedder = hashEmbedder(64);
     await cli(["index", "--embeddings", "--dir", dir], { embedder });
     const on = await cli(["doctor", "--json", "--dir", dir], { git: fakeGit(), embedder });

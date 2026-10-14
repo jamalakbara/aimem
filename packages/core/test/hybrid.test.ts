@@ -54,9 +54,30 @@ describe("hybrid scoring (15 §6)", () => {
       NOW,
     );
     const row = b.explain.find((e) => e.ref === "dec-b0gymeq0");
-    expect(row?.parts.semantic).toBe(0.9);
+    expect(row?.parts.semantic).toBe(1); // the only scored record normalises to 1
     expect(row?.parts.lexical).toBe(0);
     expect(b.decisions.some((d) => d.ref === "dec-b0gymeq0")).toBe(true);
+  });
+
+  it("normalises semantic scores across candidates (min-max, 15 §6)", () => {
+    // Real models squeeze cosine into a narrow band; normalisation spreads it to 0..1.
+    const b = buildBriefing(
+      nb,
+      index,
+      {
+        task: "kubernetes",
+        semantic: sem([
+          ["dec-b0gymeq0", 0.85],
+          ["dec-3by2wh28", 0.8],
+          ["dec-mtbcq7yr", 0.75],
+        ]),
+      },
+      NOW,
+    );
+    const s = (ref: string) => b.explain.find((e) => e.ref === ref)?.parts.semantic;
+    expect(s("dec-b0gymeq0")).toBe(1);
+    expect(s("dec-3by2wh28")).toBe(0.5);
+    expect(s("dec-mtbcq7yr") ?? 0).toBe(0);
   });
 
   it("hard filters run first: similarity never resurrects a superseded record", () => {

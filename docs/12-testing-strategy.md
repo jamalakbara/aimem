@@ -53,7 +53,8 @@ Metrics: recall@k of `must_include`, precision (no `must_not_include`), budget c
 - recall@k: share of `must_include` among the top k records by `context` score (`explain` order); "shown": share that made it into a briefing section (not just "More").
 - A `must_not_include` record is a violation if it appears anywhere in the briefing, including "More".
 - `pnpm eval` prints the per-case table and category summary and compares with `fixtures/evals/baseline/<set>.lexical.json`; `--update-baseline` rewrites it. The test suite fails if results differ from the committed baseline, so scoring changes must update it deliberately and report the deltas.
-- CI gates until slice 2.4: keyword recall@10 ≥ 0.85, 0 violations, budget 100%, deterministic, labelled. Paraphrase and multilingual are reported, and become gates (hybrid > lexical, overall ≥ 0.85) in 2.4.
+- PR gates (stub embedder): keyword recall@10 ≥ 0.85, 0 violations, budget 100%, deterministic, labelled, baseline equality.
+- Real-model gate (`AIMEM_REAL_MODEL=1`, `packages/core/test/eval-real.test.ts`, workflow `.github/workflows/evals.yml` nightly + manual, models cached): hybrid beats lexical on paraphrase and multilingual, keyword not lower, overall ≥ 0.85, 0 violations. `pnpm compare-models` re-runs the model comparison.
 Gate: recall ≥ 0.85, 0 `must_not_include`, budget 100%. Hybrid must additionally beat lexical-only on the paraphrase and multilingual subsets (target: +0.15 recall, tuned after the first run) without regressing keyword cases, and `ask` must refuse unanswerable cases.
 Unit tests use a deterministic **stub embedder** (hash-based vectors) so results are reproducible without a model.  
 Weights in 06 §2 are tuned against these evals; any weight change must show eval deltas in the PR.

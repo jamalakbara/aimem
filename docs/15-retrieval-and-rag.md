@@ -76,6 +76,17 @@ interface EmbeddingProvider {
 | `openai-compatible` | to the configured endpoint | **content is sent to that endpoint** | Covers hosted APIs and local servers that expose the same API (e.g. Ollama, LM Studio, vLLM) |
 | `none` | none | n/a | Lexical-only; everything still works |
 
+**Default model (OQ-16, decided in slice 2.4b):** `paraphrase-multilingual-MiniLM-L12-v2` (quantised ONNX, 118 MB, 384 dimensions) via `@huggingface/transformers`, cached in `$AIMEM_HOME/models` (default `~/.cache/aimem/models`). Only `aimem index --embeddings` downloads it (size announced first); other commands use it only if already present. Comparison on the 34-case `medium` eval set (recall@10; `pnpm compare-models`, results in `fixtures/evals/results/model-comparison.json`):
+
+| Model | Download | keyword | paraphrase | multilingual | overall | cold build |
+|---|---|---|---|---|---|---|
+| lexical only | — | 1.00 | 0.77 | 0.64 | 0.81 | — |
+| multilingual-e5-small | 118 MB | 1.00 | 0.86 | 0.55 | 0.81 | 4 s |
+| **paraphrase-multilingual-MiniLM-L12-v2** | 118 MB | 1.00 | 0.86 | 0.91 | **0.93** | 4 s |
+| bge-m3 | 570 MB | 1.00 | 0.86 | 0.91 | 0.93 | 46 s |
+
+The first comparison failed the gate for every model because raw cosine was used; real models compress cosine into a narrow band (e.g. 0.73–0.88), so semantic scores are now **min-max normalised over the candidate pool** as §6 specifies, then re-run. The +0.15 paraphrase target (12 §3) is not yet met (+0.09); the M2 acceptance (hybrid beats lexical on both sets, overall ≥ 0.85) is.
+
 **Language:** the team may write English and Indonesian (OQ-15), so the default must be a **multilingual** embedding model. Candidate families to evaluate in M2: multilingual-e5 (small/base), BGE-M3, and a hosted multilingual model as the optional upgrade. Pick by running the multilingual eval set (§9); model names and availability change, so verify when implementing.
 
 ### 4.3 Model identity and rebuilds
@@ -110,7 +121,7 @@ Final score in the briefing (replaces the formula in 06 §2.2 step 5):
 
 Metadata pre-filters are **hard** (superseded, wrong repo, wrong status) and happen *before* vector search, so semantic similarity can never resurrect a superseded decision.
 
-**Implementation (v0.1, slice 2.4a):** semantic scores come from the vector cache for the query built per §7; at most the top 50 records by semantic score join the candidates (plus everything with lexical, path or link relevance, and pins). `retrieval.fusion: weighted` (default) uses the formula above; `rrf` replaces `0.25·lexical + 0.25·semantic` with `0.50 × normalised RRF(k=60)` of the two rankings. The briefing header reads `semantic search: on (<model>, coverage N%)` or `off (<reason>)`; with no semantic input, rankings are identical to the lexical-only formula (verified against the eval baseline). Graph expansion rule 1 (§8) is applied to links: a link to a superseded record counts for the head of its supersede chain.
+**Implementation (v0.1, slices 2.4a–b):** semantic scores are min-max normalised over the candidate pool, then for the query built per §7; at most the top 50 records by semantic score join the candidates (plus everything with lexical, path or link relevance, and pins). `retrieval.fusion: weighted` (default) uses the formula above; `rrf` replaces `0.25·lexical + 0.25·semantic` with `0.50 × normalised RRF(k=60)` of the two rankings. The briefing header reads `semantic search: on (<model>, coverage N%)` or `off (<reason>)`; with no semantic input, rankings are identical to the lexical-only formula (verified against the eval baseline). Graph expansion rule 1 (§8) is applied to links: a link to a superseded record counts for the head of its supersede chain.
 
 ## 7. Query construction
 

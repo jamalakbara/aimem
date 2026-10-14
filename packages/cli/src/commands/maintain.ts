@@ -4,11 +4,11 @@ import {
   fixNotebook,
   loadIndex,
   loadProject,
-  resolveEmbeddingProvider,
   validateNotebook,
   writeIndexMd,
 } from "@aimem/core";
 import type { CliDeps, CommandResult, GlobalOptions } from "../deps.js";
+import { embeddingStatus } from "./embedder.js";
 
 export async function validateCmd(
   deps: CliDeps,
@@ -66,7 +66,7 @@ export async function indexCmd(
   const warnings: string[] = [];
   let embeddings: Record<string, unknown> | undefined;
   if (o.embeddings || o.rebuild) {
-    const status = resolveEmbeddingProvider(nb.config, deps.embedder);
+    const status = await embeddingStatus(deps, nb, true);
     if (!status.available) {
       embeddings = { available: false, reason: status.reason };
       warnings.push(`semantic search is off: ${status.reason}; keyword search still works`);

@@ -41,7 +41,7 @@
       {
         "name": "search",
         "status": "info",
-        "detail": "keyword search (BM25); semantic search off: the local embedding model arrives in slice 2.4"
+        "detail": "keyword search (BM25); semantic search off: no local model in tests"
       },
       {
         "name": "outbound data",

@@ -1,0 +1,35 @@
+name: Real-model evals
+
+# docs/12: PRs use the stub embedder; the real local model runs nightly and on demand.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  evals:
+    runs-on: ubuntu-latest
+    env:
+      AIMEM_HOME: ${{ github.workspace }}/.aimem-home
+      AIMEM_REAL_MODEL: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - uses: actions/cache@v4
+        with:
+          path: .aimem-home/models
+          key: aimem-models-${{ hashFiles('packages/core/src/embed/local.ts') }}
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm vitest run packages/core/test/eval-real.test.ts
+      - run: pnpm compare-models
+      - uses: actions/upload-artifact@v4
+        with:
+          name: model-comparison
+          path: fixtures/evals/results/model-comparison.json

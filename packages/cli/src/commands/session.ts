@@ -10,13 +10,13 @@ import {
   loadVectorCache,
   parseHandoffFile,
   resolveAuthorWithGit,
-  resolveEmbeddingProvider,
   slugify,
   summarizeNotebook,
   validateNotebook,
 } from "@aimem/core";
 import { RECORD_TYPES, SPEC_VERSION, STATUSES } from "@aimem/schema";
 import type { CliDeps, CommandResult, GlobalOptions } from "../deps.js";
+import { embeddingStatus } from "./embedder.js";
 
 export interface HandoffOptions extends HandoffSections {
   task?: string;
@@ -209,7 +209,7 @@ export async function doctor(deps: CliDeps, g: GlobalOptions): Promise<CommandRe
             "no aimem block in AGENTS.md or CLAUDE.md yet; agents will not follow the protocol (aimem adapters sync arrives in slice 2.5)",
         },
   );
-  const embStatus = resolveEmbeddingProvider(nb.config, deps.embedder);
+  const embStatus = await embeddingStatus(deps, nb, false);
   const vc = await loadVectorCache(deps.fs, nb);
   const cached = vc.cache
     ? `${vc.cache.meta.chunks.length} chunks cached from ${vc.cache.meta.provider}`
@@ -240,17 +240,32 @@ export async function doctor(deps: CliDeps, g: GlobalOptions): Promise<CommandRe
   const configured: string[] = [];
   if (nb.config.sync === "server") configured.push(`sync server ${nb.config.server?.url ?? "(no url)"}`);
   const emb = nb.config.retrieval?.embeddings;
-  if (emb?.provider === "openai-compatible")
-    configured.push(
-      `remote embeddings ${emb.endpoint ?? "(no endpoint)"}${emb.allow_remote ? "" : " (blocked: allow_remote is false)"}`,
-    );
+  // 15 §12: say exactly what leaves the machine. Remote embeddings are live since slice 2.4b.
+  const remoteEmbeddings = emb?.provider === "openai-compatible" && emb.allow_remote === true;
+  if (emb?.provider === "openai-compatible" && !remoteEmbeddings)
+    configured.push(`remote embeddings ${emb.endpoint ?? "(no endpoint)"} (blocked: allow_remote is false)`);
   if (nb.config.retrieval?.llm?.provider && nb.config.retrieval.llm.provider !== "none")
     configured.push(`LLM ${nb.config.retrieval.llm.endpoint ?? "(no endpoint)"}`);
-  checks.push({
-    name: "outbound data",
-    status: "info",
-    detail: `nothing leaves this machine: aimem does not push, contact a server or send text to remote models${configured.length ? `; configured but not implemented yet: ${configured.join("; ")}` : ""}`,
-  });
+  const host = (() => {
+    try {
+      return new URL(emb?.endpoint ?? "").host;
+    } catch {
+      return emb?.endpoint ?? "(no endpoint)";
+    }
+  })();
+  checks.push(
+    remoteEmbeddings
+      ? {
+          name: "outbound data",
+          status: "warn",
+          detail: `record text is sent to ${host} to compute embeddings (retrieval.embeddings.allow_remote: true); no-embed and secret-flagged records are never sent${configured.length ? `; configured but not implemented yet: ${configured.join("; ")}` : ""}`,
+        }
+      : {
+          name: "outbound data",
+          status: "info",
+          detail: `nothing leaves this machine: aimem does not push, contact a server or send text to remote models${configured.length ? `; configured but not implemented yet: ${configured.join("; ")}` : ""}`,
+        },
+  );
   return {
     data: { checks },
     text: `${checks.map((c) => `[${c.status}] ${c.name} — ${c.detail}`).join("\n")}\n`,

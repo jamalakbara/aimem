@@ -117,4 +117,17 @@ describe("doctor", () => {
     expect(adapters.status).toBe("ok");
     expect(adapters.detail).toContain("AGENTS.md");
   });
+
+  it("says plainly when record text leaves the machine for remote embeddings", async () => {
+    const { writeFileSync: w, readFileSync: r } = await import("node:fs");
+    const file = join(dir, ".aimem/project.yaml");
+    w(
+      file,
+      `${r(file, "utf8")}retrieval:\n  embeddings:\n    provider: openai-compatible\n    endpoint: https://embed.example.com/v1\n    model: m\n    allow_remote: true\n`,
+    );
+    const res = await cli(["doctor", "--json", "--dir", dir], { env: {}, git: fakeGit() });
+    const out = res.json.data.checks.find((c: { name: string }) => c.name === "outbound data");
+    expect(out.status).toBe("warn");
+    expect(out.detail).toMatch(/record text is sent to embed\.example\.com/);
+  });
 });

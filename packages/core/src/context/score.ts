@@ -5,6 +5,7 @@ import type { Notebook } from "../project/load.js";
 import { bm25 } from "../search/bm25.js";
 import { FIELD_BOOSTS, HIDDEN_STATUSES } from "../search/search.js";
 import { matchGlob, staticPrefix } from "../util/glob.js";
+import { normaliseSemantic } from "../util/normalise.js";
 import { type Freshness, freshnessOf } from "../validate/validate.js";
 
 /** Semantic scores for one query, computed ahead of time (embedding is async; scoring is pure). */
@@ -203,9 +204,12 @@ export function scoreCandidates(
   const maxRaw = Math.max(0, ...raw.values());
   const lexical = (r: IndexedRecord) => (maxRaw > 0 ? (raw.get(r.id) ?? 0) / maxRaw : 0);
   // Hard filters first: only pool records can carry a semantic score (15 §6).
-  const semScore = new Map<string, number>();
-  if (semantic)
-    for (const r of pool) semScore.set(r.id, Math.min(1, Math.max(0, semantic.scores.get(r.id) ?? 0)));
+  const semScore = semantic
+    ? normaliseSemantic(
+        semantic.scores,
+        pool.map((r) => r.id),
+      )
+    : new Map<string, number>();
   const semanticTop = new Set(
     [...semScore.keys()]
       .filter((id) => (semScore.get(id) ?? 0) > 0)
