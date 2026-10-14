@@ -10,6 +10,7 @@ import {
 import { RECORD_TYPES } from "@aimem/schema";
 import type { CliDeps, CommandResult, GlobalOptions } from "../deps.js";
 import { table } from "../output.js";
+import { retrievalMode, semanticFor } from "./semantic.js";
 
 const csv = (v: string | undefined) =>
   v
@@ -120,32 +121,41 @@ export async function searchCmd(
     paths?: string;
     limit: number;
     includeSuperseded?: boolean;
-    mode: string;
+    mode?: string;
   },
 ): Promise<CommandResult> {
-  if (o.mode !== "lexical" && o.mode !== "hybrid")
-    throw new AimemError("USAGE", `--mode must be lexical or hybrid (got '${o.mode}')`);
-  const { index } = await open(deps, g);
-  const warnings =
-    o.mode === "hybrid" ? ["hybrid search is not available yet (slice 2.3); using lexical"] : [];
+  const { nb, index } = await open(deps, g);
+  const mode = retrievalMode(nb, o.mode);
+  const sem = await semanticFor(deps, nb, index, query, mode, o.mode !== undefined);
+  const warnings = sem.warnings;
   const types = csv(o.type);
   const statuses = csv(o.status);
   const tags = csv(o.tag);
   const roles = csv(o.role);
   const paths = csv(o.paths);
-  const hits = search(index, query, {
-    limit: o.limit,
-    ...(types ? { types } : {}),
-    ...(statuses ? { statuses } : {}),
-    ...(tags ? { tags } : {}),
-    ...(roles ? { roles } : {}),
-    ...(paths ? { paths } : {}),
-    ...(o.repo ? { repo: o.repo } : {}),
-    ...(o.includeSuperseded ? { includeSuperseded: true } : {}),
-  });
+  const hits = search(
+    index,
+    query,
+    {
+      limit: o.limit,
+      ...(types ? { types } : {}),
+      ...(statuses ? { statuses } : {}),
+      ...(tags ? { tags } : {}),
+      ...(roles ? { roles } : {}),
+      ...(paths ? { paths } : {}),
+      ...(o.repo ? { repo: o.repo } : {}),
+      ...(o.includeSuperseded ? { includeSuperseded: true } : {}),
+    },
+    sem.semantic
+      ? { scores: sem.semantic.scores, fusion: nb.config.retrieval?.fusion === "rrf" ? "rrf" : "weighted" }
+      : undefined,
+  );
   const data = {
     query,
-    mode: "lexical",
+    mode: sem.semantic ? "hybrid" : "lexical",
+    ...(sem.semantic
+      ? { semanticModel: sem.semantic.provider, semanticCoverage: sem.semantic.coverage }
+      : { semanticReason: sem.off }),
     hits: hits.map((h) => ({ score: Math.round(h.score * 10000) / 10000, ...meta(h.record) })),
   };
   const text = hits.length

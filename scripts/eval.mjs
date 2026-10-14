@@ -9,7 +9,7 @@ const root = new URL("..", import.meta.url).pathname;
 const name = "medium";
 const set = YAML.parse(readFileSync(join(root, "fixtures/evals", `${name}.yaml`), "utf8"));
 const nb = await loadProject(nodeFs, join(root, "fixtures/projects", set.project));
-const report = runEvalSet(nb, await loadIndex(nb, { fs: nodeFs }), set);
+const report = await runEvalSet(nb, await loadIndex(nb, { fs: nodeFs }), set);
 const baselineFile = join(root, "fixtures/evals/baseline", `${name}.lexical.json`);
 const snapshot = {
   byCategory: report.byCategory,

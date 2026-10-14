@@ -3,6 +3,7 @@ export * from "./context/score.js";
 export * from "./embed/cache.js";
 export * from "./embed/chunk.js";
 export * from "./embed/provider.js";
+export * from "./embed/semantic.js";
 export * from "./errors.js";
 export * from "./eval/run.js";
 export * from "./git/git.js";

@@ -19,6 +19,8 @@ export interface VectorCacheMeta {
   dimensions: number;
   chunkerVersion: number;
   chunks: { key: string; ref: string; section: string; part: number; bodySha: string }[];
+  /** Records deliberately not embedded (no-embed, possible secret); absent in older caches. */
+  excluded?: string[];
 }
 
 export interface VectorCache {
@@ -156,6 +158,7 @@ export async function buildVectorCache(
       part: c.part,
       bodySha: c.bodySha,
     })),
+    excluded: excluded.map((e) => e.ref),
   };
   const p = paths(nb);
   await writeFileAtomic(deps.fs, p.vectors, new Uint8Array(vectors.buffer), deps.random);

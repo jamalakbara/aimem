@@ -56,4 +56,33 @@ describe("aimem index --embeddings", () => {
     expect(search(on)).toMatchObject({ status: "ok" });
     expect(search(on).detail).toMatch(/semantic search ready: stub:hash-64, \d+ chunks cached/);
   });
+
+  it("with a model and cache, context and search run hybrid", async () => {
+    const embedder = hashEmbedder(128);
+    await cli(["index", "--embeddings", "--dir", dir], { embedder });
+    const c = await cli(["context", "--task", "integer minor units", "--json", "--dir", dir], { embedder });
+    expect(c.json.data.header).toMatchObject({
+      semanticSearch: "on",
+      semanticModel: "stub:hash-128",
+      semanticCoverage: 1,
+      fusion: "weighted",
+    });
+    expect(c.json.data.markdown).toContain("> semantic search: on (stub:hash-128, coverage 100%)");
+    const s = await cli(["search", "integer minor units", "--json", "--dir", dir], { embedder });
+    expect(s.json.data).toMatchObject({ mode: "hybrid", semanticModel: "stub:hash-128" });
+    expect(s.json.data.hits[0].ref).toBe("dec-1a2b3c4d");
+    const lex = await cli(["search", "integer minor units", "--mode", "lexical", "--json", "--dir", dir], {
+      embedder,
+    });
+    expect(lex.json.data).toMatchObject({ mode: "lexical", semanticReason: "lexical mode" });
+  });
+
+  it("a stale cache from another model falls back with the reason", async () => {
+    await cli(["index", "--embeddings", "--dir", dir], { embedder: hashEmbedder(64) });
+    const c = await cli(["context", "--task", "money", "--mode", "hybrid", "--json", "--dir", dir], {
+      embedder: hashEmbedder(128),
+    });
+    expect(c.json.data.header.semanticSearch).toBe("off");
+    expect(c.json.warnings.join(" ")).toMatch(/different provider/);
+  });
 });

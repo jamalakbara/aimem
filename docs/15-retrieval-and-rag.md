@@ -110,6 +110,8 @@ Final score in the briefing (replaces the formula in 06 §2.2 step 5):
 
 Metadata pre-filters are **hard** (superseded, wrong repo, wrong status) and happen *before* vector search, so semantic similarity can never resurrect a superseded decision.
 
+**Implementation (v0.1, slice 2.4a):** semantic scores come from the vector cache for the query built per §7; at most the top 50 records by semantic score join the candidates (plus everything with lexical, path or link relevance, and pins). `retrieval.fusion: weighted` (default) uses the formula above; `rrf` replaces `0.25·lexical + 0.25·semantic` with `0.50 × normalised RRF(k=60)` of the two rankings. The briefing header reads `semantic search: on (<model>, coverage N%)` or `off (<reason>)`; with no semantic input, rankings are identical to the lexical-only formula (verified against the eval baseline). Graph expansion rule 1 (§8) is applied to links: a link to a superseded record counts for the head of its supersede chain.
+
 ## 7. Query construction
 
 Default (no LLM): concatenate task text, ticket/branch tokens, the task record's title+goal, and top path-derived tags; embed as a *query*.

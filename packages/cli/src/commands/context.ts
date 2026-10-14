@@ -1,6 +1,8 @@
 import {
   AimemError,
   buildBriefing,
+  buildQuery,
+  type ContextInput,
   gitChangedFiles,
   gitDiagnostics,
   loadIndex,
@@ -8,6 +10,7 @@ import {
 } from "@aimem/core";
 import type { CliDeps, CommandResult, GlobalOptions } from "../deps.js";
 import { table } from "../output.js";
+import { retrievalMode, semanticFor } from "./semantic.js";
 
 export interface ContextOptions {
   task?: string;
@@ -19,7 +22,7 @@ export interface ContextOptions {
   includeSuperseded?: boolean;
   live?: boolean;
   explain?: boolean;
-  mode: string;
+  mode?: string;
   deep?: boolean;
 }
 
@@ -27,10 +30,7 @@ export interface ContextOptions {
 export async function context(deps: CliDeps, g: GlobalOptions, o: ContextOptions): Promise<CommandResult> {
   if (o.format !== "md" && o.format !== "json")
     throw new AimemError("USAGE", `--format must be md or json (got '${o.format}')`);
-  if (o.mode !== "lexical" && o.mode !== "hybrid")
-    throw new AimemError("USAGE", `--mode must be lexical or hybrid (got '${o.mode}')`);
   const warnings: string[] = [];
-  if (o.mode === "hybrid") warnings.push("hybrid retrieval is not available yet (slice 2.3); using lexical");
   if (o.deep) warnings.push("--deep is not defined yet (see docs/14 OQ-30); ignored");
 
   const nb = await loadProject(deps.fs, g.dir);
@@ -42,18 +42,22 @@ export async function context(deps: CliDeps, g: GlobalOptions, o: ContextOptions
   const { branch } = await gitDiagnostics(deps.git, nb.root);
   const inferPaths = !o.task && !o.ref && !paths.length;
   const usedPaths = inferPaths ? await gitChangedFiles(deps.git, nb.root) : paths;
+  const input: ContextInput = {
+    ...(o.task ? { task: o.task } : {}),
+    ...(o.ref ? { ref: o.ref } : {}),
+    ...(usedPaths.length ? { paths: usedPaths } : {}),
+    ...(o.role ? { role: o.role } : {}),
+    ...(o.budget !== undefined ? { budget: o.budget } : {}),
+    ...(o.includeSuperseded ? { includeSuperseded: true } : {}),
+    ...(branch ? { branch } : {}),
+  };
+  const mode = retrievalMode(nb, o.mode);
+  const sem = await semanticFor(deps, nb, index, buildQuery(nb, index, input), mode, o.mode !== undefined);
+  warnings.push(...sem.warnings);
   const b = buildBriefing(
     nb,
     index,
-    {
-      ...(o.task ? { task: o.task } : {}),
-      ...(o.ref ? { ref: o.ref } : {}),
-      ...(usedPaths.length ? { paths: usedPaths } : {}),
-      ...(o.role ? { role: o.role } : {}),
-      ...(o.budget !== undefined ? { budget: o.budget } : {}),
-      ...(o.includeSuperseded ? { includeSuperseded: true } : {}),
-      ...(branch ? { branch } : {}),
-    },
+    { ...input, ...(sem.semantic ? { semantic: sem.semantic } : { semanticOff: sem.off ?? "off" }) },
     deps.clock.now(),
   );
   const data = {

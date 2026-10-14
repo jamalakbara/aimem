@@ -94,7 +94,7 @@ aimem context [--task "<free text>"] [--ref <task-ref>] [--paths <glob>...]
 ```
 Returns the briefing (algorithm in 06 §2). With no args, infers paths from `git diff --name-only` + `git status`, and the task from the current branch name (reported in `data.inferred`).
 `--explain` prints why each record was selected and its score (a table after the briefing, not counted in the budget; always present in JSON as `explain`).
-`--format json` prints the briefing object; `--json` wraps it in the 04 §7 envelope (the markdown is in `data.markdown`). `--budget` must be ≥ 300. v0.1: `--mode hybrid` warns and uses lexical until slice 2.3; `--no-live` is accepted (claims arrive in M3); `--deep` is reserved and ignored with a warning (OQ-30).
+`--format json` prints the briefing object; `--json` wraps it in the 04 §7 envelope (the markdown is in `data.markdown`). `--budget` must be ≥ 300. `--mode` defaults to `retrieval.mode` (else `hybrid`); hybrid uses semantic scores when a provider and an up-to-date vector cache exist, otherwise it falls back to lexical, reports the reason in the header (`semanticReason`), and warns only if `--mode hybrid` was given explicitly. `--no-live` is accepted (claims arrive in M3); `--deep` is reserved and ignored with a warning (OQ-30).
 
 ### `aimem search <query>`
 ```
@@ -102,7 +102,7 @@ aimem search "<query>" [--type decision,memory] [--status ...] [--tag ...] [--ro
                        [--repo ...] [--paths <glob>] [--limit 10] [--include-superseded]
                        [--mode lexical|hybrid]
 ```
-By default hides records that are `superseded`, `rejected`, `cancelled`, `done` or `retired` (as `context` does, 06 §2); `--include-superseded` shows them, and an explicit `--status` shows the listed statuses.
+`--mode` works as for `context`; `data.mode` reports what was actually used, with `semanticModel`/`semanticCoverage` or `semanticReason`. By default hides records that are `superseded`, `rejected`, `cancelled`, `done` or `retired` (as `context` does, 06 §2); `--include-superseded` shows them, and an explicit `--status` shows the listed statuses.
 ### `aimem ask "<question>"`
 Retrieval-augmented answer with citations (15 §10).
 ```
