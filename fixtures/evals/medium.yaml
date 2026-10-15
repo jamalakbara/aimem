@@ -1,0 +1,116 @@
+# Briefing eval set for fixtures/projects/medium (docs/12 §3, 15 §15).
+# Written from the records' meaning before the first run; do not edit cases to fit the scorer.
+# Categories: keyword (wording overlaps), paraphrase (different words), multilingual (ID↔EN), trap (superseded/inferred must not win).
+project: medium
+clock: 2026-10-12T00:00:00Z
+k: 10
+cases:
+  # --- keyword ---
+  - id: kw-zod-json-schema
+    category: keyword
+    task: "zod json schema export"
+    must_include: [dec-094vmt9t]
+    must_not_include: [dec-0b20v421]
+  - id: kw-claims-cas
+    category: keyword
+    task: "compare-and-swap claims on the aimem-live branch"
+    must_include: [dec-kqfc1se7, sch-3a3jkgmm]
+  - id: kw-biome-preset
+    category: keyword
+    task: "biome lint preset recommended migrate"
+    must_include: [mem-rj2t0xj9, inc-242wrkm4]
+  - id: kw-defer-odoo
+    category: keyword
+    task: "defer the odoo connector"
+    must_include: [dec-bgh1zcas]
+    must_not_include: [dec-azbscv8t]
+  - id: kw-secret-fixtures
+    category: keyword
+    task: "secret scanner corpus and fixtures"
+    must_include: [tsk-tx3rrrtg, mem-nrdpy59z]
+  - id: kw-stacked-prs
+    category: keyword
+    task: "merge stacked pull requests"
+    must_include: [run-608ahqd1]
+  - id: kw-git-binary
+    category: keyword
+    task: "shell out to the git binary with execa"
+    must_include: [dec-ndgz6y7a]
+  - id: kw-mcp-paths
+    category: keyword
+    task: "mcp server"
+    paths: [packages/mcp/src/server.ts]
+    must_include: [dec-p0185j9j, tsk-6r5mr5bj]
+
+  # --- paraphrase ---
+  - id: para-delete-note
+    category: paraphrase
+    task: "can I erase an old note that turned out to be wrong?"
+    must_include: [dec-b0gymeq0]
+  - id: para-same-work
+    category: paraphrase
+    task: "how do we stop two agents from grabbing the same piece of work?"
+    must_include: [dec-kqfc1se7]
+  - id: para-lint-silent
+    category: paraphrase
+    task: "why did linting suddenly stop catching anything?"
+    must_include: [mem-rj2t0xj9]
+  - id: para-zero-sha
+    category: paraphrase
+    task: "a checksum made of zeros failed validation"
+    must_include: [mem-hrm4q190]
+  - id: para-id-letters
+    category: paraphrase
+    task: "which characters can never appear in an identifier?"
+    must_include: [mem-8ba67vjm]
+  - id: para-who-is-working
+    category: paraphrase
+    task: "where is it recorded who is busy with something right now?"
+    must_include: [dec-g17nvbca, mem-peqcrkme]
+
+  # --- multilingual ---
+  - id: ml-id-zod
+    category: multilingual
+    task: "kenapa kita pakai zod versi baru untuk skema?"
+    must_include: [dec-094vmt9t]
+  - id: ml-id-agent-commit
+    category: multilingual
+    task: "bagaimana agen menyimpan perubahan catatan ke git secara otomatis?"
+    must_include: [dec-ek66gxgx]
+  - id: ml-id-delete
+    category: multilingual
+    task: "apakah boleh menghapus catatan lama?"
+    must_include: [dec-b0gymeq0]
+  - id: ml-en-index-edit
+    category: multilingual
+    task: "is it ok to hand-edit the index file?"
+    must_include: [mem-xx4j8c41, dec-v868xmvq]
+  - id: ml-en-summary-lines
+    category: multilingual
+    task: "how many lines may a summary have?"
+    must_include: [mem-dcsz2htx]
+  - id: ml-en-token-estimate
+    category: multilingual
+    task: "how are token budgets estimated?"
+    must_include: [dec-nppkpt6e]
+
+  # --- trap ---
+  - id: trap-retrieval
+    category: trap
+    task: "does retrieval use keywords only or embeddings too?"
+    must_include: [dec-mtbcq7yr]
+    must_not_include: [dec-fe8ev4k4]
+  - id: trap-linter
+    category: trap
+    task: "which linter and formatter does the project use?"
+    must_include: [mem-rj2t0xj9]
+  - id: trap-agent-commits
+    category: trap
+    task: "who commits notebook changes made by agents?"
+    must_include: [dec-ek66gxgx]
+    must_not_include: [dec-75mrvcm4, dec-k6y6hqdj]
+  - id: trap-default-status
+    category: trap
+    task: "what status does a new decision get by default?"
+    must_include: [dec-9h7m0yg3]
+    must_not_include: [dec-bcehh3ph]

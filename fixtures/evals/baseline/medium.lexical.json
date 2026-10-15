@@ -1,0 +1,158 @@
+{
+  "byCategory": {
+    "keyword": {
+      "n": 8,
+      "recall": 1,
+      "inBriefing": 1,
+      "violations": 0
+    },
+    "multilingual": {
+      "n": 6,
+      "recall": 0.6667,
+      "inBriefing": 0.6667,
+      "violations": 0
+    },
+    "paraphrase": {
+      "n": 6,
+      "recall": 0.75,
+      "inBriefing": 0.75,
+      "violations": 0
+    },
+    "trap": {
+      "n": 4,
+      "recall": 1,
+      "inBriefing": 1,
+      "violations": 0
+    }
+  },
+  "overall": {
+    "n": 24,
+    "recall": 0.8542,
+    "inBriefing": 0.8542,
+    "violations": 0,
+    "budgetOk": 1,
+    "deterministic": 1
+  },
+  "cases": [
+    {
+      "id": "kw-zod-json-schema",
+      "recall": 1,
+      "inBriefing": 1
+    },
+    {
+      "id": "kw-claims-cas",
+      "recall": 1,
+      "inBriefing": 1
+    },
+    {
+      "id": "kw-biome-preset",
+      "recall": 1,
+      "inBriefing": 1
+    },
+    {
+      "id": "kw-defer-odoo",
+      "recall": 1,
+      "inBriefing": 1
+    },
+    {
+      "id": "kw-secret-fixtures",
+      "recall": 1,
+      "inBriefing": 1
+    },
+    {
+      "id": "kw-stacked-prs",
+      "recall": 1,
+      "inBriefing": 1
+    },
+    {
+      "id": "kw-git-binary",
+      "recall": 1,
+      "inBriefing": 1
+    },
+    {
+      "id": "kw-mcp-paths",
+      "recall": 1,
+      "inBriefing": 1
+    },
+    {
+      "id": "para-delete-note",
+      "recall": 1,
+      "inBriefing": 1
+    },
+    {
+      "id": "para-same-work",
+      "recall": 1,
+      "inBriefing": 1
+    },
+    {
+      "id": "para-lint-silent",
+      "recall": 0,
+      "inBriefing": 0
+    },
+    {
+      "id": "para-zero-sha",
+      "recall": 1,
+      "inBriefing": 1
+    },
+    {
+      "id": "para-id-letters",
+      "recall": 1,
+      "inBriefing": 1
+    },
+    {
+      "id": "para-who-is-working",
+      "recall": 0.5,
+      "inBriefing": 0.5
+    },
+    {
+      "id": "ml-id-zod",
+      "recall": 1,
+      "inBriefing": 1
+    },
+    {
+      "id": "ml-id-agent-commit",
+      "recall": 0,
+      "inBriefing": 0
+    },
+    {
+      "id": "ml-id-delete",
+      "recall": 0,
+      "inBriefing": 0
+    },
+    {
+      "id": "ml-en-index-edit",
+      "recall": 1,
+      "inBriefing": 1
+    },
+    {
+      "id": "ml-en-summary-lines",
+      "recall": 1,
+      "inBriefing": 1
+    },
+    {
+      "id": "ml-en-token-estimate",
+      "recall": 1,
+      "inBriefing": 1
+    },
+    {
+      "id": "trap-retrieval",
+      "recall": 1,
+      "inBriefing": 1
+    },
+    {
+      "id": "trap-linter",
+      "recall": 1,
+      "inBriefing": 1
+    },
+    {
+      "id": "trap-agent-commits",
+      "recall": 1,
+      "inBriefing": 1
+    },
+    {
+      "id": "trap-default-status",
+      "recall": 1,
+      "inBriefing": 1
+    }
+  ]
+}

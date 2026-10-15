@@ -1,6 +1,7 @@
 export * from "./context/briefing.js";
 export * from "./context/score.js";
 export * from "./errors.js";
+export * from "./eval/run.js";
 export * from "./git/git.js";
 export * from "./index/build.js";
 export * from "./ops/handoff.js";
