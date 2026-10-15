@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "aimem": {
+      "type": "stdio",
+      "command": "aimem",
+      "args": ["serve", "mcp"],
+      "env": {}
+    }
+  }
+}

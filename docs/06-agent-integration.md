@@ -149,6 +149,8 @@ Generated files contain only the managed block between `aimem:begin`/`aimem:end`
 | Gemini CLI | `GEMINI.md` | |
 | Others | via `aimem adapters add --file <path>` | custom path |
 
+MCP (05): register `aimem serve mcp` per tool; for Claude Code, `claude mcp add --scope project aimem -- aimem serve mcp` writes `.mcp.json` (each user approves project servers once in Claude Code). This repo ships that `.mcp.json`.
+
 > File names and formats are conventions owned by each tool and change over time. Each adapter is a small template with a test; verify against the tool's current docs when implementing or updating it.
 
 ### 4.1 Optional automation (L3)
