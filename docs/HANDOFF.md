@@ -2,6 +2,27 @@
 
 Append-only session log until M1 ships `aimem handoff` (docs/17 §1 rule 5). Newest first.
 
+## 2026-10-12 — M1 slice 1.4b write commands (branch `feat/m1-cli-write`, stacked on `feat/m1-cli-read`)
+
+### Done
+- `@aimem/core` `ops/write.ts`: `resolveAuthor` (flag → AIMEM_AUTHOR), `bodyTemplate`, `findLikelyDuplicate` (title Jaccard ≥ 0.7 or title+summary ≥ 0.5, same type, current), `addRecord` (all checks before any write; supersede in the same step), `updateRecord` (`--set` splice, empty value deletes, protected fields, handoff/external refusals), `supersedeRecord`, `verifyRecords` (humans only). Every write refreshes INDEX.md.
+- CLI: `add <type>`, `decide`, `remember`, `incident`, `runbook`, `update`, `supersede --by`, `verify`; `--body` / `--body -` (stdin) / `--body-file`; `--author`; template printed on missing body. `CliDeps.stdin` added.
+- Contracts: add/update/verify JSON files. 04 §4 wording clarified (human decision: missing body writes nothing).
+
+### Not done (slice 1.4c)
+- Author from `git config user.name`; `write_policy.agent_commits` (stage/commit) via `core/git` + execa with real temp-repo tests; `validate --fix` (V015 rename, V007 back-links).
+- `link`, `discard`, `move`, `review` (later).
+
+### Next
+- Plan 1.4c.
+
+### Blocked
+- none
+
+### Notes for next agent
+- An agent `update` on a verified record keeps `trust: verified` (spec is silent); consider demoting in a later decision.
+- `addRecord` writes the new file then the superseded one; a crash between them leaves V007, which `validate --fix` (1.4c) will repair.
+
 ## 2026-10-12 — M1 slice 1.4a CLI foundation + read commands (branch `feat/m1-cli-read`, stacked on `feat/m1-index`)
 
 ### Done

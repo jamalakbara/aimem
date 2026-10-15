@@ -10,4 +10,9 @@ process.exitCode = await run(process.argv.slice(2), {
   cwd: process.cwd(),
   stdout: (s) => process.stdout.write(s),
   stderr: (s) => process.stderr.write(s),
+  stdin: async () => {
+    let data = "";
+    for await (const chunk of process.stdin) data += chunk;
+    return data;
+  },
 });

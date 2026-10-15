@@ -21,6 +21,7 @@ export async function cli(args: string[], deps: Partial<CliDeps> = {}): Promise<
     clock: { now: () => new Date("2026-10-12T00:00:00Z") },
     random: { bytes: (k) => Uint8Array.from({ length: k }, () => n++ % 256) },
     env: {},
+    stdin: async () => "",
     cwd: FIXTURES,
     stdout: (s) => {
       stdout += s;

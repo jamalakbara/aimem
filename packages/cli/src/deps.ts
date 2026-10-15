@@ -9,6 +9,8 @@ export interface CliDeps {
   cwd: string;
   stdout: (s: string) => void;
   stderr: (s: string) => void;
+  /** Whole standard input, for `--body -`. */
+  stdin: () => Promise<string>;
 }
 
 export interface GlobalOptions {

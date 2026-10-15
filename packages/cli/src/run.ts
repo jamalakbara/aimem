@@ -1,9 +1,11 @@
 import { resolve } from "node:path";
 import { AimemError } from "@aimem/core";
+import { RECORD_TYPES, type RecordType } from "@aimem/schema";
 import { Command, CommanderError, InvalidArgumentError, Option } from "commander";
 import { init } from "./commands/init.js";
 import { indexCmd, validateCmd } from "./commands/maintain.js";
 import { list, searchCmd, show } from "./commands/read.js";
+import { type AddOptions, add, supersede, update, verify } from "./commands/write.js";
 import type { CliDeps, CommandResult, GlobalOptions } from "./deps.js";
 import { EXIT_CODES, failureEnvelope, successEnvelope } from "./output.js";
 
@@ -22,7 +24,10 @@ export async function run(argv: string[], deps: CliDeps): Promise<number> {
 
   const fail = (code: string, message: string, details?: Record<string, unknown>) => {
     if (jsonMode) deps.stdout(failureEnvelope(code, message, details));
-    else deps.stderr(`error ${code}: ${message}\n`);
+    else {
+      deps.stderr(`error ${code}: ${message}\n`);
+      if (typeof details?.template === "string") deps.stderr(`\nTemplate:\n${details.template}\n`);
+    }
     exitCode = EXIT_CODES[code as keyof typeof EXIT_CODES] ?? 2;
   };
 
@@ -118,6 +123,59 @@ export async function run(argv: string[], deps: CliDeps): Promise<number> {
     .action(
       action("search", (g, [q], o) => searchCmd(deps, g, q as string, o as Parameters<typeof searchCmd>[3])),
     );
+
+  const collect = (v: string, prev: string[] = []) => [...prev, v];
+  const addCommand = (name: string, description: string, fixedType?: RecordType) => {
+    const c = cmd(name, description);
+    if (!fixedType) c.argument("<type>", `record type (${RECORD_TYPES.join(", ")})`);
+    return c
+      .requiredOption("--title <text>", "title, at most 120 characters")
+      .requiredOption("--summary <text>", "one line, at most 200 characters")
+      .option("--status <status>", "initial status (default per type)")
+      .option("--roles <list>", "comma-separated roles (default: all)")
+      .option("--tags <list>", "comma-separated tags")
+      .option("--paths <list>", "comma-separated globs of related code")
+      .option("--link <ref>", "related record (repeatable)", collect)
+      .option("--supersedes <ref>", "record this one replaces")
+      .option("--body <text>", "body text, or - to read stdin")
+      .option("--body-file <path>", "read the body from a file")
+      .option("--kind <kind>", "memory kind: gotcha | constraint | howto | fact | preference")
+      .option("--priority <p>", "task priority p0..p3")
+      .option("--assignee <handle>", "task assignee")
+      .option("--force", "skip the duplicate check")
+      .option("--author <who>", "human:<handle> or agent:<tool>[:<model>]")
+      .action(
+        action(name, (g, a, o) =>
+          fixedType
+            ? add(deps, g, fixedType, o as unknown as AddOptions)
+            : add(deps, g, a[0] as string, o as unknown as AddOptions),
+        ),
+      );
+  };
+  addCommand("add", "create a record");
+  addCommand("decide", "create a decision", "decision");
+  addCommand("remember", "create a memory", "memory");
+  addCommand("incident", "create an incident", "incident");
+  addCommand("runbook", "create a runbook", "runbook");
+
+  cmd("update", "edit fields or the body of a record")
+    .argument("<ref>", "record ref")
+    .option("--set <key=value>", "set a field; empty value removes it (repeatable)", collect)
+    .option("--body <text>", "new body, or - to read stdin")
+    .option("--body-file <path>", "read the new body from a file")
+    .option("--force", "allow editing a handoff body")
+    .option("--author <who>", "human:<handle> or agent:<tool>[:<model>]")
+    .action(action("update", (g, [ref], o) => update(deps, g, ref as string, o)));
+
+  cmd("supersede", "mark a record as replaced by another")
+    .argument("<old-ref>", "record being replaced")
+    .requiredOption("--by <new-ref>", "the replacement")
+    .action(action("supersede", (g, [old], o) => supersede(deps, g, old as string, o as { by: string })));
+
+  cmd("verify", "mark records as confirmed by a human")
+    .argument("<refs...>", "records to verify")
+    .option("--author <who>", "human:<handle>")
+    .action(action("verify", (g, [refs], o) => verify(deps, g, refs as string[], o)));
 
   cmd("validate", "check records against rules V001–V018")
     .option("--strict", "exit 1 on warnings")
