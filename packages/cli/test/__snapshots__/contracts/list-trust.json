@@ -1,0 +1,50 @@
+{
+  "ok": true,
+  "command": "list",
+  "data": {
+    "count": 4,
+    "records": [
+      {
+        "ref": "mem-1x4y6jd8",
+        "type": "memory",
+        "status": "active",
+        "trust": "inferred",
+        "title": "Retrieval is lexical-only BM25",
+        "summary": "Search appears to be keyword BM25 without embeddings.",
+        "file": ".aimem/memory/mem-1x4y6jd8-retrieval-is-lexical-only-bm25.md",
+        "updated": "2026-10-11T09:00:00Z"
+      },
+      {
+        "ref": "mem-8syrq6ke",
+        "type": "memory",
+        "status": "active",
+        "trust": "inferred",
+        "title": "Project uses pnpm workspaces",
+        "summary": "The repo appears to be a pnpm workspace with packages under packages/.",
+        "file": ".aimem/memory/mem-8syrq6ke-project-uses-pnpm-workspaces.md",
+        "updated": "2026-10-11T09:00:00Z"
+      },
+      {
+        "ref": "mem-j0nfax7q",
+        "type": "memory",
+        "status": "active",
+        "trust": "inferred",
+        "title": "Tests live in packages/*/test",
+        "summary": "Unit tests appear to sit in a test folder inside each package.",
+        "file": ".aimem/memory/mem-j0nfax7q-tests-live-in-packages-test.md",
+        "updated": "2026-10-11T09:00:00Z"
+      },
+      {
+        "ref": "mem-yd7935cw",
+        "type": "memory",
+        "status": "active",
+        "trust": "inferred",
+        "title": "Lint uses ESLint and Prettier",
+        "summary": "The project appears to lint with ESLint and format with Prettier.",
+        "file": ".aimem/memory/mem-yd7935cw-lint-uses-eslint-and-prettier.md",
+        "updated": "2026-10-11T09:00:00Z"
+      }
+    ]
+  },
+  "warnings": []
+}

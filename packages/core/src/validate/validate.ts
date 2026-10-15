@@ -59,7 +59,7 @@ export const LEVELS: Record<string, Level> = {
 };
 
 /** Statuses meaning "no longer current": no staleness warning (OQ-24). */
-const RETIRED = new Set(["superseded", "deprecated", "rejected"]);
+export const RETIRED_STATUSES: ReadonlySet<string> = new Set(["superseded", "deprecated", "rejected"]);
 const DAY = 86_400_000;
 
 type FM = Record<string, unknown> & {
@@ -222,7 +222,7 @@ export function validateFiles(
     }
 
     const fresh = freshnessOf(fm, config, now);
-    if (fresh !== "fresh" && !RETIRED.has(fm.status)) at("V010", `record is ${fresh}`);
+    if (fresh !== "fresh" && !RETIRED_STATUSES.has(fm.status)) at("V010", `record is ${fresh}`);
 
     if (fm.type === "handoff") {
       const missing = BODY_SECTIONS.handoff.filter((s) => !new RegExp(`^##\\s+${s}\\s*$`, "m").test(body));

@@ -1,0 +1,90 @@
+{
+  "ok": true,
+  "command": "list",
+  "data": {
+    "count": 8,
+    "records": [
+      {
+        "ref": "mem-6vtwa627",
+        "type": "memory",
+        "status": "active",
+        "trust": "verified",
+        "title": "Odoo version still unknown, ask IT",
+        "summary": "Nobody knows the Odoo version or edition yet; this note was meant to last only until IT answered.",
+        "file": ".aimem/memory/mem-6vtwa627-odoo-version-still-unknown-ask-it.md",
+        "updated": "2026-09-01T09:00:00Z"
+      },
+      {
+        "ref": "mem-d69w1fev",
+        "type": "memory",
+        "status": "active",
+        "trust": "agent",
+        "title": "Temporary: CI runs on Linux only",
+        "summary": "Until macOS runners were confirmed, CI was planned for Linux only; superseded in practice by the macOS matrix.",
+        "file": ".aimem/memory/mem-d69w1fev-temporary-ci-runs-on-linux-only.md",
+        "updated": "2026-09-15T09:00:00Z"
+      },
+      {
+        "ref": "mem-j4yeeebg",
+        "type": "memory",
+        "status": "active",
+        "trust": "verified",
+        "title": "A service account with an inbox folder is the simplest Google auth",
+        "summary": "Google ingestion uses a service account that can read one shared inbox folder, not per-user OAuth.",
+        "file": ".aimem/memory/mem-j4yeeebg-a-service-account-with-an-inbox-folder-is-the-simplest-googl.md",
+        "updated": "2026-06-10T09:00:00Z"
+      },
+      {
+        "ref": "mem-m6e98f9k",
+        "type": "memory",
+        "status": "active",
+        "trust": "verified",
+        "title": "Tim menulis dalam bahasa Inggris dan Indonesia",
+        "summary": "Catatan proyek bisa ditulis dalam bahasa Inggris atau Indonesia, jadi pencarian harus lintas bahasa.",
+        "file": ".aimem/memory/mem-m6e98f9k-tim-menulis-dalam-bahasa-inggris-dan-indonesia.md",
+        "updated": "2026-04-22T09:00:00Z"
+      },
+      {
+        "ref": "mem-pnen53q8",
+        "type": "memory",
+        "status": "active",
+        "trust": "verified",
+        "title": "Candidate embedding families: multilingual-e5 and BGE-M3",
+        "summary": "The shortlist for the local multilingual model was multilingual-e5 small/base and BGE-M3, plus a hosted option.",
+        "file": ".aimem/memory/mem-pnen53q8-candidate-embedding-families-multilingual-e5-and-bge-m3.md",
+        "updated": "2026-05-02T09:00:00Z"
+      },
+      {
+        "ref": "mem-q38vy3db",
+        "type": "memory",
+        "status": "active",
+        "trust": "verified",
+        "title": "The MCP TypeScript SDK is the official one",
+        "summary": "@modelcontextprotocol/sdk is the official TypeScript SDK and the planned base for the MCP server.",
+        "file": ".aimem/memory/mem-q38vy3db-the-mcp-typescript-sdk-is-the-official-one.md",
+        "updated": "2026-06-01T09:00:00Z"
+      },
+      {
+        "ref": "mem-q9krtm0g",
+        "type": "memory",
+        "status": "active",
+        "trust": "verified",
+        "title": "Default briefing budget is 4000 tokens",
+        "summary": "Briefings are packed into 4000 tokens unless project.yaml sets briefing.budget_tokens.",
+        "file": ".aimem/memory/mem-q9krtm0g-default-briefing-budget-is-4000-tokens.md",
+        "updated": "2026-05-20T09:00:00Z"
+      },
+      {
+        "ref": "mem-wnrwrrnp",
+        "type": "memory",
+        "status": "active",
+        "trust": "verified",
+        "title": "Agents forget project context between sessions",
+        "summary": "The original problem: each new agent session starts blind and re-discovers decisions already made.",
+        "file": ".aimem/memory/mem-wnrwrrnp-agents-forget-project-context-between-sessions.md",
+        "updated": "2026-04-10T09:00:00Z"
+      }
+    ]
+  },
+  "warnings": []
+}

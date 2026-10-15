@@ -1,6 +1,15 @@
 {
-  "formatter": { "indentStyle": "space", "indentWidth": 2, "lineWidth": 110 },
-  "linter": { "enabled": true, "rules": { "preset": "recommended" } },
+  "formatter": {
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 110
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended"
+    }
+  },
   "files": {
     "includes": [
       "packages/**/src/**",
@@ -8,7 +17,8 @@
       "*.ts",
       "*.json",
       "!**/dist",
-      "!**/node_modules"
+      "!**/node_modules",
+      "!**/__snapshots__"
     ]
   }
 }

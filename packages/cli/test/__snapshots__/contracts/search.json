@@ -1,0 +1,44 @@
+{
+  "ok": true,
+  "command": "search",
+  "data": {
+    "query": "zod json schema",
+    "mode": "lexical",
+    "hits": [
+      {
+        "score": 1,
+        "ref": "dec-094vmt9t",
+        "type": "decision",
+        "status": "accepted",
+        "trust": "verified",
+        "title": "Use Zod 4 for schemas and JSON Schema export",
+        "summary": "The schema package uses Zod 4 looseObject for forward compatibility and its built-in toJSONSchema for the published schema.",
+        "file": ".aimem/decisions/dec-094vmt9t-use-zod-4-for-schemas-and-json-schema-export.md",
+        "updated": "2026-10-11T09:00:00Z"
+      },
+      {
+        "score": 0.8242,
+        "ref": "run-17vbsk09",
+        "type": "runbook",
+        "status": "active",
+        "trust": "verified",
+        "title": "Regenerate the published JSON Schema",
+        "summary": "Rebuild the schema package to refresh dist/record.schema.json and project.schema.json.",
+        "file": ".aimem/runbooks/run-17vbsk09-regenerate-the-published-json-schema.md",
+        "updated": "2026-10-11T09:00:00Z"
+      },
+      {
+        "score": 0.5899,
+        "ref": "tst-cw10hn77",
+        "type": "testcase",
+        "status": "passing",
+        "trust": "verified",
+        "title": "JSON Schema contract snapshot",
+        "summary": "The exported JSON Schema matches the committed snapshot.",
+        "file": ".aimem/tests/tst-cw10hn77-json-schema-contract-snapshot.md",
+        "updated": "2026-10-11T09:00:00Z"
+      }
+    ]
+  },
+  "warnings": []
+}
