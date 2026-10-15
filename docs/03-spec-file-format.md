@@ -267,17 +267,19 @@ Never hand-edited; regenerated deterministically. Size limit 6 KB. Because it is
 | V005 | error | Duplicate `id` |
 | V006 | error | `links`/`supersedes` point to unknown ref (warn if the target is in an unreachable source) |
 | V007 | error | Supersede chain inconsistent (`supersedes` without `superseded_by` on target) |
-| V008 | error | Possible secret detected in body (09 §4) |
+| V008 | error | Possible secret detected anywhere in the record file (09 §4); reported by line and fingerprint, never the value |
 | V009 | warn | `summary` missing/too long, or equals the title |
-| V010 | warn | Record stale (past freshness window or `expires`) |
-| V011 | warn | Two `accepted` decisions with overlapping `paths` and `tags` and no supersede link (possible conflict) |
+| V010 | warn | Record stale (past freshness window or `expires`); not reported for `superseded`, `deprecated` or `rejected` records |
+| V011 | warn | Two `accepted` decisions with overlapping `paths`, a shared tag, and no link or supersede between them (possible conflict); reported on both |
 | V012 | warn | Handoff missing a required section |
 | V013 | warn | Body > 600 words |
 | V014 | warn | `roles` contains unknown role |
-| V015 | warn | File name slug/id mismatch |
+| V015 | warn | File name does not start with `<id>-` (the slug may drift) |
 | V016 | error | Spec major version newer than tool supports |
-| V017 | warn | Externally-owned record body differs from `source.content_sha` (edited locally) |
+| V017 | warn | Externally-owned record body differs from `source.content_sha` (edited locally). `content_sha` = sha256 hex of the body with LF line endings and surrounding whitespace trimmed |
 | V018 | warn | Externally-owned record's source is missing or errored at last sync (`source.state != ok`) |
+
+A record failing V001, V002 or V016 gets only that error; its other fields are not checked.
 
 Exit codes: 0 ok, 1 warnings only (when `--strict`), 2 errors.
 
