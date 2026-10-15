@@ -14,6 +14,7 @@ export * from "./ops/handoff.js";
 export * from "./ops/policy.js";
 export * from "./ops/write.js";
 export * from "./ports.js";
+export * from "./project/edit.js";
 export * from "./project/load.js";
 export * from "./records/ids.js";
 export * from "./records/store.js";

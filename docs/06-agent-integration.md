@@ -124,6 +124,8 @@ Do not edit `.aimem/INDEX.md` by hand. Do not delete records; supersede them.
 <!-- aimem:end -->
 ```
 
+v1 of the generated block (slice 2.5) omits step 3 (`aimem task claim`) until claims exist (M3); the next block version adds it back and `aimem adapters sync` updates every file.
+
 ### 3.1 What is worth recording (guidelines for agents and humans)
 | Record | Yes | No |
 |--------|-----|----|
@@ -141,8 +143,8 @@ Generated files contain only the managed block between `aimem:begin`/`aimem:end`
 | Target | File(s) | Notes |
 |--------|---------|-------|
 | Generic / many tools | `AGENTS.md` | Widely read convention; primary target |
-| Claude Code | `CLAUDE.md` (can `@AGENTS.md` import or contain the block) | Optional hooks below |
-| Cursor | `.cursor/rules/aimem.mdc` | `alwaysApply: true` |
+| Claude Code | `CLAUDE.md` (can `@AGENTS.md` import or contain the block) | If it imports `@AGENTS.md`, no second block is written. Optional hooks below |
+| Cursor | `.cursor/rules/aimem.mdc` | Whole file owned by aimem: frontmatter `description`, `alwaysApply: true` |
 | GitHub Copilot | `.github/copilot-instructions.md` | |
 | Gemini CLI | `GEMINI.md` | |
 | Others | via `aimem adapters add --file <path>` | custom path |

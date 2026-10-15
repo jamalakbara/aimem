@@ -6,6 +6,32 @@ exports[`JSON Schema export (03 §10) > export is stable (contract snapshot) 1`]
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "additionalProperties": {},
     "properties": {
+      "adapters": {
+        "additionalProperties": {},
+        "properties": {
+          "files": {
+            "items": {
+              "minLength": 1,
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "targets": {
+            "items": {
+              "enum": [
+                "agents",
+                "claude",
+                "cursor",
+                "copilot",
+                "gemini",
+              ],
+              "type": "string",
+            },
+            "type": "array",
+          },
+        },
+        "type": "object",
+      },
       "aimem": {
         "exclusiveMinimum": 0,
         "maximum": 9007199254740991,

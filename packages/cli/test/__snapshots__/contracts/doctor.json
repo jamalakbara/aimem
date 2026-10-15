@@ -36,7 +36,7 @@
       {
         "name": "adapters",
         "status": "warn",
-        "detail": "no aimem block in AGENTS.md or CLAUDE.md yet; agents will not follow the protocol (aimem adapters sync arrives in slice 2.5)"
+        "detail": "AGENTS.md missing; run aimem adapters sync so agents follow the protocol"
       },
       {
         "name": "search",

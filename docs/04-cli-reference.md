@@ -30,7 +30,7 @@ aimem init [--solo | --team] [--project <slug>] [--repo <name>]
 ```
 `--upgrade` re-runs setup on an existing notebook after a mode/sync/hub change (adds missing files, members, live branch) without touching records.
 - Writes `project.yaml`, empty type dirs, `.gitignore` entry for `.aimem/.cache/`, `INDEX.md`.
-- Generates adapter blocks (see 06) in the selected files.
+- Generates adapter blocks (see 06) in the selected files: `--adapters <list|none>`, default AGENTS.md plus CLAUDE.md if present without an `@AGENTS.md` import.
 - Unless `--no-intake`, runs the intake (08 §1) interactively, or prints intake questions in `--json` mode so an agent can ask the human. *(v0.1: the questions are printed in both modes; the interactive intake comes later.)*
 - Refuses an existing notebook (`USAGE`) unless `--force`, which re-creates `project.yaml` and missing files but never touches records.
 
@@ -47,8 +47,10 @@ Creates draft records with `trust: inferred`. `--dry-run` prints what would be c
 aimem adapters list
 aimem adapters add --file <path>        # add a custom target file
 aimem adapters sync [--targets ...]     # regenerate the aimem blocks inside AGENTS.md etc.
-aimem adapters remove
+aimem adapters remove [--targets ...]
 ```
+- Targets: `agents` (AGENTS.md), `claude` (CLAUDE.md), `cursor` (.cursor/rules/aimem.mdc), `copilot` (.github/copilot-instructions.md), `gemini` (GEMINI.md). Default: `adapters.targets` in `project.yaml`, else AGENTS.md plus CLAUDE.md when it exists and does not import `@AGENTS.md`. `--targets` and `add --file` are saved to `project.yaml`.
+- `sync` writes only between the markers; a second `sync` changes nothing. `remove` restores files byte for byte and deletes files that held only the aimem block. A broken block (missing marker, two blocks) is reported (`USAGE`, exit 2) and left untouched; other files are still processed. `data.results[] {target, file, action, note?}`; `list` → `data.adapters[] {target, file, state}`.
 
 ### `aimem hub init`
 Turn the current repo into a hub (multi-repo projects): creates `.aimem/` with `scope: hub` and prints the `hub:` snippet to add to each member repo's `project.yaml`.

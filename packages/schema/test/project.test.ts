@@ -50,8 +50,18 @@ describe("projectSchema (03 §6)", () => {
     ["retrieval", { embeddings: { provider: "cloud" } }],
     ["claims", { ttl_minutes: -1 }],
     ["roles", []],
+    ["adapters", { targets: ["vscode"] }],
   ])("rejects %s = %j", (key, value) => {
     expect(projectSchema.safeParse({ aimem: 1, project: "demo", [key]: value }).success).toBe(false);
+  });
+
+  it("accepts the adapters section (slice 2.5)", () => {
+    const cfg = {
+      aimem: 1,
+      project: "demo",
+      adapters: { targets: ["agents", "claude", "cursor", "copilot", "gemini"], files: ["docs/AI.md"] },
+    };
+    expect(projectSchema.parse(cfg)).toEqual(cfg);
   });
 
   it("rejects missing aimem or project", () => {

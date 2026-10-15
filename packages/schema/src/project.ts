@@ -62,6 +62,13 @@ export const projectSchema = z.looseObject({
   connectors: z
     .looseObject({ google: z.looseObject({ inbox_folder_id: nullableString.optional() }).optional() })
     .optional(),
+  /** Agent instruction files that carry the aimem block (06 §4). */
+  adapters: z
+    .looseObject({
+      targets: z.array(z.enum(["agents", "claude", "cursor", "copilot", "gemini"])).optional(),
+      files: z.array(z.string().min(1)).optional(),
+    })
+    .optional(),
   claims: z.looseObject({ ttl_minutes: posInt.optional(), heartbeat_minutes: posInt.optional() }).optional(),
   server: z.looseObject({ url: z.string().optional(), project_id: z.string().optional() }).optional(),
 });

@@ -111,7 +111,8 @@ describe("doctor", () => {
   });
 
   it("detects the aimem block in AGENTS.md", async () => {
-    writeFileSync(join(dir, "AGENTS.md"), "# Agents\n<!-- aimem:begin v1 -->\n...\n<!-- aimem:end -->\n");
+    const { protocolBlock } = await import("@aimem/adapters");
+    writeFileSync(join(dir, "AGENTS.md"), `# Agents\n\n${protocolBlock()}\n`);
     const r = await cli(["doctor", "--json", "--dir", dir], { env: {}, git: fakeGit() });
     const adapters = r.json.data.checks.find((c: { name: string }) => c.name === "adapters");
     expect(adapters.status).toBe("ok");

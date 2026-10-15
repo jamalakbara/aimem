@@ -1,0 +1,19 @@
+{
+  "ok": true,
+  "command": "adapters",
+  "data": {
+    "adapters": [
+      {
+        "target": "agents",
+        "file": "AGENTS.md",
+        "state": "current"
+      },
+      {
+        "target": "cursor",
+        "file": ".cursor/rules/aimem.mdc",
+        "state": "current"
+      }
+    ]
+  },
+  "warnings": []
+}

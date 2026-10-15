@@ -179,8 +179,24 @@ importers:
         specifier: ^5.0.3
         version: 5.0.3(@types/node@26.6.5)(vite@8.3.4(@types/node@26.6.5)(yaml@2.9.1))
 
+  packages/adapters:
+    dependencies:
+      '@aimem/core':
+        specifier: workspace:*
+        version: link:../core
+      '@aimem/schema':
+        specifier: workspace:*
+        version: link:../schema
+    devDependencies:
+      fast-check:
+        specifier: ^4.10.2
+        version: 4.10.2
+
   packages/cli:
     dependencies:
+      '@aimem/adapters':
+        specifier: workspace:*
+        version: link:../adapters
       '@aimem/core':
         specifier: workspace:*
         version: link:../core

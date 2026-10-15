@@ -2,6 +2,7 @@ import { resolve } from "node:path";
 import { AimemError } from "@aimem/core";
 import { RECORD_TYPES, type RecordType } from "@aimem/schema";
 import { Command, CommanderError, InvalidArgumentError, Option } from "commander";
+import { adapters } from "./commands/adapters.js";
 import { type ContextOptions, context } from "./commands/context.js";
 import { init } from "./commands/init.js";
 import { indexCmd, validateCmd } from "./commands/maintain.js";
@@ -95,6 +96,10 @@ export async function run(argv: string[], deps: CliDeps): Promise<number> {
     .option("--roles <list>", "comma-separated roles")
     .option("--force", "re-create project.yaml in an existing notebook (records untouched)")
     .option("--no-intake", "do not print the intake questions")
+    .option(
+      "--adapters <list>",
+      "agents, claude, cursor, copilot, gemini, or none (default: AGENTS.md, plus CLAUDE.md if present)",
+    )
     .action(action("init", (g, _a, o) => init(deps, g, o as Parameters<typeof init>[2])));
 
   cmd("context", "start-of-session briefing (06 §2)")
@@ -222,6 +227,16 @@ export async function run(argv: string[], deps: CliDeps): Promise<number> {
   cmd("doctor", "diagnose the environment (read-only, no network)").action(
     action("doctor", (g) => doctor(deps, g)),
   );
+
+  cmd("adapters", "manage the aimem block in agent instruction files (AGENTS.md, CLAUDE.md, …)")
+    .argument("<action>", "list | sync | remove | add")
+    .option("--targets <list>", "agents, claude, cursor, copilot, gemini (comma-separated)")
+    .option("--file <path>", "custom instruction file (with add)")
+    .action(
+      action("adapters", (g, [act], o) =>
+        adapters(deps, g, act as string, o as { targets?: string; file?: string }),
+      ),
+    );
 
   cmd("validate", "check records against rules V001–V018")
     .option("--strict", "exit 1 on warnings")
