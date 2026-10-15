@@ -9,7 +9,12 @@ const hex = (bytes: Uint8Array) => Array.from(bytes, (b) => b.toString(16).padSt
  * Write via a temp file in the same directory, then rename over the target, so readers
  * never see a partial file (docs/11 §4). On failure the temp file is removed.
  */
-export async function writeFileAtomic(fs: Fs, path: string, data: string, random: Random): Promise<void> {
+export async function writeFileAtomic(
+  fs: Fs,
+  path: string,
+  data: string | Uint8Array,
+  random: Random,
+): Promise<void> {
   const dir = dirname(path);
   await fs.mkdir(dir);
   const tmp = join(dir, `.${basename(path)}.${hex(random.bytes(6))}.tmp`);

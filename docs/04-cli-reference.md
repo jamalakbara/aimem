@@ -181,7 +181,7 @@ aimem live [--watch]                    # show all live claims and presence (--w
 | Command | Purpose |
 |---------|---------|
 | `aimem validate [--strict] [--fix] [--project]` | Run rules V001–V018 (03 §9). `--fix` first repairs safe issues — renames files that do not start with `<id>-` (V015; never overwrites), adds the missing half of a one-sided supersede link (V007), raises `updated` that is earlier than `created` — and reports them in `data.fixed` / `data.skipped`; it never deletes or resolves conflicts |
-| `aimem index [--embeddings] [--rebuild]` | Regenerate `INDEX.md`; rebuild the lexical index and (re)compute embeddings; `--rebuild` discards the cache first |
+| `aimem index [--embeddings] [--rebuild]` | Regenerate `INDEX.md`; rebuild the lexical index and (re)compute embeddings; `--rebuild` discards the cache first. `data.embeddings` reports `{available: false, reason}` (exit 0, warning) or `{available: true, provider, chunks, built, reused, removed, rebuilt, reason?, excluded[]}` |
 | `aimem stale [--mark]` | List stale records; `--mark` sets memory status to `stale` |
 | `aimem doctor` | Diagnose environment: git, remote access, server reachability, adapter presence, schema version, embedding provider/model status, and exactly what content would leave the machine. Read-only, no network; each check is `ok`/`warn`/`info` in `data.checks`; always exits 0 (use `validate --strict` as the CI gate) |
 | `aimem sync [--compact]` | Fetch durable state, push/pull live branch, or reconcile with server. `--compact` (maintainers) recreates `aimem-live` from its current tree to drop heartbeat history |

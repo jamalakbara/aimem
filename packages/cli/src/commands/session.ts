@@ -7,8 +7,10 @@ import {
   type HandoffSections,
   loadIndex,
   loadProject,
+  loadVectorCache,
   parseHandoffFile,
   resolveAuthorWithGit,
+  resolveEmbeddingProvider,
   slugify,
   summarizeNotebook,
   validateNotebook,
@@ -207,11 +209,34 @@ export async function doctor(deps: CliDeps, g: GlobalOptions): Promise<CommandRe
             "no aimem block in AGENTS.md or CLAUDE.md yet; agents will not follow the protocol (aimem adapters sync arrives in slice 2.5)",
         },
   );
-  checks.push({
-    name: "search",
-    status: "info",
-    detail: "keyword search (BM25); semantic search arrives in slice 2.3",
-  });
+  const embStatus = resolveEmbeddingProvider(nb.config, deps.embedder);
+  const vc = await loadVectorCache(deps.fs, nb);
+  const cached = vc.cache
+    ? `${vc.cache.meta.chunks.length} chunks cached from ${vc.cache.meta.provider}`
+    : vc.problem;
+  if (!embStatus.available) {
+    checks.push({
+      name: "search",
+      status: "info",
+      detail: `keyword search (BM25); semantic search off: ${embStatus.reason}${vc.cache ? ` (${cached})` : ""}`,
+    });
+  } else if (
+    vc.cache &&
+    vc.cache.meta.provider === embStatus.provider.id &&
+    vc.cache.meta.dimensions === embStatus.provider.dimensions
+  ) {
+    checks.push({
+      name: "search",
+      status: "ok",
+      detail: `semantic search ready: ${embStatus.provider.id}, ${vc.cache.meta.chunks.length} chunks cached`,
+    });
+  } else {
+    checks.push({
+      name: "search",
+      status: "warn",
+      detail: `semantic search available (${embStatus.provider.id}) but the vector cache needs building (${cached}); run aimem index --embeddings`,
+    });
+  }
   const configured: string[] = [];
   if (nb.config.sync === "server") configured.push(`sync server ${nb.config.server?.url ?? "(no url)"}`);
   const emb = nb.config.retrieval?.embeddings;

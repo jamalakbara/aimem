@@ -92,6 +92,8 @@ The index stores `provider`, `model`, `dimensions`, `chunker_version`. Any chang
 
 Vectors are **never committed to git**: large, unreadable diffs, model-specific, and reproducible.
 
+**Implementation (v0.1, slice 2.3):** `.aimem/.cache/vectors/meta.json` (`version`, `provider`, `dimensions`, `chunkerVersion`, `chunks[] {key, ref, section, part, bodySha}`) + `vectors.f32` (rows of L2-normalised float32 in `chunks` order), both written atomically. Chunk key = hash of `(ref, section, part, bodySha, provider id)`. A missing/corrupt cache (size check), or a different provider, dimension count or chunker version, triggers a full rebuild; otherwise only new or changed chunks are embedded. `no-embed` and secret-flagged records are excluded and reported. Semantic score = best chunk cosine, head chunk × 1.05, clamped to 0..1. Tests use a deterministic hash-based stub embedder (word overlap, not meaning). Until slice 2.4 no real provider is installed, so semantic search reports `off` with a reason and everything uses lexical retrieval.
+
 ## 6. Hybrid scoring
 
 Per record:
