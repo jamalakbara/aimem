@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { basename, relative } from "node:path";
+import { basename } from "node:path";
 import {
   BODY_SECTIONS,
   baseFrontmatterSchema,
@@ -9,11 +9,12 @@ import {
   STATUSES,
   TYPE_DIR,
 } from "@aimem/schema";
+import { readNotebookFiles } from "../index/build.js";
 import type { Clock, Fs } from "../ports.js";
 import type { Notebook, ResolvedProject } from "../project/load.js";
-import { listRecordFiles } from "../records/store.js";
 import { parseRecordText } from "../records/text.js";
 import { loadSecretIgnore, scanSecrets } from "../secrets/scan.js";
+import { staticPrefix } from "../util/glob.js";
 
 export type Level = "error" | "warn";
 
@@ -81,7 +82,6 @@ const strs = (v: unknown): string[] =>
   Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
 const str = (v: unknown): string | undefined => (typeof v === "string" ? v : undefined);
 const words = (s: string) => (s.match(/\S+/g) ?? []).length;
-const staticPrefix = (glob: string) => glob.split(/[*?[{]/)[0] ?? "";
 
 /** sha256 of the body with surrounding whitespace trimmed and LF line endings (OQ-25, V017). */
 export function contentSha(body: string): string {
@@ -269,15 +269,7 @@ export function validateFiles(
 
 /** Validate every record in a notebook. */
 export async function validateNotebook(nb: Notebook, deps: { fs: Fs; clock: Clock }): Promise<Issue[]> {
-  const files = await listRecordFiles(deps.fs, nb.dir);
-  const inputs: ValidationInput[] = [];
-  for (const f of files) {
-    inputs.push({
-      file: relative(nb.root, f.path).split("\\").join("/"),
-      dirType: f.dirType,
-      text: await deps.fs.readFile(f.path),
-    });
-  }
+  const inputs = await readNotebookFiles(nb, deps.fs);
   return validateFiles(inputs, nb.config, deps.clock.now(), await loadSecretIgnore(deps.fs, nb.dir));
 }
 
