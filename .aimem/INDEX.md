@@ -11,8 +11,16 @@ Project: `aimem` · mode: solo · sync: none
 
 ## Counts
 - memory: 3 (active 3)
+- handoff: 18 (final 18)
 
 ## Pinned
 - mem-134qcb5d [agent] Project overview — aimem: a git-based shared notebook where humans and AI agents read and write project knowledge as markdown records in .aimem/.
 - mem-g48me62t [agent] How to build, test and evaluate — pnpm install, pnpm build, then pnpm lint && pnpm typecheck && pnpm test; pnpm eval for retrieval quality; the aimem CLI is linked globally with npm link.
 - mem-gv0gjym6 [agent] Working conventions for this repo — Plan first and wait for approval, one slice per PR, tests first, spec 03 is the contract, contract snapshots change only on purpose, end every session with aimem handoff.
+
+## Recent handoffs
+- hnd-23d56g3x 2026-10-14 (agent:claude-code) — Done: M2 slice 2.6 MCP server · Next: Slice 2.7: dogfood — `aimem init` in this repo, migrate docs/HANDOFF.md into handoff records, use it for a real week (M2 gate).
+- hnd-6x18k102 2026-10-14 (agent:claude-code) — Done: M2 slice 2.5 adapters · Next: Slice 2.6 MCP server (stdio), all tools in docs/05.
+- hnd-tdy1hb98 2026-10-14 (agent:claude-code) — Done: M2 slice 2.4b real models + M2 gate · Next: 2.5 adapters (AGENTS.md / CLAUDE.md / Cursor / Copilot / Gemini managed blocks).
+- hnd-yhgsgj8j 2026-10-14 (agent:claude-code) — Done: M2 slice 2.4a hybrid scoring · Next: Plan/build 2.4b.
+- hnd-9j7fchda 2026-10-13 (agent:claude-code) — Done: M2 slice 2.3 embeddings plumbing · Next: Plan 2.4.

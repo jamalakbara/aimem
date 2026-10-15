@@ -18,7 +18,7 @@ Rules of the flow:
 2. **Plan first, then code.** Every slice starts in plan mode: the agent restates acceptance criteria, lists files, tests and risks. You approve before code is written.
 3. **Spec is the contract (03).** If the agent needs a field that is not in the spec, it proposes a doc change in the same PR, not a silent invention.
 4. **Tests define done.** A slice is done when its acceptance tests pass in CI, not when the code "looks right".
-5. **Every session ends with a handoff.** From M1 on, the agent uses aimem on itself (`aimem handoff`); until then it appends to `docs/HANDOFF.md`.
+5. **Every session ends with a handoff.** Since slice 2.7 the agent uses aimem on itself (`aimem handoff`); `docs/HANDOFF.md` only points there (its earlier entries were migrated into `.aimem/handoffs/`).
 
 ## 2. One-time setup (you, ~30 min)
 
