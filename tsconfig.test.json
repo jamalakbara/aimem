@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "noEmit": true,
+    "rootDir": ".",
+    "paths": { "@aimem/schema": ["./packages/schema/src/index.ts"] }
+  },
+  "include": ["packages/*/test/**/*.ts", "vitest.config.ts"]
+}
