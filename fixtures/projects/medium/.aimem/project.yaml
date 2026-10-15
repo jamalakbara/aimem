@@ -1,0 +1,19 @@
+aimem: 1
+project: aimem
+name: aimem
+mode: solo
+sync: git
+repo: aimem
+roles: [dev, pm, qa, db, devops, analyst]
+freshness_days:
+  memory: 90
+  runbook: 180
+  schema: 120
+briefing:
+  budget_tokens: 4000
+  max_handoffs: 2
+retrieval:
+  mode: hybrid
+  embeddings:
+    provider: local
+    allow_remote: false
