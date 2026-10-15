@@ -1,0 +1,17 @@
+{
+  "ok": true,
+  "command": "handoff",
+  "data": {
+    "ref": "hnd-01234567",
+    "file": ".aimem/handoffs/hnd-01234567-20261012-handoff-2026-10-12-dropped-the-float-column.md",
+    "changed": [
+      ".aimem/handoffs/hnd-01234567-20261012-handoff-2026-10-12-dropped-the-float-column.md",
+      ".aimem/INDEX.md"
+    ],
+    "task": "tsk-3c4d5e6f",
+    "branch": "main",
+    "git": "committed",
+    "claimsReleased": 0
+  },
+  "warnings": []
+}

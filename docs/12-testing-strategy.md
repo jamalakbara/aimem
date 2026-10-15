@@ -9,7 +9,7 @@ The product's value depends on three things being right: the **file format is st
 | Unit | parser, serializer, ID/slug, schema, validation rules, scoring, packing, secret scanner | Vitest | every commit |
 | Property-based | round-trip (parse→serialize→parse), unknown-key preservation, ID uniqueness, packing never exceeds budget | fast-check | every commit |
 | Golden/snapshot | `INDEX.md`, briefing markdown/JSON, CLI `--json` outputs | Vitest snapshots | every commit |
-| Integration | CLI end-to-end in temp git repos (init, add, handoff, supersede, validate) | Vitest + temp dirs | every commit |
+| Integration | CLI end-to-end in temp git repos (init, add, handoff, supersede, validate); the M1 e2e runs the **built** binary as separate processes (Vitest global setup builds first) | Vitest + temp dirs | every commit |
 | Concurrency | two/many clones racing claims against a bare remote | scripts + Vitest | every commit (fast), nightly (stress) |
 | MCP | tool schemas and behaviour via SDK client; stdio and HTTP | Vitest | every commit |
 | Connectors | import pipeline, templates, idempotency, source-missing handling; recorded Google API fixtures (Odoo stub server deferred) | Vitest + stubs | every commit |

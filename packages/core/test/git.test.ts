@@ -7,6 +7,7 @@ import {
   effectivePolicy,
   execaGit,
   type Git,
+  gitDiagnostics,
   gitUserName,
   loadProject,
   type Notebook,
@@ -224,6 +225,43 @@ describe("author from git (04 §1)", () => {
       await expect(resolveAuthorWithGit({ env: {}, git, cwd: outside })).rejects.toMatchObject({
         code: "USAGE",
       });
+    } finally {
+      rmSync(outside, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("override and diagnostics", () => {
+  it("an explicit commit override applies to human authors too", async () => {
+    const nb = await makeRepo();
+    nb.config.mode = "team";
+    const r = await addRecord(nb, memory("Exports use semicolons"), deps);
+    const p = await applyWritePolicy({
+      git,
+      nb,
+      author: "human:dana",
+      files: r.changed,
+      message: "m",
+      override: "commit",
+    });
+    expect(p.action).toBe("committed");
+  });
+
+  it("gitDiagnostics reports version, repo, user, remotes and branch without network", async () => {
+    await makeRepo();
+    await sh("remote", "add", "origin", "https://example.com/acme.git");
+    const d = await gitDiagnostics(git, root);
+    expect(d).toMatchObject({
+      installed: true,
+      repo: true,
+      userName: "Dana Example",
+      remotes: ["origin"],
+      branch: "main",
+    });
+    expect(d.version).toMatch(/^\d+\.\d+/);
+    const outside = mkdtempSync(join(tmpdir(), "aimem-diag-"));
+    try {
+      expect(await gitDiagnostics(git, outside)).toMatchObject({ installed: true, repo: false, remotes: [] });
     } finally {
       rmSync(outside, { recursive: true, force: true });
     }

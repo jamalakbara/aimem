@@ -28,10 +28,12 @@ export async function applyWritePolicy(input: {
   author: string;
   files: string[];
   message: string;
+  /** Explicit request (e.g. `handoff --commit`): applies to any author. */
+  override?: CommitPolicy;
 }): Promise<PolicyResult> {
   const { git, nb, author, files, message } = input;
-  const policy = effectivePolicy(nb.config);
-  if (!author.startsWith("agent:") || policy === "none" || !files.length)
+  const policy = input.override ?? effectivePolicy(nb.config);
+  if ((!input.override && !author.startsWith("agent:")) || policy === "none" || !files.length)
     return { action: "none", warnings: [] };
   const probe = await git.run(["--version"], nb.root);
   if (probe.code !== 0)

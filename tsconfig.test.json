@@ -11,5 +11,5 @@
       "aimem": ["./packages/cli/src/index.ts"]
     }
   },
-  "include": ["packages/*/test/**/*.ts", "vitest.config.ts"]
+  "include": ["packages/*/test/**/*.ts", "vitest.config.ts", "vitest.global-setup.ts"]
 }
