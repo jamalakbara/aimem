@@ -71,4 +71,17 @@ describe("aimem serve mcp over stdio", () => {
       await client.close();
     }
   });
+
+  it("exits cleanly (code 0, no warnings) when the client closes stdin", () => {
+    const r = spawnSync("node", [BIN, "serve", "mcp"], {
+      cwd: repo,
+      env,
+      input: "",
+      encoding: "utf8",
+      timeout: 20000,
+    });
+    expect(r.stderr).not.toMatch(/unsettled top-level await/);
+    expect(r.status).toBe(0);
+    expect(r.stdout).toBe("");
+  });
 });

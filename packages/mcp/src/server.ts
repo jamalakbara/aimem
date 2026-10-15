@@ -618,9 +618,14 @@ export function createAimemServer(deps: McpDeps): McpServer {
 export async function serveStdio(deps: McpDeps): Promise<void> {
   const server = createAimemServer(deps);
   const transport = new StdioServerTransport();
+  // The transport does not report a client that simply closes stdin, so watch stdin too;
+  // otherwise the process ends with an unsettled await (and a non-zero exit code).
   const closed = new Promise<void>((resolve) => {
     transport.onclose = () => resolve();
+    process.stdin.once("end", () => resolve());
+    process.stdin.once("close", () => resolve());
   });
   await server.connect(transport);
   await closed;
+  await server.close();
 }
