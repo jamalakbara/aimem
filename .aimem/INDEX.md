@@ -10,8 +10,9 @@ Project: `aimem` · mode: solo · sync: none
 3. END: run `aimem handoff` (Done / Not done / Next / Blocked). Supersede records, never delete them.
 
 ## Counts
-- memory: 2 (active 2)
+- memory: 3 (active 3)
 
 ## Pinned
 - mem-134qcb5d [agent] Project overview — aimem: a git-based shared notebook where humans and AI agents read and write project knowledge as markdown records in .aimem/.
 - mem-g48me62t [agent] How to build, test and evaluate — pnpm install, pnpm build, then pnpm lint && pnpm typecheck && pnpm test; pnpm eval for retrieval quality; the aimem CLI is linked globally with npm link.
+- mem-gv0gjym6 [agent] Working conventions for this repo — Plan first and wait for approval, one slice per PR, tests first, spec 03 is the contract, contract snapshots change only on purpose, end every session with aimem handoff.
