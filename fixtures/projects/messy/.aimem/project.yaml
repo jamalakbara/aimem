@@ -1,0 +1,6 @@
+aimem: 1
+project: messy-demo
+name: Messy Demo
+mode: solo
+sync: none
+roles: [dev, pm, qa]

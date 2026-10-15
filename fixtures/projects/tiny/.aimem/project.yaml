@@ -1,0 +1,6 @@
+aimem: 1
+project: acme-ledger
+name: Acme Ledger
+mode: solo
+sync: none
+roles: [dev, pm, qa, db, devops, analyst]
