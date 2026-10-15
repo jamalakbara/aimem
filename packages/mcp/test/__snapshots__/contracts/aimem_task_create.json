@@ -1,0 +1,9 @@
+{
+  "ok": true,
+  "data": {
+    "ref": "tsk-01234567",
+    "status": "open",
+    "file": ".aimem/tasks/tsk-01234567-drop-the-float-column.md",
+    "git": "committed"
+  }
+}

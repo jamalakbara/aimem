@@ -1,0 +1,13 @@
+{
+  "ok": true,
+  "data": {
+    "old": "mem-5e6f7g8h",
+    "new": "mem-01234567",
+    "changed": [
+      ".aimem/memory/mem-5e6f7g8h-payment-provider-sends-amounts-as-strings.md",
+      ".aimem/memory/mem-01234567-amounts-arrive-as-decimal-strings.md",
+      ".aimem/INDEX.md"
+    ],
+    "git": "committed"
+  }
+}

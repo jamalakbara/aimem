@@ -1,0 +1,16 @@
+{
+  "ok": true,
+  "data": {
+    "ref": "mem-01234567",
+    "type": "memory",
+    "status": "active",
+    "trust": "agent",
+    "file": ".aimem/memory/mem-01234567-exports-use-semicolons.md",
+    "changed": [
+      ".aimem/memory/mem-01234567-exports-use-semicolons.md",
+      ".aimem/INDEX.md"
+    ],
+    "git": "committed",
+    "warnings": []
+  }
+}

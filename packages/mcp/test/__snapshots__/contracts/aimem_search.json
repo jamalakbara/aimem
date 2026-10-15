@@ -1,0 +1,35 @@
+{
+  "ok": true,
+  "data": {
+    "mode": "lexical",
+    "hits": [
+      {
+        "ref": "dec-1a2b3c4d",
+        "title": "Store money as integer minor units",
+        "summary": "All amounts are stored and computed as integer minor units (cents) with an explicit currency code.",
+        "type": "decision",
+        "status": "accepted",
+        "trust": "verified",
+        "score": 1
+      },
+      {
+        "ref": "tsk-3c4d5e6f",
+        "title": "Add currency column to ledger entries",
+        "summary": "Migrate ledger_entries to integer minor units with a non-null currency column.",
+        "type": "task",
+        "status": "in_progress",
+        "trust": "verified",
+        "score": 0.8053
+      },
+      {
+        "ref": "mem-5e6f7g8h",
+        "title": "Payment provider sends amounts as strings",
+        "summary": "Webhook payloads carry amounts as decimal strings like \"12.50\"; parse them, never cast to float.",
+        "type": "memory",
+        "status": "active",
+        "trust": "verified",
+        "score": 0.2894
+      }
+    ]
+  }
+}

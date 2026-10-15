@@ -15,6 +15,7 @@
     "@aimem/core": "workspace:*",
     "@aimem/schema": "workspace:*",
     "commander": "^14.0.3",
-    "@aimem/adapters": "workspace:*"
+    "@aimem/adapters": "workspace:*",
+    "@aimem/mcp": "workspace:*"
   }
 }
