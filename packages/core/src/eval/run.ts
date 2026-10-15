@@ -1,5 +1,9 @@
 import { type Briefing, buildBriefing } from "../context/briefing.js";
+import { buildQuery } from "../context/score.js";
+import type { EmbeddingProvider } from "../embed/provider.js";
+import { semanticForQuery } from "../embed/semantic.js";
 import type { NotebookIndex } from "../index/build.js";
+import type { Fs } from "../ports.js";
 import type { Notebook } from "../project/load.js";
 import { freshnessOf } from "../validate/validate.js";
 
@@ -72,10 +76,16 @@ function shownRefs(b: Briefing): string[] {
 }
 
 /** Run every case through `buildBriefing` and compute the 12 §3 metrics. Pure. */
-export function runEvalSet(nb: Notebook, index: NotebookIndex, set: EvalSet): EvalReport {
+export async function runEvalSet(
+  nb: Notebook,
+  index: NotebookIndex,
+  set: EvalSet,
+  semantic?: { provider: EmbeddingProvider; fs: Fs },
+): Promise<EvalReport> {
   const now = new Date(set.clock);
   const byId = new Map(index.records.map((r) => [r.id, r]));
-  const cases: CaseResult[] = set.cases.map((c) => {
+  const cases: CaseResult[] = [];
+  for (const c of set.cases) {
     const input = {
       ...(c.task ? { task: c.task } : {}),
       ...(c.ref ? { ref: c.ref } : {}),
@@ -84,6 +94,12 @@ export function runEvalSet(nb: Notebook, index: NotebookIndex, set: EvalSet): Ev
       ...(c.max_tokens ? { budget: c.max_tokens } : {}),
       ...(c.include_superseded ? { includeSuperseded: true } : {}),
     };
+    if (semantic) {
+      const s = await semanticForQuery(nb, index, semantic.provider, buildQuery(nb, index, input), {
+        fs: semantic.fs,
+      });
+      if ("scores" in s) Object.assign(input, { semantic: s });
+    }
     const b = buildBriefing(nb, index, input, now);
     const again = buildBriefing(nb, index, input, now);
     const top = new Set(b.explain.slice(0, set.k).map((e) => e.ref));
@@ -98,7 +114,7 @@ export function runEvalSet(nb: Notebook, index: NotebookIndex, set: EvalSet): Ev
         freshnessOf({ ...r.fm, type: r.type, created: r.created }, nb.config, now) !== "fresh";
       return flagged && !b.warnings.some((w) => w.startsWith(`${ref} `) || w.includes(` ${ref} `));
     });
-    return {
+    cases.push({
       id: c.id,
       category: c.category,
       recall: must.length ? round(must.filter((m) => top.has(m)).length / must.length) : null,
@@ -108,8 +124,8 @@ export function runEvalSet(nb: Notebook, index: NotebookIndex, set: EvalSet): Ev
       budgetOk: b.header.used <= b.header.budget,
       deterministic: again.markdown === b.markdown,
       unlabelled,
-    };
-  });
+    });
+  }
   const summarize = (cs: CaseResult[]): Summary => ({
     n: cs.length,
     recall: mean(cs.map((c) => c.recall)),

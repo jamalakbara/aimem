@@ -111,7 +111,7 @@ export async function run(argv: string[], deps: CliDeps): Promise<number> {
     .option("--include-superseded", "include superseded/rejected/cancelled/done/retired records")
     .option("--no-live", "skip live claims (claims arrive in M3)")
     .option("--explain", "show why each record was selected")
-    .addOption(new Option("--mode <mode>", "lexical | hybrid").default("lexical"))
+    .option("--mode <mode>", "lexical | hybrid (default: retrieval.mode, else hybrid)")
     .option("--deep", "reserved (not defined yet)")
     .action(action("context", (g, _a, o) => context(deps, g, o as unknown as ContextOptions)));
 
@@ -139,7 +139,7 @@ export async function run(argv: string[], deps: CliDeps): Promise<number> {
     .option("--paths <list>", "comma-separated files or globs")
     .option("--limit <n>", "maximum results", positiveInt, 10)
     .option("--include-superseded", "include superseded/rejected/cancelled/done/retired records")
-    .addOption(new Option("--mode <mode>", "lexical | hybrid").default("lexical"))
+    .option("--mode <mode>", "lexical | hybrid (default: retrieval.mode, else hybrid)")
     .action(
       action("search", (g, [q], o) => searchCmd(deps, g, q as string, o as Parameters<typeof searchCmd>[3])),
     );

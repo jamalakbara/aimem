@@ -37,7 +37,7 @@ describe("runEvalSet (12 §3)", () => {
         { id: "budget", category: "keyword", task: "money", must_include: ["dec-1a2b3c4d"], max_tokens: 300 },
       ],
     };
-    const r = runEvalSet(nb, index, set);
+    const r = await runEvalSet(nb, index, set);
     const byId = Object.fromEntries(r.cases.map((c) => [c.id, c]));
     expect(byId.hit).toMatchObject({
       recall: 0.5,
@@ -55,7 +55,7 @@ describe("runEvalSet (12 §3)", () => {
 
   it("flags inferred or stale records shown without a warning label", async () => {
     const { nb, index } = await project("medium");
-    const r = runEvalSet(nb, index, {
+    const r = await runEvalSet(nb, index, {
       project: "medium",
       clock: "2026-10-12T00:00:00Z",
       k: 10,
@@ -79,7 +79,7 @@ describe("medium eval set: gates (docs/12 §3) and baseline", () => {
 
   it("gates: keyword recall@10 ≥ 0.85, no violations, budget 100%, deterministic, labelled", async () => {
     const { nb, index } = await project("medium");
-    const r = runEvalSet(nb, index, set);
+    const r = await runEvalSet(nb, index, set);
     expect(r.byCategory.keyword?.recall).toBeGreaterThanOrEqual(0.85);
     expect(r.overall.violations).toBe(0);
     expect(r.overall.budgetOk).toBe(1);
@@ -89,7 +89,7 @@ describe("medium eval set: gates (docs/12 §3) and baseline", () => {
 
   it("matches the committed baseline (update it deliberately with `pnpm eval --update-baseline` and report the deltas)", async () => {
     const { nb, index } = await project("medium");
-    const r = runEvalSet(nb, index, set);
+    const r = await runEvalSet(nb, index, set);
     expect({
       byCategory: r.byCategory,
       overall: r.overall,
