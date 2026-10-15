@@ -1,20 +1,38 @@
-import { exitCodeFor, loadIndex, loadProject, validateNotebook, writeIndexMd } from "@aimem/core";
+import {
+  exitCodeFor,
+  fixNotebook,
+  loadIndex,
+  loadProject,
+  validateNotebook,
+  writeIndexMd,
+} from "@aimem/core";
 import type { CliDeps, CommandResult, GlobalOptions } from "../deps.js";
 
 export async function validateCmd(
   deps: CliDeps,
   g: GlobalOptions,
-  o: { strict?: boolean },
+  o: { strict?: boolean; fix?: boolean },
 ): Promise<CommandResult> {
   const nb = await loadProject(deps.fs, g.dir);
+  const fix = o.fix
+    ? await fixNotebook(nb, { fs: deps.fs, clock: deps.clock, random: deps.random })
+    : undefined;
   const issues = await validateNotebook(nb, { fs: deps.fs, clock: deps.clock });
   const errors = issues.filter((i) => i.level === "error").length;
   const warnings = issues.length - errors;
-  const data = { errors, warnings, issues };
+  const data = { errors, warnings, issues, ...(fix ? { fixed: fix.fixed, skipped: fix.skipped } : {}) };
+  const fixLines = fix
+    ? [
+        ...fix.fixed.map((f) => `fixed ${f.code} ${f.file} — ${f.action}`),
+        ...fix.skipped.map((s) => `skipped ${s.code} ${s.file} — ${s.reason}`),
+      ]
+    : [];
+  const fixText = fixLines.length ? `${fixLines.join("\n")}\n` : "";
   const exitCode = exitCodeFor(issues, Boolean(o.strict));
-  const text = issues.length
+  const report = issues.length
     ? `${issues.map((i) => `${i.level} ${i.code} ${i.file}${i.line ? `:${i.line}` : ""} — ${i.message}`).join("\n")}\n${errors} errors, ${warnings} warnings\n`
     : "No issues.\n";
+  const text = fixText + report;
   return {
     data,
     text,

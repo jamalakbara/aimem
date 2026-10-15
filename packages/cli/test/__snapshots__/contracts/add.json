@@ -10,7 +10,8 @@
     "changed": [
       ".aimem/memory/mem-01234567-bank-exports-use-semicolons.md",
       ".aimem/INDEX.md"
-    ]
+    ],
+    "git": "committed"
   },
   "warnings": []
 }

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { cryptoRandom, nodeFs, systemClock } from "@aimem/core";
+import { cryptoRandom, execaGit, nodeFs, systemClock } from "@aimem/core";
 import { run } from "./run.js";
 
 process.exitCode = await run(process.argv.slice(2), {
@@ -15,4 +15,5 @@ process.exitCode = await run(process.argv.slice(2), {
     for await (const chunk of process.stdin) data += chunk;
     return data;
   },
+  git: execaGit(),
 });

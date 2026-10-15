@@ -88,7 +88,7 @@ Decision log in ADR style. Status: **accepted** (decided in brainstorm), **propo
 | OQ-1 | Product/CLI name and npm package availability (`aimem` is a working name) | Check availability in M0; keep CLI short | M0 |
 | OQ-2 | TypeScript vs Go for core/CLI | TypeScript (ADR-003) | M1 start |
 | OQ-3 | Monorepo handling: one `.aimem/` at root with `paths` scoping, or nested `.aimem/` per package? | One root `.aimem/`, `repo:` may name a package | M3 |
-| OQ-4 | Default `agent_commits` policy for team mode: `stage`, `commit`, or `pr`? | `stage` (human commits with their code) for team; `commit` for solo | M2 |
+| OQ-4 | Default `agent_commits` policy for team mode: `stage`, `commit`, or `pr`? | **Resolved (slice 1.4c):** `commit` for solo, `stage` for team; applies to agent writes only | M2 |
 | OQ-5 | Should live branch be allowed on protected-main repos? | Yes; it is a separate branch | M3 |
 | OQ-6 | Token counting method for budgets | `chars/4` heuristic with per-model override; optional tokenizer | M2 |
 | OQ-7 | Tasks: is aimem the system of record, or a mirror of Jira/Linear/GitHub Issues? | aimem-native tasks in v1 (agents create them; non-developers can import task Sheets). Mirroring an external task system (Odoo/Jira/Linear) is deferred (ADR-016) | M3 |
