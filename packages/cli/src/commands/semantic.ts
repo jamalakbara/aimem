@@ -2,11 +2,11 @@ import {
   AimemError,
   type Notebook,
   type NotebookIndex,
-  resolveEmbeddingProvider,
   type SemanticInput,
   semanticForQuery,
 } from "@aimem/core";
 import type { CliDeps } from "../deps.js";
+import { embeddingStatus } from "./embedder.js";
 
 export type Mode = "lexical" | "hybrid";
 
@@ -31,7 +31,7 @@ export async function semanticFor(
   explicit: boolean,
 ): Promise<{ semantic?: SemanticInput; off?: string; warnings: string[] }> {
   if (mode === "lexical") return { off: "lexical mode", warnings: [] };
-  const status = resolveEmbeddingProvider(nb.config, deps.embedder);
+  const status = await embeddingStatus(deps, nb, false);
   const result = status.available
     ? await semanticForQuery(nb, index, status.provider, query, { fs: deps.fs })
     : { reason: status.reason };

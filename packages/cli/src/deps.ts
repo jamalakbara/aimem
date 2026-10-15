@@ -1,4 +1,12 @@
-import type { Clock, EmbeddingProvider, Fs, Git, Random } from "@aimem/core";
+import type {
+  Clock,
+  EmbeddingProvider,
+  EmbeddingStatus,
+  Fs,
+  Git,
+  Random,
+  ResolvedProject,
+} from "@aimem/core";
 
 /** Everything the CLI touches, injected so commands run in-process in tests (docs/11 §3). */
 export interface CliDeps {
@@ -14,6 +22,8 @@ export interface CliDeps {
   git: Git;
   /** Embedding provider when one is installed (the local model arrives in slice 2.4; tests inject a stub). */
   embedder?: EmbeddingProvider;
+  /** Loads the configured provider (local model or remote endpoint). Only `index --embeddings` may download. */
+  loadEmbedder?: (config: ResolvedProject, allowDownload: boolean) => Promise<EmbeddingStatus>;
 }
 
 export interface GlobalOptions {

@@ -4,7 +4,7 @@
   "data": {
     "query": "zod json schema",
     "mode": "lexical",
-    "semanticReason": "the local embedding model arrives in slice 2.4",
+    "semanticReason": "no local model in tests",
     "hits": [
       {
         "score": 1,

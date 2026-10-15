@@ -94,9 +94,9 @@ describe("hashEmbedder (deterministic stub, 12 §3)", () => {
 describe("resolveEmbeddingProvider", () => {
   it.each([
     [{ provider: "none" }, /provider is none/],
-    [{ provider: "local" }, /slice 2\.4/],
-    [{ provider: "openai-compatible" }, /slice 2\.4/],
-    [undefined, /slice 2\.4/],
+    [{ provider: "local" }, /no embedding provider loaded/],
+    [{ provider: "openai-compatible" }, /no embedding provider loaded/],
+    [undefined, /no embedding provider loaded/],
   ] as const)("%j is unavailable with a reason", (embeddings, reason) => {
     const s = resolveEmbeddingProvider({ ...nb.config, retrieval: embeddings ? { embeddings } : {} });
     expect(s.available).toBe(false);

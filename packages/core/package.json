@@ -15,5 +15,8 @@
   },
   "devDependencies": {
     "fast-check": "^4.10.2"
+  },
+  "optionalDependencies": {
+    "@huggingface/transformers": "4.3.1"
   }
 }

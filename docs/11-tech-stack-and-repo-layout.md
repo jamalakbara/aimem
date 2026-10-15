@@ -12,7 +12,7 @@
 | Schema / validation | Zod → JSON Schema export | Single source for types, validation, JSON Schema | Valibot, TypeBox |
 | Markdown / frontmatter | `yaml` + own splitter (or `gray-matter`), `unified`/`remark` for rendering | Preserve unknown keys and key order on rewrite | |
 | Lexical search | Own in-memory BM25 over boosted fields (~80 lines; no stemming, accent folding); no cache yet (5k records index + search ≈ 0.5 s) | No dependency; deterministic; any language | MiniSearch (typo tolerance), SQLite FTS5 if scale demands |
-| Embeddings (client) | Local in-process multilingual model (ONNX/transformers-style, WASM/JS preferred); optional OpenAI-compatible endpoint | Offline and private by default; team writes English + Indonesian (15 §4) | Remote-only embeddings |
+| Embeddings (client) | `@huggingface/transformers` (optional dependency of core, loaded lazily; pulls `onnxruntime-node`, ~290 MB installed) running `paraphrase-multilingual-MiniLM-L12-v2`; optional OpenAI-compatible endpoint | Offline and private by default; team writes English + Indonesian (15 §4) | Remote-only embeddings |
 | Vector search (client) | Flat cosine over float32 cache | Simple and fast at this scale | HNSW library beyond ~100k chunks |
 | Vector search (server) | Postgres + `pgvector` | Reuses the existing DB; no new infra | Dedicated vector DB (rejected) |
 | Document conversion | `mammoth` (docx → HTML → markdown), optional `pandoc`; xlsx/csv parser; PDF text extraction library | Pure-JS where possible | pandoc only |

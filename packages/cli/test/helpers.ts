@@ -44,6 +44,7 @@ export async function cli(args: string[], deps: Partial<CliDeps> = {}): Promise<
     env: {},
     stdin: async () => "",
     git: fakeGit(),
+    loadEmbedder: async () => ({ available: false, reason: "no local model in tests" }),
     cwd: FIXTURES,
     stdout: (s) => {
       stdout += s;

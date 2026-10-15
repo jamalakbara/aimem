@@ -13,7 +13,8 @@
     "typecheck": "tsc -b && tsc -p tsconfig.test.json",
     "lint": "biome check .",
     "format": "biome format --write .",
-    "eval": "pnpm -s build && node scripts/eval.mjs"
+    "eval": "pnpm -s build && node scripts/eval.mjs",
+    "compare-models": "pnpm -s build && node scripts/compare-models.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",

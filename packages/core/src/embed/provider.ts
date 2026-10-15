@@ -1,5 +1,7 @@
 import type { ResolvedProject } from "../project/load.js";
 import { tokenize } from "../search/bm25.js";
+import { createLocalProvider, type ModelLoader } from "./local.js";
+import { createOpenAICompatibleProvider, type FetchLike } from "./remote.js";
 
 /** 15 §4.1. */
 export interface EmbeddingProvider {
@@ -46,10 +48,7 @@ export function hashEmbedder(dimensions = 256, variant?: string): EmbeddingProvi
   };
 }
 
-/**
- * Pick the embedding provider from `retrieval.embeddings` (15 §4.2). `injected` is used by
- * tests (and later by the local model). Without one, semantic search is off with a reason.
- */
+/** Quick, synchronous check: `none` switches semantic search off; an injected provider is used as is. */
 export function resolveEmbeddingProvider(
   config: Pick<ResolvedProject, "retrieval">,
   injected?: EmbeddingProvider,
@@ -57,7 +56,55 @@ export function resolveEmbeddingProvider(
   const provider = config.retrieval?.embeddings?.provider ?? "local";
   if (provider === "none") return { available: false, reason: "retrieval.embeddings.provider is none" };
   if (injected) return { available: true, provider: injected };
-  if (provider === "openai-compatible")
-    return { available: false, reason: "the openai-compatible provider arrives in slice 2.4" };
-  return { available: false, reason: "the local embedding model arrives in slice 2.4" };
+  return { available: false, reason: "no embedding provider loaded" };
+}
+
+export interface LoadProviderOptions {
+  cacheDir: string;
+  /** Only `aimem index --embeddings` downloads models. */
+  allowDownload: boolean;
+  env: Record<string, string | undefined>;
+  fetch?: FetchLike;
+  loader?: ModelLoader;
+  injected?: EmbeddingProvider;
+}
+
+/** Build the configured provider (15 §4.2, §11), or say why semantic search is off. Never throws. */
+export async function loadEmbeddingProvider(
+  config: Pick<ResolvedProject, "retrieval">,
+  opts: LoadProviderOptions,
+): Promise<EmbeddingStatus> {
+  const quick = resolveEmbeddingProvider(config, opts.injected);
+  if (quick.available || config.retrieval?.embeddings?.provider === "none") return quick;
+  const emb = config.retrieval?.embeddings ?? {};
+  try {
+    if (emb.provider === "openai-compatible") {
+      if (!emb.endpoint || !emb.model)
+        return {
+          available: false,
+          reason: "openai-compatible needs endpoint and model in retrieval.embeddings",
+        };
+      return {
+        available: true,
+        provider: await createOpenAICompatibleProvider({
+          endpoint: emb.endpoint,
+          model: emb.model,
+          allowRemote: emb.allow_remote === true,
+          fetch: opts.fetch ?? globalThis.fetch,
+          ...(opts.env.AIMEM_EMBEDDINGS_KEY ? { apiKey: opts.env.AIMEM_EMBEDDINGS_KEY } : {}),
+        }),
+      };
+    }
+    return {
+      available: true,
+      provider: await createLocalProvider({
+        model: emb.model ?? "auto",
+        cacheDir: opts.cacheDir,
+        allowDownload: opts.allowDownload,
+        ...(opts.loader ? { loader: opts.loader } : {}),
+      }),
+    };
+  } catch (e) {
+    return { available: false, reason: (e as Error).message };
+  }
 }

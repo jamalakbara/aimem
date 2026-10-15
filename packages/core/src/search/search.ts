@@ -1,5 +1,6 @@
 import type { IndexedRecord, NotebookIndex } from "../index/build.js";
 import { matchGlob, staticPrefix } from "../util/glob.js";
+import { normaliseSemantic } from "../util/normalise.js";
 import { bm25 } from "./bm25.js";
 
 /** 06 §2 step 3: not current, hidden unless asked for. */
@@ -87,8 +88,12 @@ export function search(
   if (semantic) {
     const maxLex = Math.max(0, ...raw.values());
     const lex = new Map(candidates.map((r) => [key(r), maxLex > 0 ? (raw.get(key(r)) ?? 0) / maxLex : 0]));
+    const norm = normaliseSemantic(
+      semantic.scores,
+      candidates.map((r) => r.id),
+    );
     const semTop = candidates
-      .map((r) => [key(r), Math.min(1, Math.max(0, semantic.scores.get(r.id) ?? 0))] as const)
+      .map((r) => [key(r), norm.get(r.id) ?? 0] as const)
       .filter(([, s]) => s > 0)
       .sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))
       .slice(0, SEMANTIC_TOP_N);
