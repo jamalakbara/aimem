@@ -60,10 +60,10 @@ supersedes: dec-2a4b6c8d
 | `id` | string | yes | `<prefix>-<8 base32 chars>`; unique within project |
 | `type` | enum | yes | One of the 8 types |
 | `title` | string | yes | ≤ 120 chars, human readable |
-| `summary` | string | yes | **One line, ≤ 200 chars.** Used in briefings. Must stand alone |
+| `summary` | string | yes | **One line, ≤ 200 chars.** Used in briefings. Must stand alone. Length/one-line are checked by V009 (warning), not V002 |
 | `status` | enum | yes | Lifecycle state; allowed values depend on type (§3) |
 | `trust` | enum | yes | `verified` \| `agent` \| `inferred` |
-| `roles` | string[] | yes | ≥ 1 role from the project's role list (or `all`) |
+| `roles` | string[] | yes | ≥ 1 role from the project's role list (or `all`). `all` is a record value meaning every role; it is not listed in `project.yaml` `roles` |
 | `tags` | string[] | no | Free tags, lowercase kebab. Reserved: `pinned`, `imported`, `adopted`, `no-embed` (exclude from embeddings and `ask`; 15 §12) |
 | `repo` | string | no | Repo name from `project.yaml`, or `all`. Default: the repo containing the file |
 | `paths` | string[] | no | Glob patterns of code the record relates to. Used for ranking |
@@ -109,7 +109,7 @@ supersedes: dec-2a4b6c8d
 ### 3.3 memory
 A fact worth remembering that is not a decision (gotcha, constraint, how-something-really-works).
 - Statuses: `active`, `stale`, `superseded`.
-- Extra fields: `kind`: `gotcha` \| `constraint` \| `howto` \| `fact` \| `preference`.
+- Extra fields: `kind` (optional): `gotcha` \| `constraint` \| `howto` \| `fact` \| `preference`.
 - Body: free; start with the fact itself, then why we know it and how to verify.
 - Default freshness window: 90 days since `verified` (or `created`) → shown as stale.
 
@@ -142,16 +142,18 @@ A fact worth remembering that is not a decision (gotcha, constraint, how-somethi
 
 ## 4. Status vocabulary summary
 
-| Type | Allowed statuses |
-|------|------------------|
-| decision | proposed, accepted, rejected, superseded, deprecated |
-| task | open, in_progress, blocked, review, done, cancelled |
-| memory | active, stale, superseded |
-| handoff | final |
-| incident | investigating, mitigated, resolved, postmortem_done |
-| runbook | active, deprecated |
-| schema | active, deprecated, superseded |
-| testcase | draft, ready, passing, failing, retired |
+| Type | Allowed statuses | Default on create |
+|------|------------------|-------------------|
+| decision | proposed, accepted, rejected, superseded, deprecated | proposed |
+| task | open, in_progress, blocked, review, done, cancelled | open |
+| memory | active, stale, superseded | active |
+| handoff | final | final |
+| incident | investigating, mitigated, resolved, postmortem_done | investigating |
+| runbook | active, deprecated | active |
+| schema | active, deprecated, superseded | active |
+| testcase | draft, ready, passing, failing, retired | draft |
+
+"Default on create" applies when a tool creates a record without an explicit status (e.g. `aimem add` without `--status`).
 
 ## 5. Trust levels
 
@@ -284,4 +286,6 @@ Exit codes: 0 ok, 1 warnings only (when `--strict`), 2 errors.
 - Additive changes (new optional fields, new types) bump the **minor** spec version and are ignored by older tools.
 - Breaking changes bump `aimem:` major; `aimem migrate` upgrades files.
 - Tools must preserve unknown frontmatter keys on rewrite.
+- Schemas never inject defaults: parsing a record or `project.yaml` adds no keys. Defaults (statuses §4, `priority: p2`, `project.yaml` values in §6) are applied by tools at the point of use.
+- Type-specific fields in §3 are optional unless marked otherwise.
 - JSON Schema for records and `project.yaml` is generated from the Zod schemas and published in `packages/schema/dist/`.

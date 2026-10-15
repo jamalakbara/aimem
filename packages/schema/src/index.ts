@@ -1,2 +1,5 @@
-/** Spec major version this package implements (03 §10). */
-export const SPEC_VERSION = 1;
+export * from "./constants.js";
+export * from "./json-schema.js";
+export * from "./project.js";
+export * from "./record.js";
+export * from "./refs.js";
