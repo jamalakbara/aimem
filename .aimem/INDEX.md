@@ -10,4 +10,7 @@ Project: `aimem` · mode: solo · sync: none
 3. END: run `aimem handoff` (Done / Not done / Next / Blocked). Supersede records, never delete them.
 
 ## Counts
-- no records yet
+- memory: 1 (active 1)
+
+## Pinned
+- mem-134qcb5d [agent] Project overview — aimem: a git-based shared notebook where humans and AI agents read and write project knowledge as markdown records in .aimem/.
