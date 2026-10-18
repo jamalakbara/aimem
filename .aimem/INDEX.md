@@ -12,7 +12,7 @@ Project: `aimem` · mode: solo · sync: none
 ## Counts
 - task: 3 (open 3)
 - memory: 4 (active 4)
-- handoff: 19 (final 19)
+- handoff: 20 (final 20)
 
 ## Pinned
 - mem-134qcb5d [agent] Project overview — aimem: a git-based shared notebook where humans and AI agents read and write project knowledge as markdown records in .aimem/.
@@ -20,8 +20,8 @@ Project: `aimem` · mode: solo · sync: none
 - mem-gv0gjym6 [agent] Working conventions for this repo — Plan first and wait for approval, one slice per PR, tests first, spec 03 is the contract, contract snapshots change only on purpose, end every session with aimem handoff.
 
 ## Recent handoffs
+- hnd-dbepfwgf 2026-10-18 (agent:claude-code) — Done: Diagnosed the aimem MCP 'Connection closed': the npm-linked dist was built from an older branch (no serve command); rebuilt on main, serve mcp exits 0, vectors refreshed (coverage 100%). · Next…
 - hnd-zjrxnegr 2026-10-15 (agent:claude-code) — Done: Dogfooding set up: aimem linked globally (npm link), this repo initialised as notebook 'aimem', protocol block in AGENTS.md, 3 pinned starter notes, vectors built (MiniLM). · Next: Human: sign…
 - hnd-23d56g3x 2026-10-14 (agent:claude-code) — Done: M2 slice 2.6 MCP server · Next: Slice 2.7: dogfood — `aimem init` in this repo, migrate docs/HANDOFF.md into handoff records, use it for a real week (M2 gate).
 - hnd-6x18k102 2026-10-14 (agent:claude-code) — Done: M2 slice 2.5 adapters · Next: Slice 2.6 MCP server (stdio), all tools in docs/05.
 - hnd-tdy1hb98 2026-10-14 (agent:claude-code) — Done: M2 slice 2.4b real models + M2 gate · Next: 2.5 adapters (AGENTS.md / CLAUDE.md / Cursor / Copilot / Gemini managed blocks).
-- hnd-yhgsgj8j 2026-10-14 (agent:claude-code) — Done: M2 slice 2.4a hybrid scoring · Next: Plan/build 2.4b.
