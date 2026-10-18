@@ -11,7 +11,7 @@ Project: `aimem` · mode: solo · sync: none
 
 ## Counts
 - task: 1 (open 1)
-- memory: 3 (active 3)
+- memory: 4 (active 4)
 - handoff: 19 (final 19)
 
 ## Pinned
