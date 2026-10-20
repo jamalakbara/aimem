@@ -85,6 +85,28 @@ describe("fixNotebook (validate --fix, 04)", () => {
     ]);
   });
 
+  it("rewrites backslashes in adapters.files to / (03 §10), keeping comments and dropping duplicates", async () => {
+    cpSync(join(FIXTURES, "tiny"), root, { recursive: true });
+    const yaml = join(root, ".aimem/project.yaml");
+    writeFileSync(
+      yaml,
+      `${readFileSync(yaml, "utf8")}# extra agent files\nadapters:\n  files: ['docs\\AI.md', docs/AI.md, 'notes\\team\\x.md', README.md]\n`,
+    );
+    const nb = await loadProject(nodeFs, root);
+    const r = await fixNotebook(nb, deps);
+    expect(r.fixed).toEqual([
+      {
+        code: "paths",
+        file: ".aimem/project.yaml",
+        action: "adapters.files: docs\\AI.md → docs/AI.md, notes\\team\\x.md → notes/team/x.md",
+      },
+    ]);
+    const text = readFileSync(yaml, "utf8");
+    expect(text).toContain("# extra agent files\n");
+    expect(text).toContain("files: [docs/AI.md, notes/team/x.md, README.md]");
+    expect((await fixNotebook(await loadProject(nodeFs, root), deps)).fixed).toEqual([]);
+  });
+
   it("on messy: fixes V007 and V015, leaves everything it cannot safely fix", async () => {
     cpSync(join(FIXTURES, "messy"), root, { recursive: true });
     const nb = await loadProject(nodeFs, root);

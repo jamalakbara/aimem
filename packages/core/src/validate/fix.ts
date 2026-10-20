@@ -1,12 +1,14 @@
-import { basename, dirname, join, posix } from "node:path";
+import { basename, dirname, join, posix, relative } from "node:path";
 import { STATUSES } from "@aimem/schema";
 import { type IndexedRecord, loadIndex } from "../index/build.js";
 import type { WriteDeps } from "../ops/write.js";
+import { setProjectValue } from "../project/edit.js";
 import type { Notebook } from "../project/load.js";
 import { recordFileName } from "../records/ids.js";
 import { readRecordFile, writeRecordFile } from "../records/store.js";
 import { setField } from "../records/text.js";
 import { writeIndexMd } from "../render/index-md.js";
+import { toPosix } from "../util/path.js";
 
 export interface FixResult {
   fixed: { code: string; file: string; action: string }[];
@@ -18,7 +20,8 @@ const str = (v: unknown) => (typeof v === "string" ? v : undefined);
 
 /**
  * `aimem validate --fix` (04): only safe repairs. V015 renames, one-sided V007 links get
- * their missing half, `updated` earlier than `created` is raised. Never deletes or overwrites.
+ * their missing half, `updated` earlier than `created` is raised, `\` in `adapters.files` becomes
+ * `/` (03 §10). Never deletes or overwrites.
  */
 export async function fixNotebook(nb: Notebook, deps: WriteDeps): Promise<FixResult> {
   const result: FixResult = { fixed: [], skipped: [] };
@@ -90,6 +93,21 @@ export async function fixNotebook(nb: Notebook, deps: WriteDeps): Promise<FixRes
     for (const [k, v] of e.sets) setField(parsed.record, k, v);
     await writeRecordFile(deps.fs, join(nb.root, file), parsed.record, deps.random);
     result.fixed.push({ code: e.code, file, action: e.notes.join("; ") });
+  }
+
+  // adapters.files written with `\` on Windows before paths were normalised (03 §10).
+  const files = (nb.config.adapters as { files?: unknown } | undefined)?.files;
+  const changed = Array.isArray(files)
+    ? files.filter((f): f is string => typeof f === "string" && f.includes("\\"))
+    : [];
+  if (Array.isArray(files) && changed.length) {
+    const next = [...new Set(files.map((f) => (typeof f === "string" ? toPosix(f) : f)))];
+    await setProjectValue(deps.fs, nb, ["adapters", "files"], next, deps.random);
+    result.fixed.push({
+      code: "paths",
+      file: toPosix(relative(nb.root, join(nb.dir, "project.yaml"))),
+      action: `adapters.files: ${changed.map((f) => `${f} → ${toPosix(f)}`).join(", ")}`,
+    });
   }
   if (result.fixed.length) await writeIndexMd(deps.fs, nb, await loadIndex(nb, { fs: deps.fs }), deps.random);
   return result;
