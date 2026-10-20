@@ -1,8 +1,9 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { Random } from "@aimem/core";
 
-export const FIXTURES = new URL("../../../fixtures/projects/", import.meta.url).pathname;
+export const FIXTURES = fileURLToPath(new URL("../../../fixtures/projects/", import.meta.url));
 
 /** All record files (.md under .aimem/<dir>/) of a fixture, absolute paths, sorted. */
 export function fixtureRecordFiles(name: string): string[] {

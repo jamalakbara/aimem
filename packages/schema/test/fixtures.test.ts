@@ -112,5 +112,5 @@ describe("fixture: messy", () => {
 });
 
 it("fixtures directory resolves", () => {
-  expect(FIXTURES.endsWith("/fixtures/projects/")).toBe(true);
+  expect(FIXTURES).toMatch(/[\\/]fixtures[\\/]projects[\\/]$/);
 });

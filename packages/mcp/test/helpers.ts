@@ -1,13 +1,14 @@
 import { cpSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { Git } from "@aimem/core";
 import { nodeFs } from "@aimem/core";
 import { createAimemServer, type McpDeps } from "@aimem/mcp";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 
-export const FIXTURES = new URL("../../../fixtures/projects/", import.meta.url).pathname;
+export const FIXTURES = fileURLToPath(new URL("../../../fixtures/projects/", import.meta.url));
 
 /** A git that is always a repo and always succeeds; records calls. */
 export function fakeGit(): Git & { calls: string[][] } {

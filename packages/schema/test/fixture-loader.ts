@@ -4,10 +4,11 @@
  */
 import { readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
+import { fileURLToPath } from "node:url";
 import { RECORD_TYPES, type RecordType, TYPE_DIR } from "@aimem/schema";
 import YAML from "yaml";
 
-export const FIXTURES = new URL("../../../fixtures/projects/", import.meta.url).pathname;
+export const FIXTURES = fileURLToPath(new URL("../../../fixtures/projects/", import.meta.url));
 
 const DOC_RE = /^---\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n([\s\S]*))?$/;
 
