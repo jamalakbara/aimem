@@ -4,6 +4,7 @@ import type { Fs } from "../ports.js";
 import type { Notebook } from "../project/load.js";
 import { listRecordFiles } from "../records/store.js";
 import { parseRecordText } from "../records/text.js";
+import { toPosix } from "../util/path.js";
 
 /** A record file as text, path relative to the notebook root. */
 export interface RecordSource {
@@ -55,7 +56,7 @@ export async function readNotebookFiles(nb: Notebook, fs: Fs): Promise<RecordSou
   const out: RecordSource[] = [];
   for (const f of await listRecordFiles(fs, nb.dir)) {
     out.push({
-      file: relative(nb.root, f.path).split("\\").join("/"),
+      file: toPosix(relative(nb.root, f.path)),
       dirType: f.dirType,
       text: await fs.readFile(f.path),
     });

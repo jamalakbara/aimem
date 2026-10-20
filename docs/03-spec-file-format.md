@@ -292,6 +292,7 @@ Exit codes: 0 ok, 1 warnings only (when `--strict`), 2 errors.
 - Additive changes (new optional fields, new types) bump the **minor** spec version and are ignored by older tools.
 - Breaking changes bump `aimem:` major; `aimem migrate` upgrades files.
 - Tools must preserve unknown frontmatter keys on rewrite. Editing a field changes only that field's lines: other keys, their order, comments and formatting stay byte-identical. Files are read with CRLF or a BOM and written with LF and no BOM.
+- Repo-relative paths stored in records and `project.yaml`, and printed in output (including `--json`), use `/` on every platform.
 - Schemas never inject defaults: parsing a record or `project.yaml` adds no keys. Defaults (statuses §4, `priority: p2`, `project.yaml` values in §6) are applied by tools at the point of use.
 - Type-specific fields in §3 are optional unless marked otherwise.
 - JSON Schema for records and `project.yaml` is generated from the Zod schemas and published in `packages/schema/dist/`.
