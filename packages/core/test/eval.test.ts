@@ -1,11 +1,12 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { type EvalSet, loadIndex, loadProject, nodeFs, runEvalSet } from "@aimem/core";
 import { describe, expect, it } from "vitest";
 import YAML from "yaml";
 import { FIXTURES } from "./helpers.js";
 
-const EVALS = new URL("../../../fixtures/evals/", import.meta.url).pathname;
+const EVALS = fileURLToPath(new URL("../../../fixtures/evals/", import.meta.url));
 
 async function project(name: string) {
   const nb = await loadProject(nodeFs, join(FIXTURES, name));

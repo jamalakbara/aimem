@@ -2,12 +2,13 @@ import { spawnSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 /** End to end: the SDK's stdio client launches the built `aimem serve mcp` (vitest global setup builds it). */
-const BIN = new URL("../../cli/dist/bin.js", import.meta.url).pathname;
+const BIN = fileURLToPath(new URL("../../cli/dist/bin.js", import.meta.url));
 const env = {
   ...process.env,
   GIT_CONFIG_GLOBAL: "/dev/null",

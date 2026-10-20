@@ -2,13 +2,14 @@ import { spawnSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 /**
  * M1 acceptance (docs/13): in a fresh repo, init → add decision → add memory → handoff → validate,
  * run as separate processes against the built binary (vitest global setup builds it).
  */
-const BIN = new URL("../dist/bin.js", import.meta.url).pathname;
+const BIN = fileURLToPath(new URL("../dist/bin.js", import.meta.url));
 const env = {
   ...process.env,
   GIT_CONFIG_GLOBAL: "/dev/null",

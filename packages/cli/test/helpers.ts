@@ -1,7 +1,8 @@
+import { fileURLToPath } from "node:url";
 import { type Git, nodeFs } from "@aimem/core";
 import { type CliDeps, run } from "aimem";
 
-export const FIXTURES = new URL("../../../fixtures/projects/", import.meta.url).pathname;
+export const FIXTURES = fileURLToPath(new URL("../../../fixtures/projects/", import.meta.url));
 
 /** Fake git: a repository where every command succeeds and user.name is unset. Records calls. */
 export function fakeGit(userName?: string): Git & { calls: string[][] } {
