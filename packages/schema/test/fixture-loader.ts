@@ -51,7 +51,13 @@ export function loadFixture(name: string): { root: string; project: unknown; fil
     for (const n of names.filter((x) => x.endsWith(".md")).sort()) {
       const path = join(dir, n);
       const { fm, body, error } = split(readFileSync(path, "utf8"));
-      files.push({ rel: relative(root, path), dirType, fm, body, ...(error ? { splitError: error } : {}) });
+      files.push({
+        rel: relative(root, path).split("\\").join("/"),
+        dirType,
+        fm,
+        body,
+        ...(error ? { splitError: error } : {}),
+      });
     }
   }
   return { root, project, files };

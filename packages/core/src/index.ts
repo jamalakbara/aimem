@@ -35,5 +35,6 @@ export * from "./secrets/scan.js";
 export * from "./status/status.js";
 export * from "./util/glob.js";
 export * from "./util/normalise.js";
+export * from "./util/path.js";
 export * from "./validate/fix.js";
 export * from "./validate/validate.js";

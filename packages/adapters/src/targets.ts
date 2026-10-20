@@ -1,5 +1,5 @@
 import { join, relative, resolve } from "node:path";
-import { AimemError, type Fs, type Notebook, type Random, writeFileAtomic } from "@aimem/core";
+import { AimemError, type Fs, type Notebook, type Random, toPosix, writeFileAtomic } from "@aimem/core";
 import { inspectBlock, removeBlock, upsertBlock } from "./block.js";
 
 /** 06 §4 targets. File names are conventions owned by each tool; verify when updating. */
@@ -71,7 +71,7 @@ async function entries(
     })),
     ...files.map((f) => ({
       target: "file" as const,
-      file: relative(nb.root, resolve(nb.root, f)),
+      file: toPosix(relative(nb.root, resolve(nb.root, f))),
       prefix: "",
     })),
   ];
