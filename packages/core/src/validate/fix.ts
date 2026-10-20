@@ -1,4 +1,4 @@
-import { basename, dirname, join } from "node:path";
+import { basename, dirname, join, posix } from "node:path";
 import { STATUSES } from "@aimem/schema";
 import { type IndexedRecord, loadIndex } from "../index/build.js";
 import type { WriteDeps } from "../ops/write.js";
@@ -32,7 +32,7 @@ export async function fixNotebook(nb: Notebook, deps: WriteDeps): Promise<FixRes
   let index = await loadIndex(nb, { fs: deps.fs });
   for (const r of index.records) {
     if (basename(r.file).startsWith(`${r.id}-`)) continue;
-    const target = join(
+    const target = posix.join(
       dirname(r.file),
       recordFileName({ id: r.id, type: r.type, title: r.title, created: r.created }),
     );
