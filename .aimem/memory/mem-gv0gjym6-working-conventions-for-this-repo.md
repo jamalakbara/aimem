@@ -10,7 +10,7 @@ roles: [all]
 tags: [pinned]
 author: agent:claude-code
 created: 2026-10-15T02:56:05Z
-updated: 2026-10-15T02:56:05Z
+updated: 2026-11-15T18:03:40Z
 kind: preference
 ---
 
@@ -19,6 +19,6 @@ From AGENTS.md and docs/17:
 - One slice per PR on its own branch; tests first; run lint, typecheck and tests before committing.
 - `docs/03` is the contract: no invented fields or statuses; change the spec in the same PR when needed.
 - `--json` output, error codes and exit codes are contracts: saved contract files change only deliberately, and the PR says so.
-- Side effects (fs, git, clock, random, network) are injected; only core/git spawns processes.
+- Side effects (fs, git, clock, random, network) are injected; only core/git and core/process spawn processes (core/process since T2, ADR-017).
 - Never put secrets or personal data in fixtures, docs or records.
 - End every session with `aimem handoff` (Done / Not done / Next / Blocked).
