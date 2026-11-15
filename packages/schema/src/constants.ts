@@ -98,6 +98,7 @@ export const ERROR_CODES = [
   "READONLY_EXTERNAL",
   "SOURCE_AUTH",
   "SOURCE_UNREACHABLE",
+  "LLM_FAILED",
   "USAGE",
 ] as const;
 export type ErrorCode = (typeof ERROR_CODES)[number];

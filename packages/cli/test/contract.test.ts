@@ -71,6 +71,7 @@ describe("exit codes (04 §1)", () => {
       CLAIM_CONFLICT: 3,
       SYNC_FAILED: 4,
       SOURCE_UNREACHABLE: 4,
+      LLM_FAILED: 4,
     });
   });
 

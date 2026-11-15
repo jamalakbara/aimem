@@ -89,6 +89,7 @@ describe("constants match 03", () => {
       "READONLY_EXTERNAL",
       "SOURCE_AUTH",
       "SOURCE_UNREACHABLE",
+      "LLM_FAILED",
       "USAGE",
     ]);
   });

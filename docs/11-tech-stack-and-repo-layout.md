@@ -77,7 +77,7 @@ schema  ←  core  ←  adapters
 - `core` must not import from `cli`, `mcp`, `server`, or `web`.
 - `connectors` depends on `core` only; it never imports `server`. The server and CLI call into it.
 - `web` never imports server code; it talks HTTP.
-- Only `core/git` spawns processes.
+- Only `core/git` and `core/process` spawn processes (`core/process` runs non-git programs such as `claude -p`, ADR-017, in an empty temp directory).
 
 ## 3. `@aimem/core` module map
 

@@ -15,6 +15,7 @@ export const EXIT_CODES: Record<ErrorCode, number> = {
   CLAIM_CONFLICT: 3,
   SYNC_FAILED: 4,
   SOURCE_UNREACHABLE: 4,
+  LLM_FAILED: 4,
 };
 
 export function successEnvelope(command: string, data: unknown, warnings: string[]): string {
