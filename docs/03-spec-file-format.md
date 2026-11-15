@@ -215,7 +215,8 @@ retrieval:                        # full reference: 15 §11
     allow_remote: false           # must be true to send content to a remote endpoint
   rerank: none                    # none | cross-encoder | llm
   llm:
-    provider: none                # used only by `aimem ask` / rerank / query rewrite
+    provider: none                # none | openai-compatible | claude-cli; used only by `aimem ask` / rerank / query rewrite
+    allow_remote: false           # must be true before record text is sent to a remote model (claude-cli: Anthropic)
 
 connectors:                       # full reference: 16 §8 (no secrets here)
   google:

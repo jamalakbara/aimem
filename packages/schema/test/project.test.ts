@@ -48,11 +48,25 @@ describe("projectSchema (03 §6)", () => {
     ["write_policy", { agent_commits: "push" }],
     ["retrieval", { mode: "semantic" }],
     ["retrieval", { embeddings: { provider: "cloud" } }],
+    ["retrieval", { llm: { provider: "claude-desktop" } }],
+    ["retrieval", { llm: { provider: "claude-cli", timeout_seconds: 0 } }],
+    ["retrieval", { llm: { provider: "claude-cli", allow_remote: "yes" } }],
     ["claims", { ttl_minutes: -1 }],
     ["roles", []],
     ["adapters", { targets: ["vscode"] }],
   ])("rejects %s = %j", (key, value) => {
     expect(projectSchema.safeParse({ aimem: 1, project: "demo", [key]: value }).success).toBe(false);
+  });
+
+  it("accepts the claude-cli LLM provider (T2)", () => {
+    const cfg = {
+      aimem: 1,
+      project: "demo",
+      retrieval: {
+        llm: { provider: "claude-cli", model: "sonnet", allow_remote: true, timeout_seconds: 60 },
+      },
+    };
+    expect(projectSchema.parse(cfg)).toEqual(cfg);
   });
 
   it("accepts the adapters section (slice 2.5)", () => {

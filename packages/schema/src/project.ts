@@ -20,9 +20,12 @@ const retrievalSchema = z.looseObject({
   query_rewrite: z.enum(["none", "llm"]).optional(),
   llm: z
     .looseObject({
-      provider: z.enum(["none", "openai-compatible"]).optional(),
+      provider: z.enum(["none", "openai-compatible", "claude-cli"]).optional(),
       endpoint: nullableString.optional(),
       model: nullableString.optional(),
+      /** Must be true before record text is sent to a remote model (15 §12). */
+      allow_remote: z.boolean().optional(),
+      timeout_seconds: posInt.optional(),
     })
     .optional(),
 });

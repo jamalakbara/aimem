@@ -172,11 +172,15 @@ retrieval:
   rerank: none                 # none | cross-encoder | llm
   query_rewrite: none          # none | llm
   llm:                         # used by ask / rerank / rewrite
-    provider: none             # none | openai-compatible
-    endpoint: null
-    model: null
+    provider: none             # none | openai-compatible | claude-cli
+    endpoint: null             # for openai-compatible
+    model: null                # claude-cli: passed as --model (e.g. sonnet); null = Claude Code default
+    allow_remote: false        # must be true to send record text to a remote model
+    timeout_seconds: 120
 ```
 Keys/tokens come from env vars or keychain, never from this file.
+
+**`claude-cli` (ADR-017):** runs `claude -p` with the user's Claude Code login — no API key in aimem. No tools, no session persistence, no MCP servers, no slash commands, no user/project settings (so no hooks), in an empty temp directory; rules via `--system-prompt-file`, prompt on stdin. Off until `allow_remote: true` (record text goes to Anthropic). `AIMEM_CLAUDE_BIN` overrides the binary. Failures → `LLM_FAILED` (exit 4). Not `--bare`: bare mode ignores the Claude Code login.
 
 ## 12. Privacy and safety
 
