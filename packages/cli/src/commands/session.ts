@@ -240,8 +240,15 @@ export async function doctor(deps: CliDeps, g: GlobalOptions): Promise<CommandRe
   const remoteEmbeddings = emb?.provider === "openai-compatible" && emb.allow_remote === true;
   if (emb?.provider === "openai-compatible" && !remoteEmbeddings)
     configured.push(`remote embeddings ${emb.endpoint ?? "(no endpoint)"} (blocked: allow_remote is false)`);
-  if (nb.config.retrieval?.llm?.provider && nb.config.retrieval.llm.provider !== "none")
-    configured.push(`LLM ${nb.config.retrieval.llm.endpoint ?? "(no endpoint)"}`);
+  const llm = nb.config.retrieval?.llm;
+  if (llm?.provider === "claude-cli")
+    configured.push(
+      llm.allow_remote === true
+        ? "LLM claude-cli: record text would go to Anthropic through your Claude Code login (claude -p, no tools) when aimem ask arrives"
+        : "LLM claude-cli (blocked: allow_remote is false)",
+    );
+  else if (llm?.provider && llm.provider !== "none")
+    configured.push(`LLM ${llm.endpoint ?? "(no endpoint)"}`);
   const host = (() => {
     try {
       return new URL(emb?.endpoint ?? "").host;

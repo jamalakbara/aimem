@@ -100,6 +100,36 @@ describe("doctor", () => {
     );
   });
 
+  it("names the claude-cli LLM in outbound data, blocked until allow_remote (T2)", async () => {
+    const yaml = join(dir, ".aimem", "project.yaml");
+    const base = readFileSync(yaml, "utf8");
+    const outbound = async () => {
+      const r = await cli(["doctor", "--json", "--dir", dir], { env: {}, git: fakeGit("Dana Example") });
+      return r.json.data.checks.find((c: { name: string }) => c.name === "outbound data").detail as string;
+    };
+    writeFileSync(
+      yaml,
+      `${base}
+retrieval:
+  llm:
+    provider: claude-cli
+`,
+    );
+    expect(await outbound()).toMatch(/LLM claude-cli \(blocked: allow_remote is false\)/);
+    writeFileSync(
+      yaml,
+      `${base}
+retrieval:
+  llm:
+    provider: claude-cli
+    allow_remote: true
+`,
+    );
+    expect(await outbound()).toMatch(
+      /LLM claude-cli: record text would go to Anthropic through your Claude Code login/,
+    );
+  });
+
   it("warns about problems but still exits 0", async () => {
     const noGit = { calls: [], run: async () => ({ code: 127, stdout: "", stderr: "not found" }) };
     const r = await cli(["doctor", "--json", "--dir", join(FIXTURES, "messy")], { env: {}, git: noGit });

@@ -81,6 +81,13 @@ Decision log in ADR style. Status: **accepted** (decided in brainstorm), **propo
 - **Revisit when:** PMs need agent progress inside Odoo, or agents need to read Odoo tasks. Then resolve OQ-19, OQ-20 and OQ-22 first.
 - **Consequences:** + smaller v1 (M4b shrinks); no dependency on Odoo version or network access. − tasks are not linked to Odoo; non-developers who track work in Odoo must also import task Sheets if they want them in the notebook.
 
+### ADR-017 — Claude Code print mode as a local LLM provider
+- **Status:** accepted (T2)
+- **Context:** `aimem ask` (15 §10) needs an LLM. Many users already have Claude Code signed in; asking them for a separate API key, stored by aimem, adds a secret to manage. OQ-17 recommended an OpenAI-compatible endpoint; this adds a second option without changing that default.
+- **Decision:** `retrieval.llm.provider: claude-cli` shells out to `claude -p` and reuses the user's Claude Code login. aimem stores no key. Flags: `--output-format json --tools "" --no-session-persistence --strict-mcp-config --disable-slash-commands --setting-sources ""`, the rules passed with `--system-prompt-file`, the prompt on stdin, and the run happens in an empty temp directory with a timeout (`timeout_seconds`, default 120). **Not `--bare`:** bare mode reads only `ANTHROPIC_API_KEY` or an `apiKeyHelper` and never the OAuth login, so it would defeat the point; the extras it skips are switched off one by one instead. Record text goes to Anthropic, so the provider stays off until `retrieval.llm.allow_remote: true`. Failures map to `LLM_FAILED` (exit 4). Binary override: `AIMEM_CLAUDE_BIN`. Default stays `none`.
+- **Verified (Claude Code 2.1.304, Windows, 2026-11-16):** with these flags the model reported no tools; no hook or plugin text reached it (a user SessionStart hook was installed); no session was saved under `~/.claude/projects`; auth came from the login with `ANTHROPIC_API_KEY` unset; a multi-line system prompt passed through the `.cmd` shim via the file; about 6 s per call. With `--setting-sources ""` the user's default model setting is not read, so set `retrieval.llm.model` (e.g. `sonnet`) for answer quality.
+- **Consequences:** + no API key in aimem; works wherever Claude Code is signed in. − depends on Claude Code's CLI flags staying stable (pinned by tests on the argument list); slower start (~1–2 s) than an HTTP call; usage counts against the user's Claude plan.
+
 ## Open questions (with recommended defaults)
 
 | ID | Question | Recommended default | Decide by |
@@ -101,7 +108,7 @@ Decision log in ADR style. Status: **accepted** (decided in brainstorm), **propo
 | OQ-14 | Private notes: allow `visibility: private` records that stay out of git? | No for v1 (breaks the files-in-git rule); use a private repo | post-v1 |
 | OQ-15 | Language of records (team may write in Indonesian/English) | Any language; `summary` recommended in the team's main language; search is language-agnostic BM25 (stemming off by default) | M2 |
 | OQ-16 | Default local multilingual embedding model (quality vs size vs speed) | **Resolved (slice 2.4b):** `paraphrase-multilingual-MiniLM-L12-v2` — smallest candidate passing the gate (overall 0.93 vs lexical 0.81; e5-small 0.81; bge-m3 0.93 at 5× size). See 15 §4.2 | M2 |
-| OQ-17 | LLM provider for `ask`/rerank: hosted API, local server (e.g. Ollama), or none | Support any OpenAI-compatible endpoint; ship with `none` | M6 |
+| OQ-17 | LLM provider for `ask`/rerank: hosted API, local server (e.g. Ollama), or none | Support any OpenAI-compatible endpoint; ship with `none`. `claude-cli` (Claude Code login) added by ADR-017 | M6 |
 | OQ-18 | May `context` ever call an LLM (query rewrite)? | No by default; opt-in `query_rewrite: llm` | M2 |
 | OQ-19 | *(deferred)* Odoo version, edition (Community/Enterprise), hosting (Online / Odoo.sh / self-hosted) | Ask IT; check `/web/webclient/version_info` on the Odoo host. Connector is version-tolerant meanwhile (16 §6.1) | M4b start |
 | OQ-20 | *(deferred)* Where to host the sync server if Odoo is only reachable inside the company network | Run it inside the network/VPN; CLI sync from a VPN laptop until then | M6 |

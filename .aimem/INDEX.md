@@ -10,9 +10,9 @@ Project: `aimem` · mode: solo · sync: none
 3. END: run `aimem handoff` (Done / Not done / Next / Blocked). Supersede records, never delete them.
 
 ## Counts
-- task: 3 (open 3)
-- memory: 5 (active 5)
-- handoff: 21 (final 21)
+- task: 12 (open 11, review 1)
+- memory: 6 (active 6)
+- handoff: 22 (final 22)
 
 ## Pinned
 - mem-134qcb5d [agent] Project overview — aimem: a git-based shared notebook where humans and AI agents read and write project knowledge as markdown records in .aimem/.
@@ -20,8 +20,13 @@ Project: `aimem` · mode: solo · sync: none
 - mem-gv0gjym6 [agent] Working conventions for this repo — Plan first and wait for approval, one slice per PR, tests first, spec 03 is the contract, contract snapshots change only on purpose, end every session with aimem handoff.
 
 ## Recent handoffs
+- hnd-j2cghd9t 2026-11-15 (agent:claude-code) — Done: T2 claude-cli LLM provider: core/process ProcessRunner (execa, empty temp cwd, stdin, timeout), core/llm LlmProvider + createClaudeCliProvider + loadLlmProvider; schema retrieval.llm.provider c…
 - hnd-ewrm4n32 2026-10-20 (agent:claude-code) — Done: Set up a Windows dev machine (pnpm 12.11.2 via npm; Node 25 has no corepack) and got the suite green on Windows: 273 -> 690 passing. PR #21 fileURLToPath in test helpers; #22/#24 .gitattributes…
 - hnd-dbepfwgf 2026-10-18 (agent:claude-code) — Done: Diagnosed the aimem MCP 'Connection closed': the npm-linked dist was built from an older branch (no serve command); rebuilt on main, serve mcp exits 0, vectors refreshed (coverage 100%). · Next…
 - hnd-zjrxnegr 2026-10-15 (agent:claude-code) — Done: Dogfooding set up: aimem linked globally (npm link), this repo initialised as notebook 'aimem', protocol block in AGENTS.md, 3 pinned starter notes, vectors built (MiniLM). · Next: Human: sign…
 - hnd-23d56g3x 2026-10-14 (agent:claude-code) — Done: M2 slice 2.6 MCP server · Next: Slice 2.7: dogfood — `aimem init` in this repo, migrate docs/HANDOFF.md into handoff records, use it for a real week (M2 gate).
-- hnd-6x18k102 2026-10-14 (agent:claude-code) — Done: M2 slice 2.5 adapters · Next: Slice 2.6 MCP server (stdio), all tools in docs/05.
+
+## Open p0/p1 tasks
+- tsk-4gt7sd44 [review, p1] T2: CLI LLM provider (Claude Code print mode)
+- tsk-pvrwny71 [open, p1] T4: aimem ask with citations
+- tsk-rmd7kq4t [open, p1] T1: Incremental embeddings after record writes
