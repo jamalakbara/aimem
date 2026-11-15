@@ -11,13 +11,14 @@ import {
   loadVectorCache,
   parseHandoffFile,
   resolveAuthorWithGit,
+  semanticForQuery,
   slugify,
   summarizeNotebook,
   validateNotebook,
 } from "@aimem/core";
 import { RECORD_TYPES, SPEC_VERSION, STATUSES } from "@aimem/schema";
 import type { CliDeps, CommandResult, GlobalOptions } from "../deps.js";
-import { embeddingStatus } from "./embedder.js";
+import { embeddingStatus, writeDeps } from "./embedder.js";
 
 export interface HandoffOptions extends HandoffSections {
   task?: string;
@@ -57,7 +58,7 @@ export async function handoff(deps: CliDeps, g: GlobalOptions, o: HandoffOptions
       ...(o.task ? { task: o.task } : {}),
       ...(branch ? { branch } : {}),
     },
-    { fs: deps.fs, clock: deps.clock, random: deps.random },
+    await writeDeps(deps, nb),
   );
   const firstDone =
     (pick("done") ?? "")
@@ -221,10 +222,14 @@ export async function doctor(deps: CliDeps, g: GlobalOptions): Promise<CommandRe
     vc.cache.meta.provider === embStatus.provider.id &&
     vc.cache.meta.dimensions === embStatus.provider.dimensions
   ) {
+    const sem = await semanticForQuery(nb, await loadIndex(nb, { fs: deps.fs }), embStatus.provider, "", {
+      fs: deps.fs,
+    });
+    const pct = "coverage" in sem ? Math.floor(sem.coverage * 100) : 0;
     checks.push({
       name: "search",
-      status: "ok",
-      detail: `semantic search ready: ${embStatus.provider.id}, ${vc.cache.meta.chunks.length} chunks cached`,
+      status: pct === 100 ? "ok" : "warn",
+      detail: `semantic search ready: ${embStatus.provider.id}, ${vc.cache.meta.chunks.length} chunks cached, coverage ${pct}%${pct === 100 ? "" : "; run aimem index --embeddings"}`,
     });
   } else {
     checks.push({

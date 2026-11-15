@@ -75,6 +75,72 @@ describe("aimem index --embeddings", () => {
     expect(lex.json.data).toMatchObject({ mode: "lexical", semanticReason: "lexical mode" });
   });
 
+  it("writes embed only changed chunks; doctor shows 100% coverage (T1, 15 §13)", async () => {
+    const embedder = hashEmbedder(64);
+    const built = await cli(["index", "--embeddings", "--json", "--dir", dir], { embedder });
+    const chunks = built.json.data.embeddings.chunks;
+    const env = { AIMEM_AUTHOR: "agent:test" };
+    const added = await cli(
+      [
+        "remember",
+        "--title",
+        "Retry webhook deliveries with jitter",
+        "--summary",
+        "Webhook retries back off exponentially with random jitter.",
+        "--body",
+        "## Notes\nJitter is 0-30% of the delay.\n",
+        "--json",
+        "--dir",
+        dir,
+      ],
+      { embedder, env },
+    );
+    expect(added.code).toBe(0);
+    // --json contract unchanged: no embedding fields on write output.
+    expect(Object.keys(added.json.data).sort()).toEqual(
+      ["changed", "file", "git", "ref", "status", "trust", "type"].sort(),
+    );
+    const ref = added.json.data.ref;
+    const upd = await cli(["update", ref, "--set", "tags=webhooks", "--json", "--dir", dir], {
+      embedder,
+      env,
+    });
+    expect(upd.code).toBe(0);
+    const ho = await cli(
+      ["handoff", "--done", "T1 test", "--not-done", "none", "--next", "none", "--json", "--dir", dir],
+      { embedder, env },
+    );
+    expect(ho.code).toBe(0);
+
+    const again = await cli(["index", "--embeddings", "--json", "--dir", dir], { embedder });
+    expect(again.json.data.embeddings.built).toBe(0);
+    expect(again.json.data.embeddings.chunks).toBeGreaterThan(chunks);
+    const doc = await cli(["doctor", "--json", "--dir", dir], { git: fakeGit(), embedder });
+    const search = doc.json.data.checks.find((c: { name: string }) => c.name === "search");
+    expect(search.detail).toMatch(/coverage 100%/);
+  });
+
+  it("writes without a model succeed and say nothing about embeddings", async () => {
+    await cli(["index", "--embeddings", "--dir", dir], { embedder: hashEmbedder(64) });
+    const r = await cli(
+      [
+        "remember",
+        "--title",
+        "Queue names are kebab-case",
+        "--summary",
+        "All queues use kebab-case.",
+        "--body",
+        "## Notes\nExample: billing-events.\n",
+        "--json",
+        "--dir",
+        dir,
+      ],
+      { env: { AIMEM_AUTHOR: "agent:test" } },
+    );
+    expect(r.code).toBe(0);
+    expect(r.json.warnings).toEqual([]);
+  });
+
   it("a stale cache from another model falls back with the reason", async () => {
     await cli(["index", "--embeddings", "--dir", dir], { embedder: hashEmbedder(64) });
     const c = await cli(["context", "--task", "money", "--mode", "hybrid", "--json", "--dir", dir], {

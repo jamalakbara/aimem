@@ -77,6 +77,16 @@ export async function loadVectorCache(
   return { cache: { meta, vectors } };
 }
 
+/** Cheap check (reads meta.json only): the provider id the cache was built with, if any. */
+export async function vectorCacheProvider(fs: Fs, nb: Notebook): Promise<string | undefined> {
+  try {
+    const meta = JSON.parse(await fs.readFile(paths(nb).meta)) as Partial<VectorCacheMeta>;
+    return typeof meta.provider === "string" ? meta.provider : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function normalise(v: number[]): number[] {
   const n = Math.hypot(...v) || 1;
   return v.map((x) => x / n);
@@ -94,14 +104,37 @@ export async function buildVectorCache(
   deps: { fs: Fs; random: Random },
   options: { rebuild?: boolean } = {},
 ): Promise<BuildResult> {
-  const excluded: BuildResult["excluded"] = [];
-  const chunks: Chunk[] = [];
-  for (const r of index.records) {
-    if (r.tags.includes("no-embed")) excluded.push({ ref: r.id, reason: "tagged no-embed" });
-    else if (scanSecrets(r.text).length) excluded.push({ ref: r.id, reason: "possible secret" });
-    else chunks.push(...chunkRecord(r));
-  }
+  return (await updateVectorCache(nb, index, provider, deps, options)) as BuildResult;
+}
 
+/**
+ * Refresh the vector cache after a record write (15 §13): embeds only new or changed chunks.
+ * Runs only when a cache built with this provider already exists — a write never starts a cold
+ * build (that stays with `aimem index --embeddings`). Never throws: the record is already
+ * written, so a failure is returned as a warning and the next write or index run catches up.
+ */
+export async function refreshVectorsAfterWrite(
+  nb: Notebook,
+  index: NotebookIndex,
+  provider: EmbeddingProvider,
+  deps: { fs: Fs; random: Random },
+): Promise<{ result?: BuildResult; warning?: string }> {
+  try {
+    const result = await updateVectorCache(nb, index, provider, deps, { onlyIfCached: true });
+    return result ? { result } : {};
+  } catch (e) {
+    const msg = (e as Error).message.split("\n")[0] ?? "unknown error";
+    return { warning: `embeddings not updated: ${msg}; run aimem index --embeddings` };
+  }
+}
+
+async function updateVectorCache(
+  nb: Notebook,
+  index: NotebookIndex,
+  provider: EmbeddingProvider,
+  deps: { fs: Fs; random: Random },
+  options: { rebuild?: boolean; onlyIfCached?: boolean },
+): Promise<BuildResult | undefined> {
   let reason: string | undefined;
   let old: VectorCache | undefined;
   if (options.rebuild) reason = "rebuild requested";
@@ -114,6 +147,15 @@ export async function buildVectorCache(
       reason = `model changed (${loaded.cache.meta.provider} → ${provider.id})`;
     else if (loaded.cache.meta.chunkerVersion !== CHUNKER_VERSION) reason = "chunker changed";
     else old = loaded.cache;
+  }
+  if (!old && options.onlyIfCached) return undefined;
+
+  const excluded: BuildResult["excluded"] = [];
+  const chunks: Chunk[] = [];
+  for (const r of index.records) {
+    if (r.tags.includes("no-embed")) excluded.push({ ref: r.id, reason: "tagged no-embed" });
+    else if (scanSecrets(r.text).length) excluded.push({ ref: r.id, reason: "possible secret" });
+    else chunks.push(...chunkRecord(r));
   }
   const previous = new Map<string, Float32Array>();
   if (old) {

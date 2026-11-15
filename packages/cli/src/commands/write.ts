@@ -12,6 +12,7 @@ import {
 } from "@aimem/core";
 import { RECORD_TYPES, type RecordType } from "@aimem/schema";
 import type { CliDeps, CommandResult, GlobalOptions } from "../deps.js";
+import { writeDeps } from "./embedder.js";
 
 const csv = (v: string | undefined) =>
   v
@@ -45,7 +46,6 @@ const author = (deps: CliDeps, g: GlobalOptions, o: { author?: string }) =>
 /** Stage/commit per write_policy (04 §4); returns the action and any warnings. */
 const commit = (deps: CliDeps, nb: Notebook, who: string, files: string[], message: string) =>
   applyWritePolicy({ git: deps.git, nb, author: who, files, message });
-const writeDeps = (deps: CliDeps) => ({ fs: deps.fs, clock: deps.clock, random: deps.random });
 
 export interface AddOptions extends BodyOptions {
   title: string;
@@ -97,7 +97,7 @@ export async function add(
       ...(Object.keys(fields).length ? { fields } : {}),
       ...(o.force ? { force: true } : {}),
     },
-    writeDeps(deps),
+    await writeDeps(deps, nb),
   );
   const git = await commit(deps, nb, who, r.changed, `aimem: add ${r.ref} ${o.title.trim()}`);
   return {
@@ -134,13 +134,13 @@ export async function update(
     nb,
     ref,
     { set, author: who, ...(body !== undefined ? { body } : {}), ...(o.force ? { force: true } : {}) },
-    writeDeps(deps),
+    await writeDeps(deps, nb),
   );
   const git = await commit(deps, nb, who, r.changed, `aimem: update ${r.ref}`);
   return {
     data: { ref: r.ref, file: r.file, changed: r.changed, git: git.action },
     text: `Updated ${r.ref} → ${r.file}\n`,
-    warnings: git.warnings,
+    warnings: [...r.warnings, ...git.warnings],
   };
 }
 
@@ -151,10 +151,11 @@ export async function supersede(
   o: { by: string },
 ): Promise<CommandResult> {
   const nb = await loadProject(deps.fs, g.dir);
-  const r = await supersedeRecord(nb, oldRef, o.by, writeDeps(deps));
+  const r = await supersedeRecord(nb, oldRef, o.by, await writeDeps(deps, nb));
   return {
     data: { old: r.old, new: r.ref, changed: r.changed },
     text: `${r.old} is now superseded by ${r.ref}\n`,
+    warnings: r.warnings,
   };
 }
 
@@ -166,6 +167,10 @@ export async function verify(
 ): Promise<CommandResult> {
   const who = await author(deps, g, o);
   const nb = await loadProject(deps.fs, g.dir);
-  const r = await verifyRecords(nb, refs, who, writeDeps(deps));
-  return { data: { ...r, git: "none" }, text: `Verified ${r.refs.join(", ")}\n` };
+  const r = await verifyRecords(nb, refs, who, await writeDeps(deps, nb));
+  return {
+    data: { refs: r.refs, changed: r.changed, git: "none" },
+    text: `Verified ${r.refs.join(", ")}\n`,
+    warnings: r.warnings,
+  };
 }
