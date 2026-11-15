@@ -4,6 +4,7 @@ import type {
   EmbeddingStatus,
   Fs,
   Git,
+  LlmStatus,
   Random,
   ResolvedProject,
 } from "@aimem/core";
@@ -24,6 +25,8 @@ export interface CliDeps {
   embedder?: EmbeddingProvider;
   /** Loads the configured provider (local model or remote endpoint). Only `index --embeddings` may download. */
   loadEmbedder?: (config: ResolvedProject, allowDownload: boolean) => Promise<EmbeddingStatus>;
+  /** Builds the configured LLM provider for `ask` (15 §11); tests inject a fake. */
+  loadLlm?: (config: ResolvedProject) => LlmStatus;
   /** Runs the MCP server on this process's stdio until the client disconnects (bin only). */
   serveMcp?: () => Promise<void>;
 }

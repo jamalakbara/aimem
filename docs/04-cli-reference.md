@@ -108,9 +108,11 @@ aimem search "<query>" [--type decision,memory] [--status ...] [--tag ...] [--ro
 ### `aimem ask "<question>"`
 Retrieval-augmented answer with citations (15 §10).
 ```
-aimem ask "why did we choose postgres for the ledger?" [--role pm] [--limit 8] [--json]
+aimem ask "why did we choose postgres for the ledger?" [--role pm] [--limit 8] [--mode lexical|hybrid] [--json]
 ```
-Requires `retrieval.llm` to be configured; otherwise prints how to enable it. Answers only from retrieved records, cites every claim as `[ref]`, says "not found in the notebook" when evidence is weak, and reports how many sources were `verified` / `agent` / `inferred`.
+Requires `retrieval.llm` to be configured; otherwise fails with `LLM_FAILED` (exit 4) and a message saying how to enable it. Answers only from retrieved records, cites every claim as `[ref]`, says "not found in the notebook" when evidence is weak, and reports how many sources were `verified` / `agent` / `inferred`. `--role` ranks that role's records higher but never filters (09 §5). Read-only; the model gets no tools.
+
+`--json` data (contract): `question`, `answer`, `found` (false when nothing matched or the model said not found; exit 0 either way), `sources[] {ref, type, title, trust, verified?}` (cited records only, in citation order), `confidence {verified, agent, inferred, note}`, `retrieval {mode, semanticModel+semanticCoverage | semanticReason, considered, excluded[] {ref, reason}}`, `provider`. Citations of records that were not retrieved are dropped and reported in `warnings`.
 
 ### `aimem show <ref>`
 Print one record (`--raw` for file text, `--links` to expand linked summaries).

@@ -7,9 +7,11 @@ import {
   DEFAULT_LOCAL_MODEL,
   type EmbeddingStatus,
   execaGit,
+  execaRunner,
   LOCAL_MODELS,
   type LocalModelName,
   loadEmbeddingProvider,
+  loadLlmProvider,
   nodeFs,
   type ResolvedProject,
   systemClock,
@@ -49,6 +51,7 @@ process.exitCode = await run(process.argv.slice(2), {
   },
   git,
   loadEmbedder,
+  loadLlm: (config) => loadLlmProvider(config, { runner: execaRunner(), env: process.env }),
   // stdout carries the MCP protocol: nothing else may be printed while serving.
   serveMcp: () =>
     serveStdio({
