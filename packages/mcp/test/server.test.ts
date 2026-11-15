@@ -1,5 +1,15 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import {
+  buildVectorCache,
+  type EmbeddingProvider,
+  hashEmbedder,
+  loadIndex,
+  loadProject,
+  type Notebook,
+  nodeFs,
+  semanticForQuery,
+} from "@aimem/core";
 import { afterEach, describe, expect, it } from "vitest";
 import { type Harness, harness } from "./helpers.js";
 
@@ -151,6 +161,64 @@ describe("tools: one contract each, plus the error path", () => {
       ...r.structured,
       data: { ...r.structured.data, issues: r.structured.data.issues.length },
     });
+  });
+});
+
+describe("incremental embeddings after writes (T1, 15 §13)", () => {
+  const seed = async (dir: string, provider: EmbeddingProvider) => {
+    const nb = await loadProject(nodeFs, dir);
+    await buildVectorCache(nb, await loadIndex(nb, { fs: nodeFs }), provider, {
+      fs: nodeFs,
+      random: { bytes: (k) => new Uint8Array(k).fill(3) },
+    });
+    return nb;
+  };
+  const coverage = async (nb: Notebook, provider: EmbeddingProvider) => {
+    const s = await semanticForQuery(nb, await loadIndex(nb, { fs: nodeFs }), provider, "", { fs: nodeFs });
+    return "coverage" in s ? s.coverage : undefined;
+  };
+
+  it("write tools keep the vector cache complete", async () => {
+    const embedder = hashEmbedder(64);
+    h = await harness("tiny", { embedder });
+    const nb = await seed(h.dir, embedder);
+    const added = await h.call("aimem_add", {
+      type: "memory",
+      title: "Exports use semicolons",
+      summary: "Bank CSV exports use semicolons.",
+      body: "Seen in September.",
+    });
+    expect(added.structured.ok).toBe(true);
+    const t = await h.call("aimem_task_create", {
+      title: "Drop the float column",
+      summary: "Remove amount_float after the backfill check.",
+      goal: "No float amounts remain.",
+    });
+    await h.call("aimem_task_status", { ref: t.structured.data.ref, status: "in_progress" });
+    await h.call("aimem_handoff", { done: "Embeddings", not_done: "none", next: "none" });
+    expect(await coverage(nb, embedder)).toBe(1);
+  });
+
+  it("loads the configured provider once per server, not per call", async () => {
+    const embedder = hashEmbedder(64);
+    let loads = 0;
+    h = await harness("tiny", {
+      loadEmbedder: async () => {
+        loads++;
+        return { available: true, provider: embedder };
+      },
+    });
+    const nb = await seed(h.dir, embedder);
+    await h.call("aimem_add", {
+      type: "memory",
+      title: "Exports use semicolons",
+      summary: "Bank CSV exports use semicolons.",
+      body: "Seen in September.",
+    });
+    await h.call("aimem_search", { query: "semicolons" });
+    await h.call("aimem_context", { task: "csv exports" });
+    expect(loads).toBe(1);
+    expect(await coverage(nb, embedder)).toBe(1);
   });
 });
 

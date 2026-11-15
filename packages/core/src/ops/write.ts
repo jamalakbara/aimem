@@ -7,6 +7,8 @@ import {
   STATUSES,
   TYPE_DIR,
 } from "@aimem/schema";
+import { refreshVectorsAfterWrite } from "../embed/cache.js";
+import type { EmbeddingProvider } from "../embed/provider.js";
 import { AimemError } from "../errors.js";
 import { type IndexedRecord, loadIndex, type NotebookIndex } from "../index/build.js";
 import type { Clock, Fs, Random } from "../ports.js";
@@ -31,6 +33,8 @@ export interface WriteDeps {
   fs: Fs;
   clock: Clock;
   random: Random;
+  /** When set, new or changed chunks are embedded after the write (15 §13). */
+  embedder?: EmbeddingProvider;
 }
 
 export interface WriteResult {
@@ -148,10 +152,20 @@ async function loadText(deps: WriteDeps, nb: Notebook, rec: IndexedRecord): Prom
   return r.record;
 }
 
-async function finish(deps: WriteDeps, nb: Notebook, changed: string[]): Promise<string[]> {
+/** After every write: re-render INDEX.md, then refresh the vector cache (never fails the write). */
+async function finish(
+  deps: WriteDeps,
+  nb: Notebook,
+  changed: string[],
+): Promise<{ changed: string[]; warnings: string[] }> {
   const index = await loadIndex(nb, { fs: deps.fs });
   if (await writeIndexMd(deps.fs, nb, index, deps.random)) changed.push(".aimem/INDEX.md");
-  return changed;
+  const warnings: string[] = [];
+  if (deps.embedder) {
+    const r = await refreshVectorsAfterWrite(nb, index, deps.embedder, deps);
+    if (r.warning) warnings.push(r.warning);
+  }
+  return { changed, warnings };
 }
 
 export interface AddInput {
@@ -275,14 +289,15 @@ export async function addRecord(
     await writeRecordFile(deps.fs, join(nb.root, old.file), oldText, deps.random);
     changed.push(old.file);
   }
+  const done = await finish(deps, nb, changed);
   return {
     ref: id,
     type: input.type,
     status,
     trust,
     file,
-    changed: await finish(deps, nb, changed),
-    warnings,
+    changed: done.changed,
+    warnings: [...warnings, ...done.warnings],
   };
 }
 
@@ -372,7 +387,7 @@ export async function updateRecord(
   checkSchema(text.data);
   checkSecrets(serializeRecord(text));
   await writeRecordFile(deps.fs, join(nb.root, rec.file), text, deps.random);
-  return { ref: rec.id, file: rec.file, changed: await finish(deps, nb, [rec.file]), warnings: [] };
+  return { ref: rec.id, file: rec.file, ...(await finish(deps, nb, [rec.file])) };
 }
 
 /** `aimem supersede <old> --by <new>`: link both, mark the old one superseded. */
@@ -404,8 +419,7 @@ export async function supersedeRecord(
     ref: next.id,
     old: old.id,
     file: next.file,
-    changed: await finish(deps, nb, [old.file, next.file]),
-    warnings: [],
+    ...(await finish(deps, nb, [old.file, next.file])),
   };
 }
 
@@ -415,7 +429,7 @@ export async function verifyRecords(
   refs: string[],
   author: string,
   deps: WriteDeps,
-): Promise<{ refs: string[]; changed: string[] }> {
+): Promise<{ refs: string[]; changed: string[]; warnings: string[] }> {
   if (!AUTHOR_RE.test(author)) throw new AimemError("USAGE", `invalid author '${author}'`);
   if (!author.startsWith("human:"))
     throw new AimemError("PERMISSION_DENIED", "only a human author can verify records");
@@ -432,5 +446,5 @@ export async function verifyRecords(
     await writeRecordFile(deps.fs, join(nb.root, rec.file), text, deps.random);
     changed.push(rec.file);
   }
-  return { refs: recs.map((r) => r.id), changed: await finish(deps, nb, changed) };
+  return { refs: recs.map((r) => r.id), ...(await finish(deps, nb, changed)) };
 }

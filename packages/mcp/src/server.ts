@@ -29,6 +29,7 @@ import {
   supersedeRecord,
   updateRecord,
   validateNotebook,
+  vectorCacheProvider,
 } from "@aimem/core";
 import { RECORD_TYPES, type RecordType } from "@aimem/schema";
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -115,17 +116,30 @@ export function createAimemServer(deps: McpDeps): McpServer {
     if (!rec) throw new AimemError("NOT_FOUND", `record ${ref} not found`);
     return rec;
   };
+  /** The server lives for the whole session, so a loaded model is kept; failures are retried. */
+  let loaded: { key: string; status: Promise<EmbeddingStatus> } | undefined;
+  const embedding = async (nb: Notebook): Promise<EmbeddingStatus> => {
+    if (deps.embedder || nb.config.retrieval?.embeddings?.provider === "none")
+      return resolveEmbeddingProvider(nb.config, deps.embedder);
+    if (!deps.loadEmbedder) return { available: false, reason: "no embedding provider loaded" };
+    const key = JSON.stringify(nb.config.retrieval?.embeddings ?? {});
+    if (loaded?.key !== key) loaded = { key, status: deps.loadEmbedder(nb.config, false) };
+    const status = await loaded.status;
+    if (!status.available) loaded = undefined;
+    return status;
+  };
+  /** Write deps, plus the embedder when there is a vector cache to keep current (15 §13). */
+  const writeDeps = async (nb: Notebook) => {
+    if (!(await vectorCacheProvider(deps.fs, nb))) return w;
+    const status = await embedding(nb);
+    return status.available ? { ...w, embedder: status.provider } : w;
+  };
   const semantic = async (
     nb: Notebook,
     index: NotebookIndex,
     query: string,
   ): Promise<{ semantic?: SemanticInput; off: string }> => {
-    const status =
-      deps.embedder || nb.config.retrieval?.embeddings?.provider === "none"
-        ? resolveEmbeddingProvider(nb.config, deps.embedder)
-        : deps.loadEmbedder
-          ? await deps.loadEmbedder(nb.config, false)
-          : { available: false as const, reason: "no embedding provider loaded" };
+    const status = await embedding(nb);
     if (!status.available) return { off: status.reason };
     const s = await semanticForQuery(nb, index, status.provider, query, { fs: deps.fs });
     return "scores" in s ? { semantic: s, off: "" } : { off: s.reason };
@@ -320,7 +334,7 @@ export function createAimemServer(deps: McpDeps): McpServer {
             ...(a.supersedes ? { supersedes: a.supersedes } : {}),
             ...(Object.keys(fields).length ? { fields } : {}),
           },
-          w,
+          await writeDeps(nb),
         );
         const git = await commit(nb, r.changed, `aimem: add ${r.ref} ${a.title.trim()}`);
         const data = {
@@ -357,7 +371,7 @@ export function createAimemServer(deps: McpDeps): McpServer {
           nb,
           a.ref,
           { set: a.set ?? {}, author: author(), ...(a.body !== undefined ? { body: a.body } : {}) },
-          w,
+          await writeDeps(nb),
         );
         const git = await commit(nb, r.changed, `aimem: update ${r.ref}`);
         return ok({ ref: r.ref, file: r.file, changed: r.changed, git: git.action }, `Updated ${r.ref}.`);
@@ -374,7 +388,7 @@ export function createAimemServer(deps: McpDeps): McpServer {
     (a) =>
       guarded(async () => {
         const { nb } = await open();
-        const r = await supersedeRecord(nb, a.old, a.new, w);
+        const r = await supersedeRecord(nb, a.old, a.new, await writeDeps(nb));
         const git = await commit(nb, r.changed, `aimem: supersede ${r.old} by ${r.ref}`);
         return ok(
           { old: r.old, new: r.ref, changed: r.changed, git: git.action },
@@ -418,7 +432,7 @@ export function createAimemServer(deps: McpDeps): McpServer {
               ...(a.assignee ? { assignee: a.assignee } : {}),
             },
           },
-          w,
+          await writeDeps(nb),
         );
         const git = await commit(nb, r.changed, `aimem: add ${r.ref} ${a.title.trim()}`);
         return ok({ ref: r.ref, status: r.status, file: r.file, git: git.action }, `Created task ${r.ref}.`);
@@ -438,7 +452,12 @@ export function createAimemServer(deps: McpDeps): McpServer {
         const rec = find(nb, index, a.ref);
         if (rec.type !== "task")
           throw new AimemError("INVALID_RECORD", `${a.ref} is a ${rec.type}, not a task`);
-        const r = await updateRecord(nb, rec.id, { set: { status: a.status }, author: author() }, w);
+        const r = await updateRecord(
+          nb,
+          rec.id,
+          { set: { status: a.status }, author: author() },
+          await writeDeps(nb),
+        );
         const git = await commit(nb, r.changed, `aimem: task ${r.ref} → ${a.status}`);
         return ok({ ref: r.ref, status: a.status, git: git.action }, `${r.ref} is now ${a.status}.`);
       }),
@@ -475,7 +494,7 @@ export function createAimemServer(deps: McpDeps): McpServer {
             ...(a.task ? { task: a.task } : {}),
             ...(branch ? { branch } : {}),
           },
-          w,
+          await writeDeps(nb),
         );
         const first =
           a.done

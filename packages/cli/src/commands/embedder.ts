@@ -1,4 +1,10 @@
-import { type EmbeddingStatus, type Notebook, resolveEmbeddingProvider } from "@aimem/core";
+import {
+  type EmbeddingProvider,
+  type EmbeddingStatus,
+  type Notebook,
+  resolveEmbeddingProvider,
+  vectorCacheProvider,
+} from "@aimem/core";
 import type { CliDeps } from "../deps.js";
 
 /** The embedding provider for this notebook: an injected one, else the configured loader. */
@@ -11,4 +17,21 @@ export async function embeddingStatus(
     return resolveEmbeddingProvider(nb.config, deps.embedder);
   if (!deps.loadEmbedder) return { available: false, reason: "no embedding provider loaded" };
   return deps.loadEmbedder(nb.config, allowDownload);
+}
+
+/**
+ * The provider for refreshing vectors after a write (15 §13), or undefined. Loads the model only
+ * when a vector cache already exists, so writes stay fast for notebooks that never built one.
+ * Never downloads; a missing model just means no refresh (context and doctor report why).
+ */
+export async function writeEmbedder(deps: CliDeps, nb: Notebook): Promise<EmbeddingProvider | undefined> {
+  if (!(await vectorCacheProvider(deps.fs, nb))) return undefined;
+  const status = await embeddingStatus(deps, nb, false);
+  return status.available ? status.provider : undefined;
+}
+
+/** Deps for core write ops, with the embedder when there is a vector cache to keep current. */
+export async function writeDeps(deps: CliDeps, nb: Notebook) {
+  const embedder = await writeEmbedder(deps, nb);
+  return { fs: deps.fs, clock: deps.clock, random: deps.random, ...(embedder ? { embedder } : {}) };
 }
