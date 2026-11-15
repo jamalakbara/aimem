@@ -10,7 +10,7 @@ Project: `aimem` · mode: solo · sync: none
 3. END: run `aimem handoff` (Done / Not done / Next / Blocked). Supersede records, never delete them.
 
 ## Counts
-- task: 3 (open 3)
+- task: 4 (open 4)
 - memory: 5 (active 5)
 - handoff: 21 (final 21)
 
@@ -25,3 +25,6 @@ Project: `aimem` · mode: solo · sync: none
 - hnd-zjrxnegr 2026-10-15 (agent:claude-code) — Done: Dogfooding set up: aimem linked globally (npm link), this repo initialised as notebook 'aimem', protocol block in AGENTS.md, 3 pinned starter notes, vectors built (MiniLM). · Next: Human: sign…
 - hnd-23d56g3x 2026-10-14 (agent:claude-code) — Done: M2 slice 2.6 MCP server · Next: Slice 2.7: dogfood — `aimem init` in this repo, migrate docs/HANDOFF.md into handoff records, use it for a real week (M2 gate).
 - hnd-6x18k102 2026-10-14 (agent:claude-code) — Done: M2 slice 2.5 adapters · Next: Slice 2.6 MCP server (stdio), all tools in docs/05.
+
+## Open p0/p1 tasks
+- tsk-rmd7kq4t [open, p1] T1: Incremental embeddings after record writes
