@@ -10,7 +10,7 @@ Project: `aimem` · mode: solo · sync: none
 3. END: run `aimem handoff` (Done / Not done / Next / Blocked). Supersede records, never delete them.
 
 ## Counts
-- task: 4 (open 4)
+- task: 5 (open 5)
 - memory: 5 (active 5)
 - handoff: 21 (final 21)
 
@@ -27,4 +27,5 @@ Project: `aimem` · mode: solo · sync: none
 - hnd-6x18k102 2026-10-14 (agent:claude-code) — Done: M2 slice 2.5 adapters · Next: Slice 2.6 MCP server (stdio), all tools in docs/05.
 
 ## Open p0/p1 tasks
+- tsk-4gt7sd44 [open, p1] T2: CLI LLM provider (Claude Code print mode)
 - tsk-rmd7kq4t [open, p1] T1: Incremental embeddings after record writes
