@@ -4,13 +4,13 @@ id: tsk-rmd7kq4t
 type: task
 title: "T1: Incremental embeddings after record writes"
 summary: New or changed records get embedded on write, not via a manual index --embeddings run.
-status: review
+status: done
 trust: agent
 roles: [all]
 paths: [packages/core/src/embed/, packages/core/src/ops/write.ts, packages/cli/src/commands/write.ts]
 author: agent:claude-code
 created: 2026-11-15T17:27:19Z
-updated: 2026-11-15T17:41:31Z
+updated: 2026-11-15T18:22:17Z
 priority: p1
 ---
 
