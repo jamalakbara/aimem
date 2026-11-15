@@ -225,7 +225,7 @@ Extends 12 §3. Case sets:
 - **Unanswerable** cases: `ask` must say "not found".
 - **Trap** cases: superseded or `inferred` records that must not win.
 
-Metrics: recall@k, MRR, nDCG@10, citation precision (cited refs actually support the claim), unanswerable-refusal rate, latency, index build time. Compare `lexical` vs `semantic` vs `hybrid`; hybrid must beat lexical-only on paraphrase/multilingual sets without regressing keyword cases. Weight and model changes require eval deltas in the PR.
+Metrics: recall@k, MRR, nDCG@10, citation precision (cited refs actually support the claim), unanswerable-refusal rate, latency, index build time. `ask` answer evals (T5) are in 12 §3.1; there, citation precision is measured against each case's `supports` list (no judge model). Compare `lexical` vs `semantic` vs `hybrid`; hybrid must beat lexical-only on paraphrase/multilingual sets without regressing keyword cases. Weight and model changes require eval deltas in the PR.
 
 ## 16. How this keeps the original requirements intact
 

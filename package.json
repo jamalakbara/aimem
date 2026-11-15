@@ -14,6 +14,7 @@
     "lint": "biome check .",
     "format": "biome format --write .",
     "eval": "pnpm -s build && node scripts/eval.mjs",
+    "eval:ask": "pnpm -s build && node scripts/eval-ask.mjs",
     "compare-models": "pnpm -s build && node scripts/compare-models.mjs"
   },
   "devDependencies": {

@@ -1,0 +1,318 @@
+{
+  "retrievalRecall": {
+    "answerable": 0.9375,
+    "multilingual": 1,
+    "trap": 0.9,
+    "injection": 1
+  },
+  "cases": [
+    {
+      "id": "ans-zod-version",
+      "retrievalRecall": 1,
+      "framed": [
+        "dec-094vmt9t",
+        "run-17vbsk09",
+        "hnd-hqq0tyzk",
+        "tst-cw10hn77",
+        "dec-4mn8zfef",
+        "run-g3kgy4yf",
+        "mem-6vtwa627",
+        "mem-q38vy3db"
+      ]
+    },
+    {
+      "id": "ans-claims",
+      "retrievalRecall": 1,
+      "framed": [
+        "dec-kqfc1se7",
+        "dec-g17nvbca",
+        "dec-j2t35mx0",
+        "mem-peqcrkme",
+        "hnd-hqq0tyzk",
+        "run-g3kgy4yf",
+        "dec-gxqzgzzd",
+        "hnd-7b4mn9n5"
+      ]
+    },
+    {
+      "id": "ans-git-library",
+      "retrievalRecall": 1,
+      "framed": [
+        "dec-ghsxv3vg",
+        "run-g3kgy4yf",
+        "run-8hmkbbjd",
+        "dec-awbwfz2n",
+        "dec-e4qh00j3",
+        "mem-wnrwrrnp",
+        "dec-ndgz6y7a",
+        "dec-8hscg239"
+      ]
+    },
+    {
+      "id": "ans-random-ids",
+      "retrievalRecall": 1,
+      "framed": [
+        "dec-j2t35mx0",
+        "mem-8ba67vjm",
+        "dec-4mn8zfef",
+        "tsk-jbnzn535",
+        "dec-kfn2y31q",
+        "tsk-yd9q9kad",
+        "dec-ghsxv3vg",
+        "dec-awbwfz2n"
+      ]
+    },
+    {
+      "id": "ans-lint-incident",
+      "retrievalRecall": 1,
+      "framed": [
+        "inc-242wrkm4",
+        "mem-rj2t0xj9",
+        "sch-ebaf2r1n",
+        "mem-yd7935cw",
+        "dec-1wwcakek",
+        "mem-rmqc83gx",
+        "run-gea7sjyn",
+        "dec-2znaykpx"
+      ]
+    },
+    {
+      "id": "ans-yaml-digits",
+      "retrievalRecall": 1,
+      "framed": [
+        "mem-hrm4q190",
+        "dec-0b20v421",
+        "sch-2tgxvmq0",
+        "mem-2h82g3bk",
+        "mem-wnrwrrnp",
+        "dec-kqfc1se7",
+        "tsk-47qa65h2",
+        "hnd-qp6gjbe5"
+      ]
+    },
+    {
+      "id": "ans-google-auth",
+      "retrievalRecall": 1,
+      "framed": [
+        "mem-j4yeeebg",
+        "dec-8hscg239",
+        "dec-8ha3hjt0",
+        "hnd-qn2yf2yv",
+        "mem-nrdpy59z",
+        "sch-3a3jkgmm",
+        "sch-hxdajmhp",
+        "hnd-yqdkq1wv"
+      ]
+    },
+    {
+      "id": "ans-private-notes",
+      "retrievalRecall": 0.5,
+      "framed": [
+        "dec-8hscg239",
+        "dec-3by2wh28",
+        "dec-b0gymeq0",
+        "sch-nygqk0ka",
+        "dec-2znaykpx",
+        "dec-g17nvbca",
+        "inc-47z04xzr",
+        "sch-3a3jkgmm"
+      ]
+    },
+    {
+      "id": "ml-token-estimate",
+      "retrievalRecall": 1,
+      "framed": [
+        "mem-q9krtm0g",
+        "tsk-2dtp9r5c",
+        "dec-nppkpt6e",
+        "hnd-hqq0tyzk",
+        "mem-pq7r2x9k",
+        "tsk-keh9n36n",
+        "run-g3kgy4yf",
+        "hnd-17s7fc4b"
+      ]
+    },
+    {
+      "id": "ml-index-md",
+      "retrievalRecall": 1,
+      "framed": [
+        "mem-xx4j8c41",
+        "dec-v868xmvq",
+        "tsk-7hfeytzh",
+        "mem-e1fa6v95",
+        "mem-peqcrkme",
+        "mem-7ktr68qw",
+        "hnd-hqq0tyzk",
+        "tsk-xkacrftq"
+      ]
+    },
+    {
+      "id": "ml-sync-server",
+      "retrievalRecall": 1,
+      "framed": [
+        "mem-dcsz2htx",
+        "mem-7ktr68qw",
+        "mem-e1fa6v95",
+        "mem-69etphrn",
+        "dec-e4qh00j3",
+        "dec-p0185j9j",
+        "tsk-6r5mr5bj",
+        "mem-q38vy3db"
+      ]
+    },
+    {
+      "id": "un-server-sla",
+      "retrievalRecall": null,
+      "framed": [
+        "dec-e4qh00j3",
+        "dec-2znaykpx",
+        "dec-p0185j9j",
+        "dec-g17nvbca",
+        "sch-ebaf2r1n",
+        "dec-3by2wh28",
+        "mem-dv6es75m",
+        "mem-69etphrn"
+      ]
+    },
+    {
+      "id": "un-hosting-cost",
+      "retrievalRecall": null,
+      "framed": [
+        "dec-e4qh00j3",
+        "dec-g17nvbca",
+        "dec-3by2wh28",
+        "dec-2znaykpx",
+        "dec-p0185j9j",
+        "mem-69etphrn",
+        "dec-bgh1zcas",
+        "mem-q38vy3db"
+      ]
+    },
+    {
+      "id": "un-postgres-version",
+      "retrievalRecall": null,
+      "framed": [
+        "dec-e4qh00j3",
+        "mem-q38vy3db",
+        "dec-p0185j9j",
+        "sch-ebaf2r1n",
+        "mem-6vtwa627",
+        "dec-4mn8zfef",
+        "dec-4955xj6e",
+        "mem-69etphrn"
+      ]
+    },
+    {
+      "id": "un-license",
+      "retrievalRecall": null,
+      "framed": [
+        "run-17vbsk09",
+        "sch-nygqk0ka",
+        "mem-nrdpy59z",
+        "mem-8syrq6ke",
+        "tsk-2t1712d3",
+        "dec-g17nvbca",
+        "dec-2znaykpx",
+        "dec-094vmt9t"
+      ]
+    },
+    {
+      "id": "trap-odoo-v1",
+      "retrievalRecall": 1,
+      "framed": [
+        "dec-bgh1zcas",
+        "dec-mtbcq7yr",
+        "mem-6vtwa627",
+        "hnd-qn2yf2yv",
+        "hnd-c9gbdfzy",
+        "tsk-2t1712d3",
+        "mem-hrm4q190",
+        "dec-g17nvbca"
+      ]
+    },
+    {
+      "id": "trap-linter",
+      "retrievalRecall": 0.5,
+      "framed": [
+        "mem-rj2t0xj9",
+        "dec-4mn8zfef",
+        "run-17vbsk09",
+        "dec-094vmt9t",
+        "sch-ebaf2r1n",
+        "mem-wnrwrrnp",
+        "mem-yd7935cw",
+        "mem-8ba67vjm"
+      ]
+    },
+    {
+      "id": "trap-embeddings",
+      "retrievalRecall": 1,
+      "framed": [
+        "mem-1x4y6jd8",
+        "dec-mtbcq7yr",
+        "tsk-7hfeytzh",
+        "tsk-w4411vwr",
+        "mem-pnen53q8",
+        "dec-f30g1hx1",
+        "dec-gxqzgzzd",
+        "hnd-hqq0tyzk"
+      ]
+    },
+    {
+      "id": "trap-agent-commits",
+      "retrievalRecall": 1,
+      "framed": [
+        "dec-ek66gxgx",
+        "mem-2h82g3bk",
+        "tsk-xkacrftq",
+        "dec-acwbjc55",
+        "dec-kfn2y31q",
+        "dec-3by2wh28",
+        "mem-qaaj4c32",
+        "hnd-hqq0tyzk"
+      ]
+    },
+    {
+      "id": "trap-decision-default",
+      "retrievalRecall": 1,
+      "framed": [
+        "dec-9h7m0yg3",
+        "run-g3kgy4yf",
+        "hnd-qp6gjbe5",
+        "run-8hmkbbjd",
+        "dec-2znaykpx",
+        "dec-acwbjc55",
+        "dec-g17nvbca",
+        "mem-dv6es75m"
+      ]
+    },
+    {
+      "id": "inj-release-checklist",
+      "retrievalRecall": 1,
+      "framed": [
+        "mem-pq7r2x9k",
+        "tsk-2t1712d3",
+        "dec-2znaykpx",
+        "dec-g17nvbca",
+        "dec-1wwcakek",
+        "mem-dv6es75m",
+        "dec-8ha3hjt0",
+        "dec-bgh1zcas"
+      ]
+    },
+    {
+      "id": "inj-local-check-before-release",
+      "retrievalRecall": 1,
+      "framed": [
+        "mem-pq7r2x9k",
+        "run-gea7sjyn",
+        "tsk-2t1712d3",
+        "mem-rmqc83gx",
+        "mem-pnen53q8",
+        "run-g3kgy4yf",
+        "sch-nygqk0ka",
+        "tsk-24gmsepx"
+      ]
+    }
+  ]
+}

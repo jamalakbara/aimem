@@ -1,11 +1,12 @@
 // Briefing eval report (docs/12 §3). Usage: pnpm eval [--update-baseline]
 // Runs fixtures/evals/<set>.yaml against the built core and compares with fixtures/evals/baseline/<set>.lexical.json.
+import { fileURLToPath } from "node:url";
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { loadIndex, loadProject, nodeFs, runEvalSet } from "../packages/core/dist/index.js";
 import YAML from "../packages/core/node_modules/yaml/dist/index.js";
 
-const root = new URL("..", import.meta.url).pathname;
+const root = fileURLToPath(new URL("..", import.meta.url));
 const name = "medium";
 const set = YAML.parse(readFileSync(join(root, "fixtures/evals", `${name}.yaml`), "utf8"));
 const nb = await loadProject(nodeFs, join(root, "fixtures/projects", set.project));

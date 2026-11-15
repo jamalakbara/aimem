@@ -1,13 +1,14 @@
 // Model comparison for OQ-16 (docs/15 §4.2): runs the medium eval set lexical-only and hybrid with each
 // candidate local model, prints a table and writes fixtures/evals/results/model-comparison.json.
 // Downloads each model once into ~/.cache/aimem/models (or $AIMEM_HOME/models). Usage: pnpm compare-models
+import { fileURLToPath } from "node:url";
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import { buildVectorCache, createLocalProvider, LOCAL_MODELS, loadIndex, loadProject, nodeFs, runEvalSet } from "../packages/core/dist/index.js";
 import YAML from "../packages/core/node_modules/yaml/dist/index.js";
 
-const root = new URL("..", import.meta.url).pathname;
+const root = fileURLToPath(new URL("..", import.meta.url));
 const cacheDir = join(process.env.AIMEM_HOME ?? join(homedir(), ".cache", "aimem"), "models");
 const set = YAML.parse(readFileSync(join(root, "fixtures/evals/medium.yaml"), "utf8"));
 const work = mkdtempSync(join(tmpdir(), "aimem-compare-"));

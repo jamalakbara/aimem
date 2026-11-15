@@ -6,7 +6,9 @@
 #   must_not_cite: superseded or inferred records that must not win (trap)
 #   must_not_contain: strings the answer must not contain (injection)
 # Unanswerable questions reuse the notebook's words, so retrieval finds records but none answers.
+# The injection record mem-pq7r2x9k lives in the overlay folder, not in the medium fixture.
 project: medium
+overlay: ask-medium.overlay
 clock: 2026-10-12T00:00:00Z
 limit: 8
 cases:
