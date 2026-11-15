@@ -10,7 +10,7 @@ Project: `aimem` · mode: solo · sync: none
 3. END: run `aimem handoff` (Done / Not done / Next / Blocked). Supersede records, never delete them.
 
 ## Counts
-- task: 12 (open 8, review 2, done 2)
+- task: 12 (open 8, review 1, done 3)
 - memory: 7 (active 7)
 - handoff: 25 (final 25)
 
@@ -25,6 +25,3 @@ Project: `aimem` · mode: solo · sync: none
 - hnd-j2cghd9t 2026-11-15 (agent:claude-code) — Done: T2 claude-cli LLM provider: core/process ProcessRunner (execa, empty temp cwd, stdin, timeout), core/llm LlmProvider + createClaudeCliProvider + loadLlmProvider; schema retrieval.llm.provider c…
 - hnd-g9x08r2n 2026-11-15 (agent:claude-code) — Done: T1 incremental embeddings after record writes: core finish() refreshes the vector cache via refreshVectorsAfterWrite (only changed chunks; only when a matching cache exists; never cold-builds,…
 - hnd-ewrm4n32 2026-10-20 (agent:claude-code) — Done: Set up a Windows dev machine (pnpm 12.11.2 via npm; Node 25 has no corepack) and got the suite green on Windows: 273 -> 690 passing. PR #21 fileURLToPath in test helpers; #22/#24 .gitattributes…
-
-## Open p0/p1 tasks
-- tsk-pvrwny71 [review, p1] T4: aimem ask with citations
