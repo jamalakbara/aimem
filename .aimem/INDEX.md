@@ -10,7 +10,7 @@ Project: `aimem` · mode: solo · sync: none
 3. END: run `aimem handoff` (Done / Not done / Next / Blocked). Supersede records, never delete them.
 
 ## Counts
-- task: 6 (open 6)
+- task: 7 (open 7)
 - memory: 5 (active 5)
 - handoff: 21 (final 21)
 
@@ -28,4 +28,5 @@ Project: `aimem` · mode: solo · sync: none
 
 ## Open p0/p1 tasks
 - tsk-4gt7sd44 [open, p1] T2: CLI LLM provider (Claude Code print mode)
+- tsk-pvrwny71 [open, p1] T4: aimem ask with citations
 - tsk-rmd7kq4t [open, p1] T1: Incremental embeddings after record writes
