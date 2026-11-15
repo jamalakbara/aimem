@@ -4,13 +4,13 @@ id: tsk-pvrwny71
 type: task
 title: "T4: aimem ask with citations"
 summary: Answer a question from retrieved records, citing refs, and refusing when evidence is weak.
-status: open
+status: in_progress
 trust: agent
 roles: [all]
 paths: [packages/cli/src/commands/, docs/04-cli-reference.md, docs/15-retrieval-and-rag.md]
 author: agent:claude-code
 created: 2026-11-15T17:27:21Z
-updated: 2026-11-15T17:27:21Z
+updated: 2026-11-15T17:58:52Z
 priority: p1
 ---
 
