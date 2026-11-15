@@ -3,6 +3,7 @@ import { AimemError } from "@aimem/core";
 import { RECORD_TYPES, type RecordType } from "@aimem/schema";
 import { Command, CommanderError, InvalidArgumentError, Option } from "commander";
 import { adapters } from "./commands/adapters.js";
+import { ask } from "./commands/ask.js";
 import { type ContextOptions, context } from "./commands/context.js";
 import { init } from "./commands/init.js";
 import { indexCmd, validateCmd } from "./commands/maintain.js";
@@ -148,6 +149,13 @@ export async function run(argv: string[], deps: CliDeps): Promise<number> {
     .action(
       action("search", (g, [q], o) => searchCmd(deps, g, q as string, o as Parameters<typeof searchCmd>[3])),
     );
+
+  cmd("ask", "answer a question from the notebook, with citations (needs retrieval.llm)")
+    .argument("<question>", "the question")
+    .option("--role <role>", "role lens: ranks that role's records higher, never filters")
+    .option("--limit <n>", "maximum records given to the model", positiveInt, 8)
+    .option("--mode <mode>", "lexical | hybrid (default: retrieval.mode, else hybrid)")
+    .action(action("ask", (g, [q], o) => ask(deps, g, q as string, o as Parameters<typeof ask>[3])));
 
   const collect = (v: string, prev: string[] = []) => [...prev, v];
   const addCommand = (name: string, description: string, fixedType?: RecordType) => {

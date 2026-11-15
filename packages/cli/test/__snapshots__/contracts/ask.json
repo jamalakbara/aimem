@@ -1,0 +1,32 @@
+{
+  "ok": true,
+  "command": "ask",
+  "data": {
+    "question": "how do we store money amounts?",
+    "answer": "Amounts are integer minor units [dec-1a2b3c4d].",
+    "found": true,
+    "sources": [
+      {
+        "ref": "dec-1a2b3c4d",
+        "type": "decision",
+        "title": "Store money as integer minor units",
+        "trust": "verified",
+        "verified": "2026-09-14"
+      }
+    ],
+    "confidence": {
+      "verified": 1,
+      "agent": 0,
+      "inferred": 0,
+      "note": "based on 1 verified record"
+    },
+    "retrieval": {
+      "mode": "lexical",
+      "semanticReason": "no local model in tests",
+      "considered": 5,
+      "excluded": []
+    },
+    "provider": "fake:model"
+  },
+  "warnings": []
+}

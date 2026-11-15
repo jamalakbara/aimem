@@ -156,6 +156,8 @@ Behaviour:
 
 Requirements: `retrieval.llm` provider configured (hosted API or local server). With none configured the command prints how to enable it.
 
+**Implementation (T4):** `core/ask` searches a 3× pool (hybrid when available), adds the `context` role bonus (+0.05) for `--role`, and keeps `--limit` (default 8). `no-embed` and secret-flagged records are never sent and are reported as `excluded`. With zero matches it answers "Not found in the notebook." **without calling the model**. Records go in as `<aimem-record ref type trust>` (title, summary, status, verified date, body) after the 05 §5 notice, about 6k tokens in total, with the question last; the rules go in the system prompt (`ASK_RULES`). Citations are parsed from `[ref]`, `[ref, ref]` and `[project:ref]`; unknown refs are dropped with a warning. The confidence note counts the cited sources' trust (e.g. "based on 2 verified, 1 agent record; agent records are not human-verified"). Answer quality is measured by T5 evals.
+
 Web: an "Ask" box on the dashboard and search page, same pipeline on the server, answers rendered with clickable citations. Role lens biases retrieval, never restricts it (09 §5).
 
 ## 11. Config (`project.yaml`, see 03 §6)

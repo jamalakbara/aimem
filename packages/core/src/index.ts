@@ -1,3 +1,4 @@
+export * from "./ask/ask.js";
 export * from "./context/briefing.js";
 export * from "./context/score.js";
 export * from "./embed/cache.js";
@@ -31,6 +32,7 @@ export {
   setBody,
   setField,
 } from "./records/text.js";
+export * from "./render/frame.js";
 export * from "./render/index-md.js";
 export * from "./search/bm25.js";
 export * from "./search/search.js";
