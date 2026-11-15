@@ -4,13 +4,13 @@ id: tsk-z7ey5hbe
 type: task
 title: "T5: Generation evals for ask"
 summary: Measure ask quality (citations, refusals, traps, injection), not just retrieval.
-status: review
+status: done
 trust: agent
 roles: [all]
 paths: [fixtures/evals/, packages/core/src/eval/, .github/workflows/]
 author: agent:claude-code
 created: 2026-11-15T17:27:21Z
-updated: 2026-11-15T18:16:24Z
+updated: 2026-11-15T18:22:22Z
 priority: p2
 ---
 
