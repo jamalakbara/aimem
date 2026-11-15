@@ -47,6 +47,8 @@ export interface AskResult {
   confidence: { verified: number; agent: number; inferred: number; note: string };
   /** Records handed to the model. */
   considered: number;
+  /** Their refs, in prompt order (used by the evals). */
+  framed: string[];
   /** Matching records that were never sent (15 §12). */
   excluded: { ref: string; reason: string }[];
   warnings: string[];
@@ -136,6 +138,7 @@ export async function askQuestion(
       sources: [],
       confidence: { ...empty, note: "no matching records" },
       considered: 0,
+      framed: [],
       excluded,
       warnings: [],
     };
@@ -181,6 +184,7 @@ export async function askQuestion(
       sources: [],
       confidence: { ...empty, note: "the retrieved records do not answer this" },
       considered: framed.length,
+      framed: framed.map((r) => r.id),
       excluded,
       warnings,
     };
@@ -194,6 +198,7 @@ export async function askQuestion(
     sources,
     confidence: { ...counts, note: sources.length ? confidenceNote(counts) : "no citations" },
     considered: framed.length,
+    framed: framed.map((r) => r.id),
     excluded,
     warnings,
   };

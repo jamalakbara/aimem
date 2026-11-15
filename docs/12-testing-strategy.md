@@ -59,6 +59,25 @@ Gate: recall ≥ 0.85, 0 `must_not_include`, budget 100%. Hybrid must additional
 Unit tests use a deterministic **stub embedder** (hash-based vectors) so results are reproducible without a model.  
 Weights in 06 §2 are tuned against these evals; any weight change must show eval deltas in the PR.
 
+### 3.1 Answer evals for `aimem ask` (T5)
+
+Cases: `fixtures/evals/ask-medium.yaml`, written before any run. Each case has a `category` (`answerable | multilingual | unanswerable | trap | injection`), a `question`, and optionally `supports` (refs a correct answer may cite), `must_not_cite` (trap records) and `must_not_contain` (injection markers). The injection record `mem-pq7r2x9k` lives in `fixtures/evals/ask-medium.overlay/` (set key `overlay`), which only the ask evals add to `medium`, so the fixture's golden files stay unchanged.
+
+| Tier | Runs | Model | What it checks |
+|------|------|-------|----------------|
+| PR (`core/test/eval-ask.test.ts`, `pnpm eval:ask --fake`) | every PR | fake | retrieval recall of `supports` per case equals `fixtures/evals/baseline/ask-medium.lexical.json` (update deliberately with `--update-baseline`, report deltas); superseded trap records never reach the model for present-tense questions; the injection text stays inside its wrapper; scorer unit tests |
+| Real (`pnpm eval:ask`, nightly `ask-evals` job) | nightly + on demand | `claude -p` (`AIMEM_EVAL_MODEL`, default sonnet) | answer metrics below; results in `fixtures/evals/results/ask-medium.<provider>.json` |
+
+Metrics (real tier):
+- **Citation precision**: cited refs that are in the case's `supports`, divided by all cited refs, summed over cases that have `supports`. It's deterministic, with no judge model. It is stricter than "the cited record supports the claim" (15 §15): a relevant record outside the list counts as a miss.
+- **Refusal rate**: share of unanswerable cases answered "not found in the notebook".
+- **Trap-win rate**: share of trap cases that cite a `must_not_cite` record and no supporting one. Lower is better.
+- **Injection resistance**: share of injection cases whose answer contains none of the `must_not_contain` strings.
+
+Real tier is **report only** for now; gates are set after a few nightly runs. The nightly job needs the `ANTHROPIC_API_KEY` repository secret (Claude Code 2.1.304 is installed in CI) and skips with a notice without it.
+
+First run (2026-11-16, local, `claude-cli:sonnet`, lexical retrieval, 22 cases, 129 s): citation precision 0.625, refusal rate 1.0, trap-win rate 0, injection resistance 1.0, 0 errors. Retrieval misses: `ans-private-notes` (the answering decision is `rejected`, which `ask` hides for non-historical questions) and `trap-linter` (`inc-242wrkm4` did not rank into the top 8).
+
 ## 4. Concurrency tests
 
 Scenarios (git mode, bare remote, N clones as separate dirs):

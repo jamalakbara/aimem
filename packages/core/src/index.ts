@@ -8,6 +8,7 @@ export * from "./embed/provider.js";
 export * from "./embed/remote.js";
 export * from "./embed/semantic.js";
 export * from "./errors.js";
+export * from "./eval/ask.js";
 export * from "./eval/run.js";
 export * from "./git/git.js";
 export * from "./index/build.js";

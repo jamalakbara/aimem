@@ -1,9 +1,10 @@
 // One-off migration (slice 2.7): docs/HANDOFF.md entries → .aimem/handoffs records, original dates kept.
 // Usage: node scripts/migrate-handoffs.mjs [path/to/HANDOFF.md]   (run after pnpm build)
+import { fileURLToPath } from "node:url";
 import { readFileSync } from "node:fs";
 import { addRecord, cryptoRandom, loadProject, nodeFs } from "../packages/core/dist/index.js";
 
-const root = new URL("..", import.meta.url).pathname;
+const root = fileURLToPath(new URL("..", import.meta.url));
 const text = readFileSync(process.argv[2] ?? `${root}docs/HANDOFF.md`, "utf8");
 const nb = await loadProject(nodeFs, root);
 const entries = text.split(/^## (?=\d{4}-\d{2}-\d{2})/m).slice(1).reverse(); // file is newest first

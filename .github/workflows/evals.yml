@@ -33,3 +33,42 @@ jobs:
         with:
           name: model-comparison
           path: fixtures/evals/results/model-comparison.json
+
+  # T5: answer evals for `aimem ask` through `claude -p`. Needs the ANTHROPIC_API_KEY repository
+  # secret (it costs money per run); without it the job reports a notice and skips. Report only:
+  # gates are set after the first runs (docs/12 §3).
+  ask-evals:
+    runs-on: ubuntu-latest
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      AIMEM_EVAL_MODEL: sonnet
+    steps:
+      - id: key
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "::notice::ANTHROPIC_API_KEY is not set; skipping ask evals"
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.key.outputs.present == 'true'
+        uses: actions/checkout@v4
+      - if: steps.key.outputs.present == 'true'
+        uses: pnpm/action-setup@v4
+      - if: steps.key.outputs.present == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - if: steps.key.outputs.present == 'true'
+        run: pnpm install --frozen-lockfile
+      # Pinned to the version whose print-mode flags ADR-017 verified.
+      - if: steps.key.outputs.present == 'true'
+        run: npm install -g @anthropic-ai/claude-code@2.1.304
+      - if: steps.key.outputs.present == 'true'
+        run: pnpm eval:ask
+      - if: steps.key.outputs.present == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ask-evals
+          path: fixtures/evals/results/ask-medium.*.json
