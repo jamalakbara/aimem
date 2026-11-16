@@ -180,6 +180,58 @@ Deterministic, from `links` / `supersedes`:
 
 `retrieval.rerank: none | cross-encoder | llm`. Reranks the top ~20 into the final ~8 for `ask` and `context --deep`. Default `none` for `context` (fast, offline); recommended for `ask`. A rerank failure falls back to the fused order.
 
+### 9.1 T8 experiment: Claude Code reranking
+
+Research run on 2026-11-16, reviewed 2026-11-17. This is an eval-only prototype;
+`ask`, `context` and their defaults do not invoke it. Run `pnpm build`, then
+`node scripts/eval-rerank.mjs --real`. It requires the default local embedding model
+already cached and a Claude Code login. The runner removes `ANTHROPIC_API_KEY` from
+its environment, uses the existing tool-free `claude-cli` provider with model
+`sonnet` (override `AIMEM_EVAL_MODEL`), and sends only synthetic fixture records.
+
+Eight new questions in `fixtures/evals/rerank-heldout.yaml` were committed before
+the first model run (`9a043a7`). They use the existing medium corpus: question-held-out
+validation, not an independent corpus. The original 34 questions remain unchanged.
+Raw per-case results and provider usage are in
+`fixtures/evals/results/rerank-claude-cli.json`.
+
+| Set/category | Lexical recall@10 | Current hybrid | Reranked |
+|--------------|-------------------|----------------|----------|
+| Medium: all 34 | 0.8088 | 0.9265 | 1.0000 |
+| Medium: keyword (8) | 1.0000 | 1.0000 | 1.0000 |
+| Medium: paraphrase (11) | 0.7727 | 0.8636 | 1.0000 |
+| Medium: multilingual (11) | 0.6364 | 0.9091 | 1.0000 |
+| Medium: trap (4) | 1.0000 | 1.0000 | 1.0000 |
+| Held-out questions: all 8 | 0.6250 | 0.5000 | 1.0000 |
+
+The experimental paraphrase gain over lexical is **+0.2273**, exceeding T7's +0.15
+target for this run. It does not close T7 for the shipped default retrieval path.
+All 42 calls produced valid rankings; zero forbidden-ref violations. Mean added
+model-call latency was 3.467 s, nearest-rank p95 4.004 s, total 145.599 s. This excludes
+embedding/index setup. Usage fields distinguish fresh input from cache reads/creation;
+do not treat `inputTokens` alone as total prompt tokens or convert it to a billing estimate.
+
+**Candidate depth matters:** rerank takes the top 50 hybrid candidates and selects
+10, using title, summary and up to 1600 body characters inside untrusted-record
+frames. Top-20 candidate recall ceilings are 0.9265 for medium and 0.8750 for held-out;
+top-50 ceilings are 1.0000 for both. A reranker restricted to the previously suggested
+~20 could not recover every answer in this experiment. No comparison against an
+actual top-20 reranking call was made; these are retrieval ceilings.
+
+Invalid JSON, duplicate or invented refs, wrong result length and provider failures
+fall back to the original candidate order. `no-embed` and secret-flagged records are
+excluded before retrieval. This experiment measures ranking, not generated answer
+quality, briefing packing, adversarial injection resistance or multi-run stability.
+It uses a relevance prompt with trust labels; it does not preserve the current
+numeric trust/freshness multipliers after reranking. Those policies and bounded
+prompt/token budgets need explicit design and tests before production integration.
+
+Recommendation: proceed with a separate opt-in `retrieval.rerank: llm` implementation
+plan using a measured candidate depth, strict output validation and fallback. Keep
+the offline path and default `none`; repeat evaluation and add injection/failure
+coverage before enabling it. Cross-encoder reranking and query rewriting remain
+unimplemented.
+
 ## 10. `aimem ask` — retrieval-augmented answers
 
 ```

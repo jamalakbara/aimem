@@ -78,6 +78,17 @@ Real tier is **report only** for now; gates are set after a few nightly runs. Th
 
 First run (2026-11-16, local, `claude-cli:sonnet`, lexical retrieval, 22 cases, 129 s): citation precision 0.625, refusal rate 1.0, trap-win rate 0, injection resistance 1.0, 0 errors. Retrieval misses: `ans-private-notes` (the answering decision is `rejected`, which `ask` hides for non-historical questions) and `trap-linter` (`inc-242wrkm4` did not rank into the top 8).
 
+### 3.2 Reranking research
+
+The optional reranking research runner is `node scripts/eval-rerank.mjs --real`
+after `pnpm build` (15 §9.1). It evaluates the original medium questions and eight
+questions committed before its first run, through the existing Claude Code login.
+It is not part of CI and does not require configuring an Anthropic API key. Unit
+tests in `core/test/eval-rerank.test.ts` validate strict candidate-only ranking
+responses; the committed result file records recall, candidate ceilings, latency,
+fallbacks and provider usage. This is evidence for a future opt-in implementation,
+not a production acceptance gate.
+
 ## 4. Concurrency tests
 
 Scenarios (git mode, bare remote, N clones as separate dirs):
