@@ -1,3 +1,4 @@
+import { type TokenUsage, tokenUsage } from "../log/calls.js";
 import type { EmbeddingProvider } from "./provider.js";
 
 export type FetchLike = (url: string | URL, init?: RequestInit) => Promise<Response>;
@@ -25,7 +26,7 @@ export async function createOpenAICompatibleProvider(
     );
   }
   const host = new URL(base).host;
-  const call = async (input: string[]): Promise<number[][]> => {
+  const call = async (input: string[]): Promise<number[][] & { usage?: TokenUsage }> => {
     const res = await opts.fetch(`${base}/embeddings`, {
       method: "POST",
       headers: {
@@ -35,10 +36,16 @@ export async function createOpenAICompatibleProvider(
       body: JSON.stringify({ model: opts.model, input }),
     });
     if (!res.ok) throw new Error(`embedding endpoint ${host} answered HTTP ${res.status}`);
-    const json = (await res.json()) as { data?: { index: number; embedding: number[] }[] };
+    const json = (await res.json()) as {
+      data?: { index: number; embedding: number[] }[];
+      usage?: { prompt_tokens?: unknown };
+    };
     if (!Array.isArray(json.data) || json.data.length !== input.length)
       throw new Error(`embedding endpoint ${host} returned an unexpected response`);
-    return [...json.data].sort((a, b) => a.index - b.index).map((d) => d.embedding);
+    const vectors = [...json.data].sort((a, b) => a.index - b.index).map((d) => d.embedding);
+    const usage = tokenUsage({ inputTokens: json.usage?.prompt_tokens });
+    if (usage) Object.defineProperty(vectors, "usage", { value: usage });
+    return vectors;
   };
   const [probe] = await call(["dimension probe"]);
   const dimensions = probe?.length ?? 0;
@@ -49,7 +56,15 @@ export async function createOpenAICompatibleProvider(
     maxInputTokens: 512,
     async embed(texts) {
       const out: number[][] = [];
-      for (let i = 0; i < texts.length; i += BATCH) out.push(...(await call(texts.slice(i, i + BATCH))));
+      let inputTokens = 0;
+      let completeUsage = texts.length > 0;
+      for (let i = 0; i < texts.length; i += BATCH) {
+        const batch = await call(texts.slice(i, i + BATCH));
+        out.push(...batch);
+        if (batch.usage?.inputTokens === undefined) completeUsage = false;
+        else inputTokens += batch.usage.inputTokens;
+      }
+      if (completeUsage) Object.defineProperty(out, "usage", { value: { inputTokens } });
       return out;
     },
   };

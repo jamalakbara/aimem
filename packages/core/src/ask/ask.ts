@@ -156,7 +156,7 @@ export async function askQuestion(
     used += cut.length;
   }
   const prompt = `${NOTICE}\n\n${blocks.join("\n\n")}\n\nQuestion: ${question}\n`;
-  const { text: answer } = await opts.llm.generate({ system: ASK_RULES, prompt });
+  const { text: answer } = await opts.llm.generate({ system: ASK_RULES, prompt, refCount: framed.length });
 
   const byId = new Map(framed.map((r) => [r.id, r]));
   const warnings: string[] = [];

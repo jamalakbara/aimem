@@ -39,6 +39,25 @@ const provider = (runner: ProcessRunner, extra: { model?: string; timeoutMs?: nu
   createClaudeCliProvider({ runner, command: "claude", timeoutMs: extra.timeoutMs ?? 120_000, ...extra });
 
 describe("claude-cli LLM provider (T2, 15 §11)", () => {
+  it("retains numeric token usage returned by Claude", async () => {
+    const f = fakeRunner({
+      stdout: JSON.stringify({
+        result: "ok",
+        usage: {
+          input_tokens: 12,
+          output_tokens: 3,
+          cache_read_input_tokens: 5,
+          cache_creation_input_tokens: 8,
+        },
+      }),
+    });
+    expect((await provider(f.runner).generate({ system: "s", prompt: "p" })).usage).toEqual({
+      inputTokens: 12,
+      outputTokens: 3,
+      cacheReadTokens: 5,
+      cacheCreationTokens: 8,
+    });
+  });
   it("runs claude -p with tools, sessions, MCP, slash commands and settings off", async () => {
     const f = fakeRunner({ stdout: ok("Answer [dec-1]") });
     const r = await provider(f.runner).generate({ system: "Rules\nline 2", prompt: "Question?" });

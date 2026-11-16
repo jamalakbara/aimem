@@ -178,6 +178,7 @@ async function updateVectorCache(
     const out = await provider.embed(
       batch.map((i) => chunks[i]?.text ?? ""),
       "document",
+      { refCount: new Set(batch.map((i) => chunks[i]?.ref)).size },
     );
     batch.forEach((i, j) => {
       const v = out[j];

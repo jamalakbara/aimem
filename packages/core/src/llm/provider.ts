@@ -1,3 +1,4 @@
+import type { TokenUsage } from "../log/calls.js";
 import type { ProcessRunner } from "../process/run.js";
 import type { ResolvedProject } from "../project/load.js";
 import { createClaudeCliProvider } from "./claude-cli.js";
@@ -7,13 +8,14 @@ export interface LlmRequest {
   system: string;
   /** The user turn: question plus framed records. */
   prompt: string;
+  refCount?: number;
 }
 
 /** Generation provider used by `ask`, rerank and query rewrite (15 §11). */
 export interface LlmProvider {
   /** e.g. `claude-cli` or `claude-cli:<model>`. */
   id: string;
-  generate(req: LlmRequest): Promise<{ text: string }>;
+  generate(req: LlmRequest): Promise<{ text: string; usage?: TokenUsage }>;
 }
 
 export type LlmStatus = { available: true; provider: LlmProvider } | { available: false; reason: string };

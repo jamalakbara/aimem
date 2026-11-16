@@ -1,3 +1,4 @@
+import type { TokenUsage } from "../log/calls.js";
 import type { ResolvedProject } from "../project/load.js";
 import { tokenize } from "../search/bm25.js";
 import { createLocalProvider, type ModelLoader } from "./local.js";
@@ -9,7 +10,11 @@ export interface EmbeddingProvider {
   id: string;
   dimensions: number;
   maxInputTokens: number;
-  embed(texts: string[], kind: "document" | "query"): Promise<number[][]>;
+  embed(
+    texts: string[],
+    kind: "document" | "query",
+    metadata?: { refCount?: number },
+  ): Promise<number[][] & { usage?: TokenUsage }>;
 }
 
 export type EmbeddingStatus =

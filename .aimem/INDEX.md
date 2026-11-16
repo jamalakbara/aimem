@@ -12,7 +12,7 @@ Project: `aimem` · mode: solo · sync: none
 ## Counts
 - task: 12 (open 8, done 4)
 - memory: 7 (active 7)
-- handoff: 25 (final 25)
+- handoff: 27 (final 27)
 
 ## Pinned
 - mem-134qcb5d [agent] Project overview — aimem: a git-based shared notebook where humans and AI agents read and write project knowledge as markdown records in .aimem/.
@@ -20,8 +20,8 @@ Project: `aimem` · mode: solo · sync: none
 - mem-gv0gjym6 [agent] Working conventions for this repo — Plan first and wait for approval, one slice per PR, tests first, spec 03 is the contract, contract snapshots change only on purpose, end every session with aimem handoff.
 
 ## Recent handoffs
+- hnd-1a6gv14a 2026-11-16 (agent:codex) — Done: Inspected T6 requirements, provider interfaces, CLI integration, and project contracts; prepared a plan for approval. · Next: Approve T6 logging plan; implement test-first, splitting core loggi…
+- hnd-j4rem7dg 2026-11-16 (agent:codex) — Done: Reviewed roadmap, task records, and latest handoff; reported eight open tasks. · Next: Latest handoff recommends T6 local call logging, then T3 Codex CLI provider verification.
 - hnd-m3a87a19 2026-11-15 (agent:claude-code) — Done: T5 ask answer evals: 22 cases committed first (fixtures/evals/ask-medium.yaml + eval-only overlay with an injection record); core/eval/ask.ts runAskEvalSet, loadAskEvalIndex, askEvalBaseline; P…
 - hnd-1bm1mbkn 2026-11-15 (agent:claude-code) — Done: T4 aimem ask: core/ask askQuestion (hybrid retrieval, role lens, no-embed and secret exclusion, framed records, ASK_RULES, citation parsing and checking, confidence note, zero matches skip the…
 - hnd-j2cghd9t 2026-11-15 (agent:claude-code) — Done: T2 claude-cli LLM provider: core/process ProcessRunner (execa, empty temp cwd, stdin, timeout), core/llm LlmProvider + createClaudeCliProvider + loadLlmProvider; schema retrieval.llm.provider c…
-- hnd-g9x08r2n 2026-11-15 (agent:claude-code) — Done: T1 incremental embeddings after record writes: core finish() refreshes the vector cache via refreshVectorsAfterWrite (only changed chunks; only when a matching cache exists; never cold-builds,…
-- hnd-ewrm4n32 2026-10-20 (agent:claude-code) — Done: Set up a Windows dev machine (pnpm 12.11.2 via npm; Node 25 has no corepack) and got the suite green on Windows: 273 -> 690 passing. PR #21 fileURLToPath in test helpers; #22/#24 .gitattributes…

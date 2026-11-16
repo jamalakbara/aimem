@@ -14,6 +14,7 @@ export * from "./git/git.js";
 export * from "./index/build.js";
 export * from "./llm/claude-cli.js";
 export * from "./llm/provider.js";
+export * from "./log/calls.js";
 export * from "./ops/handoff.js";
 export * from "./ops/policy.js";
 export * from "./ops/write.js";

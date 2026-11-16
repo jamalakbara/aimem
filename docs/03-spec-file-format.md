@@ -19,6 +19,10 @@ See 02 §5. All record directories are flat (no nesting). A record's directory i
 
 ## 2. Record file
 
+Local call diagnostics use `.aimem/.cache/calls.jsonl` (15 §17). This git-ignored,
+disposable cache is not a record and is never included in notebook indexing or sync.
+No project configuration or record fields are added for logging.
+
 A record is UTF-8 markdown: YAML frontmatter, then a body.
 
 File name: `<id>-<slug>.md`. The slug is lowercase `a-z0-9-`, derived from the title, max 60 chars. **The `id` in frontmatter is authoritative**; the slug may drift if the title changes. Accents are folded (`Café` → `cafe`); a title with no usable characters (e.g. only emoji or non-Latin script) gets the slug `untitled`.
