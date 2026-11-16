@@ -1,4 +1,4 @@
-import { cpSync, mkdtempSync, rmSync } from "node:fs";
+import { cpSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { hashEmbedder } from "@aimem/core";
@@ -13,6 +13,21 @@ beforeEach(() => {
 afterEach(() => rmSync(dir, { recursive: true, force: true }));
 
 describe("aimem index --embeddings", () => {
+  it("logs unique records per embedding batch and skips cache hits", async () => {
+    const embedder = hashEmbedder(64);
+    await cli(["index", "--embeddings", "--dir", dir], { embedder });
+    const path = join(dir, ".aimem/.cache/calls.jsonl");
+    const before = readFileSync(path, "utf8");
+    const rows = before
+      .trim()
+      .split("\n")
+      .map((l) => JSON.parse(l));
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ kind: "embedding.document", refCount: 8, status: "ok" });
+    expect(rows[0].inputCount).toBeGreaterThan(8);
+    await cli(["index", "--embeddings", "--dir", dir], { embedder });
+    expect(readFileSync(path, "utf8")).toBe(before);
+  });
   it("without a model: semantic search stays off, keyword search keeps working, exit 0", async () => {
     const r = await cli(["index", "--embeddings", "--json", "--dir", dir]);
     expect(r.code).toBe(0);

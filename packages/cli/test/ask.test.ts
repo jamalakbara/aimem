@@ -1,4 +1,4 @@
-import { appendFileSync, cpSync, mkdtempSync, rmSync } from "node:fs";
+import { appendFileSync, cpSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
@@ -31,6 +31,19 @@ const realLoader = (config: Parameters<typeof loadLlmProvider>[0]) => {
 };
 
 describe("aimem ask (04 §2, 15 §10)", () => {
+  it("logs the actual framed record count without question or answer text", async () => {
+    const r = await cli(["ask", "how do we store money amounts?", "--json", "--dir", dir], {
+      loadLlm: available(llm("private answer")),
+    });
+    const text = readFileSync(join(dir, ".aimem/.cache/calls.jsonl"), "utf8");
+    expect(JSON.parse(text)).toMatchObject({
+      kind: "llm",
+      refCount: r.json.data.retrieval.considered,
+      status: "ok",
+    });
+    expect(text).not.toContain("money");
+    expect(text).not.toContain("private answer");
+  });
   it("answers with sources and a confidence note (contract)", async () => {
     const r = await cli(["ask", "how do we store money amounts?", "--json", "--dir", dir], {
       loadLlm: available(llm("Amounts are integer minor units [dec-1a2b3c4d].")),

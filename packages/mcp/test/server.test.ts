@@ -18,6 +18,26 @@ const txt = (c: object | undefined) => (c && "text" in c ? String(c.text) : "");
 let h: Harness;
 afterEach(async () => h?.close());
 
+it("logs MCP query embeddings once per call without query text", async () => {
+  const embedder = hashEmbedder();
+  h = await harness("tiny", { embedder });
+  const nb = await loadProject(nodeFs, h.dir);
+  await buildVectorCache(nb, await loadIndex(nb, { fs: nodeFs }), embedder, {
+    fs: nodeFs,
+    random: { bytes: (n) => new Uint8Array(n) },
+  });
+  await h.call("aimem_search", { query: "money", mode: "hybrid" });
+  await h.call("aimem_search", { query: "money", mode: "hybrid" });
+  const text = readFileSync(join(nb.dir, ".cache/calls.jsonl"), "utf8");
+  const rows = text
+    .trim()
+    .split("\n")
+    .map((l) => JSON.parse(l));
+  expect(rows).toHaveLength(2);
+  expect(rows[0]).toMatchObject({ kind: "embedding.query", refCount: 0, inputCount: 1 });
+  expect(text).not.toContain("money");
+});
+
 const contract = async (name: string, value: unknown) =>
   expect(`${JSON.stringify(value, null, 2)}\n`).toMatchFileSnapshot(`__snapshots__/contracts/${name}.json`);
 

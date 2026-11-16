@@ -135,6 +135,12 @@ export async function doctor(deps: CliDeps, g: GlobalOptions): Promise<CommandRe
   const nb = await loadProject(deps.fs, g.dir);
   const d = await gitDiagnostics(deps.git, nb.root);
   const checks: Check[] = [];
+  checks.push({
+    name: "call log",
+    status: "info",
+    detail:
+      ".aimem/.cache/calls.jsonl: local call metadata only (time, provider/model, latency, status, counts and available token usage); no record text, prompts, answers or error messages",
+  });
   checks.push(
     d.installed
       ? { name: "git", status: "ok", detail: `git ${d.version}` }

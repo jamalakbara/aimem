@@ -110,7 +110,7 @@ Retrieval-augmented answer with citations (15 §10).
 ```
 aimem ask "why did we choose postgres for the ledger?" [--role pm] [--limit 8] [--mode lexical|hybrid] [--json]
 ```
-Requires `retrieval.llm` to be configured; otherwise fails with `LLM_FAILED` (exit 4) and a message saying how to enable it. Answers only from retrieved records, cites every claim as `[ref]`, says "not found in the notebook" when evidence is weak, and reports how many sources were `verified` / `agent` / `inferred`. `--role` ranks that role's records higher but never filters (09 §5). Read-only; the model gets no tools.
+Requires `retrieval.llm` to be configured; otherwise fails with `LLM_FAILED` (exit 4) and a message saying how to enable it. Answers only from retrieved records, cites every claim as `[ref]`, says "not found in the notebook" when evidence is weak, and reports how many sources were `verified` / `agent` / `inferred`. `--role` ranks that role's records higher but never filters (09 §5). Notebook records are read-only; local call metadata is appended to `.aimem/.cache/calls.jsonl` (15 §17). The model gets no tools.
 
 `--json` data (contract): `question`, `answer`, `found` (false when nothing matched or the model said not found; exit 0 either way), `sources[] {ref, type, title, trust, verified?}` (cited records only, in citation order), `confidence {verified, agent, inferred, note}`, `retrieval {mode, semanticModel+semanticCoverage | semanticReason, considered, excluded[] {ref, reason}}`, `provider`. Citations of records that were not retrieved are dropped and reported in `warnings`.
 
@@ -191,6 +191,10 @@ aimem live [--watch]                    # show all live claims and presence (--w
 | `aimem sync [--compact]` | Fetch durable state, push/pull live branch, or reconcile with server. `--compact` (maintainers) recreates `aimem-live` from its current tree to drop heartbeat history |
 | `aimem migrate` | Upgrade files to the current spec major |
 | `aimem export [--format html\|json\|md]` | Static export of the whole notebook (backup / read-only sharing) |
+
+`doctor` includes an informational `call log` entry describing `.aimem/.cache/calls.jsonl`
+and its metadata-only policy (15 §17). This adds a check to `data.checks`; the JSON envelope
+and exit codes remain unchanged.
 | `aimem config get\|set\|list` | Edit `project.yaml` safely |
 | `aimem serve mcp [--http <port>]` | Start the MCP server (05). v0.1: stdio only; stdout carries the protocol, so nothing else is printed |
 | `aimem serve web` | Start the web viewer locally against the working tree |

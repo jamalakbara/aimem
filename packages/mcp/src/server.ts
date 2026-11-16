@@ -7,6 +7,7 @@ import {
   buildBriefing,
   buildQuery,
   type Clock,
+  createCallLog,
   type EmbeddingProvider,
   type EmbeddingStatus,
   type Fs,
@@ -16,6 +17,7 @@ import {
   HIDDEN_STATUSES,
   loadIndex,
   loadProject,
+  loggedEmbeddingProvider,
   NOTICE,
   type Notebook,
   type NotebookIndex,
@@ -113,7 +115,7 @@ export function createAimemServer(deps: McpDeps): McpServer {
   };
   /** The server lives for the whole session, so a loaded model is kept; failures are retried. */
   let loaded: { key: string; status: Promise<EmbeddingStatus> } | undefined;
-  const embedding = async (nb: Notebook): Promise<EmbeddingStatus> => {
+  const rawEmbedding = async (nb: Notebook): Promise<EmbeddingStatus> => {
     if (deps.embedder || nb.config.retrieval?.embeddings?.provider === "none")
       return resolveEmbeddingProvider(nb.config, deps.embedder);
     if (!deps.loadEmbedder) return { available: false, reason: "no embedding provider loaded" };
@@ -122,6 +124,12 @@ export function createAimemServer(deps: McpDeps): McpServer {
     const status = await loaded.status;
     if (!status.available) loaded = undefined;
     return status;
+  };
+  const embedding = async (nb: Notebook): Promise<EmbeddingStatus> => {
+    const status = await rawEmbedding(nb);
+    return status.available
+      ? { available: true, provider: loggedEmbeddingProvider(status.provider, createCallLog(nb, deps)) }
+      : status;
   };
   /** Write deps, plus the embedder when there is a vector cache to keep current (15 §13). */
   const writeDeps = async (nb: Notebook) => {

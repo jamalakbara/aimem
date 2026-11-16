@@ -1,6 +1,8 @@
 import {
+  createCallLog,
   type EmbeddingProvider,
   type EmbeddingStatus,
+  loggedEmbeddingProvider,
   type Notebook,
   resolveEmbeddingProvider,
   vectorCacheProvider,
@@ -13,10 +15,15 @@ export async function embeddingStatus(
   nb: Notebook,
   allowDownload: boolean,
 ): Promise<EmbeddingStatus> {
-  if (deps.embedder || nb.config.retrieval?.embeddings?.provider === "none")
-    return resolveEmbeddingProvider(nb.config, deps.embedder);
-  if (!deps.loadEmbedder) return { available: false, reason: "no embedding provider loaded" };
-  return deps.loadEmbedder(nb.config, allowDownload);
+  const status =
+    deps.embedder || nb.config.retrieval?.embeddings?.provider === "none"
+      ? resolveEmbeddingProvider(nb.config, deps.embedder)
+      : deps.loadEmbedder
+        ? await deps.loadEmbedder(nb.config, allowDownload)
+        : { available: false as const, reason: "no embedding provider loaded" };
+  return status.available
+    ? { available: true, provider: loggedEmbeddingProvider(status.provider, createCallLog(nb, deps)) }
+    : status;
 }
 
 /**
