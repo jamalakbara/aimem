@@ -92,6 +92,15 @@ describe("status", () => {
 });
 
 describe("doctor", () => {
+  it("describes the local metadata log", async () => {
+    const r = await cli(["doctor", "--json", "--dir", dir]);
+    expect(r.json.data.checks).toContainEqual({
+      name: "call log",
+      status: "info",
+      detail:
+        ".aimem/.cache/calls.jsonl: local call metadata only (time, provider/model, latency, status, counts and available token usage); no record text, prompts, answers or error messages",
+    });
+  });
   it("reports each check (contract) and exits 0", async () => {
     const r = await cli(["doctor", "--json", "--dir", dir], { env: {}, git: fakeGit("Dana Example") });
     expect(r.code).toBe(0);

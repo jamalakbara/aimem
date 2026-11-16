@@ -4,6 +4,11 @@
   "data": {
     "checks": [
       {
+        "name": "call log",
+        "status": "info",
+        "detail": ".aimem/.cache/calls.jsonl: local call metadata only (time, provider/model, latency, status, counts and available token usage); no record text, prompts, answers or error messages"
+      },
+      {
         "name": "git",
         "status": "ok",
         "detail": "git 2.99.0"
