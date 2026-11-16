@@ -2,6 +2,7 @@
 // Usage:
 //   pnpm eval:ask --fake [--update-baseline]   deterministic tier (no model): retrieval recall vs the committed baseline
 //   pnpm eval:ask                              real tier: claude -p (Claude Code login or ANTHROPIC_API_KEY), writes results
+//   pnpm eval:ask --rerank                     real ranking + answers using Claude Code login, separate result file
 // Real-tier env: AIMEM_EVAL_MODEL (default sonnet), AIMEM_CLAUDE_BIN. The fixture records are fictional, but their
 // text is sent to Anthropic through Claude Code.
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -21,8 +22,12 @@ import YAML from "../packages/core/node_modules/yaml/dist/index.js";
 const root = fileURLToPath(new URL("..", import.meta.url));
 const name = "ask-medium";
 const fake = process.argv.includes("--fake");
+const rerank = process.argv.includes("--rerank");
+if (rerank && fake) throw new Error("--rerank requires the real tier; fake runs preserve the offline baseline.");
+if (rerank) delete process.env.ANTHROPIC_API_KEY;
 const set = YAML.parse(readFileSync(join(root, "fixtures/evals", `${name}.yaml`), "utf8"));
 const nb = await loadProject(nodeFs, join(root, "fixtures/projects", set.project));
+if (rerank) nb.config.retrieval = { ...nb.config.retrieval, rerank: "llm", llm: { allow_remote: true } };
 const index = await loadAskEvalIndex(nb, nodeFs, set.overlay ? join(root, "fixtures/evals", set.overlay) : undefined);
 
 let llm;
@@ -76,7 +81,7 @@ if (fake) {
 } else {
   const dir = join(root, "fixtures/evals/results");
   mkdirSync(dir, { recursive: true });
-  const file = join(dir, `${name}.${llm.id.replace(/[^a-z0-9.-]+/gi, "-")}.json`);
+  const file = join(dir, `${name}.${llm.id.replace(/[^a-z0-9.-]+/gi, "-")}${rerank ? ".rerank" : ""}.json`);
   writeFileSync(file, `${JSON.stringify({ date: new Date().toISOString().slice(0, 10), ...report }, null, 2)}\n`);
   console.log(`results written: ${file}`);
 }

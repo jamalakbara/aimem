@@ -38,7 +38,7 @@ QUERY (context / search / ask)
       ▼  4. vector  top-N  ┴─► 5. fuse (RRF / weighted)
       ▼  6. apply boosts: paths, links, recency, trust, freshness   (06 §2.2)
       ▼  7. graph expansion: supersede heads, 1-hop links (decayed)
-      ▼  8. optional rerank (cross-encoder / LLM) of top-20
+      ▼  8. optional LLM rerank of up to 50 eligible candidates (ask)
       ▼  9. pack to budget ──► briefing  (agent is the generator)
       ▼ 10. [ask only] LLM answers from packed context with citations
 ```
@@ -178,12 +178,40 @@ Deterministic, from `links` / `supersedes`:
 
 ## 9. Reranking (optional)
 
-`retrieval.rerank: none | cross-encoder | llm`. Reranks the top ~20 into the final ~8 for `ask` and `context --deep`. Default `none` for `context` (fast, offline); recommended for `ask`. A rerank failure falls back to the fused order.
+`retrieval.rerank: none | cross-encoder | llm`, default `none`. `llm` is implemented
+for `ask` only; `context --deep` remains reserved. `cross-encoder` is not implemented
+and `ask` warns and uses its original selection.
+
+To enable, set `retrieval.rerank: llm` alongside `retrieval.llm.provider: claude-cli`
+and `retrieval.llm.allow_remote: true` in `.aimem/project.yaml`. This uses the existing
+Claude Code login; no Anthropic API key is needed. An additional model request sends
+up to 50 matching, eligible records before answer generation. It uses the same
+provider, per-call timeout and metadata-only call log as the answer request.
+
+The candidate pool uses `ask` search order (hybrid when available), the same
+historical-status filter and role bonus, and excludes `no-embed` and secret-flagged
+records before taking 50. The ranker sees title, summary, status, updated/verified
+dates and at most 1600 body characters, inside escaped untrusted-record frames.
+The **entire rerank system + user prompt is capped at 64,000 characters**, with
+equal per-record allowances and further truncation as needed. This is a character
+cap, not a tokenizer guarantee; the answer prompt retains its existing budget.
+
+Output must be a JSON array of exactly `min(limit, candidates)` distinct candidate
+refs. Invalid output, invented/duplicate refs, provider failure/timeout, an oversized
+question, or `--limit` above 50 restores the exact selection used with reranking off
+and adds a warning. Empty candidate sets make no model call. Each model call has its
+own `timeout_seconds` budget, so reranking can add one full timeout before the answer.
+
+Trust labels and dates inform the ranking prompt; no numeric trust/freshness
+multiplier is applied after reranking. Original record metadata, citation validation
+and confidence counts remain authoritative. Framing and candidate-only validation
+limit injection effects, but do not prove that hostile text cannot influence the
+relative order of valid candidates. Defaults and the JSON envelope are unchanged.
 
 ### 9.1 T8 experiment: Claude Code reranking
 
-Research run on 2026-11-16, reviewed 2026-11-17. This is an eval-only prototype;
-`ask`, `context` and their defaults do not invoke it. Run `pnpm build`, then
+Research run on 2026-11-16, reviewed 2026-11-17. This original eval-only prototype
+uses the context scorer rather than the production `ask` path. Run `pnpm build`, then
 `node scripts/eval-rerank.mjs --real`. It requires the default local embedding model
 already cached and a Claude Code login. The runner removes `ANTHROPIC_API_KEY` from
 its environment, uses the existing tool-free `claude-cli` provider with model
@@ -223,14 +251,45 @@ fall back to the original candidate order. `no-embed` and secret-flagged records
 excluded before retrieval. This experiment measures ranking, not generated answer
 quality, briefing packing, adversarial injection resistance or multi-run stability.
 It uses a relevance prompt with trust labels; it does not preserve the current
-numeric trust/freshness multipliers after reranking. Those policies and bounded
-prompt/token budgets need explicit design and tests before production integration.
+numeric trust/freshness multipliers after reranking. Production policy and prompt
+bounds are specified in §9 above.
 
-Recommendation: proceed with a separate opt-in `retrieval.rerank: llm` implementation
-plan using a measured candidate depth, strict output validation and fallback. Keep
-the offline path and default `none`; repeat evaluation and add injection/failure
-coverage before enabling it. Cross-encoder reranking and query rewriting remain
-unimplemented.
+The opt-in `ask` implementation follows §9; cross-encoder reranking, query rewriting
+and `context --deep` remain unimplemented. The default remains `none`.
+
+### 9.2 Production `ask` retrieval validation
+
+`node scripts/eval-ask-rerank.mjs --real` exercises `askQuestion` with real Claude
+Code reranking and a stub final answer. It uses the same 42 synthetic questions,
+raw-question embeddings, the production prompt cap, and limit 10. Unlike §9.1 it
+uses `ask` search, not the context scorer or path/ref expansion. Results are in
+`fixtures/evals/results/rerank-ask-claude-cli.json` (2026-11-17 local date).
+
+| Set/category | Ask lexical recall@10 | Ask hybrid | Opt-in rerank |
+|--------------|-----------------------|------------|---------------|
+| Medium: all 34 | 0.7500 | 0.9412 | 1.0000 |
+| Medium: keyword (8) | 1.0000 | 1.0000 | 1.0000 |
+| Medium: paraphrase (11) | 0.7727 | 0.9091 | 1.0000 |
+| Medium: multilingual (11) | 0.4545 | 0.9091 | 1.0000 |
+| Medium: trap (4) | 1.0000 | 1.0000 | 1.0000 |
+| Previously held-out questions: all 8 | 0.6250 | 0.6250 | 1.0000 |
+
+Two of 42 rankings were invalid (`kw-stacked-prs`, `ml-en-summary-lines`) and
+correctly retained the original selection; both still had recall 1. No forbidden
+refs were selected. Mean added call latency was 3.305 s, nearest-rank p95 4.144 s.
+This is one run on a small, now-familiar corpus, not proof of generalization or
+answer quality. T7's default offline retrieval target remains open.
+
+The separate 22-case real-answer run (`node scripts/eval-ask.mjs --rerank`, lexical
+candidates, limit 8) took 155 s with zero errors. Refusal rate was 1.0, trap-win rate
+0, injection resistance 1.0; support-record retrieval recall was unchanged from the
+earlier baseline (answerable 0.9375, multilingual 1.0, trap 0.9, injection 1.0).
+Citation precision was **0.5319 versus 0.625 in the earlier non-reranked run**: more
+citations fell outside the fixture's support lists. These were separate stochastic
+runs, not a repeated paired comparison; do not infer an answer-quality improvement
+from the recall@10 result. The existing rejected-decision and lexical linter misses
+remain. Raw answers are in `fixtures/evals/results/ask-medium.claude-cli-sonnet.rerank.json`.
+Reranking remains off by default; broader answer-quality evaluation is still needed.
 
 ## 10. `aimem ask` — retrieval-augmented answers
 

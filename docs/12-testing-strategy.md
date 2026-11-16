@@ -89,6 +89,27 @@ responses; the committed result file records recall, candidate ceilings, latency
 fallbacks and provider usage. This is evidence for a future opt-in implementation,
 not a production acceptance gate.
 
+For production `ask` ranking, run `node scripts/eval-ask-rerank.mjs --real` after
+building. It compares the actual `askQuestion` lexical/hybrid selections against
+opt-in reranking on the same 42 questions at limit 10, using the raw question (no
+context path/ref expansion), a cached local embedder and Claude Code login. The
+final answer is stubbed: this measures retrieval, not answer quality. Results,
+warnings, usage and latency go to `results/rerank-ask-claude-cli.json`.
+
+`node scripts/eval-ask.mjs --rerank` separately exercises real ranking **and** real
+answer generation for the 22 answer cases, using lexical candidate retrieval and
+the default limit 8; it writes a distinct `.rerank.json` result. Both rerank runners
+remove `ANTHROPIC_API_KEY` and use the existing Claude Code login. They are optional
+and outside CI. Unit/integration tests cover prompt bounds, privacy exclusions,
+delimiter injection, invalid output, provider failure, consent, fallback order,
+candidate depth, unchanged default JSON and two metadata log entries per successful
+reranked answer. Default deterministic eval baselines must remain unchanged.
+
+Production results and their limits are recorded in 15 §9.2: the 42-case retrieval
+run reached recall@10 1.0 with two safe fallbacks, while the 22-case answer run had
+lower support-list citation precision than the earlier baseline. Ranking gains
+alone are not an answer-quality gate.
+
 ## 4. Concurrency tests
 
 Scenarios (git mode, bare remote, N clones as separate dirs):

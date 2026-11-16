@@ -31,6 +31,26 @@ const realLoader = (config: Parameters<typeof loadLlmProvider>[0]) => {
 };
 
 describe("aimem ask (04 §2, 15 §10)", () => {
+  it("uses configured reranking and logs both calls without changing the JSON shape", async () => {
+    appendFileSync(
+      join(dir, ".aimem/project.yaml"),
+      "\nretrieval:\n  rerank: llm\n  llm:\n    allow_remote: true\n",
+    );
+    let calls = 0;
+    const r = await cli(["ask", "money reports", "--limit", "1", "--json", "--dir", dir], {
+      loadLlm: available({
+        id: "fake:model",
+        generate: async () => ({ text: ++calls === 1 ? '["mem-6f7g8h9j"]' : "Reports [mem-6f7g8h9j]." }),
+      }),
+    });
+    expect(r.code).toBe(0);
+    expect(calls).toBe(2);
+    expect(r.json.data.sources[0].ref).toBe("mem-6f7g8h9j");
+    expect(Object.keys(r.json.data).sort()).toEqual(
+      ["question", "answer", "found", "sources", "confidence", "retrieval", "provider"].sort(),
+    );
+    expect(readFileSync(join(dir, ".aimem/.cache/calls.jsonl"), "utf8").trim().split("\n")).toHaveLength(2);
+  });
   it("logs the actual framed record count without question or answer text", async () => {
     const r = await cli(["ask", "how do we store money amounts?", "--json", "--dir", dir], {
       loadLlm: available(llm("private answer")),

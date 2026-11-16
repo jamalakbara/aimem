@@ -1,4 +1,4 @@
-/** Eval-only response validation. Invalid output means retain the baseline order. */
+/** Shared production/eval response validation. Invalid output retains the baseline order. */
 export function parseRerankOrder(text: string, candidates: string[], limit: number): string[] | undefined {
   let value: unknown;
   try {

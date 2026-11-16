@@ -1,4 +1,5 @@
 export * from "./ask/ask.js";
+export * from "./ask/rerank.js";
 export * from "./context/briefing.js";
 export * from "./context/score.js";
 export * from "./embed/cache.js";

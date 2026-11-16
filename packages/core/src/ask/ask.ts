@@ -5,6 +5,7 @@ import type { Notebook } from "../project/load.js";
 import { frameRecord, NOTICE } from "../render/frame.js";
 import { type SearchSemantic, search } from "../search/search.js";
 import { scanSecrets } from "../secrets/scan.js";
+import { RERANK_CANDIDATES, rerankRecords } from "./rerank.js";
 
 /** The phrase the model must use when the records do not answer (15 §10). */
 export const NOT_FOUND = "not found in the notebook";
@@ -99,7 +100,7 @@ function confidenceNote(c: { verified: number; agent: number; inferred: number }
  * answer with `[ref]` citations, then check the citations. Read-only; the model gets no tools.
  */
 export async function askQuestion(
-  _nb: Notebook,
+  nb: Notebook,
   index: NotebookIndex,
   question: string,
   opts: AskOptions,
@@ -112,7 +113,7 @@ export async function askQuestion(
     opts.semantic,
   );
   const excluded: AskResult["excluded"] = [];
-  const ranked = hits
+  let ranked = hits
     .filter((h) => {
       const reason = exclusion(h.record);
       if (reason) excluded.push({ ref: h.record.id, reason });
@@ -130,6 +131,50 @@ export async function askQuestion(
     .slice(0, limit);
 
   const empty = { verified: 0, agent: 0, inferred: 0 };
+  const warnings: string[] = [];
+  if (nb.config.retrieval?.rerank === "llm") {
+    if (nb.config.retrieval.llm?.allow_remote !== true) {
+      warnings.push("rerank requires retrieval.llm.allow_remote: true; using original order");
+    } else {
+      // Expand only the opt-in path. Failure preserves the exact legacy selection above.
+      const candidates = search(
+        index,
+        question,
+        {
+          limit: index.records.length,
+          ...(HISTORICAL.test(question) ? { includeSuperseded: true } : {}),
+        },
+        opts.semantic,
+      )
+        .filter((h) => {
+          const reason = exclusion(h.record);
+          if (reason && !excluded.some((e) => e.ref === h.record.id))
+            excluded.push({ ref: h.record.id, reason });
+          return !reason;
+        })
+        .map((h) => ({
+          record: h.record,
+          score:
+            h.score +
+            (opts.role && (h.record.roles.includes("all") || h.record.roles.includes(opts.role))
+              ? ROLE_BOOST
+              : 0),
+        }))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, RERANK_CANDIDATES);
+      const result = await rerankRecords(
+        candidates.map((c) => c.record),
+        question,
+        limit,
+        opts.llm,
+      );
+      if (result.warning) warnings.push(result.warning);
+      else ranked = result.records.slice(0, limit).map((record) => ({ record, score: 0 }));
+    }
+  } else if (nb.config.retrieval?.rerank === "cross-encoder") {
+    warnings.push("cross-encoder reranking is not implemented; using original order");
+  }
+
   if (!ranked.length)
     return {
       question,
@@ -140,7 +185,7 @@ export async function askQuestion(
       considered: 0,
       framed: [],
       excluded,
-      warnings: [],
+      warnings,
     };
 
   const framed: IndexedRecord[] = [];
@@ -159,7 +204,6 @@ export async function askQuestion(
   const { text: answer } = await opts.llm.generate({ system: ASK_RULES, prompt, refCount: framed.length });
 
   const byId = new Map(framed.map((r) => [r.id, r]));
-  const warnings: string[] = [];
   const found = !answer.toLowerCase().includes(NOT_FOUND);
   const sources: AskSource[] = [];
   for (const ref of citedRefs(answer)) {
