@@ -4,13 +4,13 @@ id: tsk-89xndc10
 type: task
 title: "T8: Optional rerank and query rewrite"
 summary: Better ranking for hard questions, opt-in only.
-status: open
+status: in_progress
 trust: agent
 roles: [all]
 paths: [packages/core/src/, packages/schema/src/project.ts]
 author: agent:claude-code
 created: 2026-11-15T17:27:23Z
-updated: 2026-11-15T17:27:23Z
+updated: 2026-11-16T22:01:57Z
 priority: p3
 ---
 

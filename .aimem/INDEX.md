@@ -10,7 +10,7 @@ Project: `aimem` · mode: solo · sync: none
 3. END: run `aimem handoff` (Done / Not done / Next / Blocked). Supersede records, never delete them.
 
 ## Counts
-- task: 12 (open 6, review 2, done 4)
+- task: 12 (open 5, in_progress 1, review 2, done 4)
 - memory: 7 (active 7)
 - handoff: 31 (final 31)
 
