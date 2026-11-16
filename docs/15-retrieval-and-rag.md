@@ -87,6 +87,44 @@ interface EmbeddingProvider {
 
 The first comparison failed the gate for every model because raw cosine was used; real models compress cosine into a narrow band (e.g. 0.73–0.88), so semantic scores are now **min-max normalised over the candidate pool** as §6 specifies, then re-run. The +0.15 paraphrase target (12 §3) is not yet met (+0.09); the M2 acceptance (hybrid beats lexical on both sets, overall ≥ 0.85) is.
 
+**T7 investigation (2026-11-16, Windows):** reproduced the original 34-case set with
+the real default model. No cases, expected refs, scoring defaults or model defaults
+were changed. A temporary stricter real-model assertion failed at a gain of 0.0909;
+it was not retained as a failing default CI gate.
+
+| Experiment | Keyword recall@10 | Paraphrase | Multilingual | Trap |
+|------------|------------------|------------|--------------|------|
+| Lexical baseline | 1.0000 | 0.7727 | 0.6364 | 1.0000 |
+| Current weighted hybrid (q8) | 1.0000 | 0.8636 | 0.9091 | 1.0000 |
+| Existing RRF option | 1.0000 | 0.6818 | 0.5909 | 0.7500 |
+| Semantic weight 0.30 / lexical 0.20 | 1.0000 | 0.8636 | 0.9091 | 1.0000 |
+| Semantic weight 0.35 / lexical 0.15 | 1.0000 | 0.7273 | 0.9091 | 0.7500 |
+| Plain section text and head without structural metadata | 1.0000 | 0.8636 | 0.8182 | 1.0000 |
+| Whole-record text instead of section chunks | 1.0000 | 0.8636 | 0.9091 | 1.0000 |
+| Same MiniLM model, fp32 instead of q8 | 1.0000 | 0.8636 | 0.9091 | 1.0000 |
+
+Additional temporary experiments (body-first formatting, sentence/clause chunks,
+English stopword removal, simple suffix stripping and lower recency/link weights)
+did not reach the target. These were exploratory comparisons, not supported modes.
+The fp32 ONNX file is about 470 MB versus 118 MB for q8; identical aggregate recall
+does not justify that default cost. All experiments used local fixture text only.
+
+Current hybrid misses in score-order top 10:
+
+| Case | Expected ref outside top 10 | Rank | Observation |
+|------|-----------------------------|------|-------------|
+| `para-who-is-working` | `mem-peqcrkme` | 37 | Strong semantic match, zero lexical overlap; agent trust weight remains required |
+| `hard-para-offline-first` | `dec-3by2wh28` | 32 | Relevant offline clause receives only moderate semantic similarity; old accepted decision |
+| `ml-id-agent-commit` | `dec-ek66gxgx` | 26 | Zero lexical overlap and moderate semantic similarity |
+
+All expected refs nevertheless appear in the packed hybrid briefing (`inBriefing`
+1.0000); overall recall@10 is 0.9265, budget compliance and determinism 1.0000,
+with zero forbidden-ref violations or missing labels. This distinguishes ranking
+quality from whether the agent receives the answer. Do not change the metric to
+claim the +0.15 goal: T7 remains unfinished. Before expanding into reranking or
+query rewriting (T8), review that scope and add independent evaluation questions
+to reduce the risk of tuning around these three cases.
+
 **Language:** the team may write English and Indonesian (OQ-15), so the default must be a **multilingual** embedding model. Candidate families to evaluate in M2: multilingual-e5 (small/base), BGE-M3, and a hosted multilingual model as the optional upgrade. Pick by running the multilingual eval set (§9); model names and availability change, so verify when implementing.
 
 ### 4.3 Model identity and rebuilds
