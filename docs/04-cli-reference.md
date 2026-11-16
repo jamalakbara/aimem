@@ -107,6 +107,13 @@ aimem search "<query>" [--type decision,memory] [--status ...] [--tag ...] [--ro
 `--mode` works as for `context`; `data.mode` reports what was actually used, with `semanticModel`/`semanticCoverage` or `semanticReason`. By default hides records that are `superseded`, `rejected`, `cancelled`, `done` or `retired` (as `context` does, 06 §2); `--include-superseded` shows them, and an explicit `--status` shows the listed statuses.
 ### `aimem ask "<question>"`
 Retrieval-augmented answer with citations (15 §10).
+
+Optional `retrieval.rerank: llm` uses the configured, consent-enabled LLM to rank
+up to 50 eligible records before answering (15 §9). It is off by default. The extra
+request has a 64,000-character prompt cap and the same per-call timeout and local
+metadata logging as answer generation. Invalid rankings, provider failures or
+`--limit` above 50 warn and retain the original selection; JSON fields are unchanged.
+`cross-encoder` remains unsupported, and `context --deep` is still reserved.
 ```
 aimem ask "why did we choose postgres for the ledger?" [--role pm] [--limit 8] [--mode lexical|hybrid] [--json]
 ```
