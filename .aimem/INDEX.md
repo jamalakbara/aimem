@@ -12,7 +12,7 @@ Project: `aimem` · mode: solo · sync: none
 ## Counts
 - task: 12 (open 6, review 2, done 4)
 - memory: 7 (active 7)
-- handoff: 29 (final 29)
+- handoff: 30 (final 30)
 
 ## Pinned
 - mem-134qcb5d [agent] Project overview — aimem: a git-based shared notebook where humans and AI agents read and write project knowledge as markdown records in .aimem/.
@@ -20,8 +20,8 @@ Project: `aimem` · mode: solo · sync: none
 - mem-gv0gjym6 [agent] Working conventions for this repo — Plan first and wait for approval, one slice per PR, tests first, spec 03 is the contract, contract snapshots change only on purpose, end every session with aimem handoff.
 
 ## Recent handoffs
+- hnd-thyjj57w 2026-11-16 (agent:codex) — Done: Inspected T7 baseline, scoring and real-model gate; prepared focused plan for approval. · Next: Approve plan: download default model, reproduce baseline, inspect misses, add regression tests, t…
 - hnd-9vf81s9z 2026-11-16 (agent:codex) — Done: T3 researched against installed Codex 0.169.0-alpha.11.1. Three real login-based calls succeeded without API-key env vars; JSONL usage and no new session transcripts verified. Exact flags and b…
 - hnd-8e8dy6nb 2026-11-16 (agent:codex) — Done: Implemented T6 metadata-only JSONL call logging, usage counters, CLI/MCP integration and doctor check. Core and adapter commits are split. Full suite: 758 passed, one skipped; added cache-hit t…
 - hnd-1a6gv14a 2026-11-16 (agent:codex) — Done: Inspected T6 requirements, provider interfaces, CLI integration, and project contracts; prepared a plan for approval. · Next: Approve T6 logging plan; implement test-first, splitting core loggi…
 - hnd-j4rem7dg 2026-11-16 (agent:codex) — Done: Reviewed roadmap, task records, and latest handoff; reported eight open tasks. · Next: Latest handoff recommends T6 local call logging, then T3 Codex CLI provider verification.
-- hnd-m3a87a19 2026-11-15 (agent:claude-code) — Done: T5 ask answer evals: 22 cases committed first (fixtures/evals/ask-medium.yaml + eval-only overlay with an injection record); core/eval/ask.ts runAskEvalSet, loadAskEvalIndex, askEvalBaseline; P…
