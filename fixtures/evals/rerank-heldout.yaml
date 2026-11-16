@@ -1,0 +1,38 @@
+# Written before the first rerank run; new questions on the existing medium corpus.
+# These are question-held-out cases, not an independent corpus or statistical proof.
+project: medium
+clock: 2026-10-12T00:00:00Z
+k: 10
+cases:
+  - id: hold-format-extension
+    category: paraphrase
+    task: "A newer client attached metadata my client does not recognize. What must survive when I save the note?"
+    must_include: [mem-e1fa6v95]
+  - id: hold-role-privacy
+    category: paraphrase
+    task: "Can marking a note for developers prevent a project manager with repository access from reading it?"
+    must_include: [dec-2znaykpx]
+  - id: hold-id-transcription
+    category: paraphrase
+    task: "Someone dictated a record reference containing a lowercase letter o. Is that a valid reference alphabet?"
+    must_include: [mem-8ba67vjm]
+  - id: hold-credential-helper
+    category: paraphrase
+    task: "Will repository operations keep using the credential helper I already configured for git?"
+    must_include: [dec-ndgz6y7a]
+  - id: hold-char-budget
+    category: keyword
+    task: "chars/4 token budget heuristic"
+    must_include: [dec-nppkpt6e]
+  - id: hold-noninteractive
+    category: keyword
+    task: "AIMEM_NONINTERACTIVE and --yes"
+    must_include: [mem-7ktr68qw]
+  - id: hold-id-role-access
+    category: multilingual
+    task: "Apakah label peran bisa menyembunyikan isi catatan dari orang yang punya akses repo?"
+    must_include: [dec-2znaykpx]
+  - id: hold-en-forward-format
+    category: multilingual
+    task: "Should unrecognized YAML properties disappear during a rewrite, or remain in their original order?"
+    must_include: [mem-e1fa6v95]
