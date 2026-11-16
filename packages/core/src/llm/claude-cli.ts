@@ -1,4 +1,5 @@
 import { AimemError } from "../errors.js";
+import { tokenUsage } from "../log/calls.js";
 import type { ProcessRunner } from "../process/run.js";
 import type { LlmProvider } from "./provider.js";
 
@@ -69,7 +70,7 @@ export function createClaudeCliProvider(opts: ClaudeCliOptions): LlmProvider {
           exitCode: r.code,
         });
       }
-      let out: { is_error?: unknown; result?: unknown; subtype?: unknown };
+      let out: { is_error?: unknown; result?: unknown; subtype?: unknown; usage?: Record<string, unknown> };
       try {
         out = JSON.parse(r.stdout);
       } catch {
@@ -80,7 +81,13 @@ export function createClaudeCliProvider(opts: ClaudeCliOptions): LlmProvider {
           `claude -p failed: ${String(out.subtype ?? "error")}${out.result ? ` — ${firstLine(String(out.result))}` : ""}`,
         );
       if (typeof out.result !== "string") throw fail("claude -p returned unexpected output (no result text)");
-      return { text: out.result };
+      const usage = tokenUsage({
+        inputTokens: out.usage?.input_tokens,
+        outputTokens: out.usage?.output_tokens,
+        cacheReadTokens: out.usage?.cache_read_input_tokens,
+        cacheCreationTokens: out.usage?.cache_creation_input_tokens,
+      });
+      return { text: out.result, ...(usage ? { usage } : {}) };
     },
   };
 }

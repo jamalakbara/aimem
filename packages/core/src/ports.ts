@@ -1,8 +1,10 @@
 import { randomBytes } from "node:crypto";
-import { mkdir, readdir, readFile, rename, unlink, writeFile } from "node:fs/promises";
+import { appendFile, mkdir, readdir, readFile, rename, unlink, writeFile } from "node:fs/promises";
 
 /** File system operations core needs. Injected so tests can simulate failures (docs/11 §3). */
 export interface Fs {
+  /** Optional for older injected filesystems; metadata logging is best effort. */
+  appendFile?(path: string, data: string): Promise<void>;
   readFile(path: string): Promise<string>;
   writeFile(path: string, data: string | Uint8Array): Promise<void>;
   readBytes(path: string): Promise<Uint8Array>;
@@ -22,6 +24,7 @@ export interface Random {
 }
 
 export const nodeFs: Fs = {
+  appendFile: (p, d) => appendFile(p, d, "utf8"),
   readFile: (p) => readFile(p, "utf8"),
   writeFile: (p, d) => (typeof d === "string" ? writeFile(p, d, "utf8") : writeFile(p, d)),
   readBytes: async (p) => new Uint8Array(await readFile(p)),

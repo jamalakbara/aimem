@@ -238,3 +238,41 @@ Metrics: recall@k, MRR, nDCG@10, citation precision (cited refs actually support
 | Standard structure across projects | Improved: structured chunks + metadata give better filters than free text |
 | Self-hosted for the team | pgvector inside the existing Postgres; no new infra |
 | Trust and review | Enforced inside retrieval (hard filters, weights, citations) |
+
+## 17. Local call diagnostics (T6)
+
+CLI and MCP adapters append one JSON line per generation or embedding provider invocation
+to `.aimem/.cache/calls.jsonl`, using the notebook selected by `--dir` or the MCP working
+directory. Cache hits and unavailable providers produce no entry. Embedding batches count
+as one invocation; internal HTTP batches are aggregated, and provider initialization
+(including remote dimension probes) is outside this log. This is an operational trace,
+not a billing ledger.
+
+| Field | Meaning |
+|-------|---------|
+| `version` | `1` |
+| `time` | Invocation start, UTC ISO timestamp |
+| `kind` | `llm`, `embedding.document`, or `embedding.query` |
+| `provider`, `model` | Provider name and configured model; model is `null` when unspecified; remote host omitted |
+| `latencyMs` | Elapsed time through success/failure, excluding log I/O, clamped to zero |
+| `status` | `ok` or `error`; no raw error message |
+| `refCount` | Distinct records sent in this call; query embeddings use `0`, unavailable metadata uses `null` |
+| `inputCount` | Embedding text count (chunks or queries), omitted for LLM calls |
+| `usage` | Optional nonnegative integer counters: `inputTokens`, `outputTokens`, `cacheReadTokens`, `cacheCreationTokens` |
+
+Claude usage includes cache counters when returned. Remote embedding input tokens are
+reported only when every internal batch supplies usage. Local models provide no token
+usage. Missing counters are omitted, never estimated as zero.
+
+Logs contain no record text, prompts, answers, ref identifiers, credentials, or raw
+errors. Content logging is not offered in this slice. Logging uses injected filesystem
+and clock ports; append failures are best effort and cannot fail the original operation.
+Injected filesystems without `appendFile` skip logging. Entries use append writes rather
+than read/replace; abrupt process termination can still leave an incomplete last line.
+There is no automatic retention or rotation yet; the cache can be deleted to clear it.
+`aimem init` already ignores `.aimem/.cache/`; existing notebooks must retain that rule.
+
+`aimem doctor` reports the location and metadata policy in a `call log` check.
+The `doctor --json` envelope and exit code are unchanged; its checks array gains that
+informational entry. `ask` and retrieval outputs are unchanged; they may now append local
+diagnostics while leaving notebook records untouched.
