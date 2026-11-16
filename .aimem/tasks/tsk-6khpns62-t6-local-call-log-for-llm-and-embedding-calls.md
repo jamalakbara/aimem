@@ -4,13 +4,13 @@ id: tsk-6khpns62
 type: task
 title: "T6: Local call log for LLM and embedding calls"
 summary: Trace each LLM and embedding call without storing record text by default.
-status: open
+status: review
 trust: agent
 roles: [all]
 paths: [packages/core/src/, packages/cli/src/commands/embedder.ts]
 author: agent:claude-code
 created: 2026-11-15T17:27:22Z
-updated: 2026-11-15T17:27:22Z
+updated: 2026-11-16T13:29:55Z
 priority: p2
 ---
 
