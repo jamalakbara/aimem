@@ -90,6 +90,60 @@ Decision log in ADR style. Status: **accepted** (decided in brainstorm), **propo
 
 ## Open questions (with recommended defaults)
 
+### T3 — Codex CLI provider verification (2026-11-16)
+
+**Recommendation: no-go for implementation on the tested build until zero-tool
+operation can be verified.** Login-based generation works, but the `ask` contract
+requires no tools (15 §10). Keep `claude-cli` as the implemented login-based provider;
+do not add a `codex-cli` schema value on the strength of this probe.
+
+| Check | Observed result |
+|-------|-----------------|
+| Installed CLI | Desktop-bundled `codex-cli 0.169.0-alpha.11.1`, Windows; no installation needed |
+| Authentication | `codex login status`: ChatGPT login. Real calls succeeded with `OPENAI_API_KEY` and `CODEX_API_KEY` removed from the child environment |
+| Non-interactive | Prompt on stdin through the existing `execaRunner`, fresh temporary working directory, 90 s timeout; exit 0 in 5.2–7.4 s |
+| Output | `--json` emits JSONL: `thread.started`, `turn.started`, `item.completed` with `item.type=agent_message` and `item.text`, then `turn.completed.usage` |
+| Usage | Observed `input_tokens`, `cached_input_tokens`, `cache_write_input_tokens`, `output_tokens`, `reasoning_output_tokens` |
+| Session files | Zero new `.jsonl` files under the existing Codex home `sessions/` tree after each of three `--ephemeral` calls. This does not establish absence of other local caches/logs or server retention |
+| Tool disabling | `codex exec --tools "" --help` rejects `--tools`. With the feature switches below, two model responses still listed `functions.exec`, wait/input helpers and collaboration tools. Self-report is not authoritative proof of tool execution |
+| Additional check | A request to use only `functions.exec` for `text(6 * 7)` returned `42`, but JSONL included only an agent message and no tool event. That result cannot establish whether a tool actually ran |
+| Environment isolation | Removing inherited `CODEX_*` variables except `CODEX_HOME` did not change the reported tool list. No login files were copied or modified |
+
+Exact tested arguments (line breaks here are for readability; pass as an argv array):
+
+```text
+codex -a never exec --ignore-user-config --ignore-rules --ephemeral
+  --skip-git-repo-check --sandbox read-only --json --color never
+  -c project_doc_max_bytes=0 -c web_search="disabled"
+  --disable shell_tool --disable apps --disable plugins --disable hooks
+  --disable skill_search --disable multi_agent --disable multi_agent_v2
+  --disable browser_use --disable computer_use --disable image_generation
+  --disable view_image --disable sleep_tool -
+```
+
+Capability prompt: ask for `T3_OK` and exposed tool names, explicitly forbidding tool
+calls, file access, browsing and delegation. Only synthetic prompts were sent. The
+first call inherited desktop environment variables; the next two removed `CODEX_*`
+except `CODEX_HOME`. All removed `OPENAI_API_KEY`; removing all `CODEX_*` also removes
+`CODEX_API_KEY`. No particular model was selected, so these observations are specific
+to this installed build and its default model, not a cross-model guarantee.
+
+The CLI help documents `--ignore-user-config` as retaining access to authentication
+through Codex home. Official references describe
+[non-interactive JSONL and ephemeral execution](https://developers.openai.com/codex/noninteractive)
+and [individual tool/configuration switches](https://developers.openai.com/codex/config-reference).
+Neither a read-only filesystem sandbox nor a prompt saying "do not use tools" proves
+zero tools are exposed. We found no verified all-tools-off invocation in this check.
+
+Revisit with an officially supported zero-tool mode or authoritative request/tool
+inventory evidence, then test inherited MCP/plugins/hooks, prompt isolation, failure
+mapping and output parsing before implementation. This is a bounded no-go for the
+tested build, not a claim that every Codex version is unsuitable.
+
+Real-model evaluations can continue locally through the existing Claude Code login.
+The optional GitHub Actions evaluation job still requires its separately configured
+key; skipping that setup does not prevent local evaluation (12 §3.1).
+
 | ID | Question | Recommended default | Decide by |
 |----|----------|--------------------|-----------|
 | OQ-1 | Product/CLI name and npm package availability (`aimem` is a working name) | Check availability in M0; keep CLI short | M0 |
