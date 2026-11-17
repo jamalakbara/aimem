@@ -4,6 +4,8 @@ export default defineConfig({
   test: {
     include: ["packages/*/test/**/*.test.ts"],
     testTimeout: 30000,
+    // Bound concurrent fixture I/O on hosted Windows runners.
+    maxWorkers: 4,
     globalSetup: ["./vitest.global-setup.ts"],
   },
   resolve: {
