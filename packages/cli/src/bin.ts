@@ -3,6 +3,7 @@ import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import {
+  createLocalRanker,
   cryptoRandom,
   DEFAULT_LOCAL_MODEL,
   type EmbeddingStatus,
@@ -21,6 +22,23 @@ import { run } from "./run.js";
 
 const modelsDir = join(process.env.AIMEM_HOME ?? join(homedir(), ".cache", "aimem"), "models");
 const git = execaGit();
+const loadRanker = async (allowDownload: boolean) => {
+  try {
+    if (allowDownload)
+      process.stderr.write(
+        `Preparing optional local cross-encoder in ${modelsDir} (one-time model download) …\n`,
+      );
+    return {
+      available: true as const,
+      provider: await createLocalRanker({ cacheDir: modelsDir, allowDownload }),
+    };
+  } catch {
+    return {
+      available: false as const,
+      reason: "local cross-encoder unavailable; run aimem index --reranker",
+    };
+  }
+};
 
 async function loadEmbedder(config: ResolvedProject, allowDownload: boolean): Promise<EmbeddingStatus> {
   const emb = config.retrieval?.embeddings;
@@ -51,6 +69,7 @@ process.exitCode = await run(process.argv.slice(2), {
   },
   git,
   loadEmbedder,
+  loadRanker,
   loadLlm: (config) => loadLlmProvider(config, { runner: execaRunner(), env: process.env }),
   // stdout carries the MCP protocol: nothing else may be printed while serving.
   serveMcp: () =>

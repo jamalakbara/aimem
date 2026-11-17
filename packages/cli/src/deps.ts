@@ -5,6 +5,7 @@ import type {
   Fs,
   Git,
   LlmStatus,
+  LocalRanker,
   Random,
   ResolvedProject,
 } from "@aimem/core";
@@ -27,6 +28,9 @@ export interface CliDeps {
   loadEmbedder?: (config: ResolvedProject, allowDownload: boolean) => Promise<EmbeddingStatus>;
   /** Builds the configured LLM provider for `ask` (15 §11); tests inject a fake. */
   loadLlm?: (config: ResolvedProject) => LlmStatus;
+  loadRanker?: (
+    allowDownload: boolean,
+  ) => Promise<{ available: true; provider: LocalRanker } | { available: false; reason: string }>;
   /** Runs the MCP server on this process's stdio until the client disconnects (bin only). */
   serveMcp?: () => Promise<void>;
 }

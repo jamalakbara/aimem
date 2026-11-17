@@ -135,6 +135,30 @@ export async function doctor(deps: CliDeps, g: GlobalOptions): Promise<CommandRe
   const nb = await loadProject(deps.fs, g.dir);
   const d = await gitDiagnostics(deps.git, nb.root);
   const checks: Check[] = [];
+  if (nb.config.retrieval?.rerank === "cross-encoder") {
+    try {
+      const status = await deps.loadRanker?.(false);
+      checks.push(
+        status?.available
+          ? {
+              name: "local reranker",
+              status: "ok",
+              detail: `${status.provider.id}: local inference; no record text leaves this machine`,
+            }
+          : {
+              name: "local reranker",
+              status: "warn",
+              detail: status?.reason ?? "local model unavailable; run aimem index --reranker",
+            },
+      );
+    } catch {
+      checks.push({
+        name: "local reranker",
+        status: "warn",
+        detail: "local model unavailable; run aimem index --reranker",
+      });
+    }
+  }
   checks.push({
     name: "call log",
     status: "info",

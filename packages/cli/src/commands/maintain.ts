@@ -55,7 +55,7 @@ export async function validateCmd(
 export async function indexCmd(
   deps: CliDeps,
   g: GlobalOptions,
-  o: { embeddings?: boolean; rebuild?: boolean } = {},
+  o: { embeddings?: boolean; rebuild?: boolean; reranker?: boolean } = {},
 ): Promise<CommandResult> {
   const nb = await loadProject(deps.fs, g.dir);
   const index = await loadIndex(nb, { fs: deps.fs });
@@ -64,6 +64,15 @@ export async function indexCmd(
     `${written ? "INDEX.md updated" : "INDEX.md already up to date"} (${index.records.length} records${index.problems.length ? `, ${index.problems.length} unreadable; run aimem validate` : ""}).`,
   ];
   const warnings: string[] = [];
+  let reranker: { available: boolean; provider?: string; reason?: string } | undefined;
+  if (o.reranker) {
+    const status = await deps.loadRanker?.(true);
+    reranker = status?.available
+      ? { available: true, provider: status.provider.id }
+      : { available: false, reason: status?.reason ?? "no local ranker loader" };
+    lines.push(`Reranker: ${reranker.available ? reranker.provider : "unavailable"}.`);
+    if (!reranker.available) warnings.push("cross-encoder unavailable; original retrieval still works");
+  }
   let embeddings: Record<string, unknown> | undefined;
   if (o.embeddings || o.rebuild) {
     const status = await embeddingStatus(deps, nb, true);
@@ -92,6 +101,7 @@ export async function indexCmd(
       records: index.records.length,
       problems: index.problems,
       ...(embeddings ? { embeddings } : {}),
+      ...(reranker ? { reranker } : {}),
     },
     text: `${lines.join("\n")}\n`,
     warnings,
