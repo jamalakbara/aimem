@@ -82,10 +82,12 @@ describe("local provider (15 §4.2)", () => {
     ).rejects.toThrow(/unknown local model/);
   });
 
-  it("without a downloaded model and downloads disabled, the real loader fails with a clear message", async () => {
+  it("the real offline loader reports a missing model or optional runtime", async () => {
     await expect(
       createLocalProvider({ model: "multilingual-e5-small", cacheDir: emptyModels, allowDownload: false }),
-    ).rejects.toThrow(/not downloaded/);
+    ).rejects.toThrow(
+      /not downloaded yet; run aimem index --embeddings|the local embedding runtime \(@huggingface\/transformers\) is not installed/,
+    );
   });
 });
 
@@ -150,7 +152,41 @@ describe("openai-compatible provider (15 §4.2, §12)", () => {
 });
 
 describe("loadEmbeddingProvider", () => {
-  const base = { cacheDir: emptyModels, allowDownload: false, env: {} };
+  const base = {
+    cacheDir: emptyModels,
+    allowDownload: false,
+    env: {},
+    loader: {
+      load: async () => {
+        throw new Error("model cache miss");
+      },
+    },
+  };
+  it.each([
+    ["model cache miss", /not downloaded yet; run aimem index --embeddings/],
+    [
+      "the local embedding runtime (@huggingface/transformers) is not installed",
+      /runtime .* is not installed/,
+    ],
+  ] as const)(
+    "keeps optional local inference unavailable with an actionable reason: %s",
+    async (message, reason) => {
+      const s = await loadEmbeddingProvider(
+        { retrieval: { embeddings: { provider: "local" } } },
+        {
+          ...base,
+          loader: {
+            load: async (_hub, setup) => {
+              expect(setup.allowRemote).toBe(false);
+              throw new Error(message);
+            },
+          },
+        },
+      );
+      expect(s.available).toBe(false);
+      if (!s.available) expect(s.reason).toMatch(reason);
+    },
+  );
   it.each([
     [{ provider: "none" }, /provider is none/],
     [{ provider: "openai-compatible", endpoint: "http://x/v1", model: "m" }, /allow_remote/],
