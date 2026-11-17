@@ -113,7 +113,16 @@ up to 50 eligible records before answering (15 §9). It is off by default. The e
 request has a 64,000-character prompt cap and the same per-call timeout and local
 metadata logging as answer generation. Invalid rankings, provider failures or
 `--limit` above 50 warn and retain the original selection; JSON fields are unchanged.
-`cross-encoder` remains unsupported, and `context --deep` is still reserved.
+`context --deep` is still reserved.
+
+### Optional local ranker setup
+
+`aimem index --reranker` explicitly downloads/caches the optional multilingual
+cross-encoder under `$AIMEM_HOME/models` (default `~/.cache/aimem/models`).
+It does not enable ranking: set `retrieval.rerank: cross-encoder` to opt in.
+`index --json` adds `data.reranker {available, provider? , reason?}` only with
+`--reranker`; unavailable setup warns, exits 0, and leaves original retrieval usable.
+Ordinary retrieval and doctor never download models.
 ```
 aimem ask "why did we choose postgres for the ledger?" [--role pm] [--limit 8] [--mode lexical|hybrid] [--json]
 ```

@@ -264,6 +264,7 @@ export async function run(argv: string[], deps: CliDeps): Promise<number> {
     .action(action("validate", (g, _a, o) => validateCmd(deps, g, o)));
 
   cmd("index", "regenerate INDEX.md; optionally build the vector cache")
+    .option("--reranker", "explicitly download/cache the optional local cross-encoder")
     .option("--embeddings", "build or update the vector cache for semantic search")
     .option("--rebuild", "discard the vector cache and rebuild it")
     .action(action("index", (g, _a, o) => indexCmd(deps, g, o)));
