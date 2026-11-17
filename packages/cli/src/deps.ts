@@ -17,6 +17,8 @@ export interface CliDeps {
   random: Random;
   env: Record<string, string | undefined>;
   cwd: string;
+  /** Resolved running binary path; only used for development-build diagnostics. */
+  cliEntry?: string;
   stdout: (s: string) => void;
   stderr: (s: string) => void;
   /** Whole standard input, for `--body -`. */

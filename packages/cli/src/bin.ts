@@ -2,6 +2,7 @@
 import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   createLocalRanker,
   cryptoRandom,
@@ -60,6 +61,7 @@ process.exitCode = await run(process.argv.slice(2), {
   random: cryptoRandom,
   env: process.env,
   cwd: process.cwd(),
+  cliEntry: fileURLToPath(import.meta.url),
   stdout: (s) => process.stdout.write(s),
   stderr: (s) => process.stderr.write(s),
   stdin: async () => {
