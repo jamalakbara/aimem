@@ -105,6 +105,16 @@ aimem search "<query>" [--type decision,memory] [--status ...] [--tag ...] [--ro
                        [--mode lexical|hybrid]
 ```
 `--mode` works as for `context`; `data.mode` reports what was actually used, with `semanticModel`/`semanticCoverage` or `semanticReason`. By default hides records that are `superseded`, `rejected`, `cancelled`, `done` or `retired` (as `context` does, 06 §2); `--include-superseded` shows them, and an explicit `--status` shows the listed statuses.
+`context`, `search` and `ask` honor optional `retrieval.query_rewrite: llm` and
+`retrieval.rerank: cross-encoder` (15 §7/§9). Both default to `none`. Rewriting
+sends only explicit user query/task text, never task-record bodies or derived tags,
+and requires `retrieval.llm.allow_remote: true`. Search fuses the original and
+reformulations with RRF; context keeps each record's best complete score across
+queries. Local ranking follows fusion and retains trust/freshness policy.
+Provider failure or invalid output warns and preserves the preceding retrieval
+result. JSON envelopes are unchanged; local inference adds `rerank.local` call
+metadata to the existing cache log without question/document text.
+
 ### `aimem ask "<question>"`
 Retrieval-augmented answer with citations (15 §10).
 
@@ -115,7 +125,7 @@ metadata logging as answer generation. Invalid rankings, provider failures or
 `--limit` above 50 warn and retain the original selection; JSON fields are unchanged.
 `context --deep` is still reserved.
 
-### Optional local ranker setup
+**Optional local ranker setup:**
 
 `aimem index --reranker` explicitly downloads/caches the optional multilingual
 cross-encoder under `$AIMEM_HOME/models` (default `~/.cache/aimem/models`).

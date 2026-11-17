@@ -85,7 +85,8 @@ export async function contextWithRewrites(
     }
     return { scored, warnings };
   };
-  const rewrite = await rewriteQueries(nb, buildQuery(nb, index, input), deps.llm);
+  // Task refs may contain private or secret-flagged bodies: only explicit user text may leave here.
+  const rewrite = await rewriteQueries(nb, input.task ?? "", deps.llm);
   const warnings = rewrite.warning ? [rewrite.warning] : [];
   if (rewrite.queries.length === 1) return finish(baseline, warnings);
   try {

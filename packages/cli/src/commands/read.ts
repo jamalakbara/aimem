@@ -5,11 +5,12 @@ import {
   loadIndex,
   loadProject,
   RETIRED_STATUSES,
-  search,
+  searchWithRewrites,
 } from "@aimem/core";
 import { RECORD_TYPES } from "@aimem/schema";
 import type { CliDeps, CommandResult, GlobalOptions } from "../deps.js";
 import { table } from "../output.js";
+import { retrievalDeps } from "./retrieval.js";
 import { retrievalMode, semanticFor } from "./semantic.js";
 
 const csv = (v: string | undefined) =>
@@ -133,7 +134,8 @@ export async function searchCmd(
   const tags = csv(o.tag);
   const roles = csv(o.role);
   const paths = csv(o.paths);
-  const hits = search(
+  const retrieved = await searchWithRewrites(
+    nb,
     index,
     query,
     {
@@ -146,10 +148,20 @@ export async function searchCmd(
       ...(o.repo ? { repo: o.repo } : {}),
       ...(o.includeSuperseded ? { includeSuperseded: true } : {}),
     },
-    sem.semantic
-      ? { scores: sem.semantic.scores, fusion: nb.config.retrieval?.fusion === "rrf" ? "rrf" : "weighted" }
-      : undefined,
+    {
+      ...(await retrievalDeps(deps, nb, index, mode)),
+      ...(sem.semantic
+        ? {
+            semantic: {
+              scores: sem.semantic.scores,
+              fusion: nb.config.retrieval?.fusion === "rrf" ? ("rrf" as const) : ("weighted" as const),
+            },
+          }
+        : {}),
+    },
   );
+  const hits = retrieved.hits;
+  warnings.push(...retrieved.warnings);
   const data = {
     query,
     mode: sem.semantic ? "hybrid" : "lexical",

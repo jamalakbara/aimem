@@ -14,6 +14,30 @@ import { FIXTURES } from "./helpers.js";
 
 const notebook = () => loadProject(nodeFs, join(FIXTURES, "tiny"));
 
+it("never sends task record bodies or path-derived tags to a context rewrite model", async () => {
+  const nb = await notebook();
+  nb.config.retrieval = { query_rewrite: "llm", llm: { allow_remote: true } };
+  const index = await loadIndex(nb, { fs: nodeFs });
+  const seen: string[] = [];
+  const deps = {
+    llm: {
+      id: "fake",
+      generate: async (req: { prompt: string }) => {
+        seen.push(req.prompt);
+        return { text: '["first wording", "second wording"]' };
+      },
+    },
+  };
+  await contextWithRewrites(
+    nb,
+    index,
+    { task: "explicit question", ref: "tsk-3c4d5e6f", paths: ["services/ledger/amount.ts"] },
+    new Date("2026-10-12T00:00:00Z"),
+    deps,
+  );
+  expect(seen).toEqual(["explicit question"]);
+});
+
 it("keeps default search and context scoring byte-for-byte equivalent", async () => {
   const nb = await notebook();
   const index = await loadIndex(nb, { fs: nodeFs });

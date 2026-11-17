@@ -7,6 +7,7 @@ import {
   loggedLlmProvider,
 } from "@aimem/core";
 import type { CliDeps, CommandResult, GlobalOptions } from "../deps.js";
+import { retrievalDeps } from "./retrieval.js";
 import { retrievalMode, semanticFor } from "./semantic.js";
 
 const HOW_TO_ENABLE =
@@ -36,6 +37,7 @@ export async function ask(
   const mode = retrievalMode(nb, o.mode);
   const sem = await semanticFor(deps, nb, index, question, mode, o.mode !== undefined);
   const r = await askQuestion(nb, index, question.trim(), {
+    ...(await retrievalDeps(deps, nb, index, mode)),
     llm: loggedLlmProvider(status.provider, createCallLog(nb, deps)),
     ...(o.limit ? { limit: o.limit } : {}),
     ...(o.role ? { role: o.role } : {}),
