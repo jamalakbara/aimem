@@ -14,6 +14,7 @@
 | Lexical search | Own in-memory BM25 over boosted fields (~80 lines; no stemming, accent folding); no cache yet (5k records index + search ≈ 0.5 s) | No dependency; deterministic; any language | MiniSearch (typo tolerance), SQLite FTS5 if scale demands |
 | Embeddings (client) | `@huggingface/transformers` (optional dependency of core, loaded lazily; pulls `onnxruntime-node`, ~290 MB installed) running `paraphrase-multilingual-MiniLM-L12-v2`; optional OpenAI-compatible endpoint | Offline and private by default; team writes English + Indonesian (15 §4) | Remote-only embeddings |
 | Vector search (client) | Flat cosine over float32 cache | Simple and fast at this scale | HNSW library beyond ~100k chunks |
+| Optional local reranking | BGE v2 M3 cross-encoder via the existing optional Transformers.js runtime | Local query/document scoring; explicit model setup, disabled by default | MiniLM comparison and limitations in 19 |
 | Vector search (server) | Postgres + `pgvector` | Reuses the existing DB; no new infra | Dedicated vector DB (rejected) |
 | Document conversion | `mammoth` (docx → HTML → markdown), optional `pandoc`; xlsx/csv parser; PDF text extraction library | Pure-JS where possible | pandoc only |
 | Google | Official Google API client (Drive, Sheets), service account | Official and typed | |
