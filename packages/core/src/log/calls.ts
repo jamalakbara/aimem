@@ -23,7 +23,7 @@ export function tokenUsage(value: unknown): TokenUsage | undefined {
 }
 
 export interface CallMetadata {
-  kind: "llm" | "embedding.document" | "embedding.query";
+  kind: "llm" | "embedding.document" | "embedding.query" | "rerank.local";
   id: string;
   refCount?: number;
   inputCount?: number;

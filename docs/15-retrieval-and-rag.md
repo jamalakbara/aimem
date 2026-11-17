@@ -197,8 +197,8 @@ Deterministic, from `links` / `supersedes`:
 ## 9. Reranking (optional)
 
 `retrieval.rerank: none | cross-encoder | llm`, default `none`. `llm` is implemented
-for `ask` only; `context --deep` remains reserved. `cross-encoder` is not implemented
-and `ask` warns and uses its original selection.
+for `ask` only; `context --deep` remains reserved. `cross-encoder` is local and
+optional; unavailable providers warn and retain the original selection.
 
 The local cross-encoder core uses paired query/document classification through
 Transformers.js (the existing optional runtime). The small candidate is the
@@ -294,8 +294,9 @@ It uses a relevance prompt with trust labels; it does not preserve the current
 numeric trust/freshness multipliers after reranking. Production policy and prompt
 bounds are specified in §9 above.
 
-The opt-in `ask` implementation follows §9; cross-encoder reranking, query rewriting
-and `context --deep` remain unimplemented. The default remains `none`.
+The opt-in `ask` implementation follows §9. Query rewriting and local cross-encoder
+ranking are now supported in core; adapter integration follows separately.
+`context --deep` remains reserved. The defaults remain `none`.
 
 ### 9.2 Production `ask` retrieval validation
 
@@ -441,7 +442,7 @@ not a billing ledger.
 |-------|---------|
 | `version` | `1` |
 | `time` | Invocation start, UTC ISO timestamp |
-| `kind` | `llm`, `embedding.document`, or `embedding.query` |
+| `kind` | `llm`, `embedding.document`, `embedding.query`, or `rerank.local` |
 | `provider`, `model` | Provider name and configured model; model is `null` when unspecified; remote host omitted |
 | `latencyMs` | Elapsed time through success/failure, excluding log I/O, clamped to zero |
 | `status` | `ok` or `error`; no raw error message |

@@ -3,7 +3,8 @@ import type { IndexedRecord, NotebookIndex } from "../index/build.js";
 import type { LlmProvider } from "../llm/provider.js";
 import type { Notebook } from "../project/load.js";
 import { frameRecord, NOTICE } from "../render/frame.js";
-import { type SearchSemantic, search } from "../search/search.js";
+import { type QueryDeps, searchWithRewrites } from "../retrieval/query.js";
+import type { SearchSemantic } from "../search/search.js";
 import { scanSecrets } from "../secrets/scan.js";
 import { RERANK_CANDIDATES, rerankRecords } from "./rerank.js";
 
@@ -60,6 +61,9 @@ export interface AskOptions {
   semantic?: SearchSemantic;
   limit?: number;
   role?: string;
+  ranker?: QueryDeps["ranker"];
+  now?: Date;
+  semanticFor?: QueryDeps["semanticFor"];
 }
 
 function exclusion(r: IndexedRecord): string | undefined {
@@ -106,12 +110,20 @@ export async function askQuestion(
   opts: AskOptions,
 ): Promise<AskResult> {
   const limit = opts.limit ?? DEFAULT_LIMIT;
-  const hits = search(
+  const retrieved = await searchWithRewrites(
+    nb,
     index,
     question,
-    { limit: limit * 3, ...(HISTORICAL.test(question) ? { includeSuperseded: true } : {}) },
-    opts.semantic,
+    { limit: index.records.length, ...(HISTORICAL.test(question) ? { includeSuperseded: true } : {}) },
+    {
+      llm: opts.llm,
+      semantic: opts.semantic,
+      ranker: opts.ranker,
+      now: opts.now,
+      semanticFor: opts.semanticFor,
+    },
   );
+  const hits = retrieved.hits.slice(0, limit * 3);
   const excluded: AskResult["excluded"] = [];
   let ranked = hits
     .filter((h) => {
@@ -131,21 +143,13 @@ export async function askQuestion(
     .slice(0, limit);
 
   const empty = { verified: 0, agent: 0, inferred: 0 };
-  const warnings: string[] = [];
+  const warnings: string[] = [...retrieved.warnings];
   if (nb.config.retrieval?.rerank === "llm") {
     if (nb.config.retrieval.llm?.allow_remote !== true) {
       warnings.push("rerank requires retrieval.llm.allow_remote: true; using original order");
     } else {
       // Expand only the opt-in path. Failure preserves the exact legacy selection above.
-      const candidates = search(
-        index,
-        question,
-        {
-          limit: index.records.length,
-          ...(HISTORICAL.test(question) ? { includeSuperseded: true } : {}),
-        },
-        opts.semantic,
-      )
+      const candidates = retrieved.hits
         .filter((h) => {
           const reason = exclusion(h.record);
           if (reason && !excluded.some((e) => e.ref === h.record.id))
@@ -171,8 +175,6 @@ export async function askQuestion(
       if (result.warning) warnings.push(result.warning);
       else ranked = result.records.slice(0, limit).map((record) => ({ record, score: 0 }));
     }
-  } else if (nb.config.retrieval?.rerank === "cross-encoder") {
-    warnings.push("cross-encoder reranking is not implemented; using original order");
   }
 
   if (!ranked.length)

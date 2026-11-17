@@ -39,6 +39,29 @@ function fakeLlm(answer: string | ((req: LlmRequest) => string)) {
 }
 const ask = async (question: string, llm: LlmProvider, extra: { role?: string; limit?: number } = {}) =>
   askQuestion(nb, await loadIndex(nb, { fs: nodeFs }), question, { llm, ...extra });
+
+it("combines opt-in query rewrite and local ranking before answering", async () => {
+  nb.config.retrieval = { query_rewrite: "llm", rerank: "cross-encoder", llm: { allow_remote: true } };
+  let rankCalls = 0;
+  const { llm, requests } = fakeLlm((req) =>
+    req.refCount === 0 ? '["ledger amounts", "money reports"]' : "Amounts [dec-1a2b3c4d].",
+  );
+  const result = await askQuestion(nb, await loadIndex(nb, { fs: nodeFs }), "money", {
+    llm,
+    now: new Date("2026-10-12T00:00:00Z"),
+    ranker: {
+      id: "fake",
+      score: async (_query, docs) => {
+        rankCalls++;
+        return docs.map(() => 0.5);
+      },
+    },
+  });
+  expect(rankCalls).toBe(1);
+  expect(requests).toHaveLength(2);
+  expect(result.sources.map((s) => s.ref)).toContain("dec-1a2b3c4d");
+  expect(result.warnings).toEqual([]);
+});
 /** Refs that were handed to the model, in prompt order. */
 const framed = (req: LlmRequest | undefined) =>
   [...(req?.prompt ?? "").matchAll(/<aimem-record ref="([^"]+)" type="[^"]+" trust="[^"]+">/g)].map(
@@ -133,14 +156,14 @@ describe("aimem ask (15 §10)", () => {
     expect(result.warnings.join(" ")).toMatch(/allow_remote/);
   });
 
-  it("unsupported cross-encoder reranking warns without an extra call", async () => {
+  it("unavailable cross-encoder reranking warns without an extra call", async () => {
     const baseline = await ask("money", fakeLlm("answer").llm);
     nb.config.retrieval = { rerank: "cross-encoder" };
     const f = fakeLlm("answer");
     const result = await ask("money", f.llm);
     expect(f.requests).toHaveLength(1);
     expect(result.framed).toEqual(baseline.framed);
-    expect(result.warnings.join(" ")).toMatch(/cross-encoder.*not implemented/);
+    expect(result.warnings.join(" ")).toMatch(/cross-encoder.*(clock|unavailable)/);
   });
   it("frames retrieved records with ref, type and trust, after the notice; rules go in the system prompt", async () => {
     const f = fakeLlm("Amounts are integer minor units [dec-1a2b3c4d].");
