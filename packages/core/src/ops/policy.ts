@@ -18,6 +18,26 @@ export interface PolicyResult {
 
 const firstLine = (s: string) => s.trim().split("\n").find(Boolean) ?? "unknown error";
 
+/** Local metadata only: never fetch just to decide whether an agent may commit. */
+async function agentCommitGuard(git: Git, cwd: string): Promise<string | undefined> {
+  const current = await git.run(["symbolic-ref", "--quiet", "--short", "HEAD"], cwd);
+  const branch = current.stdout.trim();
+  if (current.code !== 0 || !branch)
+    return "agent changes staged because the current branch could not be identified";
+  const staged = () => `agent changes staged on ${branch}; commits require a named feature branch`;
+  if (["main", "master", "trunk"].includes(branch)) return staged();
+  const remotes = await git.run(["remote"], cwd);
+  if (remotes.code !== 0) return "agent changes staged because default-branch metadata could not be read";
+  for (const remote of remotes.stdout
+    .split("\n")
+    .map((s) => s.trim())
+    .filter(Boolean)) {
+    const head = await git.run(["symbolic-ref", "--quiet", `refs/remotes/${remote}/HEAD`], cwd);
+    if (head.code === 0 && head.stdout.trim() === `refs/remotes/${remote}/${branch}`) return staged();
+  }
+  return undefined;
+}
+
 /**
  * Stage or commit the files an agent just wrote (04 §4). Only those paths are touched:
  * other staged work is left as it is and never included. Human writes are left to the human.
@@ -32,7 +52,7 @@ export async function applyWritePolicy(input: {
   override?: CommitPolicy;
 }): Promise<PolicyResult> {
   const { git, nb, author, files, message } = input;
-  const policy = input.override ?? effectivePolicy(nb.config);
+  let policy = input.override ?? effectivePolicy(nb.config);
   if ((!input.override && !author.startsWith("agent:")) || policy === "none" || !files.length)
     return { action: "none", warnings: [] };
   const probe = await git.run(["--version"], nb.root);
@@ -43,12 +63,19 @@ export async function applyWritePolicy(input: {
     };
   if (!(await isGitRepo(git, nb.root)))
     return { action: "skipped", warnings: ["not a git repository; records written but not staged"] };
+  const guard =
+    policy === "commit" && author.startsWith("agent:") ? await agentCommitGuard(git, nb.root) : undefined;
+  if (guard) policy = "stage";
   const add = await git.run(["add", "--", ...files], nb.root);
   if (add.code !== 0) return { action: "failed", warnings: [`git add failed: ${firstLine(add.stderr)}`] };
   if (policy === "stage" || policy === "pr") {
     return {
       action: "staged",
-      warnings: policy === "pr" ? ["write_policy pr is not supported yet; changes were staged instead"] : [],
+      warnings: guard
+        ? [guard]
+        : policy === "pr"
+          ? ["write_policy pr is not supported yet; changes were staged instead"]
+          : [],
     };
   }
   const commit = await git.run(

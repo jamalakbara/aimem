@@ -251,6 +251,13 @@ server:                           # only if sync: server
 
 Rules:
 - `mode: solo` implies defaults `agent_commits: commit`, `durable_requires_review: false`, no members needed.
+- Agent commits are restricted to named feature branches. With a commit policy,
+  tools stage and warn on `main`, `master`, `trunk`, detached/unidentifiable HEAD,
+  or a branch identified by an available local remote HEAD as that remote's
+  default. No fetch is performed. Missing remote HEAD metadata cannot identify
+  other custom default/protected branches; repository protection is not queried.
+  Agent `handoff --commit` respects the same guard; explicit human commits remain
+  supported. No configuration keys are added for this guard.
 - Unknown keys are preserved and warned about, not rejected (forward compatibility).
 - Secrets (tokens) are **never** stored here; use env vars (`AIMEM_TOKEN`) or the OS keychain.
 

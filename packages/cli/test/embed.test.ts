@@ -153,7 +153,7 @@ describe("aimem index --embeddings", () => {
       { env: { AIMEM_AUTHOR: "agent:test" } },
     );
     expect(r.code).toBe(0);
-    expect(r.json.warnings).toEqual([]);
+    expect(r.json.warnings).toEqual(["agent changes staged on main; commits require a named feature branch"]);
   });
 
   it("a stale cache from another model falls back with the reason", async () => {

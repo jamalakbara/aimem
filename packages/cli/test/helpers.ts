@@ -5,7 +5,7 @@ import { type CliDeps, run } from "aimem";
 export const FIXTURES = fileURLToPath(new URL("../../../fixtures/projects/", import.meta.url));
 
 /** Fake git: a repository where every command succeeds and user.name is unset. Records calls. */
-export function fakeGit(userName?: string): Git & { calls: string[][] } {
+export function fakeGit(userName?: string, branch = "main"): Git & { calls: string[][] } {
   const calls: string[][] = [];
   return {
     calls,
@@ -13,7 +13,9 @@ export function fakeGit(userName?: string): Git & { calls: string[][] } {
       calls.push(args);
       if (args[0] === "--version") return { code: 0, stdout: "git version 2.99.0\n", stderr: "" };
       if (args[0] === "rev-parse" && args.includes("--abbrev-ref"))
-        return { code: 0, stdout: "main\n", stderr: "" };
+        return { code: 0, stdout: `${branch}\n`, stderr: "" };
+      if (args[0] === "symbolic-ref" && args.at(-1) === "HEAD")
+        return { code: 0, stdout: `${branch}\n`, stderr: "" };
       if (args[0] === "rev-parse") return { code: 0, stdout: "true\n", stderr: "" };
       if (args[0] === "remote") return { code: 0, stdout: "origin\n", stderr: "" };
       if (args[0] === "config")

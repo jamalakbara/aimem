@@ -27,6 +27,7 @@ beforeAll(() => {
   spawnSync("node", [BIN, "init", "--no-intake"], { cwd: repo, env });
   git("add", "-A");
   git("commit", "-q", "-m", "chore: add aimem notebook");
+  git("checkout", "-q", "-b", "codex/e2e");
 });
 afterAll(() => rmSync(repo, { recursive: true, force: true }));
 
@@ -68,6 +69,31 @@ describe("aimem serve mcp over stdio", () => {
         "author: agent:e2e-agent\n",
       );
       expect(git("status", "--porcelain")).toBe("");
+    } finally {
+      await client.close();
+    }
+  });
+
+  it("stages agent writes on main without creating a commit", async () => {
+    git("checkout", "-q", "main");
+    const before = git("rev-parse", "HEAD");
+    const client = new Client({ name: "e2e-agent", version: "1.0.0" });
+    await client.connect(
+      new StdioClientTransport({ command: "node", args: [BIN, "serve", "mcp"], cwd: repo, env }),
+    );
+    try {
+      const result = await client.callTool({
+        name: "aimem_add",
+        arguments: {
+          type: "memory",
+          title: "Main requires review",
+          summary: "Agent notes remain staged on the default branch.",
+          body: "Review before committing.",
+        },
+      });
+      expect((result.structuredContent as { data: { git: string } }).data.git).toBe("staged");
+      expect(git("rev-parse", "HEAD")).toBe(before);
+      expect(git("diff", "--cached", "--name-only")).toContain(".aimem/memory/");
     } finally {
       await client.close();
     }

@@ -49,6 +49,7 @@ describe("M1 end-to-end with the built binary", () => {
     expect(init.code, init.stderr).toBe(0);
     git("add", "-A");
     git("commit", "-q", "-m", "chore: add aimem notebook");
+    git("checkout", "-q", "-b", "codex/e2e");
 
     const dec = aimem([
       "decide",
