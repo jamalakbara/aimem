@@ -10,7 +10,7 @@ roles: [all]
 paths: [packages/core/src/context/score.ts, packages/core/src/embed/chunk.ts, packages/core/src/search/, fixtures/evals/]
 author: agent:claude-code
 created: 2026-11-15T17:27:23Z
-updated: 2026-11-17T17:24:41Z
+updated: 2026-11-17T18:17:13Z
 priority: p2
 ---
 
@@ -24,4 +24,4 @@ Improve default offline paraphrase retrieval without regressing keyword cases or
 - [x] Model experiments include before/after evidence
 
 ## Notes
-Still open. Default MiniLM paraphrase recall is 0.8636 vs lexical 0.7727 (+0.0909). Corpus-mean centering did not improve the original set. E5-base regressed paraphrase recall to 0.7727; it was not shipped. Six additional questions were written before experiments. All original expected refs appear somewhere in the medium briefing, but the top-10 scoring target remains unmet. See docs/15 sections 4.2 and 9, fixtures/evals/results/t7-centering.json and t7-e5-base.json, PRs #38 and #47. Optional T8 ranking does not close T7.
+Still open: default MiniLM paraphrase recall is 0.8636 versus lexical 0.7727 (+0.0909). Centering, phrase queries, constraint focus and durable-decision policies do not close the original target; E5-base regresses paraphrase recall. Qwen3-0.6B instruction variants retain paraphrase 0.8636 but regress multilingual to 0.5455 versus MiniLM 0.9091, so no new model/default ships. Six plus four additional questions were written before experiments. Results and caveats: docs/15, PRs #38/#47/#50. Optional T8 ranking and the separate search handoff fix do not close T7.

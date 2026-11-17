@@ -28,6 +28,7 @@ Status: **draft v0.1** — produced from the initial brainstorm. Working name `a
 | 17 | [Build Playbook for Claude Code](17-claude-code-build-playbook.md) | How to build aimem with a coding agent: flow, prompts, slices, definition of done |
 | 18 | [T7–T9 Implementation Plan](18-t7-t9-implementation-plan.md) | Approved slices, acceptance criteria and validation |
 | 19 | [T8 Quality Report](19-t8-quality-report.md) | Local model comparison and generated-answer validation status |
+| 20 | [Dogfood Fix Plan](20-dogfood-fix-plan.md) | Approved default-branch, stale-build and search fixes with validation evidence |
 
 ## Reading paths
 

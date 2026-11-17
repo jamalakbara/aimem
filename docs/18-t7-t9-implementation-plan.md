@@ -1,6 +1,6 @@
 # T7–T9 implementation plan
 
-Status: approved on 2026-11-17; T8 and T9 implemented for review on 2026-11-18.
+Status: approved on 2026-11-17; T8 and T9 merged on 2026-11-18.
 T7's numerical target remains open; no regressing default was shipped.
 
 | Task | Outcome |
