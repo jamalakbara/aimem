@@ -471,3 +471,30 @@ There is no automatic retention or rotation yet; the cache can be deleted to cle
 The `doctor --json` envelope and exit code are unchanged; its checks array gains that
 informational entry. `ask` and retrieval outputs are unchanged; they may now append local
 diagnostics while leaving notebook records untouched.
+
+## 18. Explicit local usage capture (T9)
+
+`aimem usage record --session <opaque-id> --refs <ref,...>` appends one event to
+`.aimem/.cache/usage.jsonl`. Agents explicitly report refs they actually cited or
+used; ordinary context/search calls do not imply use. Capture never changes
+ranking or learns weights. There is no automatic ask capture or MCP usage tool.
+
+| Field | Contract |
+|-------|----------|
+| `version` | `1` |
+| `time` | Injected clock, UTC ISO timestamp |
+| `session` | Opaque 1–64 character ID; starts with a letter/digit, then letters/digits/`_`/`-`; no personal data |
+| `source` | `agent` |
+| `refs` | 1–100 supplied refs, deduplicated in first-seen order; same-project global refs canonicalize to local IDs |
+
+Refs must resolve in the currently loaded notebook. Foreign and unknown refs are
+rejected before any append or directory creation. Sessions/refs never determine
+the log path. One append writes each complete JSON line; concurrent reporters
+append independent events. Abrupt termination can still leave a partial last line.
+Storage failures produce a bounded error rather than a false success.
+
+Only opaque sessions and ref identifiers are stored: no query, answer, record body,
+credentials or personal data. This cache is separate from T6 diagnostics, whose
+entries deliberately omit refs. Existing `.aimem/.cache/` ignore rules cover it;
+there is no sync, upload, automatic retention or rotation. Delete the cache to
+clear history. Notebook records and the generated index remain untouched.

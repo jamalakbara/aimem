@@ -9,6 +9,7 @@ import { init } from "./commands/init.js";
 import { indexCmd, validateCmd } from "./commands/maintain.js";
 import { list, searchCmd, show } from "./commands/read.js";
 import { doctor, type HandoffOptions, handoff, status } from "./commands/session.js";
+import { usageRecord } from "./commands/usage.js";
 import { type AddOptions, add, supersede, update, verify } from "./commands/write.js";
 import type { CliDeps, CommandResult, GlobalOptions } from "./deps.js";
 import { EXIT_CODES, failureEnvelope, successEnvelope } from "./output.js";
@@ -262,6 +263,11 @@ export async function run(argv: string[], deps: CliDeps): Promise<number> {
     .option("--strict", "exit 1 on warnings")
     .option("--fix", "repair safe issues first (file names, one-sided supersede links, updated)")
     .action(action("validate", (g, _a, o) => validateCmd(deps, g, o)));
+
+  cmd("usage <operation>", "record explicit cited-ref usage locally; never changes ranking")
+    .option("--session <id>", "opaque session identifier (no personal data)")
+    .option("--refs <list>", "comma-separated known record refs")
+    .action(action("usage", (g, args, o) => usageRecord(deps, g, args, o)));
 
   cmd("index", "regenerate INDEX.md; optionally build the vector cache")
     .option("--reranker", "explicitly download/cache the optional local cross-encoder")
