@@ -3,6 +3,7 @@ import {
   buildBriefing,
   buildQuery,
   type ContextInput,
+  contextWithRewrites,
   gitChangedFiles,
   gitDiagnostics,
   loadIndex,
@@ -10,6 +11,7 @@ import {
 } from "@aimem/core";
 import type { CliDeps, CommandResult, GlobalOptions } from "../deps.js";
 import { table } from "../output.js";
+import { retrievalDeps } from "./retrieval.js";
 import { retrievalMode, semanticFor } from "./semantic.js";
 
 export interface ContextOptions {
@@ -54,12 +56,19 @@ export async function context(deps: CliDeps, g: GlobalOptions, o: ContextOptions
   const mode = retrievalMode(nb, o.mode);
   const sem = await semanticFor(deps, nb, index, buildQuery(nb, index, input), mode, o.mode !== undefined);
   warnings.push(...sem.warnings);
-  const b = buildBriefing(
+  const retrievalInput = {
+    ...input,
+    ...(sem.semantic ? { semantic: sem.semantic } : { semanticOff: sem.off ?? "off" }),
+  };
+  const retrieved = await contextWithRewrites(
     nb,
     index,
-    { ...input, ...(sem.semantic ? { semantic: sem.semantic } : { semanticOff: sem.off ?? "off" }) },
+    retrievalInput,
     deps.clock.now(),
+    await retrievalDeps(deps, nb, index, mode),
   );
+  warnings.push(...retrieved.warnings);
+  const b = buildBriefing(nb, index, retrievalInput, deps.clock.now(), retrieved.scored);
   const data = {
     ...b,
     ...(inferPaths ? { inferred: { paths: usedPaths, ...(branch ? { branch } : {}) } } : {}),

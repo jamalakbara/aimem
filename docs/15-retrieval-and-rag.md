@@ -186,6 +186,11 @@ Responses must be a JSON array of 2–3 distinct single-line queries, each at mo
 512 characters, different from the original; the response cap is 2048 characters.
 Missing consent/provider, invalid output and provider errors retain the original
 query exactly and add a warning. The original always participates in retrieval.
+Search uses RRF across the result lists; context uses the maximum complete score
+per record, retaining each query's existing hard filters, metadata and trust policy.
+Context rewriting receives only explicit `--task` text, not a referenced task's
+body or path-derived record tags. CLI `context`, `search` and `ask` are integrated;
+MCP integration is delivered separately.
 
 ## 8. Graph expansion ("GraphRAG-lite")
 
