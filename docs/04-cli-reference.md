@@ -105,6 +105,12 @@ aimem search "<query>" [--type decision,memory] [--status ...] [--tag ...] [--ro
                        [--mode lexical|hybrid]
 ```
 `--mode` works as for `context`; `data.mode` reports what was actually used, with `semanticModel`/`semanticCoverage` or `semanticReason`. By default hides records that are `superseded`, `rejected`, `cancelled`, `done` or `retired` (as `context` does, 06 §2); `--include-superseded` shows them, and an explicit `--status` shows the listed statuses.
+Search multiplies handoff relevance by 0.5 after lexical/hybrid fusion, before
+limiting and normalizing scores, to favor direct durable answers over session
+summaries. Explicit history terms (`handoff`, `session`, `history`, `sesi`,
+`riwayat`, their supported plurals, `what happened`, `experiment results`) retain
+the original relevance. `--type handoff` preserves handoff ordering. This also
+affects the search candidates used by `ask`; context scoring is unchanged.
 `context`, `search` and `ask` honor optional `retrieval.query_rewrite: llm` and
 `retrieval.rerank: cross-encoder` (15 §7/§9). Both default to `none`. Rewriting
 sends only explicit user query/task text, never task-record bodies or derived tags,

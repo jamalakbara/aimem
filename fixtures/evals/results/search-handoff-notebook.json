@@ -1,0 +1,504 @@
+{
+  "corpus": "aimem notebook without the self-referential bug report",
+  "handoffPrior": 0.5,
+  "cases": [
+    {
+      "id": "english-tests",
+      "mode": "lexical",
+      "query": "how to run tests",
+      "expected": "mem-g48me62t",
+      "before": {
+        "expectedRank": 1,
+        "firstHandoffRank": 2,
+        "top": [
+          {
+            "ref": "mem-g48me62t",
+            "type": "memory"
+          },
+          {
+            "ref": "hnd-zjrxnegr",
+            "type": "handoff"
+          },
+          {
+            "ref": "hnd-x2ry7c4f",
+            "type": "handoff"
+          },
+          {
+            "ref": "hnd-1bm1mbkn",
+            "type": "handoff"
+          }
+        ]
+      },
+      "after": {
+        "expectedRank": 1,
+        "firstHandoffRank": 3,
+        "top": [
+          {
+            "ref": "mem-g48me62t",
+            "type": "memory"
+          },
+          {
+            "ref": "mem-rv1cc0fw",
+            "type": "memory"
+          },
+          {
+            "ref": "hnd-zjrxnegr",
+            "type": "handoff"
+          },
+          {
+            "ref": "mem-tr1ayss7",
+            "type": "memory"
+          }
+        ]
+      }
+    },
+    {
+      "id": "english-tests",
+      "mode": "hybrid",
+      "query": "how to run tests",
+      "expected": "mem-g48me62t",
+      "before": {
+        "expectedRank": 1,
+        "firstHandoffRank": 2,
+        "top": [
+          {
+            "ref": "mem-g48me62t",
+            "type": "memory"
+          },
+          {
+            "ref": "hnd-8f3zwsag",
+            "type": "handoff"
+          },
+          {
+            "ref": "hnd-zjrxnegr",
+            "type": "handoff"
+          },
+          {
+            "ref": "hnd-69pmbgjk",
+            "type": "handoff"
+          }
+        ]
+      },
+      "after": {
+        "expectedRank": 1,
+        "firstHandoffRank": 5,
+        "top": [
+          {
+            "ref": "mem-g48me62t",
+            "type": "memory"
+          },
+          {
+            "ref": "mem-rv1cc0fw",
+            "type": "memory"
+          },
+          {
+            "ref": "tsk-08kpmr34",
+            "type": "task"
+          },
+          {
+            "ref": "tsk-twhvzefh",
+            "type": "task"
+          }
+        ]
+      }
+    },
+    {
+      "id": "indonesian-tests",
+      "mode": "lexical",
+      "query": "bagaimana cara menjalankan tes?",
+      "expected": "mem-g48me62t",
+      "before": {
+        "expectedRank": null,
+        "firstHandoffRank": null,
+        "top": []
+      },
+      "after": {
+        "expectedRank": null,
+        "firstHandoffRank": null,
+        "top": []
+      }
+    },
+    {
+      "id": "indonesian-tests",
+      "mode": "hybrid",
+      "query": "bagaimana cara menjalankan tes?",
+      "expected": "mem-g48me62t",
+      "before": {
+        "expectedRank": 9,
+        "firstHandoffRank": 1,
+        "top": [
+          {
+            "ref": "hnd-8f3zwsag",
+            "type": "handoff"
+          },
+          {
+            "ref": "hnd-thyjj57w",
+            "type": "handoff"
+          },
+          {
+            "ref": "hnd-69pmbgjk",
+            "type": "handoff"
+          },
+          {
+            "ref": "hnd-x2ry7c4f",
+            "type": "handoff"
+          }
+        ]
+      },
+      "after": {
+        "expectedRank": 1,
+        "firstHandoffRank": 6,
+        "top": [
+          {
+            "ref": "mem-g48me62t",
+            "type": "memory"
+          },
+          {
+            "ref": "tsk-08kpmr34",
+            "type": "task"
+          },
+          {
+            "ref": "mem-rv1cc0fw",
+            "type": "memory"
+          },
+          {
+            "ref": "tsk-twhvzefh",
+            "type": "task"
+          }
+        ]
+      }
+    },
+    {
+      "id": "explicit-history",
+      "mode": "lexical",
+      "query": "reranking experiment results",
+      "expected": "hnd-8f3zwsag",
+      "before": {
+        "expectedRank": 1,
+        "firstHandoffRank": 1,
+        "top": [
+          {
+            "ref": "hnd-8f3zwsag",
+            "type": "handoff"
+          },
+          {
+            "ref": "hnd-06ent6zq",
+            "type": "handoff"
+          },
+          {
+            "ref": "hnd-9dwpvcab",
+            "type": "handoff"
+          },
+          {
+            "ref": "tsk-89xndc10",
+            "type": "task"
+          }
+        ]
+      },
+      "after": {
+        "expectedRank": 1,
+        "firstHandoffRank": 1,
+        "top": [
+          {
+            "ref": "hnd-8f3zwsag",
+            "type": "handoff"
+          },
+          {
+            "ref": "hnd-06ent6zq",
+            "type": "handoff"
+          },
+          {
+            "ref": "hnd-9dwpvcab",
+            "type": "handoff"
+          },
+          {
+            "ref": "tsk-89xndc10",
+            "type": "task"
+          }
+        ]
+      }
+    },
+    {
+      "id": "explicit-history",
+      "mode": "hybrid",
+      "query": "reranking experiment results",
+      "expected": "hnd-8f3zwsag",
+      "before": {
+        "expectedRank": 1,
+        "firstHandoffRank": 1,
+        "top": [
+          {
+            "ref": "hnd-8f3zwsag",
+            "type": "handoff"
+          },
+          {
+            "ref": "hnd-06ent6zq",
+            "type": "handoff"
+          },
+          {
+            "ref": "hnd-9dwpvcab",
+            "type": "handoff"
+          },
+          {
+            "ref": "hnd-342wkzjm",
+            "type": "handoff"
+          }
+        ]
+      },
+      "after": {
+        "expectedRank": 1,
+        "firstHandoffRank": 1,
+        "top": [
+          {
+            "ref": "hnd-8f3zwsag",
+            "type": "handoff"
+          },
+          {
+            "ref": "hnd-06ent6zq",
+            "type": "handoff"
+          },
+          {
+            "ref": "hnd-9dwpvcab",
+            "type": "handoff"
+          },
+          {
+            "ref": "hnd-342wkzjm",
+            "type": "handoff"
+          }
+        ]
+      }
+    },
+    {
+      "id": "indonesian-test-steps",
+      "mode": "lexical",
+      "query": "bagaimana langkah menjalankan pengujian proyek?",
+      "expected": "mem-g48me62t",
+      "before": {
+        "expectedRank": null,
+        "firstHandoffRank": null,
+        "top": []
+      },
+      "after": {
+        "expectedRank": null,
+        "firstHandoffRank": null,
+        "top": []
+      }
+    },
+    {
+      "id": "indonesian-test-steps",
+      "mode": "hybrid",
+      "query": "bagaimana langkah menjalankan pengujian proyek?",
+      "expected": "mem-g48me62t",
+      "before": {
+        "expectedRank": 8,
+        "firstHandoffRank": 1,
+        "top": [
+          {
+            "ref": "hnd-8f3zwsag",
+            "type": "handoff"
+          },
+          {
+            "ref": "hnd-thyjj57w",
+            "type": "handoff"
+          },
+          {
+            "ref": "hnd-1a6gv14a",
+            "type": "handoff"
+          },
+          {
+            "ref": "hnd-eq42pdds",
+            "type": "handoff"
+          }
+        ]
+      },
+      "after": {
+        "expectedRank": 2,
+        "firstHandoffRank": 8,
+        "top": [
+          {
+            "ref": "tsk-dgfhqkxd",
+            "type": "task"
+          },
+          {
+            "ref": "mem-g48me62t",
+            "type": "memory"
+          },
+          {
+            "ref": "tsk-08kpmr34",
+            "type": "task"
+          },
+          {
+            "ref": "tsk-twhvzefh",
+            "type": "task"
+          }
+        ]
+      }
+    },
+    {
+      "id": "indonesian-build-checks",
+      "mode": "lexical",
+      "query": "cara membangun proyek dan memeriksa kualitasnya?",
+      "expected": "mem-g48me62t",
+      "before": {
+        "expectedRank": null,
+        "firstHandoffRank": null,
+        "top": []
+      },
+      "after": {
+        "expectedRank": null,
+        "firstHandoffRank": null,
+        "top": []
+      }
+    },
+    {
+      "id": "indonesian-build-checks",
+      "mode": "hybrid",
+      "query": "cara membangun proyek dan memeriksa kualitasnya?",
+      "expected": "mem-g48me62t",
+      "before": {
+        "expectedRank": 5,
+        "firstHandoffRank": 2,
+        "top": [
+          {
+            "ref": "mem-134qcb5d",
+            "type": "memory"
+          },
+          {
+            "ref": "hnd-eq42pdds",
+            "type": "handoff"
+          },
+          {
+            "ref": "tsk-dgfhqkxd",
+            "type": "task"
+          },
+          {
+            "ref": "hnd-1a6gv14a",
+            "type": "handoff"
+          }
+        ]
+      },
+      "after": {
+        "expectedRank": 3,
+        "firstHandoffRank": 10,
+        "top": [
+          {
+            "ref": "mem-134qcb5d",
+            "type": "memory"
+          },
+          {
+            "ref": "tsk-dgfhqkxd",
+            "type": "task"
+          },
+          {
+            "ref": "mem-g48me62t",
+            "type": "memory"
+          },
+          {
+            "ref": "tsk-twhvzefh",
+            "type": "task"
+          }
+        ]
+      }
+    },
+    {
+      "id": "baseline-session-history",
+      "mode": "lexical",
+      "query": "what happened during the retrieval baseline investigation?",
+      "expected": "hnd-thyjj57w",
+      "before": {
+        "expectedRank": 11,
+        "firstHandoffRank": 1,
+        "top": [
+          {
+            "ref": "hnd-6x18k102",
+            "type": "handoff"
+          },
+          {
+            "ref": "dec-j4ccy4q9",
+            "type": "decision"
+          },
+          {
+            "ref": "mem-g48me62t",
+            "type": "memory"
+          },
+          {
+            "ref": "tsk-89xndc10",
+            "type": "task"
+          }
+        ]
+      },
+      "after": {
+        "expectedRank": 11,
+        "firstHandoffRank": 1,
+        "top": [
+          {
+            "ref": "hnd-6x18k102",
+            "type": "handoff"
+          },
+          {
+            "ref": "dec-j4ccy4q9",
+            "type": "decision"
+          },
+          {
+            "ref": "mem-g48me62t",
+            "type": "memory"
+          },
+          {
+            "ref": "tsk-89xndc10",
+            "type": "task"
+          }
+        ]
+      }
+    },
+    {
+      "id": "baseline-session-history",
+      "mode": "hybrid",
+      "query": "what happened during the retrieval baseline investigation?",
+      "expected": "hnd-thyjj57w",
+      "before": {
+        "expectedRank": 4,
+        "firstHandoffRank": 1,
+        "top": [
+          {
+            "ref": "hnd-54gctqfc",
+            "type": "handoff"
+          },
+          {
+            "ref": "tsk-89xndc10",
+            "type": "task"
+          },
+          {
+            "ref": "dec-j4ccy4q9",
+            "type": "decision"
+          },
+          {
+            "ref": "hnd-thyjj57w",
+            "type": "handoff"
+          }
+        ]
+      },
+      "after": {
+        "expectedRank": 4,
+        "firstHandoffRank": 1,
+        "top": [
+          {
+            "ref": "hnd-54gctqfc",
+            "type": "handoff"
+          },
+          {
+            "ref": "tsk-89xndc10",
+            "type": "task"
+          },
+          {
+            "ref": "dec-j4ccy4q9",
+            "type": "decision"
+          },
+          {
+            "ref": "hnd-thyjj57w",
+            "type": "handoff"
+          }
+        ]
+      }
+    }
+  ]
+}
