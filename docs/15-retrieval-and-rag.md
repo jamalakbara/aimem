@@ -202,7 +202,7 @@ Search uses RRF across the result lists; context uses the maximum complete score
 per record, retaining each query's existing hard filters, metadata and trust policy.
 Context rewriting receives only explicit `--task` text, not a referenced task's
 body or path-derived record tags. CLI `context`, `search` and `ask` are integrated;
-MCP integration is delivered separately.
+MCP `aimem_context` and `aimem_search` use the same implementation and consent rules.
 
 ## 8. Graph expansion ("GraphRAG-lite")
 
@@ -220,18 +220,21 @@ optional; unavailable providers warn and retain the original selection.
 The local cross-encoder core uses paired query/document classification through
 Transformers.js (the existing optional runtime). The small candidate is the
 [official multilingual MiniLM cross-encoder](https://huggingface.co/cross-encoder/mmarco-mMiniLMv2-L12-H384-v1),
-using `onnx/model_quint8_avx2.onnx`; the comparison candidate is
-[BGE v2 M3](https://huggingface.co/onnx-community/bge-reranker-v2-m3-ONNX).
+using `onnx/model_quint8_avx2.onnx`; the selected optional ranker is
+[BGE v2 M3](https://huggingface.co/onnx-community/bge-reranker-v2-m3-ONNX)
+(about 571 MB quantized ONNX). See [the quality report](19-t8-quality-report.md)
+for measured tradeoffs; default retrieval still uses no ranker.
 Inference is local, batches four pairs with a 512-token limit, and converts the
 single relevance logit to a sigmoid score. Ranker text is capped at 2400 characters
 per eligible record, at most 50 records, with a 4096-character query cap.
 `no-embed` and secret-flagged records are excluded before candidate truncation.
 Invalid logits or unavailable models preserve the original ordering. Search
 multiplies relevance by trust/freshness; context replaces its text relevance
-component with half the ranker score and keeps existing metadata/trust/freshness
+component with half the min-max normalized ranker score and keeps existing metadata/trust/freshness
 weights. Unranked candidates follow the ranked pool in their original order;
 briefing pin and packing rules still apply. Core loaders prohibit downloads unless
-explicitly requested; adapter setup and diagnostics are delivered separately.
+explicitly requested with `aimem index --reranker`; CLI doctor checks cached model
+availability, and ordinary CLI/MCP retrieval never downloads a ranker.
 
 `node scripts/eval-local-ranker.mjs --model=minilm --download` compares production
 context scoring before/after ranking on medium and T7's additional questions;
@@ -312,7 +315,7 @@ numeric trust/freshness multipliers after reranking. Production policy and promp
 bounds are specified in §9 above.
 
 The opt-in `ask` implementation follows §9. Query rewriting and local cross-encoder
-ranking are now supported in core; adapter integration follows separately.
+ranking are now supported in core, CLI and MCP.
 `context --deep` remains reserved. The defaults remain `none`.
 
 ### 9.2 Production `ask` retrieval validation
@@ -448,7 +451,7 @@ Metrics: recall@k, MRR, nDCG@10, citation precision (cited refs actually support
 
 ## 17. Local call diagnostics (T6)
 
-CLI and MCP adapters append one JSON line per generation or embedding provider invocation
+CLI and MCP adapters append one JSON line per generation, embedding or local-ranking provider invocation
 to `.aimem/.cache/calls.jsonl`, using the notebook selected by `--dir` or the MCP working
 directory. Cache hits and unavailable providers produce no entry. Embedding batches count
 as one invocation; internal HTTP batches are aggregated, and provider initialization

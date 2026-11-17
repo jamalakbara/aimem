@@ -21,6 +21,10 @@ The product's value depends on three things being right: the **file format is st
 | Performance | latency/size budgets | benchmark scripts | nightly |
 | Agent smoke | scripted "fake agent" follows the protocol; optional real-agent smoke (manual) | scripts | nightly / manual |
 
+Vitest caps file workers at four to bound concurrent fixture I/O. A Windows CI
+run of the expanded suite previously exceeded the existing 10-second hybrid
+fixture setup timeout; the worker cap preserves assertions and timeout budgets.
+
 ## 2. Fixtures (`fixtures/`)
 
 | Fixture | Contents | Used for |
@@ -110,13 +114,13 @@ run reached recall@10 1.0 with two safe fallbacks, while the 22-case answer run 
 lower support-list citation precision than the earlier baseline. Ranking gains
 alone are not an answer-quality gate.
 
-## 4. Concurrency tests
-
 T8's local ranker comparison and generated-answer validation status are recorded
 in [19 — T8 quality report](19-t8-quality-report.md). The optional runner
 `node scripts/eval-retrieval-options.mjs --real` performs a provider preflight,
 uses the unchanged 22 answer cases, and rejects quality comparisons on provider
 errors. It needs a Claude Code login and a cached optional BGE ranker.
+
+## 4. Concurrency tests
 
 Scenarios (git mode, bare remote, N clones as separate dirs):
 1. Two clones claim the same task simultaneously → exactly one succeeds; other gets `CLAIM_CONFLICT`.

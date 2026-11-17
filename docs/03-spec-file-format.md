@@ -226,7 +226,7 @@ retrieval:                        # full reference: 15 §11
   embeddings:
     provider: local               # local | openai-compatible | none
     allow_remote: false           # must be true to send content to a remote endpoint
-  rerank: none                    # none | cross-encoder (reserved) | llm (ask only; 15 §9)
+  rerank: none                    # none | cross-encoder (local) | llm (ask only; 15 §9)
   llm:
     provider: none                # none | openai-compatible | claude-cli; used only by `aimem ask` / rerank / query rewrite
     allow_remote: false           # must be true before record text is sent to a remote model (claude-cli: Anthropic)

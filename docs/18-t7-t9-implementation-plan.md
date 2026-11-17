@@ -1,6 +1,13 @@
 # T7–T9 implementation plan
 
-Status: approved on 2026-11-17; implementation in progress.
+Status: approved on 2026-11-17; T8 and T9 implemented for review on 2026-11-18.
+T7's numerical target remains open; no regressing default was shipped.
+
+| Task | Outcome |
+|------|---------|
+| T7 | Default gain remains +0.0909; centering and E5-base findings are recorded in 15 §4.2. |
+| T8 | Core, CLI and MCP features are implemented; both defaults remain none. Real answer deltas include regressions; see 19. |
+| T9 | Explicit per-session usage command and local cache are implemented and tested; see 04 and 15 §18. |
 
 Requested scope: finish T7, the remaining T8 features, and T9. Each numbered
 slice gets its own PR; adapter changes follow core changes. Existing uncommitted

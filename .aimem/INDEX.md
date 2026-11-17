@@ -11,9 +11,9 @@ Project: `aimem` · mode: solo · sync: none
 
 ## Counts
 - decision: 1 (accepted 1)
-- task: 12 (open 5, in_progress 1, review 2, done 4)
+- task: 12 (open 4, review 4, done 4)
 - memory: 7 (active 7)
-- handoff: 36 (final 36)
+- handoff: 37 (final 37)
 
 ## Pinned
 - mem-134qcb5d [agent] Project overview — aimem: a git-based shared notebook where humans and AI agents read and write project knowledge as markdown records in .aimem/.
@@ -21,8 +21,8 @@ Project: `aimem` · mode: solo · sync: none
 - mem-gv0gjym6 [agent] Working conventions for this repo — Plan first and wait for approval, one slice per PR, tests first, spec 03 is the contract, contract snapshots change only on purpose, end every session with aimem handoff.
 
 ## Recent handoffs
+- hnd-qvme4yxp 2026-11-17 (agent:codex) — Done: Implemented approved T8 query rewriting and local cross-encoder ranking across core, CLI and MCP; explicit ranker setup/doctor and metadata diagnostics. Implemented T9 explicit per-session usag…
 - hnd-342wkzjm 2026-11-16 (agent:codex) — Done: Reviewed the stacked codex/t8-ask-rerank changes against main: inspected ask reranking logic, validation/fallback, tests, spec and user docs; no concrete blocker found in reviewed paths. · Next…
 - hnd-jz905gsd 2026-11-16 (agent:codex) — Done: Recapped repository progress from the latest project handoff, briefing, and Git state. · Next: Review the draft PR on codex/t8-ask-rerank; investigate answer citation quality before recommendin…
 - hnd-06ent6zq 2026-11-16 (agent:codex) — Done: Implemented approved opt-in ask reranking via configured LLM and Claude Code login: 50 eligible candidates, 64000-character full rerank prompt cap, privacy and trust framing, strict ref validat…
 - hnd-eq42pdds 2026-11-16 (agent:codex) — Done: Prepared production slice plan after inspecting ask, config, prompt framing and reserved context --deep contracts. · Next: Approve ask slice: up to 50 eligible candidates, bounded untrusted-rec…
-- hnd-8f3zwsag 2026-11-16 (agent:codex) — Done: Completed eval-only Claude Code reranking experiment. Eight held-out questions committed before runs. 42 calls: medium and held-out recall at 10 both 1.0; paraphrase gain +0.2273 over lexical;…
