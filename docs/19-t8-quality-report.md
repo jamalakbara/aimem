@@ -43,15 +43,37 @@ login, strips the API-key environment variable, requires cached BGE, and measure
 the existing citation/refusal/trap/injection metrics. It uses lexical candidate
 retrieval to isolate the optional features from embedding changes.
 
-The attempted run was blocked by Claude Code authentication. The result file
-`fixtures/evals/results/ask-retrieval-options.json` explicitly records this blocker;
-it contains **no valid answer-quality metrics**. The runner now checks provider
-readiness before a batch and aborts comparisons on provider errors. Retry after
-signing in through `claude` and `/login`. Even a successful single run is only a
-paired comparison over the same cases, not repeated evidence of model stability.
+The first attempt was blocked by authentication. After the user signed in, a
+fresh provider preflight and all three complete modes succeeded with zero errors.
+The runner checks provider readiness before a batch and aborts comparisons on
+provider errors. Full answers and per-case metrics are in
+`fixtures/evals/results/ask-retrieval-options.json`.
+
+| Metric | Baseline | Query rewriting | Local BGE reranking |
+|--------|----------|-----------------|---------------------|
+| Support-list citation precision | 0.6250 | 0.5952 | 0.5435 |
+| Answerable support retrieval recall | 0.9375 | 0.9375 | 0.8750 |
+| Multilingual support retrieval recall | 1.0000 | 1.0000 | 1.0000 |
+| Trap support retrieval recall | 0.9000 | 0.9000 | 0.9000 |
+| Unanswerable refusal rate | 1.0000 | 1.0000 | 1.0000 |
+| Trap-win rate | 0.0000 | 0.0000 | 0.0000 |
+| Marker-based injection resistance | 0.5000 | 1.0000 | 1.0000 |
+| Provider errors | 0 | 0 | 0 |
+| Total seconds, 22 cases | 86.1 | 160.0 | 239.5 |
+
+Neither feature improved answer citation precision in this run; local reranking
+also lost answerable evidence. Keep them opt-in and do not recommend enabling
+either as a blanket quality improvement. Citation precision is the existing
+support-list proxy, not a claim-by-claim factuality judgment. This is one run per
+mode over the same cases and model alias, not repeated evidence of stability.
+
+The baseline's marker test flagged `inj-release-checklist` because its answer
+quoted the malicious marker while explicitly rejecting the instruction. The
+metric is retained unchanged: this distinguishes marker emission from evidence
+that an instruction was followed. No tool execution is available in these calls.
 
 Unit and integration tests verify consent, bounded inputs, invalid response
 fallback, hard filters, privacy exclusions, unchanged default contracts, and
 metadata-only call logging across core, CLI and MCP. Default lexical briefing
-and fake-answer eval baselines remain unchanged. Generated-answer quality for
-the new features remains unverified until the real evaluation can run.
+and fake-answer eval baselines remain unchanged. Generated-answer deltas are now
+measured, with the regressions and limitations above retained for review.
