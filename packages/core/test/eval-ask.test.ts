@@ -36,6 +36,33 @@ function scripted(answers: Record<string, string>): LlmProvider {
 }
 
 describe("runAskEvalSet scoring (15 §15)", () => {
+  it("evaluates configured local ranking with the fixture clock", async () => {
+    const { nb, index } = await project("tiny");
+    nb.config.retrieval = { rerank: "cross-encoder" };
+    let calls = 0;
+    const report = await runAskEvalSet(
+      nb,
+      index,
+      {
+        project: "tiny",
+        clock: "2026-10-12T00:00:00Z",
+        limit: 8,
+        cases: [{ id: "ranked", category: "answerable", question: "money", supports: ["dec-1a2b3c4d"] }],
+      },
+      {
+        llm: { id: "fake", generate: async () => ({ text: "Amounts [dec-1a2b3c4d]." }) },
+        ranker: {
+          id: "fake",
+          score: async (_q, docs) => {
+            calls++;
+            return docs.map(() => 0.5);
+          },
+        },
+      },
+    );
+    expect(calls).toBe(1);
+    expect(report.summary.errors).toBe(0);
+  });
   const set: AskEvalSet = {
     project: "tiny",
     clock: "2026-10-12T00:00:00Z",

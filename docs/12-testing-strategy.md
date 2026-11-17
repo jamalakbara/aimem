@@ -112,6 +112,12 @@ alone are not an answer-quality gate.
 
 ## 4. Concurrency tests
 
+T8's local ranker comparison and generated-answer validation status are recorded
+in [19 — T8 quality report](19-t8-quality-report.md). The optional runner
+`node scripts/eval-retrieval-options.mjs --real` performs a provider preflight,
+uses the unchanged 22 answer cases, and rejects quality comparisons on provider
+errors. It needs a Claude Code login and a cached optional BGE ranker.
+
 Scenarios (git mode, bare remote, N clones as separate dirs):
 1. Two clones claim the same task simultaneously → exactly one succeeds; other gets `CLAIM_CONFLICT`.
 2. Claim, kill the process (no release), advance clock past TTL → claim shows expired; `--steal` works.

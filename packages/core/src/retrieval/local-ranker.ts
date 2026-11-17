@@ -11,7 +11,7 @@ export const CROSS_ENCODER_MODELS = {
   minilm: { hub: "cross-encoder/mmarco-mMiniLMv2-L12-H384-v1", file: "model_quint8_avx2", dtype: "fp32" },
   bge: { hub: "onnx-community/bge-reranker-v2-m3-ONNX", file: "model", dtype: "q8" },
 } as const;
-export const DEFAULT_RANKER_MODEL = "minilm";
+export const DEFAULT_RANKER_MODEL = "bge";
 export interface LocalRanker {
   id: string;
   /** One finite relevance score in [0,1] per document. Never sends content remotely. */
@@ -129,7 +129,14 @@ export async function rerankSearchHits(
       return { ...h, raw, score: raw };
     })
     .sort((a, b) => b.raw - a.raw || a.record.id.localeCompare(b.record.id));
-  return { hits: [...ranked, ...hits.filter((h) => !result.scores.has(h.record.id))] };
+  const max = ranked[0]?.raw ?? 0;
+  if (max <= 0) return { hits, warning: "cross-encoder returned no relevance signal; using original order" };
+  const normalized = ranked.map((h) => ({ ...h, score: h.raw / max }));
+  const ceiling = normalized.at(-1)?.score ?? 0;
+  const tail = hits
+    .filter((h) => !result.scores.has(h.record.id))
+    .map((h) => ({ ...h, score: ceiling * h.score, raw: max * ceiling * h.score }));
+  return { hits: [...normalized, ...tail] };
 }
 
 export async function rerankContextCandidates(

@@ -1,0 +1,5 @@
+{
+  "status": "blocked",
+  "reason": "Claude Code real-answer preflight failed; no quality metrics are valid",
+  "reports": []
+}

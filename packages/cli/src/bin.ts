@@ -26,7 +26,7 @@ const loadRanker = async (allowDownload: boolean) => {
   try {
     if (allowDownload)
       process.stderr.write(
-        `Preparing optional local cross-encoder in ${modelsDir} (one-time model download) …\n`,
+        `Preparing optional local BGE cross-encoder in ${modelsDir} (~571 MB one-time model download) …\n`,
       );
     return {
       available: true as const,
