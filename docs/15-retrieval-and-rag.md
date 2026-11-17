@@ -120,6 +120,18 @@ The +0.15 default target remains unmet; centering is experimental only, not a
 shipped mode. Results: `fixtures/evals/results/t7-centering.json`. The opt-in T8
 features and T9 proceed independently under the approved plan; neither closes T7.
 
+**Additional T7 model check (2026-11-18):**
+`node scripts/eval-t7-e5.mjs --download` evaluates the
+[E5-base ONNX model](https://huggingface.co/Xenova/multilingual-e5-base) with mean
+pooling, normalized 768-dimensional vectors, and the model author's required
+`query: `/`passage: ` prefixes. Omit `--download` to require cached weights.
+The original medium paraphrase recall was 0.7727, below the shipped MiniLM's
+0.8636; keyword stayed 1.0 and multilingual stayed 0.9091. Additional-question
+overall recall was 0.6667, but improving those cases does not justify the original
+paraphrase regression. Results and missed-record score components are in
+`fixtures/evals/results/t7-e5-base.json`. E5-base remains an experimental runner,
+not a new supported provider or default. T7's default +0.15 target remains open.
+
 Current hybrid misses in score-order top 10:
 
 | Case | Expected ref outside top 10 | Rank | Observation |

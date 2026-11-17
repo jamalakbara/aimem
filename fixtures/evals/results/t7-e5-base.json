@@ -1,0 +1,1253 @@
+{
+  "model": "experimental:e5-base",
+  "reports": [
+    {
+      "name": "medium",
+      "lexical": {
+        "keyword": {
+          "n": 8,
+          "recall": 1,
+          "inBriefing": 1,
+          "violations": 0
+        },
+        "multilingual": {
+          "n": 11,
+          "recall": 0.6364,
+          "inBriefing": 0.6364,
+          "violations": 0
+        },
+        "paraphrase": {
+          "n": 11,
+          "recall": 0.7727,
+          "inBriefing": 0.8636,
+          "violations": 0
+        },
+        "trap": {
+          "n": 4,
+          "recall": 1,
+          "inBriefing": 1,
+          "violations": 0
+        }
+      },
+      "hybrid": {
+        "keyword": {
+          "n": 8,
+          "recall": 1,
+          "inBriefing": 1,
+          "violations": 0
+        },
+        "multilingual": {
+          "n": 11,
+          "recall": 0.9091,
+          "inBriefing": 1,
+          "violations": 0
+        },
+        "paraphrase": {
+          "n": 11,
+          "recall": 0.7727,
+          "inBriefing": 1,
+          "violations": 0
+        },
+        "trap": {
+          "n": 4,
+          "recall": 1,
+          "inBriefing": 1,
+          "violations": 0
+        }
+      },
+      "overall": {
+        "n": 34,
+        "recall": 0.8971,
+        "inBriefing": 1,
+        "violations": 0,
+        "budgetOk": 1,
+        "deterministic": 1
+      }
+    },
+    {
+      "case": "para-who-is-working",
+      "missing": [
+        "mem-peqcrkme"
+      ],
+      "top": [
+        {
+          "ref": "dec-b0gymeq0",
+          "title": "Records are replaced, not removed",
+          "lexical": 1,
+          "semantic": 0.8187,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.0268,
+          "typeBoost": 0.6,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.5374
+        },
+        {
+          "ref": "run-g3kgy4yf",
+          "title": "Resume a session after a break",
+          "lexical": 0.4702,
+          "semantic": 0.8695,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.7299,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.4729
+        },
+        {
+          "ref": "dec-g17nvbca",
+          "title": "Two speeds of data: live state vs durable knowledge",
+          "lexical": 0.6953,
+          "semantic": 0.8383,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.0177,
+          "typeBoost": 0.6,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.4652
+        },
+        {
+          "ref": "sch-2tgxvmq0",
+          "title": "Fixture expected.yaml manifest",
+          "lexical": 0.3547,
+          "semantic": 0.7688,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.9857,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.4444
+        },
+        {
+          "ref": "tsk-w4411vwr",
+          "title": "Embeddings behind an interface",
+          "lexical": 0.1055,
+          "semantic": 0.9224,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.9857,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.4205
+        },
+        {
+          "ref": "dec-1wwcakek",
+          "title": "Trust label on every record",
+          "lexical": 0.5111,
+          "semantic": 0.8259,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.0256,
+          "typeBoost": 0.6,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.4168
+        },
+        {
+          "ref": "tsk-jbnzn535",
+          "title": "Records I/O with atomic writes",
+          "lexical": 0.1397,
+          "semantic": 0.8613,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.9857,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.4138
+        },
+        {
+          "ref": "dec-bgh1zcas",
+          "title": "Defer the Odoo connector",
+          "lexical": 0.5209,
+          "semantic": 0.6113,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.5044,
+          "typeBoost": 0.6,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.4135
+        },
+        {
+          "ref": "mem-nrdpy59z",
+          "title": "No secrets or personal data in fixtures, docs or records",
+          "lexical": 0.1123,
+          "semantic": 0.8405,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.9857,
+          "typeBoost": 0.5,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.4118
+        },
+        {
+          "ref": "dec-kqfc1se7",
+          "title": "Claims via compare-and-swap on a dedicated branch",
+          "lexical": 0.1071,
+          "semantic": 0.7802,
+          "paths": 0,
+          "links": 1,
+          "recency": 0.0371,
+          "typeBoost": 0.6,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.4055
+        },
+        {
+          "ref": "tsk-xkacrftq",
+          "title": "Adapters with managed blocks",
+          "lexical": 0.1516,
+          "semantic": 0.793,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.9857,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.3997
+        },
+        {
+          "ref": "tsk-q02m86qx",
+          "title": "Medium fixture from aimem's own history",
+          "lexical": 0.1228,
+          "semantic": 0.7655,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.9857,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.3856
+        }
+      ],
+      "expected": [
+        {
+          "rank": 45,
+          "lexical": 0,
+          "semantic": 0.7836,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.5929,
+          "typeBoost": 0.5,
+          "roleMatch": 1,
+          "trust": 0.7,
+          "freshness": 1,
+          "total": 0.2311
+        }
+      ]
+    },
+    {
+      "case": "ml-id-agent-commit",
+      "missing": [
+        "dec-ek66gxgx"
+      ],
+      "top": [
+        {
+          "ref": "mem-7ktr68qw",
+          "title": "Agen wajib memakai --yes",
+          "lexical": 0.5689,
+          "semantic": 0.9733,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.7133,
+          "typeBoost": 0.5,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.5319
+        },
+        {
+          "ref": "mem-1x1a0n8k",
+          "title": "Tulis catatan dan dokumen ringkas",
+          "lexical": 0.463,
+          "semantic": 0.904,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.7645,
+          "typeBoost": 0.5,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.4932
+        },
+        {
+          "ref": "mem-e1fa6v95",
+          "title": "Kunci frontmatter yang tidak dikenal harus dipertahankan",
+          "lexical": 0.3551,
+          "semantic": 0.8361,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.9857,
+          "typeBoost": 0.5,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.4714
+        },
+        {
+          "ref": "mem-xx4j8c41",
+          "title": "Jangan edit INDEX.md secara manual",
+          "lexical": 1,
+          "semantic": 0.8823,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.6655,
+          "typeBoost": 0.5,
+          "roleMatch": 1,
+          "trust": 0.7,
+          "freshness": 1,
+          "total": 0.4285
+        },
+        {
+          "ref": "dec-ndgz6y7a",
+          "title": "Shell out to the git binary",
+          "lexical": 0.3661,
+          "semantic": 0.7833,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.0478,
+          "typeBoost": 0.6,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.3721
+        },
+        {
+          "ref": "mem-kpd8exvr",
+          "title": "Bobot trust di peringkat briefing",
+          "lexical": 0.4065,
+          "semantic": 0.5264,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.5406,
+          "typeBoost": 0.5,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.3623
+        },
+        {
+          "ref": "sch-nygqk0ka",
+          "title": "Local vector cache",
+          "lexical": 0.2633,
+          "semantic": 0.7271,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.4391,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.3565
+        },
+        {
+          "ref": "dec-3by2wh28",
+          "title": "Files in git are the source of truth",
+          "lexical": 0.3145,
+          "semantic": 0.7702,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.0147,
+          "typeBoost": 0.6,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.3526
+        },
+        {
+          "ref": "tsk-631d60cw",
+          "title": "Protect main on GitHub",
+          "lexical": 0,
+          "semantic": 0.7443,
+          "paths": 0,
+          "links": 0,
+          "recency": 1,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.3511
+        },
+        {
+          "ref": "tst-r0e4pz1p",
+          "title": "M1 end-to-end in a fresh repo",
+          "lexical": 0.2882,
+          "semantic": 0.4559,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.9857,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.3496
+        },
+        {
+          "ref": "sch-3a3jkgmm",
+          "title": "Claims on the aimem-live branch",
+          "lexical": 0.2623,
+          "semantic": 0.7541,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.1024,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.3293
+        },
+        {
+          "ref": "dec-ek66gxgx",
+          "title": "Agents stage in team mode and commit in solo mode",
+          "lexical": 0,
+          "semantic": 0.756,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.5793,
+          "typeBoost": 0.6,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.3269
+        }
+      ],
+      "expected": [
+        {
+          "rank": 12,
+          "lexical": 0,
+          "semantic": 0.756,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.5793,
+          "typeBoost": 0.6,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.3269
+        }
+      ]
+    },
+    {
+      "case": "hard-para-busy",
+      "missing": [
+        "dec-g17nvbca"
+      ],
+      "top": [
+        {
+          "ref": "tsk-2dtp9r5c",
+          "title": "context v0",
+          "lexical": 0.2324,
+          "semantic": 1,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.9857,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.4717
+        },
+        {
+          "ref": "dec-kqfc1se7",
+          "title": "Claims via compare-and-swap on a dedicated branch",
+          "lexical": 0.3154,
+          "semantic": 0.8227,
+          "paths": 0,
+          "links": 1,
+          "recency": 0.0371,
+          "typeBoost": 0.6,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.4682
+        },
+        {
+          "ref": "tsk-2t1712d3",
+          "title": "Check npm availability of the aimem name",
+          "lexical": 0.5958,
+          "semantic": 0.6143,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.9857,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.4661
+        },
+        {
+          "ref": "dec-1wwcakek",
+          "title": "Trust label on every record",
+          "lexical": 0.86,
+          "semantic": 0.6543,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.0256,
+          "typeBoost": 0.6,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.4611
+        },
+        {
+          "ref": "tsk-24gmsepx",
+          "title": "Dogfood aimem on this repo",
+          "lexical": 0.3075,
+          "semantic": 0.772,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.9857,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.4334
+        },
+        {
+          "ref": "tsk-631d60cw",
+          "title": "Protect main on GitHub",
+          "lexical": 0.3084,
+          "semantic": 0.7244,
+          "paths": 0,
+          "links": 0,
+          "recency": 1,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.4232
+        },
+        {
+          "ref": "dec-bgh1zcas",
+          "title": "Defer the Odoo connector",
+          "lexical": 0.5675,
+          "semantic": 0.5084,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.5044,
+          "typeBoost": 0.6,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.3994
+        },
+        {
+          "ref": "dec-e4qh00j3",
+          "title": "Sync server is optional and self-hosted",
+          "lexical": 0.5372,
+          "semantic": 0.7186,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.0315,
+          "typeBoost": 0.6,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.3971
+        },
+        {
+          "ref": "run-608ahqd1",
+          "title": "Merge stacked pull requests",
+          "lexical": 0.4272,
+          "semantic": 0.4893,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.9857,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.3927
+        },
+        {
+          "ref": "mem-nrdpy59z",
+          "title": "No secrets or personal data in fixtures, docs or records",
+          "lexical": 0.1644,
+          "semantic": 0.6528,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.9857,
+          "typeBoost": 0.5,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.3779
+        },
+        {
+          "ref": "tsk-aqj8yy8e",
+          "title": "handoff, status, doctor and the M1 e2e",
+          "lexical": 0,
+          "semantic": 0.8102,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.9857,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.3661
+        },
+        {
+          "ref": "tst-w6raaynf",
+          "title": "Messy manifest matches schema-level codes",
+          "lexical": 0.2056,
+          "semantic": 0.6016,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.9857,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.3654
+        }
+      ],
+      "expected": [
+        {
+          "rank": 25,
+          "lexical": 0.9281,
+          "semantic": 0,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.0177,
+          "typeBoost": 0.6,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.3138
+        }
+      ]
+    },
+    {
+      "case": "hard-para-offline-first",
+      "missing": [
+        "dec-3by2wh28"
+      ],
+      "top": [
+        {
+          "ref": "dec-2znaykpx",
+          "title": "Roles are a relevance lens, not access control",
+          "lexical": 1,
+          "semantic": 0.8852,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.0397,
+          "typeBoost": 0.6,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.5553
+        },
+        {
+          "ref": "dec-bgh1zcas",
+          "title": "Defer the Odoo connector",
+          "lexical": 0.2487,
+          "semantic": 0.923,
+          "paths": 0,
+          "links": 1,
+          "recency": 0.5044,
+          "typeBoost": 0.6,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.5234
+        },
+        {
+          "ref": "inc-242wrkm4",
+          "title": "Lint silently disabled",
+          "lexical": 0.5142,
+          "semantic": 0.8517,
+          "paths": 0,
+          "links": 0,
+          "recency": 1,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.5065
+        },
+        {
+          "ref": "inc-mqknzdvg",
+          "title": "Draft code landed without tests",
+          "lexical": 0.4061,
+          "semantic": 0.8874,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.8193,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.4703
+        },
+        {
+          "ref": "dec-9h7m0yg3",
+          "title": "New decisions start as proposed",
+          "lexical": 0.3646,
+          "semantic": 0.7429,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.9857,
+          "typeBoost": 0.6,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.4555
+        },
+        {
+          "ref": "mem-rj2t0xj9",
+          "title": "Formatter config migration switched every lint rule off",
+          "lexical": 0,
+          "semantic": 0.689,
+          "paths": 0,
+          "links": 1,
+          "recency": 1,
+          "typeBoost": 0.5,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.4473
+        },
+        {
+          "ref": "inc-47z04xzr",
+          "title": "Empty temp files leaked into the repo root",
+          "lexical": 0.3371,
+          "semantic": 0.7629,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.9857,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.4386
+        },
+        {
+          "ref": "dec-8hscg239",
+          "title": "Ingest from the tools non-developers already use",
+          "lexical": 0.322,
+          "semantic": 1,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.0956,
+          "typeBoost": 0.6,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.4201
+        },
+        {
+          "ref": "dec-p0185j9j",
+          "title": "Ship the MCP server over stdio first",
+          "lexical": 0.3589,
+          "semantic": 0.9027,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.1448,
+          "typeBoost": 0.6,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.4099
+        },
+        {
+          "ref": "run-gea7sjyn",
+          "title": "Run the full local check",
+          "lexical": 0,
+          "semantic": 0.9641,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.9857,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.4046
+        },
+        {
+          "ref": "tsk-631d60cw",
+          "title": "Protect main on GitHub",
+          "lexical": 0,
+          "semantic": 0.9372,
+          "paths": 0,
+          "links": 0,
+          "recency": 1,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.3993
+        },
+        {
+          "ref": "hnd-7b4mn9n5",
+          "title": "Handoff 2026-10-10: security doc review",
+          "lexical": 0,
+          "semantic": 0.9028,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.8727,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.378
+        }
+      ],
+      "expected": [
+        {
+          "rank": 33,
+          "lexical": 0,
+          "semantic": 0.779,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.0147,
+          "typeBoost": 0.6,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.2762
+        }
+      ]
+    },
+    {
+      "name": "t7-heldout",
+      "lexical": {
+        "multilingual": {
+          "n": 2,
+          "recall": 0.5,
+          "inBriefing": 0.5,
+          "violations": 0
+        },
+        "paraphrase": {
+          "n": 4,
+          "recall": 0.25,
+          "inBriefing": 1,
+          "violations": 0
+        }
+      },
+      "hybrid": {
+        "multilingual": {
+          "n": 2,
+          "recall": 1,
+          "inBriefing": 1,
+          "violations": 0
+        },
+        "paraphrase": {
+          "n": 4,
+          "recall": 0.5,
+          "inBriefing": 1,
+          "violations": 0
+        }
+      },
+      "overall": {
+        "n": 6,
+        "recall": 0.6667,
+        "inBriefing": 1,
+        "violations": 0,
+        "budgetOk": 1,
+        "deterministic": 1
+      }
+    },
+    {
+      "case": "heldout-disconnected-laptop",
+      "missing": [
+        "dec-3by2wh28"
+      ],
+      "top": [
+        {
+          "ref": "dec-2znaykpx",
+          "title": "Roles are a relevance lens, not access control",
+          "lexical": 0.9504,
+          "semantic": 0.6651,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.0397,
+          "typeBoost": 0.6,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.4878
+        },
+        {
+          "ref": "dec-8hscg239",
+          "title": "Ingest from the tools non-developers already use",
+          "lexical": 0.6238,
+          "semantic": 0.8832,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.0956,
+          "typeBoost": 0.6,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.4663
+        },
+        {
+          "ref": "dec-bgh1zcas",
+          "title": "Defer the Odoo connector",
+          "lexical": 0.2582,
+          "semantic": 1,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.5044,
+          "typeBoost": 0.6,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.445
+        },
+        {
+          "ref": "tsk-2t1712d3",
+          "title": "Check npm availability of the aimem name",
+          "lexical": 0.2865,
+          "semantic": 0.7726,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.9857,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.4283
+        },
+        {
+          "ref": "tsk-24gmsepx",
+          "title": "Dogfood aimem on this repo",
+          "lexical": 0.4472,
+          "semantic": 0.6009,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.9857,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.4256
+        },
+        {
+          "ref": "run-gea7sjyn",
+          "title": "Run the full local check",
+          "lexical": 0.2857,
+          "semantic": 0.7157,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.9857,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.4139
+        },
+        {
+          "ref": "run-g3kgy4yf",
+          "title": "Resume a session after a break",
+          "lexical": 0.2742,
+          "semantic": 0.8182,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.7299,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.4111
+        },
+        {
+          "ref": "run-17vbsk09",
+          "title": "Regenerate the published JSON Schema",
+          "lexical": 0.2696,
+          "semantic": 0.6588,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.9857,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.3957
+        },
+        {
+          "ref": "run-608ahqd1",
+          "title": "Merge stacked pull requests",
+          "lexical": 0.4364,
+          "semantic": 0.4529,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.9857,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.3859
+        },
+        {
+          "ref": "inc-kxhfs6xz",
+          "title": "Lockfile drift after pnpm 12 upgrade",
+          "lexical": 0.2751,
+          "semantic": 0.6087,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.9857,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.3845
+        },
+        {
+          "ref": "dec-b0gymeq0",
+          "title": "Records are replaced, not removed",
+          "lexical": 0.3507,
+          "semantic": 0.8418,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.0268,
+          "typeBoost": 0.6,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.3808
+        },
+        {
+          "ref": "tsk-r1xfa5j3",
+          "title": "Delete wip/ after M1",
+          "lexical": 0.0631,
+          "semantic": 0.7896,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.9857,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.3767
+        }
+      ],
+      "expected": [
+        {
+          "rank": 31,
+          "lexical": 0.3082,
+          "semantic": 0.5759,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.0147,
+          "typeBoost": 0.6,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.3025
+        }
+      ]
+    },
+    {
+      "case": "heldout-present-ownership",
+      "missing": [
+        "dec-g17nvbca"
+      ],
+      "top": [
+        {
+          "ref": "tsk-2t1712d3",
+          "title": "Check npm availability of the aimem name",
+          "lexical": 1,
+          "semantic": 0.7482,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.9857,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.6006
+        },
+        {
+          "ref": "run-g3kgy4yf",
+          "title": "Resume a session after a break",
+          "lexical": 0.7167,
+          "semantic": 0.7607,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.7299,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.5073
+        },
+        {
+          "ref": "tsk-yd9q9kad",
+          "title": "Move newId and slugify into core",
+          "lexical": 0.3018,
+          "semantic": 0.6051,
+          "paths": 0,
+          "links": 0.5,
+          "recency": 0.9857,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.4403
+        },
+        {
+          "ref": "dec-8hscg239",
+          "title": "Ingest from the tools non-developers already use",
+          "lexical": 0.4595,
+          "semantic": 0.9084,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.0956,
+          "typeBoost": 0.6,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.4315
+        },
+        {
+          "ref": "tsk-w4411vwr",
+          "title": "Embeddings behind an interface",
+          "lexical": 0.4374,
+          "semantic": 0.6245,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.9857,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.429
+        },
+        {
+          "ref": "tsk-24gmsepx",
+          "title": "Dogfood aimem on this repo",
+          "lexical": 0.2029,
+          "semantic": 0.7993,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.9857,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.4141
+        },
+        {
+          "ref": "tsk-xkacrftq",
+          "title": "Adapters with managed blocks",
+          "lexical": 0,
+          "semantic": 1,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.9857,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.4136
+        },
+        {
+          "ref": "tst-6hys1hvm",
+          "title": "Medium fixture groups are consistent",
+          "lexical": 0.0641,
+          "semantic": 0.8312,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.9857,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.3874
+        },
+        {
+          "ref": "tst-cw10hn77",
+          "title": "JSON Schema contract snapshot",
+          "lexical": 0.0689,
+          "semantic": 0.794,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.9857,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.3793
+        },
+        {
+          "ref": "tsk-5j98vp1g",
+          "title": "CLI init, add, show, list, update, supersede, verify",
+          "lexical": 0.0399,
+          "semantic": 0.6053,
+          "paths": 0,
+          "links": 0.5,
+          "recency": 0.9857,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.3749
+        },
+        {
+          "ref": "hnd-7b4mn9n5",
+          "title": "Handoff 2026-10-10: security doc review",
+          "lexical": 0.039,
+          "semantic": 0.8382,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.8727,
+          "typeBoost": 0.3,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.3716
+        },
+        {
+          "ref": "mem-nrdpy59z",
+          "title": "No secrets or personal data in fixtures, docs or records",
+          "lexical": 0.0484,
+          "semantic": 0.6752,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.9857,
+          "typeBoost": 0.5,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.3545
+        }
+      ],
+      "expected": [
+        {
+          "rank": 68,
+          "lexical": 0.3469,
+          "semantic": 0,
+          "paths": 0,
+          "links": 0,
+          "recency": 0.0177,
+          "typeBoost": 0.6,
+          "roleMatch": 1,
+          "trust": 1,
+          "freshness": 1,
+          "total": 0.1685
+        }
+      ]
+    }
+  ]
+}
