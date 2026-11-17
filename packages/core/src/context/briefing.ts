@@ -109,12 +109,18 @@ const item = (r: IndexedRecord, body?: string): BriefItem => ({
 });
 
 /** Build the session briefing (06 §2): select, score, warn, pack to budget, render. Pure. */
-export function buildBriefing(nb: Notebook, index: NotebookIndex, input: ContextInput, now: Date): Briefing {
+export function buildBriefing(
+  nb: Notebook,
+  index: NotebookIndex,
+  input: ContextInput,
+  now: Date,
+  scored?: ReturnType<typeof scoreCandidates>,
+): Briefing {
   const budget = input.budget ?? nb.config.briefing?.budget_tokens ?? BASE_BUDGET;
   if (!Number.isInteger(budget) || budget < MIN_BUDGET)
     throw new AimemError("USAGE", `--budget must be at least ${MIN_BUDGET} tokens`);
   const scale = budget / BASE_BUDGET;
-  const { candidates, refTask, fusion } = scoreCandidates(nb, index, input, now);
+  const { candidates, refTask, fusion } = scored ?? scoreCandidates(nb, index, input, now);
   const sem = input.semantic;
   const semanticLine = sem
     ? `on (${sem.provider}, coverage ${Math.round(sem.coverage * 100)}%)`
