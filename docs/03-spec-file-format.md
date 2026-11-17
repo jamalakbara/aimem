@@ -27,6 +27,11 @@ Optional local cross-encoder files share the existing `$AIMEM_HOME/models` cache
 with embedding models (15 §9); they are not notebook records or project config.
 Only explicit `aimem index --reranker` setup permits ranker downloads.
 
+Explicit agent usage reports use `.aimem/.cache/usage.jsonl` (15 §18). This
+disposable, gitignored cache is not a record, never changes `INDEX.md`, and is
+never used for ranking, embedding or notebook sync. Its event contract is defined
+in 15 §18; no project config or frontmatter keys are added.
+
 A record is UTF-8 markdown: YAML frontmatter, then a body.
 
 File name: `<id>-<slug>.md`. The slug is lowercase `a-z0-9-`, derived from the title, max 60 chars. **The `id` in frontmatter is authoritative**; the slug may drift if the title changes. Accents are folded (`Café` → `cafe`); a title with no usable characters (e.g. only emoji or non-Latin script) gets the slug `untitled`.

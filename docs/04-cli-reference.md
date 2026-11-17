@@ -115,6 +115,17 @@ Provider failure or invalid output warns and preserves the preceding retrieval
 result. JSON envelopes are unchanged; local inference adds `rerank.local` call
 metadata to the existing cache log without question/document text.
 
+### `aimem usage record --session <id> --refs <ref,...>`
+
+Explicitly report cited/used refs to the local cache (15 §18); returning a briefing
+does not automatically count as use. Provide an opaque session ID and 1–100 refs.
+Unknown/foreign refs fail with `NOT_FOUND` (exit 1); invalid sessions, ref syntax or
+arguments use `USAGE` (exit 2); inaccessible append storage uses `PERMISSION_DENIED`
+(exit 2) without raw filesystem details. All validation precedes writing.
+Success exits 0; `--json` data is `{recorded: true, file, entry}` where `file` is
+`.aimem/.cache/usage.jsonl` and `entry` follows 15 §18. No commits, record/index
+updates, model calls or learned weights. Cache history may be deleted to clear it.
+
 ### `aimem ask "<question>"`
 Retrieval-augmented answer with citations (15 §10).
 
