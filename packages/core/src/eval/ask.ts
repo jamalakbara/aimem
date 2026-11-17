@@ -6,6 +6,7 @@ import type { LlmProvider } from "../llm/provider.js";
 import type { Fs } from "../ports.js";
 import type { Notebook } from "../project/load.js";
 import { listRecordFiles } from "../records/store.js";
+import type { LocalRanker } from "../retrieval/local-ranker.js";
 import type { SearchSemantic } from "../search/search.js";
 
 /** One `ask` eval case (fixtures/evals/ask-*.yaml; 15 §15). Field names follow the YAML file. */
@@ -103,7 +104,11 @@ export async function runAskEvalSet(
   nb: Notebook,
   index: NotebookIndex,
   set: AskEvalSet,
-  opts: { llm: LlmProvider; semantic?: (question: string) => Promise<SearchSemantic | undefined> },
+  opts: {
+    llm: LlmProvider;
+    ranker?: LocalRanker;
+    semantic?: (question: string) => Promise<SearchSemantic | undefined>;
+  },
 ): Promise<AskEvalReport> {
   const cases: AskCaseResult[] = [];
   for (const c of set.cases) {
@@ -120,6 +125,8 @@ export async function runAskEvalSet(
       const r = await askQuestion(nb, index, c.question, {
         llm: opts.llm,
         limit: set.limit,
+        now: new Date(set.clock),
+        ...(opts.ranker ? { ranker: opts.ranker } : {}),
         ...(semantic ? { semantic } : {}),
       });
       const cited = citedRefs(r.answer);

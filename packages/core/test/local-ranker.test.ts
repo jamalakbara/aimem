@@ -41,6 +41,7 @@ it("reranks candidates with trust and freshness, and preserves exact order on fa
   expect(ranked.hits.map((h) => h.record.id).sort()).toEqual(hits.map((h) => h.record.id).sort());
   expect(ranked.warning).toBeUndefined();
   expect(ranked.hits[0]?.record.trust).toBe("verified");
+  expect(ranked.hits[0]?.score).toBe(1);
 });
 
 it("loads cached models only and batches paired query/document inference", async () => {
