@@ -109,6 +109,17 @@ did not reach the target. These were exploratory comparisons, not supported mode
 The fp32 ONNX file is about 470 MB versus 118 MB for q8; identical aggregate recall
 does not justify that default cost. All experiments used local fixture text only.
 
+**T7 follow-up (2026-11-17):** `node scripts/eval-t7.mjs` reproduces the default
+without downloads; append `1` for experimental corpus-mean centering of document
+and query vectors. Six additional questions were written before these runs in
+`fixtures/evals/t7-heldout.yaml`. Centering left medium recall unchanged
+(paraphrase 0.8636 vs lexical 0.7727; keyword 1.0; multilingual 0.9091), while
+held-out overall recall rose from 0.4167 to 0.5833. The original misses remain:
+`mem-peqcrkme` for present work ownership and `dec-3by2wh28` for offline operation.
+The +0.15 default target remains unmet; centering is experimental only, not a
+shipped mode. Results: `fixtures/evals/results/t7-centering.json`. The opt-in T8
+features and T9 proceed independently under the approved plan; neither closes T7.
+
 Current hybrid misses in score-order top 10:
 
 | Case | Expected ref outside top 10 | Rank | Observation |

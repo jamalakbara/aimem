@@ -1,0 +1,29 @@
+# Written before T7 implementation experiments, 2026-11-17.
+project: medium
+clock: 2026-10-12T00:00:00Z
+k: 10
+cases:
+  - id: heldout-withdraw-false-knowledge
+    category: paraphrase
+    task: "What should happen to knowledge we later discover was mistaken?"
+    must_include: [dec-b0gymeq0]
+  - id: heldout-competing-workers
+    category: paraphrase
+    task: "Prevent concurrent workers from starting an identical assignment"
+    must_include: [dec-kqfc1se7]
+  - id: heldout-disconnected-laptop
+    category: paraphrase
+    task: "Can I still use the notebook on a disconnected laptop?"
+    must_include: [dec-3by2wh28]
+  - id: heldout-present-ownership
+    category: paraphrase
+    task: "Where do I find the current owner of an ongoing assignment?"
+    must_include: [dec-g17nvbca]
+  - id: heldout-id-lint
+    category: multilingual
+    task: "pemeriksa gaya diam setelah konfigurasi diperbarui"
+    must_include: [mem-rj2t0xj9]
+  - id: heldout-id-index
+    category: multilingual
+    task: "bolehkah menyunting daftar indeks secara manual?"
+    must_include: [mem-xx4j8c41, dec-v868xmvq]
