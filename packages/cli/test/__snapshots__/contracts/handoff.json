@@ -10,8 +10,10 @@
     ],
     "task": "tsk-3c4d5e6f",
     "branch": "main",
-    "git": "committed",
+    "git": "staged",
     "claimsReleased": 0
   },
-  "warnings": []
+  "warnings": [
+    "agent changes staged on main; commits require a named feature branch"
+  ]
 }

@@ -10,8 +10,8 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 
 export const FIXTURES = fileURLToPath(new URL("../../../fixtures/projects/", import.meta.url));
 
-/** A git that is always a repo and always succeeds; records calls. */
-export function fakeGit(): Git & { calls: string[][] } {
+/** A repository on a named agent feature branch; records calls. */
+export function fakeGit(branch = "codex/test"): Git & { calls: string[][] } {
   const calls: string[][] = [];
   return {
     calls,
@@ -19,7 +19,9 @@ export function fakeGit(): Git & { calls: string[][] } {
       calls.push(args);
       if (args[0] === "--version") return { code: 0, stdout: "git version 2.99.0\n", stderr: "" };
       if (args[0] === "rev-parse" && args.includes("--abbrev-ref"))
-        return { code: 0, stdout: "main\n", stderr: "" };
+        return { code: 0, stdout: `${branch}\n`, stderr: "" };
+      if (args[0] === "symbolic-ref" && args.at(-1) === "HEAD")
+        return { code: 0, stdout: `${branch}\n`, stderr: "" };
       if (args[0] === "rev-parse") return { code: 0, stdout: "true\n", stderr: "" };
       return { code: 0, stdout: "", stderr: "" };
     },

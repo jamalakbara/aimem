@@ -14,6 +14,10 @@ Ranker loading never permits downloads in MCP; prepare it with
 Warnings appear in tool text and structured results; defaults and tool input
 schemas are unchanged. Calls use the existing metadata-only local diagnostics.
 
+Agent writes share the core commit guard (03 §6): default/guarded branches and
+detached HEAD stage changes rather than commit, including in solo mode. Tests
+of automatic commits use feature branches; `data.git` still reports the action.
+
 | Transport | Use | Auth |
 |-----------|-----|------|
 | stdio | Local; spawned by the agent tool in the repo working directory | none (local user) |

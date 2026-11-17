@@ -72,6 +72,14 @@ describe("handoff", () => {
       `aimem: handoff ${r.json.data.ref} Dropped the float column`,
     );
   });
+
+  it("--commit cannot bypass main protection for an agent", async () => {
+    const git = fakeGit();
+    const r = await cli([...HANDOFF, "--commit", "--json", "--dir", dir], { ...agent, git });
+    expect(r.code).toBe(0);
+    expect(r.json.data.git).toBe("staged");
+    expect(git.calls.some((c) => c[0] === "commit")).toBe(false);
+  });
 });
 
 describe("status", () => {

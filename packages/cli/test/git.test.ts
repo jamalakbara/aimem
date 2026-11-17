@@ -24,7 +24,7 @@ const REMEMBER = [
 
 describe("write policy from the CLI", () => {
   it("agent writes in solo mode are committed, touching only the changed files", async () => {
-    const git = fakeGit();
+    const git = fakeGit(undefined, "codex/notes");
     const r = await cli([...REMEMBER, "--dir", dir], { env: { AIMEM_AUTHOR: "agent:claude-code" }, git });
     expect(r.json.data.git).toBe("committed");
     const commit = git.calls.find((c) => c[0] === "commit");
@@ -58,7 +58,7 @@ describe("write policy from the CLI", () => {
   });
 
   it("git warnings surface in the envelope without failing the command", async () => {
-    const git = fakeGit();
+    const git = fakeGit(undefined, "codex/notes");
     const failing = {
       calls: git.calls,
       run: async (args: string[], cwd: string) =>
@@ -68,6 +68,15 @@ describe("write policy from the CLI", () => {
     expect(r.code).toBe(0);
     expect(r.json.data.git).toBe("failed");
     expect(r.json.warnings.join(" ")).toMatch(/hook says no/);
+  });
+
+  it("agent writes on main stage and warn without committing", async () => {
+    const git = fakeGit();
+    const r = await cli([...REMEMBER, "--dir", dir], { env: { AIMEM_AUTHOR: "agent:test" }, git });
+    expect(r.code).toBe(0);
+    expect(r.json.data.git).toBe("staged");
+    expect(r.json.warnings.join(" ")).toContain("staged on main");
+    expect(git.calls.some((c) => c[0] === "commit")).toBe(false);
   });
 });
 

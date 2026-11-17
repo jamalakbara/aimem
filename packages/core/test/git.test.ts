@@ -75,8 +75,88 @@ describe("effectivePolicy (03 §6, OQ-4)", () => {
 });
 
 describe("applyWritePolicy with real git", () => {
+  it.each(["main", "master", "trunk"])(
+    "stages agent writes on %s even with an explicit commit override",
+    async (branch) => {
+      const nb = await makeRepo();
+      if (branch !== "main") await sh("checkout", "-q", "-b", branch);
+      writeFileSync(join(root, "unrelated.txt"), "existing staged work\n");
+      await sh("add", "unrelated.txt");
+      const r = await addRecord(nb, memory("Default branches require review"), deps);
+      for (const override of [undefined, "commit"] as const) {
+        const p = await applyWritePolicy({
+          git,
+          nb,
+          author: "agent:test",
+          files: r.changed,
+          message: "must not commit",
+          ...(override ? { override } : {}),
+        });
+        expect(p.action).toBe("staged");
+        expect(p.warnings.join(" ")).toContain(branch);
+        expect(await sh("rev-list", "--count", "HEAD")).toBe("1");
+        expect((await sh("diff", "--cached", "--name-only")).split("\n")).toContain("unrelated.txt");
+      }
+    },
+  );
+
+  it.each(["origin", "upstream"])(
+    "uses the locally known %s default branch without network access",
+    async (remote) => {
+      const nb = await makeRepo();
+      await sh("checkout", "-q", "-b", "release");
+      await sh("remote", "add", remote, "https://example.com/not-contacted.git");
+      await sh("update-ref", `refs/remotes/${remote}/release`, "HEAD");
+      await sh("symbolic-ref", `refs/remotes/${remote}/HEAD`, `refs/remotes/${remote}/release`);
+      const r = await addRecord(nb, memory("Remote default branch"), deps);
+      const p = await applyWritePolicy({
+        git,
+        nb,
+        author: "agent:test",
+        files: r.changed,
+        message: "must not commit",
+      });
+      expect(p.action).toBe("staged");
+      expect(p.warnings.join(" ")).toContain("release");
+      expect(await sh("rev-list", "--count", "HEAD")).toBe("1");
+    },
+  );
+
+  it("stages on detached HEAD and when current branch detection fails", async () => {
+    const nb = await makeRepo();
+    await sh("checkout", "--detach", "-q");
+    const r = await addRecord(nb, memory("Detached sessions are staged"), deps);
+    const p = await applyWritePolicy({
+      git,
+      nb,
+      author: "agent:test",
+      files: r.changed,
+      message: "must not commit",
+    });
+    expect(p.action).toBe("staged");
+    expect(await sh("rev-list", "--count", "HEAD")).toBe("1");
+    const failedBranch: Git = {
+      run: (args, cwd) =>
+        args[0] === "symbolic-ref"
+          ? Promise.resolve({ code: 128, stdout: "", stderr: "unavailable" })
+          : git.run(args, cwd),
+    };
+    expect(
+      (
+        await applyWritePolicy({
+          git: failedBranch,
+          nb,
+          author: "agent:test",
+          files: r.changed,
+          message: "must not commit",
+        })
+      ).action,
+    ).toBe("staged");
+  });
+
   it("solo + agent: commits only the touched files; other staged work stays staged and out of the commit", async () => {
     const nb = await makeRepo();
+    await sh("checkout", "-q", "-b", "codex/notes");
     writeFileSync(join(root, "unrelated.txt"), "work in progress\n");
     await sh("add", "unrelated.txt");
     const r = await addRecord(nb, memory("Exports use semicolons"), deps);
@@ -147,6 +227,7 @@ describe("applyWritePolicy with real git", () => {
 
   it("works for the very first commit of an empty repository", async () => {
     const nb = await makeRepo("tiny", false);
+    await sh("checkout", "-q", "-b", "codex/notes");
     const r = await addRecord(nb, memory("Exports use semicolons"), deps);
     const p = await applyWritePolicy({
       git,
@@ -190,6 +271,7 @@ describe("applyWritePolicy with real git", () => {
 
   it("a failing pre-commit hook: files stay written, warning carries git's message", async () => {
     const nb = await makeRepo();
+    await sh("checkout", "-q", "-b", "codex/notes");
     mkdirSync(join(root, ".git/hooks"), { recursive: true });
     writeFileSync(join(root, ".git/hooks/pre-commit"), "#!/bin/sh\necho 'hook says no' >&2\nexit 1\n");
     chmodSync(join(root, ".git/hooks/pre-commit"), 0o755);

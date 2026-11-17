@@ -174,6 +174,10 @@ aimem add decision --title "..." --summary "..." [--status accepted] [--roles de
 - Runs a **dedupe check**: a current record of the same type whose title is very similar (word overlap ≥ 70%) or whose title + summary overlap ≥ 50% is a likely duplicate; it is named in `error.details` and the command exits 3 unless `--force` (agents should then `aimem show` it and update/supersede instead).
 - Sets `trust: agent` for `agent:*` authors, `verified` for `human:*`.
 - Applies `write_policy.agent_commits` (`none|stage|commit|pr`; default `commit` in solo mode, `stage` otherwise) to **agent** writes only; human writes are left for the human to commit. Only the files the command wrote are staged/committed (`git commit --only`), so other staged work is never included. Commit message `aimem: <verb> <ref> <title>` plus a trailer `Aimem-Author: <author>`. `pr` currently stages and warns. Outside a git repo, without git, or when git refuses (e.g. a failing hook) the records stay written, a warning is added, and the exit code is 0. Write commands report `data.git`: `none | staged | committed | skipped | failed`.
+- A commit policy stages and warns for agents on guarded/default branches or an
+  unidentifiable current branch (03 §6). This deliberately changes main-branch
+  `data.git` from `committed` to `staged`; JSON field names and exit codes stay
+  unchanged. Only local git metadata is consulted, with no network fetch.
 
 Shortcuts: `aimem decide`, `aimem remember` (memory), `aimem incident`, `aimem runbook` — thin aliases for `add <type>` with type-specific flags.
 
@@ -200,7 +204,9 @@ aimem handoff [--task <ref>] --done "..." --not-done "..." --next "..." [--block
 Writes a `handoff` record, releases this session's claims (default), updates `INDEX.md`.
 - `--done`, `--not-done`, `--next` are required (from flags or `--from-file`, a markdown file with `## Done` / `## Not done` / `## Next` / `## Blocked` / `## Notes for next agent`; flags win). `--blocked` and `--notes` default to `none`.
 - Title `Handoff <date>: <first line of Done>` (≤ 120), summary `Done: … · Next: …` (≤ 200, cut with `…`), `branch` from git, `--task` must be an existing task.
-- Applies `write_policy` like other writes; `--commit` commits it regardless of policy or author.
+- Applies `write_policy` like other writes; `--commit` requests a commit regardless
+  of policy, but an agent still cannot commit on a guarded/default branch (03 §6).
+  Explicit human commits remain supported there.
 - v0.1: claims arrive in M3, so `--release-claims` is accepted and reports `claimsReleased: 0` with a warning.
 
 ## 5. Task and claim commands
