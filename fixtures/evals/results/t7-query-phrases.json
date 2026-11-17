@@ -1,0 +1,4208 @@
+{
+  "reports": [
+    {
+      "set": "medium",
+      "summary": {
+        "lexical": {
+          "all": 0.8088235294117647,
+          "keyword": 1,
+          "paraphrase": 0.7727272727272727,
+          "multilingual": 0.6363636363636364,
+          "trap": 1
+        },
+        "hybrid": {
+          "all": 0.9264705882352942,
+          "keyword": 1,
+          "paraphrase": 0.8636363636363636,
+          "multilingual": 0.9090909090909091,
+          "trap": 1
+        },
+        "phraseMax": {
+          "all": 0.8676470588235294,
+          "keyword": 1,
+          "paraphrase": 0.8636363636363636,
+          "multilingual": 0.7272727272727273,
+          "trap": 1
+        },
+        "phraseMean": {
+          "all": 0.8970588235294118,
+          "keyword": 1,
+          "paraphrase": 0.8636363636363636,
+          "multilingual": 0.8181818181818182,
+          "trap": 1
+        },
+        "phraseMin": {
+          "all": 0.8235294117647058,
+          "keyword": 1,
+          "paraphrase": 0.7272727272727273,
+          "multilingual": 0.7272727272727273,
+          "trap": 1
+        },
+        "phraseRrf": {
+          "all": 0.9264705882352942,
+          "keyword": 1,
+          "paraphrase": 0.8636363636363636,
+          "multilingual": 0.9090909090909091,
+          "trap": 1
+        }
+      },
+      "cases": [
+        {
+          "case": "kw-zod-json-schema",
+          "category": "keyword",
+          "variant": "lexical",
+          "queries": [
+            "zod json schema export"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-zod-json-schema",
+          "category": "keyword",
+          "variant": "hybrid",
+          "queries": [
+            "zod json schema export"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-zod-json-schema",
+          "category": "keyword",
+          "variant": "phraseMax",
+          "queries": [
+            "zod json schema export"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-zod-json-schema",
+          "category": "keyword",
+          "variant": "phraseMean",
+          "queries": [
+            "zod json schema export"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-zod-json-schema",
+          "category": "keyword",
+          "variant": "phraseMin",
+          "queries": [
+            "zod json schema export"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-zod-json-schema",
+          "category": "keyword",
+          "variant": "phraseRrf",
+          "queries": [
+            "zod json schema export"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-claims-cas",
+          "category": "keyword",
+          "variant": "lexical",
+          "queries": [
+            "compare-and-swap claims on the aimem-live branch",
+            "compare-and-swap claims on the",
+            "on the aimem-live branch"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-claims-cas",
+          "category": "keyword",
+          "variant": "hybrid",
+          "queries": [
+            "compare-and-swap claims on the aimem-live branch",
+            "compare-and-swap claims on the",
+            "on the aimem-live branch"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-claims-cas",
+          "category": "keyword",
+          "variant": "phraseMax",
+          "queries": [
+            "compare-and-swap claims on the aimem-live branch",
+            "compare-and-swap claims on the",
+            "on the aimem-live branch"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-claims-cas",
+          "category": "keyword",
+          "variant": "phraseMean",
+          "queries": [
+            "compare-and-swap claims on the aimem-live branch",
+            "compare-and-swap claims on the",
+            "on the aimem-live branch"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-claims-cas",
+          "category": "keyword",
+          "variant": "phraseMin",
+          "queries": [
+            "compare-and-swap claims on the aimem-live branch",
+            "compare-and-swap claims on the",
+            "on the aimem-live branch"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-claims-cas",
+          "category": "keyword",
+          "variant": "phraseRrf",
+          "queries": [
+            "compare-and-swap claims on the aimem-live branch",
+            "compare-and-swap claims on the",
+            "on the aimem-live branch"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-biome-preset",
+          "category": "keyword",
+          "variant": "lexical",
+          "queries": [
+            "biome lint preset recommended migrate"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-biome-preset",
+          "category": "keyword",
+          "variant": "hybrid",
+          "queries": [
+            "biome lint preset recommended migrate"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-biome-preset",
+          "category": "keyword",
+          "variant": "phraseMax",
+          "queries": [
+            "biome lint preset recommended migrate"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-biome-preset",
+          "category": "keyword",
+          "variant": "phraseMean",
+          "queries": [
+            "biome lint preset recommended migrate"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-biome-preset",
+          "category": "keyword",
+          "variant": "phraseMin",
+          "queries": [
+            "biome lint preset recommended migrate"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-biome-preset",
+          "category": "keyword",
+          "variant": "phraseRrf",
+          "queries": [
+            "biome lint preset recommended migrate"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-defer-odoo",
+          "category": "keyword",
+          "variant": "lexical",
+          "queries": [
+            "defer the odoo connector"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-defer-odoo",
+          "category": "keyword",
+          "variant": "hybrid",
+          "queries": [
+            "defer the odoo connector"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-defer-odoo",
+          "category": "keyword",
+          "variant": "phraseMax",
+          "queries": [
+            "defer the odoo connector"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-defer-odoo",
+          "category": "keyword",
+          "variant": "phraseMean",
+          "queries": [
+            "defer the odoo connector"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-defer-odoo",
+          "category": "keyword",
+          "variant": "phraseMin",
+          "queries": [
+            "defer the odoo connector"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-defer-odoo",
+          "category": "keyword",
+          "variant": "phraseRrf",
+          "queries": [
+            "defer the odoo connector"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-secret-fixtures",
+          "category": "keyword",
+          "variant": "lexical",
+          "queries": [
+            "secret scanner corpus and fixtures"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-secret-fixtures",
+          "category": "keyword",
+          "variant": "hybrid",
+          "queries": [
+            "secret scanner corpus and fixtures"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-secret-fixtures",
+          "category": "keyword",
+          "variant": "phraseMax",
+          "queries": [
+            "secret scanner corpus and fixtures"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-secret-fixtures",
+          "category": "keyword",
+          "variant": "phraseMean",
+          "queries": [
+            "secret scanner corpus and fixtures"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-secret-fixtures",
+          "category": "keyword",
+          "variant": "phraseMin",
+          "queries": [
+            "secret scanner corpus and fixtures"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-secret-fixtures",
+          "category": "keyword",
+          "variant": "phraseRrf",
+          "queries": [
+            "secret scanner corpus and fixtures"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-stacked-prs",
+          "category": "keyword",
+          "variant": "lexical",
+          "queries": [
+            "merge stacked pull requests"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-stacked-prs",
+          "category": "keyword",
+          "variant": "hybrid",
+          "queries": [
+            "merge stacked pull requests"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-stacked-prs",
+          "category": "keyword",
+          "variant": "phraseMax",
+          "queries": [
+            "merge stacked pull requests"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-stacked-prs",
+          "category": "keyword",
+          "variant": "phraseMean",
+          "queries": [
+            "merge stacked pull requests"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-stacked-prs",
+          "category": "keyword",
+          "variant": "phraseMin",
+          "queries": [
+            "merge stacked pull requests"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-stacked-prs",
+          "category": "keyword",
+          "variant": "phraseRrf",
+          "queries": [
+            "merge stacked pull requests"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-git-binary",
+          "category": "keyword",
+          "variant": "lexical",
+          "queries": [
+            "shell out to the git binary with execa",
+            "the git binary with",
+            "git binary with execa"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-git-binary",
+          "category": "keyword",
+          "variant": "hybrid",
+          "queries": [
+            "shell out to the git binary with execa",
+            "the git binary with",
+            "git binary with execa"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-git-binary",
+          "category": "keyword",
+          "variant": "phraseMax",
+          "queries": [
+            "shell out to the git binary with execa",
+            "the git binary with",
+            "git binary with execa"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-git-binary",
+          "category": "keyword",
+          "variant": "phraseMean",
+          "queries": [
+            "shell out to the git binary with execa",
+            "the git binary with",
+            "git binary with execa"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-git-binary",
+          "category": "keyword",
+          "variant": "phraseMin",
+          "queries": [
+            "shell out to the git binary with execa",
+            "the git binary with",
+            "git binary with execa"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-git-binary",
+          "category": "keyword",
+          "variant": "phraseRrf",
+          "queries": [
+            "shell out to the git binary with execa",
+            "the git binary with",
+            "git binary with execa"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-mcp-paths",
+          "category": "keyword",
+          "variant": "lexical",
+          "queries": [
+            "mcp server   mcp"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-mcp-paths",
+          "category": "keyword",
+          "variant": "hybrid",
+          "queries": [
+            "mcp server   mcp"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-mcp-paths",
+          "category": "keyword",
+          "variant": "phraseMax",
+          "queries": [
+            "mcp server   mcp"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-mcp-paths",
+          "category": "keyword",
+          "variant": "phraseMean",
+          "queries": [
+            "mcp server   mcp"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-mcp-paths",
+          "category": "keyword",
+          "variant": "phraseMin",
+          "queries": [
+            "mcp server   mcp"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "kw-mcp-paths",
+          "category": "keyword",
+          "variant": "phraseRrf",
+          "queries": [
+            "mcp server   mcp"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "para-delete-note",
+          "category": "paraphrase",
+          "variant": "lexical",
+          "queries": [
+            "can I erase an old note that turned out to be wrong?",
+            "that turned out to"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "para-delete-note",
+          "category": "paraphrase",
+          "variant": "hybrid",
+          "queries": [
+            "can I erase an old note that turned out to be wrong?",
+            "that turned out to"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "para-delete-note",
+          "category": "paraphrase",
+          "variant": "phraseMax",
+          "queries": [
+            "can I erase an old note that turned out to be wrong?",
+            "that turned out to"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "para-delete-note",
+          "category": "paraphrase",
+          "variant": "phraseMean",
+          "queries": [
+            "can I erase an old note that turned out to be wrong?",
+            "that turned out to"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "para-delete-note",
+          "category": "paraphrase",
+          "variant": "phraseMin",
+          "queries": [
+            "can I erase an old note that turned out to be wrong?",
+            "that turned out to"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "para-delete-note",
+          "category": "paraphrase",
+          "variant": "phraseRrf",
+          "queries": [
+            "can I erase an old note that turned out to be wrong?",
+            "that turned out to"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "para-same-work",
+          "category": "paraphrase",
+          "variant": "lexical",
+          "queries": [
+            "how do we stop two agents from grabbing the same piece of work?",
+            "stop two agents from",
+            "from grabbing the same",
+            "same piece of work?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "para-same-work",
+          "category": "paraphrase",
+          "variant": "hybrid",
+          "queries": [
+            "how do we stop two agents from grabbing the same piece of work?",
+            "stop two agents from",
+            "from grabbing the same",
+            "same piece of work?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "para-same-work",
+          "category": "paraphrase",
+          "variant": "phraseMax",
+          "queries": [
+            "how do we stop two agents from grabbing the same piece of work?",
+            "stop two agents from",
+            "from grabbing the same",
+            "same piece of work?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "para-same-work",
+          "category": "paraphrase",
+          "variant": "phraseMean",
+          "queries": [
+            "how do we stop two agents from grabbing the same piece of work?",
+            "stop two agents from",
+            "from grabbing the same",
+            "same piece of work?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "para-same-work",
+          "category": "paraphrase",
+          "variant": "phraseMin",
+          "queries": [
+            "how do we stop two agents from grabbing the same piece of work?",
+            "stop two agents from",
+            "from grabbing the same",
+            "same piece of work?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "para-same-work",
+          "category": "paraphrase",
+          "variant": "phraseRrf",
+          "queries": [
+            "how do we stop two agents from grabbing the same piece of work?",
+            "stop two agents from",
+            "from grabbing the same",
+            "same piece of work?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "para-lint-silent",
+          "category": "paraphrase",
+          "variant": "lexical",
+          "queries": [
+            "why did linting suddenly stop catching anything?",
+            "why did linting suddenly",
+            "suddenly stop catching anything?"
+          ],
+          "recall": 0,
+          "missing": [
+            "mem-rj2t0xj9"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "para-lint-silent",
+          "category": "paraphrase",
+          "variant": "hybrid",
+          "queries": [
+            "why did linting suddenly stop catching anything?",
+            "why did linting suddenly",
+            "suddenly stop catching anything?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "para-lint-silent",
+          "category": "paraphrase",
+          "variant": "phraseMax",
+          "queries": [
+            "why did linting suddenly stop catching anything?",
+            "why did linting suddenly",
+            "suddenly stop catching anything?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "para-lint-silent",
+          "category": "paraphrase",
+          "variant": "phraseMean",
+          "queries": [
+            "why did linting suddenly stop catching anything?",
+            "why did linting suddenly",
+            "suddenly stop catching anything?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "para-lint-silent",
+          "category": "paraphrase",
+          "variant": "phraseMin",
+          "queries": [
+            "why did linting suddenly stop catching anything?",
+            "why did linting suddenly",
+            "suddenly stop catching anything?"
+          ],
+          "recall": 0,
+          "missing": [
+            "mem-rj2t0xj9"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "para-lint-silent",
+          "category": "paraphrase",
+          "variant": "phraseRrf",
+          "queries": [
+            "why did linting suddenly stop catching anything?",
+            "why did linting suddenly",
+            "suddenly stop catching anything?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "para-zero-sha",
+          "category": "paraphrase",
+          "variant": "lexical",
+          "queries": [
+            "a checksum made of zeros failed validation",
+            "a checksum made of",
+            "of zeros failed validation"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "para-zero-sha",
+          "category": "paraphrase",
+          "variant": "hybrid",
+          "queries": [
+            "a checksum made of zeros failed validation",
+            "a checksum made of",
+            "of zeros failed validation"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "para-zero-sha",
+          "category": "paraphrase",
+          "variant": "phraseMax",
+          "queries": [
+            "a checksum made of zeros failed validation",
+            "a checksum made of",
+            "of zeros failed validation"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "para-zero-sha",
+          "category": "paraphrase",
+          "variant": "phraseMean",
+          "queries": [
+            "a checksum made of zeros failed validation",
+            "a checksum made of",
+            "of zeros failed validation"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "para-zero-sha",
+          "category": "paraphrase",
+          "variant": "phraseMin",
+          "queries": [
+            "a checksum made of zeros failed validation",
+            "a checksum made of",
+            "of zeros failed validation"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "para-zero-sha",
+          "category": "paraphrase",
+          "variant": "phraseRrf",
+          "queries": [
+            "a checksum made of zeros failed validation",
+            "a checksum made of",
+            "of zeros failed validation"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "para-id-letters",
+          "category": "paraphrase",
+          "variant": "lexical",
+          "queries": [
+            "which characters can never appear in an identifier?",
+            "which characters can never",
+            "never appear in an",
+            "appear in an identifier?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "para-id-letters",
+          "category": "paraphrase",
+          "variant": "hybrid",
+          "queries": [
+            "which characters can never appear in an identifier?",
+            "which characters can never",
+            "never appear in an",
+            "appear in an identifier?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "para-id-letters",
+          "category": "paraphrase",
+          "variant": "phraseMax",
+          "queries": [
+            "which characters can never appear in an identifier?",
+            "which characters can never",
+            "never appear in an",
+            "appear in an identifier?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "para-id-letters",
+          "category": "paraphrase",
+          "variant": "phraseMean",
+          "queries": [
+            "which characters can never appear in an identifier?",
+            "which characters can never",
+            "never appear in an",
+            "appear in an identifier?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "para-id-letters",
+          "category": "paraphrase",
+          "variant": "phraseMin",
+          "queries": [
+            "which characters can never appear in an identifier?",
+            "which characters can never",
+            "never appear in an",
+            "appear in an identifier?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "para-id-letters",
+          "category": "paraphrase",
+          "variant": "phraseRrf",
+          "queries": [
+            "which characters can never appear in an identifier?",
+            "which characters can never",
+            "never appear in an",
+            "appear in an identifier?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "para-who-is-working",
+          "category": "paraphrase",
+          "variant": "lexical",
+          "queries": [
+            "where is it recorded who is busy with something right now?",
+            "where is it recorded",
+            "recorded who is busy",
+            "with something right now?"
+          ],
+          "recall": 0.5,
+          "missing": [
+            "mem-peqcrkme"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "para-who-is-working",
+          "category": "paraphrase",
+          "variant": "hybrid",
+          "queries": [
+            "where is it recorded who is busy with something right now?",
+            "where is it recorded",
+            "recorded who is busy",
+            "with something right now?"
+          ],
+          "recall": 0.5,
+          "missing": [
+            "mem-peqcrkme"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "para-who-is-working",
+          "category": "paraphrase",
+          "variant": "phraseMax",
+          "queries": [
+            "where is it recorded who is busy with something right now?",
+            "where is it recorded",
+            "recorded who is busy",
+            "with something right now?"
+          ],
+          "recall": 0.5,
+          "missing": [
+            "mem-peqcrkme"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "para-who-is-working",
+          "category": "paraphrase",
+          "variant": "phraseMean",
+          "queries": [
+            "where is it recorded who is busy with something right now?",
+            "where is it recorded",
+            "recorded who is busy",
+            "with something right now?"
+          ],
+          "recall": 0.5,
+          "missing": [
+            "mem-peqcrkme"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "para-who-is-working",
+          "category": "paraphrase",
+          "variant": "phraseMin",
+          "queries": [
+            "where is it recorded who is busy with something right now?",
+            "where is it recorded",
+            "recorded who is busy",
+            "with something right now?"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-g17nvbca",
+            "mem-peqcrkme"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "para-who-is-working",
+          "category": "paraphrase",
+          "variant": "phraseRrf",
+          "queries": [
+            "where is it recorded who is busy with something right now?",
+            "where is it recorded",
+            "recorded who is busy",
+            "with something right now?"
+          ],
+          "recall": 0.5,
+          "missing": [
+            "mem-peqcrkme"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "ml-id-zod",
+          "category": "multilingual",
+          "variant": "lexical",
+          "queries": [
+            "kenapa kita pakai zod versi baru untuk skema?",
+            "kenapa kita pakai zod",
+            "zod versi baru untuk",
+            "versi baru untuk skema?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "ml-id-zod",
+          "category": "multilingual",
+          "variant": "hybrid",
+          "queries": [
+            "kenapa kita pakai zod versi baru untuk skema?",
+            "kenapa kita pakai zod",
+            "zod versi baru untuk",
+            "versi baru untuk skema?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "ml-id-zod",
+          "category": "multilingual",
+          "variant": "phraseMax",
+          "queries": [
+            "kenapa kita pakai zod versi baru untuk skema?",
+            "kenapa kita pakai zod",
+            "zod versi baru untuk",
+            "versi baru untuk skema?"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-094vmt9t"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "ml-id-zod",
+          "category": "multilingual",
+          "variant": "phraseMean",
+          "queries": [
+            "kenapa kita pakai zod versi baru untuk skema?",
+            "kenapa kita pakai zod",
+            "zod versi baru untuk",
+            "versi baru untuk skema?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "ml-id-zod",
+          "category": "multilingual",
+          "variant": "phraseMin",
+          "queries": [
+            "kenapa kita pakai zod versi baru untuk skema?",
+            "kenapa kita pakai zod",
+            "zod versi baru untuk",
+            "versi baru untuk skema?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "ml-id-zod",
+          "category": "multilingual",
+          "variant": "phraseRrf",
+          "queries": [
+            "kenapa kita pakai zod versi baru untuk skema?",
+            "kenapa kita pakai zod",
+            "zod versi baru untuk",
+            "versi baru untuk skema?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "ml-id-agent-commit",
+          "category": "multilingual",
+          "variant": "lexical",
+          "queries": [
+            "bagaimana agen menyimpan perubahan catatan ke git secara otomatis?",
+            "bagaimana agen menyimpan perubahan",
+            "perubahan catatan ke git",
+            "ke git secara otomatis?"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-ek66gxgx"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "ml-id-agent-commit",
+          "category": "multilingual",
+          "variant": "hybrid",
+          "queries": [
+            "bagaimana agen menyimpan perubahan catatan ke git secara otomatis?",
+            "bagaimana agen menyimpan perubahan",
+            "perubahan catatan ke git",
+            "ke git secara otomatis?"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-ek66gxgx"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "ml-id-agent-commit",
+          "category": "multilingual",
+          "variant": "phraseMax",
+          "queries": [
+            "bagaimana agen menyimpan perubahan catatan ke git secara otomatis?",
+            "bagaimana agen menyimpan perubahan",
+            "perubahan catatan ke git",
+            "ke git secara otomatis?"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-ek66gxgx"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "ml-id-agent-commit",
+          "category": "multilingual",
+          "variant": "phraseMean",
+          "queries": [
+            "bagaimana agen menyimpan perubahan catatan ke git secara otomatis?",
+            "bagaimana agen menyimpan perubahan",
+            "perubahan catatan ke git",
+            "ke git secara otomatis?"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-ek66gxgx"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "ml-id-agent-commit",
+          "category": "multilingual",
+          "variant": "phraseMin",
+          "queries": [
+            "bagaimana agen menyimpan perubahan catatan ke git secara otomatis?",
+            "bagaimana agen menyimpan perubahan",
+            "perubahan catatan ke git",
+            "ke git secara otomatis?"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-ek66gxgx"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "ml-id-agent-commit",
+          "category": "multilingual",
+          "variant": "phraseRrf",
+          "queries": [
+            "bagaimana agen menyimpan perubahan catatan ke git secara otomatis?",
+            "bagaimana agen menyimpan perubahan",
+            "perubahan catatan ke git",
+            "ke git secara otomatis?"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-ek66gxgx"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "ml-id-delete",
+          "category": "multilingual",
+          "variant": "lexical",
+          "queries": [
+            "apakah boleh menghapus catatan lama?"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-b0gymeq0"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "ml-id-delete",
+          "category": "multilingual",
+          "variant": "hybrid",
+          "queries": [
+            "apakah boleh menghapus catatan lama?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "ml-id-delete",
+          "category": "multilingual",
+          "variant": "phraseMax",
+          "queries": [
+            "apakah boleh menghapus catatan lama?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "ml-id-delete",
+          "category": "multilingual",
+          "variant": "phraseMean",
+          "queries": [
+            "apakah boleh menghapus catatan lama?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "ml-id-delete",
+          "category": "multilingual",
+          "variant": "phraseMin",
+          "queries": [
+            "apakah boleh menghapus catatan lama?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "ml-id-delete",
+          "category": "multilingual",
+          "variant": "phraseRrf",
+          "queries": [
+            "apakah boleh menghapus catatan lama?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "ml-en-index-edit",
+          "category": "multilingual",
+          "variant": "lexical",
+          "queries": [
+            "is it ok to hand-edit the index file?",
+            "to hand-edit the index",
+            "hand-edit the index file?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "ml-en-index-edit",
+          "category": "multilingual",
+          "variant": "hybrid",
+          "queries": [
+            "is it ok to hand-edit the index file?",
+            "to hand-edit the index",
+            "hand-edit the index file?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "ml-en-index-edit",
+          "category": "multilingual",
+          "variant": "phraseMax",
+          "queries": [
+            "is it ok to hand-edit the index file?",
+            "to hand-edit the index",
+            "hand-edit the index file?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "ml-en-index-edit",
+          "category": "multilingual",
+          "variant": "phraseMean",
+          "queries": [
+            "is it ok to hand-edit the index file?",
+            "to hand-edit the index",
+            "hand-edit the index file?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "ml-en-index-edit",
+          "category": "multilingual",
+          "variant": "phraseMin",
+          "queries": [
+            "is it ok to hand-edit the index file?",
+            "to hand-edit the index",
+            "hand-edit the index file?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "ml-en-index-edit",
+          "category": "multilingual",
+          "variant": "phraseRrf",
+          "queries": [
+            "is it ok to hand-edit the index file?",
+            "to hand-edit the index",
+            "hand-edit the index file?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "ml-en-summary-lines",
+          "category": "multilingual",
+          "variant": "lexical",
+          "queries": [
+            "how many lines may a summary have?",
+            "how many lines may",
+            "may a summary have?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "ml-en-summary-lines",
+          "category": "multilingual",
+          "variant": "hybrid",
+          "queries": [
+            "how many lines may a summary have?",
+            "how many lines may",
+            "may a summary have?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "ml-en-summary-lines",
+          "category": "multilingual",
+          "variant": "phraseMax",
+          "queries": [
+            "how many lines may a summary have?",
+            "how many lines may",
+            "may a summary have?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "ml-en-summary-lines",
+          "category": "multilingual",
+          "variant": "phraseMean",
+          "queries": [
+            "how many lines may a summary have?",
+            "how many lines may",
+            "may a summary have?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "ml-en-summary-lines",
+          "category": "multilingual",
+          "variant": "phraseMin",
+          "queries": [
+            "how many lines may a summary have?",
+            "how many lines may",
+            "may a summary have?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "ml-en-summary-lines",
+          "category": "multilingual",
+          "variant": "phraseRrf",
+          "queries": [
+            "how many lines may a summary have?",
+            "how many lines may",
+            "may a summary have?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "ml-en-token-estimate",
+          "category": "multilingual",
+          "variant": "lexical",
+          "queries": [
+            "how are token budgets estimated?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "ml-en-token-estimate",
+          "category": "multilingual",
+          "variant": "hybrid",
+          "queries": [
+            "how are token budgets estimated?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "ml-en-token-estimate",
+          "category": "multilingual",
+          "variant": "phraseMax",
+          "queries": [
+            "how are token budgets estimated?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "ml-en-token-estimate",
+          "category": "multilingual",
+          "variant": "phraseMean",
+          "queries": [
+            "how are token budgets estimated?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "ml-en-token-estimate",
+          "category": "multilingual",
+          "variant": "phraseMin",
+          "queries": [
+            "how are token budgets estimated?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "ml-en-token-estimate",
+          "category": "multilingual",
+          "variant": "phraseRrf",
+          "queries": [
+            "how are token budgets estimated?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "trap-retrieval",
+          "category": "trap",
+          "variant": "lexical",
+          "queries": [
+            "does retrieval use keywords only or embeddings too?",
+            "does retrieval use keywords",
+            "keywords only or embeddings",
+            "only or embeddings too?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "trap-retrieval",
+          "category": "trap",
+          "variant": "hybrid",
+          "queries": [
+            "does retrieval use keywords only or embeddings too?",
+            "does retrieval use keywords",
+            "keywords only or embeddings",
+            "only or embeddings too?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "trap-retrieval",
+          "category": "trap",
+          "variant": "phraseMax",
+          "queries": [
+            "does retrieval use keywords only or embeddings too?",
+            "does retrieval use keywords",
+            "keywords only or embeddings",
+            "only or embeddings too?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "trap-retrieval",
+          "category": "trap",
+          "variant": "phraseMean",
+          "queries": [
+            "does retrieval use keywords only or embeddings too?",
+            "does retrieval use keywords",
+            "keywords only or embeddings",
+            "only or embeddings too?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "trap-retrieval",
+          "category": "trap",
+          "variant": "phraseMin",
+          "queries": [
+            "does retrieval use keywords only or embeddings too?",
+            "does retrieval use keywords",
+            "keywords only or embeddings",
+            "only or embeddings too?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "trap-retrieval",
+          "category": "trap",
+          "variant": "phraseRrf",
+          "queries": [
+            "does retrieval use keywords only or embeddings too?",
+            "does retrieval use keywords",
+            "keywords only or embeddings",
+            "only or embeddings too?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "trap-linter",
+          "category": "trap",
+          "variant": "lexical",
+          "queries": [
+            "which linter and formatter does the project use?",
+            "which linter and formatter",
+            "formatter does the project",
+            "does the project use?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "trap-linter",
+          "category": "trap",
+          "variant": "hybrid",
+          "queries": [
+            "which linter and formatter does the project use?",
+            "which linter and formatter",
+            "formatter does the project",
+            "does the project use?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "trap-linter",
+          "category": "trap",
+          "variant": "phraseMax",
+          "queries": [
+            "which linter and formatter does the project use?",
+            "which linter and formatter",
+            "formatter does the project",
+            "does the project use?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "trap-linter",
+          "category": "trap",
+          "variant": "phraseMean",
+          "queries": [
+            "which linter and formatter does the project use?",
+            "which linter and formatter",
+            "formatter does the project",
+            "does the project use?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "trap-linter",
+          "category": "trap",
+          "variant": "phraseMin",
+          "queries": [
+            "which linter and formatter does the project use?",
+            "which linter and formatter",
+            "formatter does the project",
+            "does the project use?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "trap-linter",
+          "category": "trap",
+          "variant": "phraseRrf",
+          "queries": [
+            "which linter and formatter does the project use?",
+            "which linter and formatter",
+            "formatter does the project",
+            "does the project use?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "trap-agent-commits",
+          "category": "trap",
+          "variant": "lexical",
+          "queries": [
+            "who commits notebook changes made by agents?",
+            "who commits notebook changes",
+            "changes made by agents?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "trap-agent-commits",
+          "category": "trap",
+          "variant": "hybrid",
+          "queries": [
+            "who commits notebook changes made by agents?",
+            "who commits notebook changes",
+            "changes made by agents?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "trap-agent-commits",
+          "category": "trap",
+          "variant": "phraseMax",
+          "queries": [
+            "who commits notebook changes made by agents?",
+            "who commits notebook changes",
+            "changes made by agents?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "trap-agent-commits",
+          "category": "trap",
+          "variant": "phraseMean",
+          "queries": [
+            "who commits notebook changes made by agents?",
+            "who commits notebook changes",
+            "changes made by agents?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "trap-agent-commits",
+          "category": "trap",
+          "variant": "phraseMin",
+          "queries": [
+            "who commits notebook changes made by agents?",
+            "who commits notebook changes",
+            "changes made by agents?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "trap-agent-commits",
+          "category": "trap",
+          "variant": "phraseRrf",
+          "queries": [
+            "who commits notebook changes made by agents?",
+            "who commits notebook changes",
+            "changes made by agents?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "trap-default-status",
+          "category": "trap",
+          "variant": "lexical",
+          "queries": [
+            "what status does a new decision get by default?",
+            "what status does a",
+            "a new decision get",
+            "decision get by default?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "trap-default-status",
+          "category": "trap",
+          "variant": "hybrid",
+          "queries": [
+            "what status does a new decision get by default?",
+            "what status does a",
+            "a new decision get",
+            "decision get by default?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "trap-default-status",
+          "category": "trap",
+          "variant": "phraseMax",
+          "queries": [
+            "what status does a new decision get by default?",
+            "what status does a",
+            "a new decision get",
+            "decision get by default?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "trap-default-status",
+          "category": "trap",
+          "variant": "phraseMean",
+          "queries": [
+            "what status does a new decision get by default?",
+            "what status does a",
+            "a new decision get",
+            "decision get by default?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "trap-default-status",
+          "category": "trap",
+          "variant": "phraseMin",
+          "queries": [
+            "what status does a new decision get by default?",
+            "what status does a",
+            "a new decision get",
+            "decision get by default?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "trap-default-status",
+          "category": "trap",
+          "variant": "phraseRrf",
+          "queries": [
+            "what status does a new decision get by default?",
+            "what status does a",
+            "a new decision get",
+            "decision get by default?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-para-erase",
+          "category": "paraphrase",
+          "variant": "lexical",
+          "queries": [
+            "may I wipe out an outdated entry?",
+            "out an outdated entry?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-para-erase",
+          "category": "paraphrase",
+          "variant": "hybrid",
+          "queries": [
+            "may I wipe out an outdated entry?",
+            "out an outdated entry?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-para-erase",
+          "category": "paraphrase",
+          "variant": "phraseMax",
+          "queries": [
+            "may I wipe out an outdated entry?",
+            "out an outdated entry?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-para-erase",
+          "category": "paraphrase",
+          "variant": "phraseMean",
+          "queries": [
+            "may I wipe out an outdated entry?",
+            "out an outdated entry?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-para-erase",
+          "category": "paraphrase",
+          "variant": "phraseMin",
+          "queries": [
+            "may I wipe out an outdated entry?",
+            "out an outdated entry?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-para-erase",
+          "category": "paraphrase",
+          "variant": "phraseRrf",
+          "queries": [
+            "may I wipe out an outdated entry?",
+            "out an outdated entry?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-para-quiet-checker",
+          "category": "paraphrase",
+          "variant": "lexical",
+          "queries": [
+            "style checker went silent after upgrading its settings",
+            "style checker went silent",
+            "silent after upgrading its",
+            "after upgrading its settings"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-para-quiet-checker",
+          "category": "paraphrase",
+          "variant": "hybrid",
+          "queries": [
+            "style checker went silent after upgrading its settings",
+            "style checker went silent",
+            "silent after upgrading its",
+            "after upgrading its settings"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-para-quiet-checker",
+          "category": "paraphrase",
+          "variant": "phraseMax",
+          "queries": [
+            "style checker went silent after upgrading its settings",
+            "style checker went silent",
+            "silent after upgrading its",
+            "after upgrading its settings"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-para-quiet-checker",
+          "category": "paraphrase",
+          "variant": "phraseMean",
+          "queries": [
+            "style checker went silent after upgrading its settings",
+            "style checker went silent",
+            "silent after upgrading its",
+            "after upgrading its settings"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-para-quiet-checker",
+          "category": "paraphrase",
+          "variant": "phraseMin",
+          "queries": [
+            "style checker went silent after upgrading its settings",
+            "style checker went silent",
+            "silent after upgrading its",
+            "after upgrading its settings"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-para-quiet-checker",
+          "category": "paraphrase",
+          "variant": "phraseRrf",
+          "queries": [
+            "style checker went silent after upgrading its settings",
+            "style checker went silent",
+            "silent after upgrading its",
+            "after upgrading its settings"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-para-busy",
+          "category": "paraphrase",
+          "variant": "lexical",
+          "queries": [
+            "track which teammate is currently busy on what",
+            "track which teammate is",
+            "is currently busy on",
+            "currently busy on what"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-para-busy",
+          "category": "paraphrase",
+          "variant": "hybrid",
+          "queries": [
+            "track which teammate is currently busy on what",
+            "track which teammate is",
+            "is currently busy on",
+            "currently busy on what"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-para-busy",
+          "category": "paraphrase",
+          "variant": "phraseMax",
+          "queries": [
+            "track which teammate is currently busy on what",
+            "track which teammate is",
+            "is currently busy on",
+            "currently busy on what"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-para-busy",
+          "category": "paraphrase",
+          "variant": "phraseMean",
+          "queries": [
+            "track which teammate is currently busy on what",
+            "track which teammate is",
+            "is currently busy on",
+            "currently busy on what"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-para-busy",
+          "category": "paraphrase",
+          "variant": "phraseMin",
+          "queries": [
+            "track which teammate is currently busy on what",
+            "track which teammate is",
+            "is currently busy on",
+            "currently busy on what"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-para-busy",
+          "category": "paraphrase",
+          "variant": "phraseRrf",
+          "queries": [
+            "track which teammate is currently busy on what",
+            "track which teammate is",
+            "is currently busy on",
+            "currently busy on what"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-para-collision",
+          "category": "paraphrase",
+          "variant": "lexical",
+          "queries": [
+            "avoid two people picking up identical work at once",
+            "avoid two people picking",
+            "picking up identical work",
+            "identical work at once"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-para-collision",
+          "category": "paraphrase",
+          "variant": "hybrid",
+          "queries": [
+            "avoid two people picking up identical work at once",
+            "avoid two people picking",
+            "picking up identical work",
+            "identical work at once"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-para-collision",
+          "category": "paraphrase",
+          "variant": "phraseMax",
+          "queries": [
+            "avoid two people picking up identical work at once",
+            "avoid two people picking",
+            "picking up identical work",
+            "identical work at once"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-para-collision",
+          "category": "paraphrase",
+          "variant": "phraseMean",
+          "queries": [
+            "avoid two people picking up identical work at once",
+            "avoid two people picking",
+            "picking up identical work",
+            "identical work at once"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-para-collision",
+          "category": "paraphrase",
+          "variant": "phraseMin",
+          "queries": [
+            "avoid two people picking up identical work at once",
+            "avoid two people picking",
+            "picking up identical work",
+            "identical work at once"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-para-collision",
+          "category": "paraphrase",
+          "variant": "phraseRrf",
+          "queries": [
+            "avoid two people picking up identical work at once",
+            "avoid two people picking",
+            "picking up identical work",
+            "identical work at once"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-para-offline-first",
+          "category": "paraphrase",
+          "variant": "lexical",
+          "queries": [
+            "should everything keep working without internet access?",
+            "should everything keep working",
+            "working without internet access?"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-3by2wh28"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-para-offline-first",
+          "category": "paraphrase",
+          "variant": "hybrid",
+          "queries": [
+            "should everything keep working without internet access?",
+            "should everything keep working",
+            "working without internet access?"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-3by2wh28"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-para-offline-first",
+          "category": "paraphrase",
+          "variant": "phraseMax",
+          "queries": [
+            "should everything keep working without internet access?",
+            "should everything keep working",
+            "working without internet access?"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-3by2wh28"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-para-offline-first",
+          "category": "paraphrase",
+          "variant": "phraseMean",
+          "queries": [
+            "should everything keep working without internet access?",
+            "should everything keep working",
+            "working without internet access?"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-3by2wh28"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-para-offline-first",
+          "category": "paraphrase",
+          "variant": "phraseMin",
+          "queries": [
+            "should everything keep working without internet access?",
+            "should everything keep working",
+            "working without internet access?"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-3by2wh28"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-para-offline-first",
+          "category": "paraphrase",
+          "variant": "phraseRrf",
+          "queries": [
+            "should everything keep working without internet access?",
+            "should everything keep working",
+            "working without internet access?"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-3by2wh28"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-ml-id-hapus",
+          "category": "multilingual",
+          "variant": "lexical",
+          "queries": [
+            "bolehkah catatan usang dibuang begitu saja?",
+            "bolehkah catatan usang dibuang",
+            "usang dibuang begitu saja?"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-b0gymeq0"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-ml-id-hapus",
+          "category": "multilingual",
+          "variant": "hybrid",
+          "queries": [
+            "bolehkah catatan usang dibuang begitu saja?",
+            "bolehkah catatan usang dibuang",
+            "usang dibuang begitu saja?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-ml-id-hapus",
+          "category": "multilingual",
+          "variant": "phraseMax",
+          "queries": [
+            "bolehkah catatan usang dibuang begitu saja?",
+            "bolehkah catatan usang dibuang",
+            "usang dibuang begitu saja?"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-b0gymeq0"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-ml-id-hapus",
+          "category": "multilingual",
+          "variant": "phraseMean",
+          "queries": [
+            "bolehkah catatan usang dibuang begitu saja?",
+            "bolehkah catatan usang dibuang",
+            "usang dibuang begitu saja?"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-b0gymeq0"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-ml-id-hapus",
+          "category": "multilingual",
+          "variant": "phraseMin",
+          "queries": [
+            "bolehkah catatan usang dibuang begitu saja?",
+            "bolehkah catatan usang dibuang",
+            "usang dibuang begitu saja?"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-b0gymeq0"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-ml-id-hapus",
+          "category": "multilingual",
+          "variant": "phraseRrf",
+          "queries": [
+            "bolehkah catatan usang dibuang begitu saja?",
+            "bolehkah catatan usang dibuang",
+            "usang dibuang begitu saja?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-ml-id-rahasia",
+          "category": "multilingual",
+          "variant": "lexical",
+          "queries": [
+            "kunci rahasia tidak boleh masuk ke repositori",
+            "kunci rahasia tidak boleh",
+            "boleh masuk ke repositori"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-ml-id-rahasia",
+          "category": "multilingual",
+          "variant": "hybrid",
+          "queries": [
+            "kunci rahasia tidak boleh masuk ke repositori",
+            "kunci rahasia tidak boleh",
+            "boleh masuk ke repositori"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-ml-id-rahasia",
+          "category": "multilingual",
+          "variant": "phraseMax",
+          "queries": [
+            "kunci rahasia tidak boleh masuk ke repositori",
+            "kunci rahasia tidak boleh",
+            "boleh masuk ke repositori"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-ml-id-rahasia",
+          "category": "multilingual",
+          "variant": "phraseMean",
+          "queries": [
+            "kunci rahasia tidak boleh masuk ke repositori",
+            "kunci rahasia tidak boleh",
+            "boleh masuk ke repositori"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-ml-id-rahasia",
+          "category": "multilingual",
+          "variant": "phraseMin",
+          "queries": [
+            "kunci rahasia tidak boleh masuk ke repositori",
+            "kunci rahasia tidak boleh",
+            "boleh masuk ke repositori"
+          ],
+          "recall": 0,
+          "missing": [
+            "mem-nrdpy59z"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-ml-id-rahasia",
+          "category": "multilingual",
+          "variant": "phraseRrf",
+          "queries": [
+            "kunci rahasia tidak boleh masuk ke repositori",
+            "kunci rahasia tidak boleh",
+            "boleh masuk ke repositori"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-ml-id-bahasa",
+          "category": "multilingual",
+          "variant": "lexical",
+          "queries": [
+            "pencarian harus mengerti dua bahasa"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-ml-id-bahasa",
+          "category": "multilingual",
+          "variant": "hybrid",
+          "queries": [
+            "pencarian harus mengerti dua bahasa"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-ml-id-bahasa",
+          "category": "multilingual",
+          "variant": "phraseMax",
+          "queries": [
+            "pencarian harus mengerti dua bahasa"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-ml-id-bahasa",
+          "category": "multilingual",
+          "variant": "phraseMean",
+          "queries": [
+            "pencarian harus mengerti dua bahasa"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-ml-id-bahasa",
+          "category": "multilingual",
+          "variant": "phraseMin",
+          "queries": [
+            "pencarian harus mengerti dua bahasa"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-ml-id-bahasa",
+          "category": "multilingual",
+          "variant": "phraseRrf",
+          "queries": [
+            "pencarian harus mengerti dua bahasa"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-ml-en-oneline",
+          "category": "multilingual",
+          "variant": "lexical",
+          "queries": [
+            "summaries need to fit on a single row",
+            "summaries need to fit"
+          ],
+          "recall": 0,
+          "missing": [
+            "mem-dcsz2htx"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-ml-en-oneline",
+          "category": "multilingual",
+          "variant": "hybrid",
+          "queries": [
+            "summaries need to fit on a single row",
+            "summaries need to fit"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-ml-en-oneline",
+          "category": "multilingual",
+          "variant": "phraseMax",
+          "queries": [
+            "summaries need to fit on a single row",
+            "summaries need to fit"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-ml-en-oneline",
+          "category": "multilingual",
+          "variant": "phraseMean",
+          "queries": [
+            "summaries need to fit on a single row",
+            "summaries need to fit"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-ml-en-oneline",
+          "category": "multilingual",
+          "variant": "phraseMin",
+          "queries": [
+            "summaries need to fit on a single row",
+            "summaries need to fit"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-ml-en-oneline",
+          "category": "multilingual",
+          "variant": "phraseRrf",
+          "queries": [
+            "summaries need to fit on a single row",
+            "summaries need to fit"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-ml-en-noninteractive",
+          "category": "multilingual",
+          "variant": "lexical",
+          "queries": [
+            "automated assistants must never wait for keyboard input",
+            "automated assistants must never",
+            "never wait for keyboard",
+            "wait for keyboard input"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-ml-en-noninteractive",
+          "category": "multilingual",
+          "variant": "hybrid",
+          "queries": [
+            "automated assistants must never wait for keyboard input",
+            "automated assistants must never",
+            "never wait for keyboard",
+            "wait for keyboard input"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-ml-en-noninteractive",
+          "category": "multilingual",
+          "variant": "phraseMax",
+          "queries": [
+            "automated assistants must never wait for keyboard input",
+            "automated assistants must never",
+            "never wait for keyboard",
+            "wait for keyboard input"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-ml-en-noninteractive",
+          "category": "multilingual",
+          "variant": "phraseMean",
+          "queries": [
+            "automated assistants must never wait for keyboard input",
+            "automated assistants must never",
+            "never wait for keyboard",
+            "wait for keyboard input"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-ml-en-noninteractive",
+          "category": "multilingual",
+          "variant": "phraseMin",
+          "queries": [
+            "automated assistants must never wait for keyboard input",
+            "automated assistants must never",
+            "never wait for keyboard",
+            "wait for keyboard input"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "hard-ml-en-noninteractive",
+          "category": "multilingual",
+          "variant": "phraseRrf",
+          "queries": [
+            "automated assistants must never wait for keyboard input",
+            "automated assistants must never",
+            "never wait for keyboard",
+            "wait for keyboard input"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        }
+      ]
+    },
+    {
+      "set": "t7-heldout",
+      "summary": {
+        "lexical": {
+          "all": 0.3333333333333333,
+          "paraphrase": 0.25,
+          "multilingual": 0.5
+        },
+        "hybrid": {
+          "all": 0.4166666666666667,
+          "paraphrase": 0.5,
+          "multilingual": 0.25
+        },
+        "phraseMax": {
+          "all": 0.4166666666666667,
+          "paraphrase": 0.5,
+          "multilingual": 0.25
+        },
+        "phraseMean": {
+          "all": 0.4166666666666667,
+          "paraphrase": 0.5,
+          "multilingual": 0.25
+        },
+        "phraseMin": {
+          "all": 0.5833333333333334,
+          "paraphrase": 0.75,
+          "multilingual": 0.25
+        },
+        "phraseRrf": {
+          "all": 0.5833333333333334,
+          "paraphrase": 0.75,
+          "multilingual": 0.25
+        }
+      },
+      "cases": [
+        {
+          "case": "heldout-withdraw-false-knowledge",
+          "category": "paraphrase",
+          "variant": "lexical",
+          "queries": [
+            "What should happen to knowledge we later discover was mistaken?",
+            "What should happen to",
+            "to knowledge we later",
+            "later discover was mistaken?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "heldout-withdraw-false-knowledge",
+          "category": "paraphrase",
+          "variant": "hybrid",
+          "queries": [
+            "What should happen to knowledge we later discover was mistaken?",
+            "What should happen to",
+            "to knowledge we later",
+            "later discover was mistaken?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "heldout-withdraw-false-knowledge",
+          "category": "paraphrase",
+          "variant": "phraseMax",
+          "queries": [
+            "What should happen to knowledge we later discover was mistaken?",
+            "What should happen to",
+            "to knowledge we later",
+            "later discover was mistaken?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "heldout-withdraw-false-knowledge",
+          "category": "paraphrase",
+          "variant": "phraseMean",
+          "queries": [
+            "What should happen to knowledge we later discover was mistaken?",
+            "What should happen to",
+            "to knowledge we later",
+            "later discover was mistaken?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "heldout-withdraw-false-knowledge",
+          "category": "paraphrase",
+          "variant": "phraseMin",
+          "queries": [
+            "What should happen to knowledge we later discover was mistaken?",
+            "What should happen to",
+            "to knowledge we later",
+            "later discover was mistaken?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "heldout-withdraw-false-knowledge",
+          "category": "paraphrase",
+          "variant": "phraseRrf",
+          "queries": [
+            "What should happen to knowledge we later discover was mistaken?",
+            "What should happen to",
+            "to knowledge we later",
+            "later discover was mistaken?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "heldout-competing-workers",
+          "category": "paraphrase",
+          "variant": "lexical",
+          "queries": [
+            "Prevent concurrent workers from starting an identical assignment",
+            "Prevent concurrent workers from",
+            "from starting an identical",
+            "starting an identical assignment"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-kqfc1se7"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "heldout-competing-workers",
+          "category": "paraphrase",
+          "variant": "hybrid",
+          "queries": [
+            "Prevent concurrent workers from starting an identical assignment",
+            "Prevent concurrent workers from",
+            "from starting an identical",
+            "starting an identical assignment"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "heldout-competing-workers",
+          "category": "paraphrase",
+          "variant": "phraseMax",
+          "queries": [
+            "Prevent concurrent workers from starting an identical assignment",
+            "Prevent concurrent workers from",
+            "from starting an identical",
+            "starting an identical assignment"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "heldout-competing-workers",
+          "category": "paraphrase",
+          "variant": "phraseMean",
+          "queries": [
+            "Prevent concurrent workers from starting an identical assignment",
+            "Prevent concurrent workers from",
+            "from starting an identical",
+            "starting an identical assignment"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-kqfc1se7"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "heldout-competing-workers",
+          "category": "paraphrase",
+          "variant": "phraseMin",
+          "queries": [
+            "Prevent concurrent workers from starting an identical assignment",
+            "Prevent concurrent workers from",
+            "from starting an identical",
+            "starting an identical assignment"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "heldout-competing-workers",
+          "category": "paraphrase",
+          "variant": "phraseRrf",
+          "queries": [
+            "Prevent concurrent workers from starting an identical assignment",
+            "Prevent concurrent workers from",
+            "from starting an identical",
+            "starting an identical assignment"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "heldout-disconnected-laptop",
+          "category": "paraphrase",
+          "variant": "lexical",
+          "queries": [
+            "Can I still use the notebook on a disconnected laptop?",
+            "use the notebook on",
+            "on a disconnected laptop?"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-3by2wh28"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "heldout-disconnected-laptop",
+          "category": "paraphrase",
+          "variant": "hybrid",
+          "queries": [
+            "Can I still use the notebook on a disconnected laptop?",
+            "use the notebook on",
+            "on a disconnected laptop?"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-3by2wh28"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "heldout-disconnected-laptop",
+          "category": "paraphrase",
+          "variant": "phraseMax",
+          "queries": [
+            "Can I still use the notebook on a disconnected laptop?",
+            "use the notebook on",
+            "on a disconnected laptop?"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-3by2wh28"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "heldout-disconnected-laptop",
+          "category": "paraphrase",
+          "variant": "phraseMean",
+          "queries": [
+            "Can I still use the notebook on a disconnected laptop?",
+            "use the notebook on",
+            "on a disconnected laptop?"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-3by2wh28"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "heldout-disconnected-laptop",
+          "category": "paraphrase",
+          "variant": "phraseMin",
+          "queries": [
+            "Can I still use the notebook on a disconnected laptop?",
+            "use the notebook on",
+            "on a disconnected laptop?"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-3by2wh28"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "heldout-disconnected-laptop",
+          "category": "paraphrase",
+          "variant": "phraseRrf",
+          "queries": [
+            "Can I still use the notebook on a disconnected laptop?",
+            "use the notebook on",
+            "on a disconnected laptop?"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-3by2wh28"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "heldout-present-ownership",
+          "category": "paraphrase",
+          "variant": "lexical",
+          "queries": [
+            "Where do I find the current owner of an ongoing assignment?",
+            "find the current owner",
+            "owner of an ongoing",
+            "of an ongoing assignment?"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-g17nvbca"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "heldout-present-ownership",
+          "category": "paraphrase",
+          "variant": "hybrid",
+          "queries": [
+            "Where do I find the current owner of an ongoing assignment?",
+            "find the current owner",
+            "owner of an ongoing",
+            "of an ongoing assignment?"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-g17nvbca"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "heldout-present-ownership",
+          "category": "paraphrase",
+          "variant": "phraseMax",
+          "queries": [
+            "Where do I find the current owner of an ongoing assignment?",
+            "find the current owner",
+            "owner of an ongoing",
+            "of an ongoing assignment?"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-g17nvbca"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "heldout-present-ownership",
+          "category": "paraphrase",
+          "variant": "phraseMean",
+          "queries": [
+            "Where do I find the current owner of an ongoing assignment?",
+            "find the current owner",
+            "owner of an ongoing",
+            "of an ongoing assignment?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "heldout-present-ownership",
+          "category": "paraphrase",
+          "variant": "phraseMin",
+          "queries": [
+            "Where do I find the current owner of an ongoing assignment?",
+            "find the current owner",
+            "owner of an ongoing",
+            "of an ongoing assignment?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "heldout-present-ownership",
+          "category": "paraphrase",
+          "variant": "phraseRrf",
+          "queries": [
+            "Where do I find the current owner of an ongoing assignment?",
+            "find the current owner",
+            "owner of an ongoing",
+            "of an ongoing assignment?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "heldout-id-lint",
+          "category": "multilingual",
+          "variant": "lexical",
+          "queries": [
+            "pemeriksa gaya diam setelah konfigurasi diperbarui",
+            "pemeriksa gaya diam setelah",
+            "diam setelah konfigurasi diperbarui"
+          ],
+          "recall": 0,
+          "missing": [
+            "mem-rj2t0xj9"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "heldout-id-lint",
+          "category": "multilingual",
+          "variant": "hybrid",
+          "queries": [
+            "pemeriksa gaya diam setelah konfigurasi diperbarui",
+            "pemeriksa gaya diam setelah",
+            "diam setelah konfigurasi diperbarui"
+          ],
+          "recall": 0,
+          "missing": [
+            "mem-rj2t0xj9"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "heldout-id-lint",
+          "category": "multilingual",
+          "variant": "phraseMax",
+          "queries": [
+            "pemeriksa gaya diam setelah konfigurasi diperbarui",
+            "pemeriksa gaya diam setelah",
+            "diam setelah konfigurasi diperbarui"
+          ],
+          "recall": 0,
+          "missing": [
+            "mem-rj2t0xj9"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "heldout-id-lint",
+          "category": "multilingual",
+          "variant": "phraseMean",
+          "queries": [
+            "pemeriksa gaya diam setelah konfigurasi diperbarui",
+            "pemeriksa gaya diam setelah",
+            "diam setelah konfigurasi diperbarui"
+          ],
+          "recall": 0,
+          "missing": [
+            "mem-rj2t0xj9"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "heldout-id-lint",
+          "category": "multilingual",
+          "variant": "phraseMin",
+          "queries": [
+            "pemeriksa gaya diam setelah konfigurasi diperbarui",
+            "pemeriksa gaya diam setelah",
+            "diam setelah konfigurasi diperbarui"
+          ],
+          "recall": 0,
+          "missing": [
+            "mem-rj2t0xj9"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "heldout-id-lint",
+          "category": "multilingual",
+          "variant": "phraseRrf",
+          "queries": [
+            "pemeriksa gaya diam setelah konfigurasi diperbarui",
+            "pemeriksa gaya diam setelah",
+            "diam setelah konfigurasi diperbarui"
+          ],
+          "recall": 0,
+          "missing": [
+            "mem-rj2t0xj9"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "heldout-id-index",
+          "category": "multilingual",
+          "variant": "lexical",
+          "queries": [
+            "bolehkah menyunting daftar indeks secara manual?",
+            "bolehkah menyunting daftar indeks",
+            "daftar indeks secara manual?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "heldout-id-index",
+          "category": "multilingual",
+          "variant": "hybrid",
+          "queries": [
+            "bolehkah menyunting daftar indeks secara manual?",
+            "bolehkah menyunting daftar indeks",
+            "daftar indeks secara manual?"
+          ],
+          "recall": 0.5,
+          "missing": [
+            "dec-v868xmvq"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "heldout-id-index",
+          "category": "multilingual",
+          "variant": "phraseMax",
+          "queries": [
+            "bolehkah menyunting daftar indeks secara manual?",
+            "bolehkah menyunting daftar indeks",
+            "daftar indeks secara manual?"
+          ],
+          "recall": 0.5,
+          "missing": [
+            "dec-v868xmvq"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "heldout-id-index",
+          "category": "multilingual",
+          "variant": "phraseMean",
+          "queries": [
+            "bolehkah menyunting daftar indeks secara manual?",
+            "bolehkah menyunting daftar indeks",
+            "daftar indeks secara manual?"
+          ],
+          "recall": 0.5,
+          "missing": [
+            "dec-v868xmvq"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "heldout-id-index",
+          "category": "multilingual",
+          "variant": "phraseMin",
+          "queries": [
+            "bolehkah menyunting daftar indeks secara manual?",
+            "bolehkah menyunting daftar indeks",
+            "daftar indeks secara manual?"
+          ],
+          "recall": 0.5,
+          "missing": [
+            "dec-v868xmvq"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "heldout-id-index",
+          "category": "multilingual",
+          "variant": "phraseRrf",
+          "queries": [
+            "bolehkah menyunting daftar indeks secara manual?",
+            "bolehkah menyunting daftar indeks",
+            "daftar indeks secara manual?"
+          ],
+          "recall": 0.5,
+          "missing": [
+            "dec-v868xmvq"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        }
+      ]
+    },
+    {
+      "set": "t7-query-heldout",
+      "summary": {
+        "lexical": {
+          "all": 0.5,
+          "keyword": 1,
+          "paraphrase": 0.5,
+          "multilingual": 0
+        },
+        "hybrid": {
+          "all": 0.75,
+          "keyword": 1,
+          "paraphrase": 0.5,
+          "multilingual": 1
+        },
+        "phraseMax": {
+          "all": 0.5,
+          "keyword": 1,
+          "paraphrase": 0,
+          "multilingual": 1
+        },
+        "phraseMean": {
+          "all": 0.5,
+          "keyword": 1,
+          "paraphrase": 0,
+          "multilingual": 1
+        },
+        "phraseMin": {
+          "all": 0.75,
+          "keyword": 1,
+          "paraphrase": 0.5,
+          "multilingual": 1
+        },
+        "phraseRrf": {
+          "all": 0.5,
+          "keyword": 1,
+          "paraphrase": 0,
+          "multilingual": 1
+        }
+      },
+      "cases": [
+        {
+          "case": "query-heldout-disconnected-work",
+          "category": "paraphrase",
+          "variant": "lexical",
+          "queries": [
+            "When my network connection drops, can I continue using the project notebook without a running service?",
+            "When my network connection",
+            "connection drops, can I",
+            "without a running service?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "query-heldout-disconnected-work",
+          "category": "paraphrase",
+          "variant": "hybrid",
+          "queries": [
+            "When my network connection drops, can I continue using the project notebook without a running service?",
+            "When my network connection",
+            "connection drops, can I",
+            "without a running service?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "query-heldout-disconnected-work",
+          "category": "paraphrase",
+          "variant": "phraseMax",
+          "queries": [
+            "When my network connection drops, can I continue using the project notebook without a running service?",
+            "When my network connection",
+            "connection drops, can I",
+            "without a running service?"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-3by2wh28"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "query-heldout-disconnected-work",
+          "category": "paraphrase",
+          "variant": "phraseMean",
+          "queries": [
+            "When my network connection drops, can I continue using the project notebook without a running service?",
+            "When my network connection",
+            "connection drops, can I",
+            "without a running service?"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-3by2wh28"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "query-heldout-disconnected-work",
+          "category": "paraphrase",
+          "variant": "phraseMin",
+          "queries": [
+            "When my network connection drops, can I continue using the project notebook without a running service?",
+            "When my network connection",
+            "connection drops, can I",
+            "without a running service?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "query-heldout-disconnected-work",
+          "category": "paraphrase",
+          "variant": "phraseRrf",
+          "queries": [
+            "When my network connection drops, can I continue using the project notebook without a running service?",
+            "When my network connection",
+            "connection drops, can I",
+            "without a running service?"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-3by2wh28"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "query-heldout-ephemeral-ownership",
+          "category": "paraphrase",
+          "variant": "lexical",
+          "queries": [
+            "When someone is already handling a job, where do we track that temporary ownership separately from saved notes?",
+            "When someone is already",
+            "already handling a job,",
+            "separately from saved notes?"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-g17nvbca",
+            "mem-peqcrkme"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "query-heldout-ephemeral-ownership",
+          "category": "paraphrase",
+          "variant": "hybrid",
+          "queries": [
+            "When someone is already handling a job, where do we track that temporary ownership separately from saved notes?",
+            "When someone is already",
+            "already handling a job,",
+            "separately from saved notes?"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-g17nvbca",
+            "mem-peqcrkme"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "query-heldout-ephemeral-ownership",
+          "category": "paraphrase",
+          "variant": "phraseMax",
+          "queries": [
+            "When someone is already handling a job, where do we track that temporary ownership separately from saved notes?",
+            "When someone is already",
+            "already handling a job,",
+            "separately from saved notes?"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-g17nvbca",
+            "mem-peqcrkme"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "query-heldout-ephemeral-ownership",
+          "category": "paraphrase",
+          "variant": "phraseMean",
+          "queries": [
+            "When someone is already handling a job, where do we track that temporary ownership separately from saved notes?",
+            "When someone is already",
+            "already handling a job,",
+            "separately from saved notes?"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-g17nvbca",
+            "mem-peqcrkme"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "query-heldout-ephemeral-ownership",
+          "category": "paraphrase",
+          "variant": "phraseMin",
+          "queries": [
+            "When someone is already handling a job, where do we track that temporary ownership separately from saved notes?",
+            "When someone is already",
+            "already handling a job,",
+            "separately from saved notes?"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-g17nvbca",
+            "mem-peqcrkme"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "query-heldout-ephemeral-ownership",
+          "category": "paraphrase",
+          "variant": "phraseRrf",
+          "queries": [
+            "When someone is already handling a job, where do we track that temporary ownership separately from saved notes?",
+            "When someone is already",
+            "already handling a job,",
+            "separately from saved notes?"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-g17nvbca",
+            "mem-peqcrkme"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "query-heldout-withdraw-id",
+          "category": "multilingual",
+          "variant": "lexical",
+          "queries": [
+            "Kalau catatan lama ternyata keliru, apakah riwayatnya dihapus atau diganti dengan catatan baru?",
+            "Kalau catatan lama ternyata",
+            "ternyata keliru, apakah riwayatnya",
+            "diganti dengan catatan baru?"
+          ],
+          "recall": 0,
+          "missing": [
+            "dec-b0gymeq0"
+          ],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "query-heldout-withdraw-id",
+          "category": "multilingual",
+          "variant": "hybrid",
+          "queries": [
+            "Kalau catatan lama ternyata keliru, apakah riwayatnya dihapus atau diganti dengan catatan baru?",
+            "Kalau catatan lama ternyata",
+            "ternyata keliru, apakah riwayatnya",
+            "diganti dengan catatan baru?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "query-heldout-withdraw-id",
+          "category": "multilingual",
+          "variant": "phraseMax",
+          "queries": [
+            "Kalau catatan lama ternyata keliru, apakah riwayatnya dihapus atau diganti dengan catatan baru?",
+            "Kalau catatan lama ternyata",
+            "ternyata keliru, apakah riwayatnya",
+            "diganti dengan catatan baru?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "query-heldout-withdraw-id",
+          "category": "multilingual",
+          "variant": "phraseMean",
+          "queries": [
+            "Kalau catatan lama ternyata keliru, apakah riwayatnya dihapus atau diganti dengan catatan baru?",
+            "Kalau catatan lama ternyata",
+            "ternyata keliru, apakah riwayatnya",
+            "diganti dengan catatan baru?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "query-heldout-withdraw-id",
+          "category": "multilingual",
+          "variant": "phraseMin",
+          "queries": [
+            "Kalau catatan lama ternyata keliru, apakah riwayatnya dihapus atau diganti dengan catatan baru?",
+            "Kalau catatan lama ternyata",
+            "ternyata keliru, apakah riwayatnya",
+            "diganti dengan catatan baru?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "query-heldout-withdraw-id",
+          "category": "multilingual",
+          "variant": "phraseRrf",
+          "queries": [
+            "Kalau catatan lama ternyata keliru, apakah riwayatnya dihapus atau diganti dengan catatan baru?",
+            "Kalau catatan lama ternyata",
+            "ternyata keliru, apakah riwayatnya",
+            "diganti dengan catatan baru?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "query-heldout-schema-export",
+          "category": "keyword",
+          "variant": "lexical",
+          "queries": [
+            "I am wiring schema generation into the build; how do we export JSON Schema from Zod?",
+            "I am wiring schema",
+            "schema generation into the",
+            "JSON Schema from Zod?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "query-heldout-schema-export",
+          "category": "keyword",
+          "variant": "hybrid",
+          "queries": [
+            "I am wiring schema generation into the build; how do we export JSON Schema from Zod?",
+            "I am wiring schema",
+            "schema generation into the",
+            "JSON Schema from Zod?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "query-heldout-schema-export",
+          "category": "keyword",
+          "variant": "phraseMax",
+          "queries": [
+            "I am wiring schema generation into the build; how do we export JSON Schema from Zod?",
+            "I am wiring schema",
+            "schema generation into the",
+            "JSON Schema from Zod?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "query-heldout-schema-export",
+          "category": "keyword",
+          "variant": "phraseMean",
+          "queries": [
+            "I am wiring schema generation into the build; how do we export JSON Schema from Zod?",
+            "I am wiring schema",
+            "schema generation into the",
+            "JSON Schema from Zod?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "query-heldout-schema-export",
+          "category": "keyword",
+          "variant": "phraseMin",
+          "queries": [
+            "I am wiring schema generation into the build; how do we export JSON Schema from Zod?",
+            "I am wiring schema",
+            "schema generation into the",
+            "JSON Schema from Zod?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        },
+        {
+          "case": "query-heldout-schema-export",
+          "category": "keyword",
+          "variant": "phraseRrf",
+          "queries": [
+            "I am wiring schema generation into the build; how do we export JSON Schema from Zod?",
+            "I am wiring schema",
+            "schema generation into the",
+            "JSON Schema from Zod?"
+          ],
+          "recall": 1,
+          "missing": [],
+          "violations": [],
+          "budgetOk": true,
+          "deterministic": true
+        }
+      ]
+    }
+  ]
+}

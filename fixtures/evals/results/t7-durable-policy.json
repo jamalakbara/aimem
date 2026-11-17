@@ -1,0 +1,3879 @@
+{
+  "reports": [
+    {
+      "name": "medium",
+      "summary": {
+        "original": {
+          "lexical": {
+            "all": 0.8088235294117647,
+            "keyword": 1,
+            "paraphrase": 0.7727272727272727,
+            "multilingual": 0.6363636363636364,
+            "trap": 1
+          },
+          "hybrid": {
+            "all": 0.9264705882352942,
+            "keyword": 1,
+            "paraphrase": 0.8636363636363636,
+            "multilingual": 0.9090909090909091,
+            "trap": 1
+          }
+        },
+        "accepted": {
+          "lexical": {
+            "all": 0.8088235294117647,
+            "keyword": 1,
+            "paraphrase": 0.7727272727272727,
+            "multilingual": 0.6363636363636364,
+            "trap": 1
+          },
+          "hybrid": {
+            "all": 0.9264705882352942,
+            "keyword": 1,
+            "paraphrase": 0.8636363636363636,
+            "multilingual": 0.9090909090909091,
+            "trap": 1
+          }
+        },
+        "verified": {
+          "lexical": {
+            "all": 0.8088235294117647,
+            "keyword": 1,
+            "paraphrase": 0.7727272727272727,
+            "multilingual": 0.6363636363636364,
+            "trap": 1
+          },
+          "hybrid": {
+            "all": 0.9264705882352942,
+            "keyword": 1,
+            "paraphrase": 0.8636363636363636,
+            "multilingual": 0.9090909090909091,
+            "trap": 1
+          }
+        },
+        "floor": {
+          "lexical": {
+            "all": 0.7794117647058824,
+            "keyword": 1,
+            "paraphrase": 0.7727272727272727,
+            "multilingual": 0.5454545454545454,
+            "trap": 1
+          },
+          "hybrid": {
+            "all": 0.9264705882352942,
+            "keyword": 1,
+            "paraphrase": 0.8636363636363636,
+            "multilingual": 0.9090909090909091,
+            "trap": 1
+          }
+        }
+      },
+      "rows": [
+        {
+          "id": "kw-zod-json-schema",
+          "category": "keyword",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-zod-json-schema",
+          "category": "keyword",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-zod-json-schema",
+          "category": "keyword",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-zod-json-schema",
+          "category": "keyword",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-zod-json-schema",
+          "category": "keyword",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-zod-json-schema",
+          "category": "keyword",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-zod-json-schema",
+          "category": "keyword",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-zod-json-schema",
+          "category": "keyword",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-claims-cas",
+          "category": "keyword",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-claims-cas",
+          "category": "keyword",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-claims-cas",
+          "category": "keyword",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-claims-cas",
+          "category": "keyword",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-claims-cas",
+          "category": "keyword",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-claims-cas",
+          "category": "keyword",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-claims-cas",
+          "category": "keyword",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-claims-cas",
+          "category": "keyword",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-biome-preset",
+          "category": "keyword",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-biome-preset",
+          "category": "keyword",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-biome-preset",
+          "category": "keyword",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-biome-preset",
+          "category": "keyword",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-biome-preset",
+          "category": "keyword",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-biome-preset",
+          "category": "keyword",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-biome-preset",
+          "category": "keyword",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-biome-preset",
+          "category": "keyword",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-defer-odoo",
+          "category": "keyword",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-defer-odoo",
+          "category": "keyword",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-defer-odoo",
+          "category": "keyword",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-defer-odoo",
+          "category": "keyword",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-defer-odoo",
+          "category": "keyword",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-defer-odoo",
+          "category": "keyword",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-defer-odoo",
+          "category": "keyword",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-defer-odoo",
+          "category": "keyword",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-secret-fixtures",
+          "category": "keyword",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-secret-fixtures",
+          "category": "keyword",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-secret-fixtures",
+          "category": "keyword",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-secret-fixtures",
+          "category": "keyword",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-secret-fixtures",
+          "category": "keyword",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-secret-fixtures",
+          "category": "keyword",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-secret-fixtures",
+          "category": "keyword",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-secret-fixtures",
+          "category": "keyword",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-stacked-prs",
+          "category": "keyword",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-stacked-prs",
+          "category": "keyword",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-stacked-prs",
+          "category": "keyword",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-stacked-prs",
+          "category": "keyword",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-stacked-prs",
+          "category": "keyword",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-stacked-prs",
+          "category": "keyword",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-stacked-prs",
+          "category": "keyword",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-stacked-prs",
+          "category": "keyword",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-git-binary",
+          "category": "keyword",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-git-binary",
+          "category": "keyword",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-git-binary",
+          "category": "keyword",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-git-binary",
+          "category": "keyword",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-git-binary",
+          "category": "keyword",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-git-binary",
+          "category": "keyword",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-git-binary",
+          "category": "keyword",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-git-binary",
+          "category": "keyword",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-mcp-paths",
+          "category": "keyword",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-mcp-paths",
+          "category": "keyword",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-mcp-paths",
+          "category": "keyword",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-mcp-paths",
+          "category": "keyword",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-mcp-paths",
+          "category": "keyword",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-mcp-paths",
+          "category": "keyword",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-mcp-paths",
+          "category": "keyword",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "kw-mcp-paths",
+          "category": "keyword",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-delete-note",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-delete-note",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-delete-note",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-delete-note",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-delete-note",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-delete-note",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-delete-note",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-delete-note",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-same-work",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-same-work",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-same-work",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-same-work",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-same-work",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-same-work",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-same-work",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-same-work",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-lint-silent",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 0,
+          "missing": [
+            "mem-rj2t0xj9"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-lint-silent",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 0,
+          "missing": [
+            "mem-rj2t0xj9"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-lint-silent",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 0,
+          "missing": [
+            "mem-rj2t0xj9"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-lint-silent",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 0,
+          "missing": [
+            "mem-rj2t0xj9"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-lint-silent",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-lint-silent",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-lint-silent",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-lint-silent",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-zero-sha",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-zero-sha",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-zero-sha",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-zero-sha",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-zero-sha",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-zero-sha",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-zero-sha",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-zero-sha",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-id-letters",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-id-letters",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-id-letters",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-id-letters",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-id-letters",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-id-letters",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-id-letters",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-id-letters",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-who-is-working",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 0.5,
+          "missing": [
+            "mem-peqcrkme"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-who-is-working",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 0.5,
+          "missing": [
+            "mem-peqcrkme"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-who-is-working",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 0.5,
+          "missing": [
+            "mem-peqcrkme"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-who-is-working",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 0.5,
+          "missing": [
+            "mem-peqcrkme"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-who-is-working",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 0.5,
+          "missing": [
+            "mem-peqcrkme"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-who-is-working",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 0.5,
+          "missing": [
+            "mem-peqcrkme"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-who-is-working",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 0.5,
+          "missing": [
+            "mem-peqcrkme"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "para-who-is-working",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 0.5,
+          "missing": [
+            "mem-peqcrkme"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-id-zod",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-id-zod",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-id-zod",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-id-zod",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-id-zod",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-id-zod",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-id-zod",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-id-zod",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-id-agent-commit",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 0,
+          "missing": [
+            "dec-ek66gxgx"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-id-agent-commit",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 0,
+          "missing": [
+            "dec-ek66gxgx"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-id-agent-commit",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 0,
+          "missing": [
+            "dec-ek66gxgx"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-id-agent-commit",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 0,
+          "missing": [
+            "dec-ek66gxgx"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-id-agent-commit",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 0,
+          "missing": [
+            "dec-ek66gxgx"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-id-agent-commit",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 0,
+          "missing": [
+            "dec-ek66gxgx"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-id-agent-commit",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 0,
+          "missing": [
+            "dec-ek66gxgx"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-id-agent-commit",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 0,
+          "missing": [
+            "dec-ek66gxgx"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-id-delete",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 0,
+          "missing": [
+            "dec-b0gymeq0"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-id-delete",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 0,
+          "missing": [
+            "dec-b0gymeq0"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-id-delete",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 0,
+          "missing": [
+            "dec-b0gymeq0"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-id-delete",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 0,
+          "missing": [
+            "dec-b0gymeq0"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-id-delete",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-id-delete",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-id-delete",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-id-delete",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-en-index-edit",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-en-index-edit",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-en-index-edit",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-en-index-edit",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-en-index-edit",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-en-index-edit",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-en-index-edit",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-en-index-edit",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-en-summary-lines",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-en-summary-lines",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-en-summary-lines",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-en-summary-lines",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-en-summary-lines",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-en-summary-lines",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-en-summary-lines",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-en-summary-lines",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-en-token-estimate",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-en-token-estimate",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-en-token-estimate",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-en-token-estimate",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-en-token-estimate",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-en-token-estimate",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-en-token-estimate",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "ml-en-token-estimate",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "trap-retrieval",
+          "category": "trap",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "trap-retrieval",
+          "category": "trap",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "trap-retrieval",
+          "category": "trap",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "trap-retrieval",
+          "category": "trap",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "trap-retrieval",
+          "category": "trap",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "trap-retrieval",
+          "category": "trap",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "trap-retrieval",
+          "category": "trap",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "trap-retrieval",
+          "category": "trap",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "trap-linter",
+          "category": "trap",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "trap-linter",
+          "category": "trap",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "trap-linter",
+          "category": "trap",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "trap-linter",
+          "category": "trap",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "trap-linter",
+          "category": "trap",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "trap-linter",
+          "category": "trap",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "trap-linter",
+          "category": "trap",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "trap-linter",
+          "category": "trap",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "trap-agent-commits",
+          "category": "trap",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "trap-agent-commits",
+          "category": "trap",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "trap-agent-commits",
+          "category": "trap",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "trap-agent-commits",
+          "category": "trap",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "trap-agent-commits",
+          "category": "trap",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "trap-agent-commits",
+          "category": "trap",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "trap-agent-commits",
+          "category": "trap",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "trap-agent-commits",
+          "category": "trap",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "trap-default-status",
+          "category": "trap",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "trap-default-status",
+          "category": "trap",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "trap-default-status",
+          "category": "trap",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "trap-default-status",
+          "category": "trap",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "trap-default-status",
+          "category": "trap",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "trap-default-status",
+          "category": "trap",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "trap-default-status",
+          "category": "trap",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "trap-default-status",
+          "category": "trap",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-erase",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-erase",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-erase",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-erase",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-erase",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-erase",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-erase",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-erase",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-quiet-checker",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-quiet-checker",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-quiet-checker",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-quiet-checker",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-quiet-checker",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-quiet-checker",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-quiet-checker",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-quiet-checker",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-busy",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-busy",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-busy",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-busy",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-busy",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-busy",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-busy",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-busy",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-collision",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-collision",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-collision",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-collision",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-collision",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-collision",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-collision",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-collision",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-offline-first",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 0,
+          "missing": [
+            "dec-3by2wh28"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-offline-first",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 0,
+          "missing": [
+            "dec-3by2wh28"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-offline-first",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 0,
+          "missing": [
+            "dec-3by2wh28"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-offline-first",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 0,
+          "missing": [
+            "dec-3by2wh28"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-offline-first",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 0,
+          "missing": [
+            "dec-3by2wh28"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-offline-first",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 0,
+          "missing": [
+            "dec-3by2wh28"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-offline-first",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 0,
+          "missing": [
+            "dec-3by2wh28"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-para-offline-first",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 0,
+          "missing": [
+            "dec-3by2wh28"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-id-hapus",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 0,
+          "missing": [
+            "dec-b0gymeq0"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-id-hapus",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 0,
+          "missing": [
+            "dec-b0gymeq0"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-id-hapus",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 0,
+          "missing": [
+            "dec-b0gymeq0"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-id-hapus",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 0,
+          "missing": [
+            "dec-b0gymeq0"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-id-hapus",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-id-hapus",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-id-hapus",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-id-hapus",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-id-rahasia",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-id-rahasia",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-id-rahasia",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-id-rahasia",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-id-rahasia",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-id-rahasia",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-id-rahasia",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-id-rahasia",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-id-bahasa",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-id-bahasa",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-id-bahasa",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-id-bahasa",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 0,
+          "missing": [
+            "dec-mtbcq7yr"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-id-bahasa",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-id-bahasa",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-id-bahasa",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-id-bahasa",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-en-oneline",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 0,
+          "missing": [
+            "mem-dcsz2htx"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-en-oneline",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 0,
+          "missing": [
+            "mem-dcsz2htx"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-en-oneline",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 0,
+          "missing": [
+            "mem-dcsz2htx"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-en-oneline",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 0,
+          "missing": [
+            "mem-dcsz2htx"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-en-oneline",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-en-oneline",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-en-oneline",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-en-oneline",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-en-noninteractive",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-en-noninteractive",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-en-noninteractive",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-en-noninteractive",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-en-noninteractive",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-en-noninteractive",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-en-noninteractive",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "hard-ml-en-noninteractive",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        }
+      ]
+    },
+    {
+      "name": "t7-heldout",
+      "summary": {
+        "original": {
+          "lexical": {
+            "all": 0.3333333333333333,
+            "paraphrase": 0.25,
+            "multilingual": 0.5
+          },
+          "hybrid": {
+            "all": 0.4166666666666667,
+            "paraphrase": 0.5,
+            "multilingual": 0.25
+          }
+        },
+        "accepted": {
+          "lexical": {
+            "all": 0.3333333333333333,
+            "paraphrase": 0.25,
+            "multilingual": 0.5
+          },
+          "hybrid": {
+            "all": 0.6666666666666666,
+            "paraphrase": 0.75,
+            "multilingual": 0.5
+          }
+        },
+        "verified": {
+          "lexical": {
+            "all": 0.3333333333333333,
+            "paraphrase": 0.25,
+            "multilingual": 0.5
+          },
+          "hybrid": {
+            "all": 0.6666666666666666,
+            "paraphrase": 0.75,
+            "multilingual": 0.5
+          }
+        },
+        "floor": {
+          "lexical": {
+            "all": 0.3333333333333333,
+            "paraphrase": 0.25,
+            "multilingual": 0.5
+          },
+          "hybrid": {
+            "all": 0.5,
+            "paraphrase": 0.5,
+            "multilingual": 0.5
+          }
+        }
+      },
+      "rows": [
+        {
+          "id": "heldout-withdraw-false-knowledge",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-withdraw-false-knowledge",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-withdraw-false-knowledge",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-withdraw-false-knowledge",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-withdraw-false-knowledge",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-withdraw-false-knowledge",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-withdraw-false-knowledge",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-withdraw-false-knowledge",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-competing-workers",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 0,
+          "missing": [
+            "dec-kqfc1se7"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-competing-workers",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 0,
+          "missing": [
+            "dec-kqfc1se7"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-competing-workers",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 0,
+          "missing": [
+            "dec-kqfc1se7"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-competing-workers",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 0,
+          "missing": [
+            "dec-kqfc1se7"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-competing-workers",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-competing-workers",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-competing-workers",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-competing-workers",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-disconnected-laptop",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 0,
+          "missing": [
+            "dec-3by2wh28"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-disconnected-laptop",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 0,
+          "missing": [
+            "dec-3by2wh28"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-disconnected-laptop",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 0,
+          "missing": [
+            "dec-3by2wh28"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-disconnected-laptop",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 0,
+          "missing": [
+            "dec-3by2wh28"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-disconnected-laptop",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 0,
+          "missing": [
+            "dec-3by2wh28"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-disconnected-laptop",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-disconnected-laptop",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-disconnected-laptop",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 0,
+          "missing": [
+            "dec-3by2wh28"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-present-ownership",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 0,
+          "missing": [
+            "dec-g17nvbca"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-present-ownership",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 0,
+          "missing": [
+            "dec-g17nvbca"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-present-ownership",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 0,
+          "missing": [
+            "dec-g17nvbca"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-present-ownership",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 0,
+          "missing": [
+            "dec-g17nvbca"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-present-ownership",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 0,
+          "missing": [
+            "dec-g17nvbca"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-present-ownership",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 0,
+          "missing": [
+            "dec-g17nvbca"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-present-ownership",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 0,
+          "missing": [
+            "dec-g17nvbca"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-present-ownership",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 0,
+          "missing": [
+            "dec-g17nvbca"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-id-lint",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 0,
+          "missing": [
+            "mem-rj2t0xj9"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-id-lint",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 0,
+          "missing": [
+            "mem-rj2t0xj9"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-id-lint",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 0,
+          "missing": [
+            "mem-rj2t0xj9"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-id-lint",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 0,
+          "missing": [
+            "mem-rj2t0xj9"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-id-lint",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 0,
+          "missing": [
+            "mem-rj2t0xj9"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-id-lint",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 0,
+          "missing": [
+            "mem-rj2t0xj9"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-id-lint",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 0,
+          "missing": [
+            "mem-rj2t0xj9"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-id-lint",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 0,
+          "missing": [
+            "mem-rj2t0xj9"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-id-index",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-id-index",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-id-index",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-id-index",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-id-index",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 0.5,
+          "missing": [
+            "dec-v868xmvq"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-id-index",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-id-index",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "heldout-id-index",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        }
+      ]
+    },
+    {
+      "name": "t7-query-heldout",
+      "summary": {
+        "original": {
+          "lexical": {
+            "all": 0.5,
+            "keyword": 1,
+            "paraphrase": 0.5,
+            "multilingual": 0
+          },
+          "hybrid": {
+            "all": 0.75,
+            "keyword": 1,
+            "paraphrase": 0.5,
+            "multilingual": 1
+          }
+        },
+        "accepted": {
+          "lexical": {
+            "all": 0.5,
+            "keyword": 1,
+            "paraphrase": 0.5,
+            "multilingual": 0
+          },
+          "hybrid": {
+            "all": 0.875,
+            "keyword": 1,
+            "paraphrase": 0.75,
+            "multilingual": 1
+          }
+        },
+        "verified": {
+          "lexical": {
+            "all": 0.5,
+            "keyword": 1,
+            "paraphrase": 0.5,
+            "multilingual": 0
+          },
+          "hybrid": {
+            "all": 0.875,
+            "keyword": 1,
+            "paraphrase": 0.75,
+            "multilingual": 1
+          }
+        },
+        "floor": {
+          "lexical": {
+            "all": 0.5,
+            "keyword": 1,
+            "paraphrase": 0.5,
+            "multilingual": 0
+          },
+          "hybrid": {
+            "all": 0.75,
+            "keyword": 1,
+            "paraphrase": 0.5,
+            "multilingual": 1
+          }
+        }
+      },
+      "rows": [
+        {
+          "id": "query-heldout-disconnected-work",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "query-heldout-disconnected-work",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "query-heldout-disconnected-work",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "query-heldout-disconnected-work",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "query-heldout-disconnected-work",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "query-heldout-disconnected-work",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "query-heldout-disconnected-work",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "query-heldout-disconnected-work",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "query-heldout-ephemeral-ownership",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 0,
+          "missing": [
+            "dec-g17nvbca",
+            "mem-peqcrkme"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "query-heldout-ephemeral-ownership",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 0,
+          "missing": [
+            "dec-g17nvbca",
+            "mem-peqcrkme"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "query-heldout-ephemeral-ownership",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 0,
+          "missing": [
+            "dec-g17nvbca",
+            "mem-peqcrkme"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "query-heldout-ephemeral-ownership",
+          "category": "paraphrase",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 0,
+          "missing": [
+            "dec-g17nvbca",
+            "mem-peqcrkme"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "query-heldout-ephemeral-ownership",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 0,
+          "missing": [
+            "dec-g17nvbca",
+            "mem-peqcrkme"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "query-heldout-ephemeral-ownership",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 0.5,
+          "missing": [
+            "mem-peqcrkme"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "query-heldout-ephemeral-ownership",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 0.5,
+          "missing": [
+            "mem-peqcrkme"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "query-heldout-ephemeral-ownership",
+          "category": "paraphrase",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 0,
+          "missing": [
+            "dec-g17nvbca",
+            "mem-peqcrkme"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "query-heldout-withdraw-id",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 0,
+          "missing": [
+            "dec-b0gymeq0"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "query-heldout-withdraw-id",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 0,
+          "missing": [
+            "dec-b0gymeq0"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "query-heldout-withdraw-id",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 0,
+          "missing": [
+            "dec-b0gymeq0"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "query-heldout-withdraw-id",
+          "category": "multilingual",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 0,
+          "missing": [
+            "dec-b0gymeq0"
+          ],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "query-heldout-withdraw-id",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "query-heldout-withdraw-id",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "query-heldout-withdraw-id",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "query-heldout-withdraw-id",
+          "category": "multilingual",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "query-heldout-schema-export",
+          "category": "keyword",
+          "mode": "lexical",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "query-heldout-schema-export",
+          "category": "keyword",
+          "mode": "lexical",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "query-heldout-schema-export",
+          "category": "keyword",
+          "mode": "lexical",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "query-heldout-schema-export",
+          "category": "keyword",
+          "mode": "lexical",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "query-heldout-schema-export",
+          "category": "keyword",
+          "mode": "hybrid",
+          "policy": "original",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "query-heldout-schema-export",
+          "category": "keyword",
+          "mode": "hybrid",
+          "policy": "accepted",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "query-heldout-schema-export",
+          "category": "keyword",
+          "mode": "hybrid",
+          "policy": "verified",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        },
+        {
+          "id": "query-heldout-schema-export",
+          "category": "keyword",
+          "mode": "hybrid",
+          "policy": "floor",
+          "recall": 1,
+          "missing": [],
+          "budgetOk": true,
+          "violations": []
+        }
+      ]
+    }
+  ]
+}

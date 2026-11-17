@@ -1,0 +1,21 @@
+# Written before phrase-query experiments on 2026-11-18; never tune expected refs to a run.
+project: medium
+clock: 2026-10-12T00:00:00Z
+k: 10
+cases:
+  - id: query-heldout-disconnected-work
+    category: paraphrase
+    task: "When my network connection drops, can I continue using the project notebook without a running service?"
+    must_include: [dec-3by2wh28]
+  - id: query-heldout-ephemeral-ownership
+    category: paraphrase
+    task: "When someone is already handling a job, where do we track that temporary ownership separately from saved notes?"
+    must_include: [dec-g17nvbca, mem-peqcrkme]
+  - id: query-heldout-withdraw-id
+    category: multilingual
+    task: "Kalau catatan lama ternyata keliru, apakah riwayatnya dihapus atau diganti dengan catatan baru?"
+    must_include: [dec-b0gymeq0]
+  - id: query-heldout-schema-export
+    category: keyword
+    task: "I am wiring schema generation into the build; how do we export JSON Schema from Zod?"
+    must_include: [dec-094vmt9t]

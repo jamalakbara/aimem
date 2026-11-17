@@ -132,6 +132,30 @@ paraphrase regression. Results and missed-record score components are in
 `fixtures/evals/results/t7-e5-base.json`. E5-base remains an experimental runner,
 not a new supported provider or default. T7's default +0.15 target remains open.
 
+**Further T7 investigation (2026-11-18):** four additional long-form questions
+were written before phrase-query runs (`t7-query-heldout.yaml`). No production
+scoring, default model, original questions or expected refs changed.
+
+| Experiment | Medium paraphrase | Medium multilingual | Finding |
+|------------|-------------------|---------------------|---------|
+| Current MiniLM hybrid | 0.8636 | 0.9091 | Reference |
+| Phrase max / mean | 0.8636 / 0.8636 | 0.7273 / 0.8182 | Regressions |
+| Phrase min / RRF | 0.7273 / 0.8636 | 0.7273 / 0.9091 | Neither meets original target |
+| Qwen3 0.6B q8, last-token pooling | 0.8636 | 0.5455 | Regression with either tested query instruction |
+| Accepted-decision recency policy | 0.8636 | 0.9091 | Improves additional cases, not the original target |
+
+Qwen uses the [ONNX model card's inference setup](https://huggingface.co/onnx-community/Qwen3-Embedding-0.6B-ONNX)
+with a 614 MB explicit download, 1024-dimensional vectors, four-text batches and
+no document instruction; both the supplied web-search instruction and a
+project-notebook instruction were measured. It is not a supported/default model.
+Phrase experiments compare max, mean, min and rank fusion of full-query and
+bounded four-word windows; a separate constraint-clause probe did not improve
+the original target. Accepted-decision recency was tested for **both** lexical and
+hybrid paths, retaining trust/freshness multipliers, so it is not a baseline swap.
+All are diagnostic scripts (`eval-t7-queries`, `eval-t7-qwen`, `eval-t7-constraint`,
+`eval-t7-durable`); results are in `t7-query-phrases.json`, `t7-qwen.json` and
+`t7-durable-policy.json`. T7 remains open and defaults remain unchanged.
+
 Current hybrid misses in score-order top 10:
 
 | Case | Expected ref outside top 10 | Rank | Observation |

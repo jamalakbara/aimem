@@ -1,0 +1,857 @@
+{
+  "model": "Qwen3-Embedding-0.6B-ONNX",
+  "pooling": "last_token",
+  "variants": [
+    {
+      "instruction": "Given a web search query, retrieve relevant passages that answer the query",
+      "rows": [
+        {
+          "name": "medium",
+          "lexical": {
+            "keyword": {
+              "n": 8,
+              "recall": 1,
+              "inBriefing": 1,
+              "violations": 0
+            },
+            "multilingual": {
+              "n": 11,
+              "recall": 0.6364,
+              "inBriefing": 0.6364,
+              "violations": 0
+            },
+            "paraphrase": {
+              "n": 11,
+              "recall": 0.7727,
+              "inBriefing": 0.8636,
+              "violations": 0
+            },
+            "trap": {
+              "n": 4,
+              "recall": 1,
+              "inBriefing": 1,
+              "violations": 0
+            }
+          },
+          "hybrid": {
+            "keyword": {
+              "n": 8,
+              "recall": 1,
+              "inBriefing": 1,
+              "violations": 0
+            },
+            "multilingual": {
+              "n": 11,
+              "recall": 0.5455,
+              "inBriefing": 1,
+              "violations": 0
+            },
+            "paraphrase": {
+              "n": 11,
+              "recall": 0.8636,
+              "inBriefing": 0.9545,
+              "violations": 0
+            },
+            "trap": {
+              "n": 4,
+              "recall": 1,
+              "inBriefing": 1,
+              "violations": 0
+            }
+          },
+          "overall": {
+            "n": 34,
+            "recall": 0.8088,
+            "inBriefing": 0.9853,
+            "violations": 0,
+            "budgetOk": 1,
+            "deterministic": 1
+          }
+        },
+        {
+          "case": "para-who-is-working",
+          "missing": [
+            "mem-peqcrkme"
+          ],
+          "expected": [
+            {
+              "rank": 0
+            }
+          ]
+        },
+        {
+          "case": "ml-id-agent-commit",
+          "missing": [
+            "dec-ek66gxgx"
+          ],
+          "expected": [
+            {
+              "rank": 20,
+              "lexical": 0,
+              "semantic": 0.7946,
+              "paths": 0,
+              "links": 0,
+              "recency": 0.5793,
+              "typeBoost": 0.6,
+              "roleMatch": 1,
+              "trust": 1,
+              "freshness": 1,
+              "total": 0.3366
+            }
+          ]
+        },
+        {
+          "case": "ml-id-delete",
+          "missing": [
+            "dec-b0gymeq0"
+          ],
+          "expected": [
+            {
+              "rank": 19,
+              "lexical": 0,
+              "semantic": 0.8018,
+              "paths": 0,
+              "links": 0,
+              "recency": 0.0268,
+              "typeBoost": 0.6,
+              "roleMatch": 1,
+              "trust": 1,
+              "freshness": 1,
+              "total": 0.2831
+            }
+          ]
+        },
+        {
+          "case": "hard-para-offline-first",
+          "missing": [
+            "dec-3by2wh28"
+          ],
+          "expected": [
+            {
+              "rank": 24,
+              "lexical": 0,
+              "semantic": 0.9046,
+              "paths": 0,
+              "links": 0,
+              "recency": 0.0147,
+              "typeBoost": 0.6,
+              "roleMatch": 1,
+              "trust": 1,
+              "freshness": 1,
+              "total": 0.3076
+            }
+          ]
+        },
+        {
+          "case": "hard-ml-id-hapus",
+          "missing": [
+            "dec-b0gymeq0"
+          ],
+          "expected": [
+            {
+              "rank": 31,
+              "lexical": 0,
+              "semantic": 0.6174,
+              "paths": 0,
+              "links": 0,
+              "recency": 0.0268,
+              "typeBoost": 0.6,
+              "roleMatch": 1,
+              "trust": 1,
+              "freshness": 1,
+              "total": 0.237
+            }
+          ]
+        },
+        {
+          "case": "hard-ml-id-bahasa",
+          "missing": [
+            "dec-mtbcq7yr"
+          ],
+          "expected": [
+            {
+              "rank": 48,
+              "lexical": 0,
+              "semantic": 0,
+              "paths": 0,
+              "links": 0,
+              "recency": 0.429,
+              "typeBoost": 0.6,
+              "roleMatch": 1,
+              "trust": 1,
+              "freshness": 1,
+              "total": 0.1229
+            }
+          ]
+        },
+        {
+          "case": "hard-ml-en-oneline",
+          "missing": [
+            "mem-dcsz2htx"
+          ],
+          "expected": [
+            {
+              "rank": 22,
+              "lexical": 0,
+              "semantic": 0.797,
+              "paths": 0,
+              "links": 0,
+              "recency": 0.6354,
+              "typeBoost": 0.5,
+              "roleMatch": 1,
+              "trust": 1,
+              "freshness": 1,
+              "total": 0.3378
+            }
+          ]
+        },
+        {
+          "name": "t7-heldout",
+          "lexical": {
+            "multilingual": {
+              "n": 2,
+              "recall": 0.5,
+              "inBriefing": 0.5,
+              "violations": 0
+            },
+            "paraphrase": {
+              "n": 4,
+              "recall": 0.25,
+              "inBriefing": 1,
+              "violations": 0
+            }
+          },
+          "hybrid": {
+            "multilingual": {
+              "n": 2,
+              "recall": 0.5,
+              "inBriefing": 0.5,
+              "violations": 0
+            },
+            "paraphrase": {
+              "n": 4,
+              "recall": 0.5,
+              "inBriefing": 1,
+              "violations": 0
+            }
+          },
+          "overall": {
+            "n": 6,
+            "recall": 0.5,
+            "inBriefing": 0.8333,
+            "violations": 0,
+            "budgetOk": 1,
+            "deterministic": 1
+          }
+        },
+        {
+          "case": "heldout-disconnected-laptop",
+          "missing": [
+            "dec-3by2wh28"
+          ],
+          "expected": [
+            {
+              "rank": 13,
+              "lexical": 0.3082,
+              "semantic": 0.7869,
+              "paths": 0,
+              "links": 0,
+              "recency": 0.0147,
+              "typeBoost": 0.6,
+              "roleMatch": 1,
+              "trust": 1,
+              "freshness": 1,
+              "total": 0.3552
+            }
+          ]
+        },
+        {
+          "case": "heldout-present-ownership",
+          "missing": [
+            "dec-g17nvbca"
+          ],
+          "expected": [
+            {
+              "rank": 17,
+              "lexical": 0.3469,
+              "semantic": 0.6938,
+              "paths": 0,
+              "links": 0,
+              "recency": 0.0177,
+              "typeBoost": 0.6,
+              "roleMatch": 1,
+              "trust": 1,
+              "freshness": 1,
+              "total": 0.342
+            }
+          ]
+        },
+        {
+          "case": "heldout-id-lint",
+          "missing": [
+            "mem-rj2t0xj9"
+          ],
+          "expected": [
+            {
+              "rank": 0
+            }
+          ]
+        },
+        {
+          "name": "t7-query-heldout",
+          "lexical": {
+            "keyword": {
+              "n": 1,
+              "recall": 1,
+              "inBriefing": 1,
+              "violations": 0
+            },
+            "multilingual": {
+              "n": 1,
+              "recall": 0,
+              "inBriefing": 0,
+              "violations": 0
+            },
+            "paraphrase": {
+              "n": 2,
+              "recall": 0.5,
+              "inBriefing": 0.75,
+              "violations": 0
+            }
+          },
+          "hybrid": {
+            "keyword": {
+              "n": 1,
+              "recall": 1,
+              "inBriefing": 1,
+              "violations": 0
+            },
+            "multilingual": {
+              "n": 1,
+              "recall": 0,
+              "inBriefing": 1,
+              "violations": 0
+            },
+            "paraphrase": {
+              "n": 2,
+              "recall": 0,
+              "inBriefing": 1,
+              "violations": 0
+            }
+          },
+          "overall": {
+            "n": 4,
+            "recall": 0.25,
+            "inBriefing": 1,
+            "violations": 0,
+            "budgetOk": 1,
+            "deterministic": 1
+          }
+        },
+        {
+          "case": "query-heldout-disconnected-work",
+          "missing": [
+            "dec-3by2wh28"
+          ],
+          "expected": [
+            {
+              "rank": 18,
+              "lexical": 0.4612,
+              "semantic": 0.5821,
+              "paths": 0,
+              "links": 0,
+              "recency": 0.0147,
+              "typeBoost": 0.6,
+              "roleMatch": 1,
+              "trust": 1,
+              "freshness": 1,
+              "total": 0.3423
+            }
+          ]
+        },
+        {
+          "case": "query-heldout-ephemeral-ownership",
+          "missing": [
+            "dec-g17nvbca",
+            "mem-peqcrkme"
+          ],
+          "expected": [
+            {
+              "rank": 21,
+              "lexical": 0.1269,
+              "semantic": 0.8298,
+              "paths": 0,
+              "links": 0,
+              "recency": 0.0177,
+              "typeBoost": 0.6,
+              "roleMatch": 1,
+              "trust": 1,
+              "freshness": 1,
+              "total": 0.321
+            },
+            {
+              "rank": 46,
+              "lexical": 0,
+              "semantic": 0.7666,
+              "paths": 0,
+              "links": 0,
+              "recency": 0.5929,
+              "typeBoost": 0.5,
+              "roleMatch": 1,
+              "trust": 0.7,
+              "freshness": 1,
+              "total": 0.2281
+            }
+          ]
+        },
+        {
+          "case": "query-heldout-withdraw-id",
+          "missing": [
+            "dec-b0gymeq0"
+          ],
+          "expected": [
+            {
+              "rank": 18,
+              "lexical": 0,
+              "semantic": 0.8577,
+              "paths": 0,
+              "links": 0,
+              "recency": 0.0268,
+              "typeBoost": 0.6,
+              "roleMatch": 1,
+              "trust": 1,
+              "freshness": 1,
+              "total": 0.2971
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "instruction": "Given a question about a software project, retrieve relevant notebook records that answer the question",
+      "rows": [
+        {
+          "name": "medium",
+          "lexical": {
+            "keyword": {
+              "n": 8,
+              "recall": 1,
+              "inBriefing": 1,
+              "violations": 0
+            },
+            "multilingual": {
+              "n": 11,
+              "recall": 0.6364,
+              "inBriefing": 0.6364,
+              "violations": 0
+            },
+            "paraphrase": {
+              "n": 11,
+              "recall": 0.7727,
+              "inBriefing": 0.8636,
+              "violations": 0
+            },
+            "trap": {
+              "n": 4,
+              "recall": 1,
+              "inBriefing": 1,
+              "violations": 0
+            }
+          },
+          "hybrid": {
+            "keyword": {
+              "n": 8,
+              "recall": 1,
+              "inBriefing": 1,
+              "violations": 0
+            },
+            "multilingual": {
+              "n": 11,
+              "recall": 0.5455,
+              "inBriefing": 1,
+              "violations": 0
+            },
+            "paraphrase": {
+              "n": 11,
+              "recall": 0.8636,
+              "inBriefing": 0.9545,
+              "violations": 0
+            },
+            "trap": {
+              "n": 4,
+              "recall": 1,
+              "inBriefing": 1,
+              "violations": 0
+            }
+          },
+          "overall": {
+            "n": 34,
+            "recall": 0.8088,
+            "inBriefing": 0.9853,
+            "violations": 0,
+            "budgetOk": 1,
+            "deterministic": 1
+          }
+        },
+        {
+          "case": "para-who-is-working",
+          "missing": [
+            "mem-peqcrkme"
+          ],
+          "expected": [
+            {
+              "rank": 0
+            }
+          ]
+        },
+        {
+          "case": "ml-id-delete",
+          "missing": [
+            "dec-b0gymeq0"
+          ],
+          "expected": [
+            {
+              "rank": 11,
+              "lexical": 0,
+              "semantic": 0.9295,
+              "paths": 0,
+              "links": 0,
+              "recency": 0.0268,
+              "typeBoost": 0.6,
+              "roleMatch": 1,
+              "trust": 1,
+              "freshness": 1,
+              "total": 0.315
+            }
+          ]
+        },
+        {
+          "case": "hard-para-offline-first",
+          "missing": [
+            "dec-3by2wh28"
+          ],
+          "expected": [
+            {
+              "rank": 33,
+              "lexical": 0,
+              "semantic": 0.8021,
+              "paths": 0,
+              "links": 0,
+              "recency": 0.0147,
+              "typeBoost": 0.6,
+              "roleMatch": 1,
+              "trust": 1,
+              "freshness": 1,
+              "total": 0.282
+            }
+          ]
+        },
+        {
+          "case": "hard-ml-id-hapus",
+          "missing": [
+            "dec-b0gymeq0"
+          ],
+          "expected": [
+            {
+              "rank": 35,
+              "lexical": 0,
+              "semantic": 0.6947,
+              "paths": 0,
+              "links": 0,
+              "recency": 0.0268,
+              "typeBoost": 0.6,
+              "roleMatch": 1,
+              "trust": 1,
+              "freshness": 1,
+              "total": 0.2564
+            }
+          ]
+        },
+        {
+          "case": "hard-ml-id-rahasia",
+          "missing": [
+            "mem-nrdpy59z"
+          ],
+          "expected": [
+            {
+              "rank": 11,
+              "lexical": 0,
+              "semantic": 0.6749,
+              "paths": 0,
+              "links": 0,
+              "recency": 0.9857,
+              "typeBoost": 0.5,
+              "roleMatch": 1,
+              "trust": 1,
+              "freshness": 1,
+              "total": 0.3423
+            }
+          ]
+        },
+        {
+          "case": "hard-ml-id-bahasa",
+          "missing": [
+            "dec-mtbcq7yr"
+          ],
+          "expected": [
+            {
+              "rank": 53,
+              "lexical": 0,
+              "semantic": 0,
+              "paths": 0,
+              "links": 0,
+              "recency": 0.429,
+              "typeBoost": 0.6,
+              "roleMatch": 1,
+              "trust": 1,
+              "freshness": 1,
+              "total": 0.1229
+            }
+          ]
+        },
+        {
+          "case": "hard-ml-en-oneline",
+          "missing": [
+            "mem-dcsz2htx"
+          ],
+          "expected": [
+            {
+              "rank": 39,
+              "lexical": 0,
+              "semantic": 0.5045,
+              "paths": 0,
+              "links": 0,
+              "recency": 0.6354,
+              "typeBoost": 0.5,
+              "roleMatch": 1,
+              "trust": 1,
+              "freshness": 1,
+              "total": 0.2647
+            }
+          ]
+        },
+        {
+          "name": "t7-heldout",
+          "lexical": {
+            "multilingual": {
+              "n": 2,
+              "recall": 0.5,
+              "inBriefing": 0.5,
+              "violations": 0
+            },
+            "paraphrase": {
+              "n": 4,
+              "recall": 0.25,
+              "inBriefing": 1,
+              "violations": 0
+            }
+          },
+          "hybrid": {
+            "multilingual": {
+              "n": 2,
+              "recall": 0.5,
+              "inBriefing": 0.5,
+              "violations": 0
+            },
+            "paraphrase": {
+              "n": 4,
+              "recall": 0.5,
+              "inBriefing": 1,
+              "violations": 0
+            }
+          },
+          "overall": {
+            "n": 6,
+            "recall": 0.5,
+            "inBriefing": 0.8333,
+            "violations": 0,
+            "budgetOk": 1,
+            "deterministic": 1
+          }
+        },
+        {
+          "case": "heldout-disconnected-laptop",
+          "missing": [
+            "dec-3by2wh28"
+          ],
+          "expected": [
+            {
+              "rank": 12,
+              "lexical": 0.3082,
+              "semantic": 0.897,
+              "paths": 0,
+              "links": 0,
+              "recency": 0.0147,
+              "typeBoost": 0.6,
+              "roleMatch": 1,
+              "trust": 1,
+              "freshness": 1,
+              "total": 0.3828
+            }
+          ]
+        },
+        {
+          "case": "heldout-present-ownership",
+          "missing": [
+            "dec-g17nvbca"
+          ],
+          "expected": [
+            {
+              "rank": 17,
+              "lexical": 0.3469,
+              "semantic": 0.668,
+              "paths": 0,
+              "links": 0,
+              "recency": 0.0177,
+              "typeBoost": 0.6,
+              "roleMatch": 1,
+              "trust": 1,
+              "freshness": 1,
+              "total": 0.3355
+            }
+          ]
+        },
+        {
+          "case": "heldout-id-lint",
+          "missing": [
+            "mem-rj2t0xj9"
+          ],
+          "expected": [
+            {
+              "rank": 0
+            }
+          ]
+        },
+        {
+          "name": "t7-query-heldout",
+          "lexical": {
+            "keyword": {
+              "n": 1,
+              "recall": 1,
+              "inBriefing": 1,
+              "violations": 0
+            },
+            "multilingual": {
+              "n": 1,
+              "recall": 0,
+              "inBriefing": 0,
+              "violations": 0
+            },
+            "paraphrase": {
+              "n": 2,
+              "recall": 0.5,
+              "inBriefing": 0.75,
+              "violations": 0
+            }
+          },
+          "hybrid": {
+            "keyword": {
+              "n": 1,
+              "recall": 1,
+              "inBriefing": 1,
+              "violations": 0
+            },
+            "multilingual": {
+              "n": 1,
+              "recall": 0,
+              "inBriefing": 1,
+              "violations": 0
+            },
+            "paraphrase": {
+              "n": 2,
+              "recall": 0,
+              "inBriefing": 1,
+              "violations": 0
+            }
+          },
+          "overall": {
+            "n": 4,
+            "recall": 0.25,
+            "inBriefing": 1,
+            "violations": 0,
+            "budgetOk": 1,
+            "deterministic": 1
+          }
+        },
+        {
+          "case": "query-heldout-disconnected-work",
+          "missing": [
+            "dec-3by2wh28"
+          ],
+          "expected": [
+            {
+              "rank": 14,
+              "lexical": 0.4612,
+              "semantic": 0.6405,
+              "paths": 0,
+              "links": 0,
+              "recency": 0.0147,
+              "typeBoost": 0.6,
+              "roleMatch": 1,
+              "trust": 1,
+              "freshness": 1,
+              "total": 0.3569
+            }
+          ]
+        },
+        {
+          "case": "query-heldout-ephemeral-ownership",
+          "missing": [
+            "dec-g17nvbca",
+            "mem-peqcrkme"
+          ],
+          "expected": [
+            {
+              "rank": 27,
+              "lexical": 0.1269,
+              "semantic": 0.7674,
+              "paths": 0,
+              "links": 0,
+              "recency": 0.0177,
+              "typeBoost": 0.6,
+              "roleMatch": 1,
+              "trust": 1,
+              "freshness": 1,
+              "total": 0.3054
+            },
+            {
+              "rank": 48,
+              "lexical": 0,
+              "semantic": 0.6797,
+              "paths": 0,
+              "links": 0,
+              "recency": 0.5929,
+              "typeBoost": 0.5,
+              "roleMatch": 1,
+              "trust": 0.7,
+              "freshness": 1,
+              "total": 0.213
+            }
+          ]
+        },
+        {
+          "case": "query-heldout-withdraw-id",
+          "missing": [
+            "dec-b0gymeq0"
+          ],
+          "expected": [
+            {
+              "rank": 16,
+              "lexical": 0,
+              "semantic": 1,
+              "paths": 0,
+              "links": 0,
+              "recency": 0.0268,
+              "typeBoost": 0.6,
+              "roleMatch": 1,
+              "trust": 1,
+              "freshness": 1,
+              "total": 0.3327
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "dtype": "q8"
+}
