@@ -160,3 +160,20 @@ Server mode: same scenarios through the API with parallel requests, plus transac
 - Concurrency suite and nightly stress pass for 7 consecutive nights.
 - Security checklist (09 §9) complete.
 - Dogfood: 2 projects × 2 weeks with the author's real agents; issues triaged.
+
+## Hosted CI runner capacity
+
+CI keeps Ubuntu, macOS and Windows on Node 22 and 24, with identical lint,
+typecheck, full-test and strict notebook-validation steps. macOS is pinned to
+`macos-15-intel`: on 2026-11-18 local time, GitHub cancelled queued Arm jobs with
+"The job was not acquired by Runner of type hosted even after multiple attempts"
+and a macOS arm64 capacity notice. Intel is a supported standard runner
+([GitHub runner reference](https://docs.github.com/en/actions/reference/runners/github-hosted-runners)).
+This changes macOS architecture coverage from Arm to Intel; it does not skip
+checks. Revisit Arm coverage when hosted capacity is reliable.
+
+The Intel job also exposed an existing test assumption: optional local inference
+may be unavailable at runtime import, before a model-cache lookup. Injected tests
+cover both unavailable-runtime and missing-model fallback, and the real offline
+loader smoke check accepts only those two actionable errors. No download or
+provider-success requirement is removed.
