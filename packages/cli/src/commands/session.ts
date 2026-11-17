@@ -18,6 +18,7 @@ import {
 } from "@aimem/core";
 import { RECORD_TYPES, SPEC_VERSION, STATUSES } from "@aimem/schema";
 import type { CliDeps, CommandResult, GlobalOptions } from "../deps.js";
+import { developmentBuildCheck } from "./development-build.js";
 import { embeddingStatus, writeDeps } from "./embedder.js";
 
 export interface HandoffOptions extends HandoffSections {
@@ -135,6 +136,8 @@ export async function doctor(deps: CliDeps, g: GlobalOptions): Promise<CommandRe
   const nb = await loadProject(deps.fs, g.dir);
   const d = await gitDiagnostics(deps.git, nb.root);
   const checks: Check[] = [];
+  const build = await developmentBuildCheck(deps.fs, deps.cliEntry);
+  if (build) checks.push(build);
   if (nb.config.retrieval?.rerank === "cross-encoder") {
     try {
       const status = await deps.loadRanker?.(false);

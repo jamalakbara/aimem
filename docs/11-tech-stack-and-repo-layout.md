@@ -139,6 +139,12 @@ node packages/cli/dist/index.js --help
 ```
 Dogfooding: from M2, run `aimem init` in this repo and use it while building.
 
+After source changes or branch switches, run `pnpm build` before using an
+npm-linked CLI or MCP binary. `aimem doctor` diagnoses missing/older compiled
+output in recognized development checkouts (04, development-build freshness).
+The binary path and optional filesystem timestamp port are injected; normal
+installed packages do not scan the user's notebook source.
+
 ## 6. CI pipeline (GitHub Actions)
 1. Install, lint, typecheck.
 2. Unit tests (core/schema/adapters) — matrix: Linux + macOS, Node LTS and previous LTS.

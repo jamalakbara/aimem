@@ -266,6 +266,17 @@ Error codes (stable) and their exit codes:
 
 `aimem validate`: with errors it fails with `INVALID_RECORD` and `error.details = {errors, warnings, issues}` (exit 2); otherwise `ok: true` with the same `data`, exit 1 under `--strict` if there are warnings, else 0.
 
+### Development-build freshness
+
+In a recognized aimem source checkout, `doctor` compares TypeScript files in the
+CLI and its runtime workspace packages against corresponding built JS files.
+Missing or older output produces a `development build` warning suggesting
+`pnpm build`. The check inspects the running binary's checkout, even when the
+selected notebook is elsewhere. Published installs skip it. Unavailable metadata
+is informational; doctor still exits 0. This is a modification-time heuristic,
+not a content hash. The JSON envelope is unchanged; `checks[]` gains this entry
+only for recognized development builds.
+
 ## 8. Example sessions
 
 **Agent start**
