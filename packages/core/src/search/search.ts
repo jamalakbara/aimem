@@ -31,7 +31,7 @@ export interface SearchOptions {
 
 export interface SearchHit {
   record: IndexedRecord;
-  /** Raw BM25 score. */
+  /** BM25/hybrid relevance after the handoff prior, before final normalisation. */
   raw: number;
   /** Normalised to the best hit: 0 < score ≤ 1. */
   score: number;
@@ -67,6 +67,15 @@ export interface SearchSemantic {
 }
 
 const SEMANTIC_TOP_N = 50;
+/** Session summaries have a lower prior than direct durable answers (dogfood regression). */
+const HANDOFF_RELEVANCE = 0.5;
+const HISTORY_QUERY =
+  /\b(handoffs?|sessions?|history|sesi|riwayat)\b|\bwhat happened\b|\bexperiment results\b/iu;
+
+/** History queries retain their original relevance; other queries prefer durable answers. */
+export function searchHandoffPrior(query: string): number {
+  return HISTORY_QUERY.test(query) ? 1 : HANDOFF_RELEVANCE;
+}
 
 export function search(
   index: NotebookIndex,
@@ -115,7 +124,9 @@ export function search(
   }
   const hits = candidates.flatMap((r) => {
     const s = fused.get(key(r));
-    return s ? [{ record: r, raw: s, score: 0 }] : [];
+    return s
+      ? [{ record: r, raw: s * (r.type === "handoff" ? searchHandoffPrior(query) : 1), score: 0 }]
+      : [];
   });
   hits.sort((a, b) => b.raw - a.raw || (a.record.id < b.record.id ? -1 : a.record.id > b.record.id ? 1 : 0));
   const max = hits[0]?.raw ?? 1;

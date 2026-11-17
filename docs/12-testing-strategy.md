@@ -120,6 +120,24 @@ in [19 — T8 quality report](19-t8-quality-report.md). The optional runner
 uses the unchanged 22 answer cases, and rejects quality comparisons on provider
 errors. It needs a Claude Code login and a cached optional BGE ranker.
 
+### 3.3 Search dogfood regressions
+
+`core/test/search-handoffs.test.ts` uses sanitized build/test notes in
+`fixtures/evals/search-dogfood.yaml`: direct English/Indonesian answers, explicit
+history intent, and handoff-only filtering. PR semantic inputs are deterministic
+test doubles. After building, `node scripts/eval-search-handoffs.mjs` compares
+cached MiniLM results on medium plus those notes; `--notebook` evaluates the
+current notebook, excluding the bug report that repeats the exact questions.
+The runner reconstructs pre-prior order by removing the final handoff multiplier.
+It never downloads a model. Notebook reports capture the corpus at run time.
+
+`--answers` explicitly uses the Claude Code login to generate answers from the
+unchanged 22 synthetic medium cases, compares against the recorded T8 baseline,
+and rejects provider errors. It sends synthetic fixture records, not notebook
+records. Results and limitations are in 15 §7. The handoff fix deliberately changes
+ten framed selections in `ask-medium.lexical.json`; support recall is unchanged
+and the default context baseline remains unchanged.
+
 ## 4. Concurrency tests
 
 Scenarios (git mode, bare remote, N clones as separate dirs):

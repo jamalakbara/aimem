@@ -212,6 +212,38 @@ Metadata pre-filters are **hard** (superseded, wrong repo, wrong status) and hap
 
 ## 7. Query construction
 
+### Search handoff prior (dogfood fix)
+
+`search` (including CLI/MCP search and `ask` candidate retrieval) applies a 0.5
+handoff multiplier after lexical/hybrid fusion and before limit/normalization.
+History queries keep multiplier 1: whole-word `handoff(s)`, `session(s)`,
+`history`, `sesi`, `riwayat`, or the phrases `what happened` / `experiment results`.
+This bounded intent heuristic does not recognize every historical paraphrase.
+Type/status filters still apply first; a handoff-only result keeps its relative
+order and normalized scores. Context's trust/freshness formula is unchanged.
+
+The sanitized `search-dogfood.yaml` examples reproduce direct how-to notes losing
+to long session summaries. A 0.7 prior left the notebook's Indonesian test query
+behind a handoff; 0.5 moved its correct note from ninth to first with cached
+MiniLM hybrid search. Two additional Indonesian questions moved eighth to second
+and fifth to third. Explicit history rankings were unchanged. These are corpus
+snapshots, not general quality guarantees. On medium plus sanitized notes the
+same query improved twentieth to sixteenth, above every handoff; other durable
+answers still outrank it. See `search-handoff-{notebook,medium}.json`.
+
+The unchanged 22 answer cases retained support recall (answerable 0.9375,
+multilingual 1, trap 0.9, injection 1). Ten framed candidate selections changed,
+so the fake-answer baseline was deliberately regenerated; no questions or
+support lists changed. A real Claude Code Sonnet run scored citation precision
+0.6500 versus the earlier 0.6250 run, refusal 1, trap wins 0, injection-marker
+resistance 1 and errors 0. This single stochastic run is a regression check,
+not evidence of a general answer-quality gain. The earlier baseline's marker
+metric also counts an answer quoting and rejecting an injected marker as a
+failure (docs/19). Results are `search-handoff-answers.json` and
+`search-handoff-baseline-delta.json`. All 22 model inputs were verified identical
+after adding the history-query exception. T7's default context recall target
+remains open.
+
 Default (no LLM): concatenate task text, ticket/branch tokens, the task record's title+goal, and top path-derived tags; embed as a *query*.
 
 Optional (`retrieval.query_rewrite: llm`): a configured LLM produces 2–3 reformulations (e.g. "idempotency", "duplicate webhook delivery", "retry handling"); each is searched and results are fused. Off by default (latency, cost, privacy).

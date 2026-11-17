@@ -1,0 +1,73 @@
+# Sanitized technical excerpts from aimem dogfooding notes; authored before the ranking change.
+# Semantic scores are deterministic PR-test inputs, not model-quality claims.
+records:
+  - id: mem-g48me62t
+    type: memory
+    title: How to build, test and evaluate
+    summary: Run pnpm build, pnpm lint, pnpm typecheck and pnpm test; pnpm eval measures retrieval quality.
+    body: |
+      Setup uses pnpm install. Build with pnpm build.
+      Before committing run pnpm lint, pnpm typecheck and pnpm test.
+      Tests build the workspace first and exercise the built binary.
+      Run pnpm eval for retrieval quality; the real-model tier is optional.
+  - id: hnd-8f3zwsag
+    type: handoff
+    title: Session results from the reranking experiment
+    summary: Completed an experiment with held-out questions and recorded test results.
+    body: |
+      ## Done
+      Completed an eval-only reranking experiment. Test questions were committed before runs.
+      The held-out tests had no forbidden references. Lint and typecheck passed.
+      ## Not done
+      Production ranking, adversarial tests and bounded prompts.
+      ## Next
+      Review the experiment, then plan the optional ranking slice and run tests.
+      ## Blocked
+      none
+      ## Notes for next agent
+      Results on one corpus do not establish generalization.
+  - id: hnd-thyjj57w
+    type: handoff
+    title: Session plan for retrieval tests
+    summary: Inspected baseline scoring and prepared a plan for testing.
+    body: |
+      ## Done
+      Inspected the baseline, scoring and real-model gate.
+      ## Not done
+      Scoring changes and a fresh model run.
+      ## Next
+      Reproduce the baseline, inspect misses, add regression tests and report eval deltas.
+      ## Blocked
+      Waiting for plan approval.
+      ## Notes for next agent
+      Keep keyword cases and compare multilingual queries.
+  - id: mem-00000001
+    type: memory
+    title: Integer currency amounts
+    summary: Currency amounts are stored as integer minor units.
+    body: Use integers for money to avoid floating point rounding.
+cases:
+  - id: english-tests
+    query: how to run tests
+    expected: mem-g48me62t
+  - id: indonesian-tests
+    query: bagaimana cara menjalankan tes?
+    expected: mem-g48me62t
+    semantic:
+      mem-g48me62t: 0.82
+      hnd-8f3zwsag: 0.94
+      hnd-thyjj57w: 0.91
+      mem-00000001: 0.2
+  - id: explicit-history
+    query: reranking experiment results
+    expected: hnd-8f3zwsag
+real_cases:
+  - id: indonesian-test-steps
+    query: bagaimana langkah menjalankan pengujian proyek?
+    expected: mem-g48me62t
+  - id: indonesian-build-checks
+    query: cara membangun proyek dan memeriksa kualitasnya?
+    expected: mem-g48me62t
+  - id: baseline-session-history
+    query: what happened during the retrieval baseline investigation?
+    expected: hnd-thyjj57w

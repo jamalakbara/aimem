@@ -1,0 +1,27 @@
+{
+  "before": {
+    "answerable": 0.9375,
+    "multilingual": 1,
+    "trap": 0.9,
+    "injection": 1
+  },
+  "after": {
+    "answerable": 0.9375,
+    "multilingual": 1,
+    "trap": 0.9,
+    "injection": 1
+  },
+  "changedSelections": [
+    "ans-zod-version",
+    "ans-claims",
+    "ans-yaml-digits",
+    "ans-google-auth",
+    "ml-token-estimate",
+    "ml-index-md",
+    "trap-odoo-v1",
+    "trap-embeddings",
+    "trap-agent-commits",
+    "trap-decision-default"
+  ],
+  "realInputsVerified": 22
+}
