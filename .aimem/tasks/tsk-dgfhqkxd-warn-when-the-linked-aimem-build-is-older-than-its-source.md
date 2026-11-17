@@ -4,23 +4,23 @@ id: tsk-dgfhqkxd
 type: task
 title: Warn when the linked aimem build is older than its source
 summary: A stale dist behind npm link silently broke the MCP server; doctor (or the CLI at start-up) should detect it.
-status: open
+status: done
 trust: agent
 roles: [dev]
 tags: [tooling, dogfood]
 paths: [packages/cli/**]
 author: agent:claude-code
 created: 2026-10-18T15:42:38Z
-updated: 2026-10-18T15:42:38Z
+updated: 2026-11-17T22:11:36Z
 priority: p2
 ---
 
 ## Goal
-Running a stale build of aimem is noticed before it causes confusing failures.
+Running a stale development build is noticed before it causes confusing failures.
 
 ## Acceptance criteria
-- [ ] `aimem doctor` reports when the running build is older than the checked-out source (dev checkouts only)
-- [ ] Decide whether packaging (installing a built package instead of a link) removes the need
+- [x] Doctor warns about missing/older built JS in recognized development checkouts
+- [x] Published installs skip this diagnostic; built packaging avoids the linked-source problem
 
 ## Notes
-Found 2026-10-18: Claude Code's aimem MCP server failed with "Connection closed" because the linked dist predated `serve mcp`. Workaround recorded as a gotcha memory.
+Implemented in PR #52. Optional injected stat and CLI entry metadata; source/output timestamps across schema/core/adapters/MCP/CLI. Read-only, no rebuild/download, doctor exit remains 0. Tests cover fresh/stale/missing outputs, installed packages and unavailable metadata. Merged in PR #52 after all six OS/Node checks passed.

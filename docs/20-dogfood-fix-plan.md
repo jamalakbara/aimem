@@ -19,3 +19,22 @@ Status: approved on 2026-11-18. These are separate slices after the T7–T9 work
   handoff filters useful and inspect real eval deltas before choosing a weight.
 - Preserve all existing uncommitted notebook notes. One slice per PR, tests first,
   documented JSON/exit behavior, lint/typecheck/tests, and a final handoff.
+
+## Implementation evidence (2026-11-18)
+
+| Slice | PR | Validation |
+|-------|----|------------|
+| Agent commits on main | [#51](https://github.com/jamalakbara/aimem/pull/51) | Real git default/feature/detached/custom-default cases; deliberate staged-result JSON snapshots; 834 tests passed, one skipped. |
+| Stale linked build | [#52](https://github.com/jamalakbara/aimem/pull/52) | Injected timestamps/entry path; fresh/stale/missing/installed/unavailable cases; 838 tests passed, one skipped. |
+| Long handoffs dominate search | [#53](https://github.com/jamalakbara/aimem/pull/53) | Test-first sanitized queries; cached MiniLM notebook/medium and real Sonnet answer reports; 846 tests passed, one skipped. |
+
+Each slice passed lint, typecheck and strict notebook validation locally. Search's
+0.5 prior exempts explicit history terms; default context eval is unchanged, and
+answer support recall is unchanged despite ten deliberate candidate-selection
+baseline changes. See docs/12 §3.3 and docs/15 §7 for metrics and limitations.
+All three slices merged on 2026-11-18 after all six OS/Node checks passed.
+[CI repair #54](https://github.com/jamalakbara/aimem/pull/54) uses supported Intel
+macOS runners after Arm runner-acquisition failures, and tests both optional
+inference-runtime failure states (docs/12). The final suite passes 848 tests,
+with one skipped. The task audit records 11 done and T7 open: its +0.15 default
+paraphrase target remains unmet (+0.0909).
