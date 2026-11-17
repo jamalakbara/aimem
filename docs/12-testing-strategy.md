@@ -161,3 +161,9 @@ and a macOS arm64 capacity notice. Intel is a supported standard runner
 ([GitHub runner reference](https://docs.github.com/en/actions/reference/runners/github-hosted-runners)).
 This changes macOS architecture coverage from Arm to Intel; it does not skip
 checks. Revisit Arm coverage when hosted capacity is reliable.
+
+The Intel job also exposed an existing test assumption: optional local inference
+may be unavailable at runtime import, before a model-cache lookup. Injected tests
+cover both unavailable-runtime and missing-model fallback, and the real offline
+loader smoke check accepts only those two actionable errors. No download or
+provider-success requirement is removed.
