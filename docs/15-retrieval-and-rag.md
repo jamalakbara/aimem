@@ -200,6 +200,28 @@ Deterministic, from `links` / `supersedes`:
 for `ask` only; `context --deep` remains reserved. `cross-encoder` is not implemented
 and `ask` warns and uses its original selection.
 
+The local cross-encoder core uses paired query/document classification through
+Transformers.js (the existing optional runtime). The small candidate is the
+[official multilingual MiniLM cross-encoder](https://huggingface.co/cross-encoder/mmarco-mMiniLMv2-L12-H384-v1),
+using `onnx/model_quint8_avx2.onnx`; the comparison candidate is
+[BGE v2 M3](https://huggingface.co/onnx-community/bge-reranker-v2-m3-ONNX).
+Inference is local, batches four pairs with a 512-token limit, and converts the
+single relevance logit to a sigmoid score. Ranker text is capped at 2400 characters
+per eligible record, at most 50 records, with a 4096-character query cap.
+`no-embed` and secret-flagged records are excluded before candidate truncation.
+Invalid logits or unavailable models preserve the original ordering. Search
+multiplies relevance by trust/freshness; context replaces its text relevance
+component with half the ranker score and keeps existing metadata/trust/freshness
+weights. Unranked candidates follow the ranked pool in their original order;
+briefing pin and packing rules still apply. Core loaders prohibit downloads unless
+explicitly requested; adapter setup and diagnostics are delivered separately.
+
+`node scripts/eval-local-ranker.mjs --model=minilm --download` compares production
+context scoring before/after ranking on medium and T7's additional questions;
+omit `--download` to require a cached model. `--model=bge` compares the larger
+candidate. These runs send only synthetic fixture text to local inference and
+write separate result files. They do not change the default retrieval path.
+
 To enable, set `retrieval.rerank: llm` alongside `retrieval.llm.provider: claude-cli`
 and `retrieval.llm.allow_remote: true` in `.aimem/project.yaml`. This uses the existing
 Claude Code login; no Anthropic API key is needed. An additional model request sends

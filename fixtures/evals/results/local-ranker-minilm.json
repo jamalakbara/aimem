@@ -1,0 +1,452 @@
+{
+  "model": "minilm",
+  "loadMs": 1479,
+  "summaries": {
+    "medium": {
+      "all": {
+        "n": 34,
+        "baseline": 0.9264705882352942,
+        "recall": 0.8382352941176471
+      },
+      "keyword": {
+        "n": 8,
+        "baseline": 1,
+        "recall": 1
+      },
+      "paraphrase": {
+        "n": 11,
+        "baseline": 0.8636363636363636,
+        "recall": 0.7727272727272727
+      },
+      "multilingual": {
+        "n": 11,
+        "baseline": 0.9090909090909091,
+        "recall": 0.7272727272727273
+      },
+      "trap": {
+        "n": 4,
+        "baseline": 1,
+        "recall": 1
+      }
+    },
+    "t7-heldout": {
+      "all": {
+        "n": 6,
+        "baseline": 0.4166666666666667,
+        "recall": 0.4166666666666667
+      },
+      "paraphrase": {
+        "n": 4,
+        "baseline": 0.5,
+        "recall": 0.25
+      },
+      "multilingual": {
+        "n": 2,
+        "baseline": 0.25,
+        "recall": 0.75
+      }
+    }
+  },
+  "results": [
+    {
+      "set": "medium",
+      "case": "kw-zod-json-schema",
+      "category": "keyword",
+      "baseline": 1,
+      "recall": 1,
+      "ms": 1018,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "medium",
+      "case": "kw-claims-cas",
+      "category": "keyword",
+      "baseline": 1,
+      "recall": 1,
+      "ms": 1102,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "medium",
+      "case": "kw-biome-preset",
+      "category": "keyword",
+      "baseline": 1,
+      "recall": 1,
+      "ms": 961,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "medium",
+      "case": "kw-defer-odoo",
+      "category": "keyword",
+      "baseline": 1,
+      "recall": 1,
+      "ms": 861,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "medium",
+      "case": "kw-secret-fixtures",
+      "category": "keyword",
+      "baseline": 1,
+      "recall": 1,
+      "ms": 855,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "medium",
+      "case": "kw-stacked-prs",
+      "category": "keyword",
+      "baseline": 1,
+      "recall": 1,
+      "ms": 1026,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "medium",
+      "case": "kw-git-binary",
+      "category": "keyword",
+      "baseline": 1,
+      "recall": 1,
+      "ms": 830,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "medium",
+      "case": "kw-mcp-paths",
+      "category": "keyword",
+      "baseline": 1,
+      "recall": 1,
+      "ms": 806,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "medium",
+      "case": "para-delete-note",
+      "category": "paraphrase",
+      "baseline": 1,
+      "recall": 1,
+      "ms": 820,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "medium",
+      "case": "para-same-work",
+      "category": "paraphrase",
+      "baseline": 1,
+      "recall": 1,
+      "ms": 983,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "medium",
+      "case": "para-lint-silent",
+      "category": "paraphrase",
+      "baseline": 1,
+      "recall": 1,
+      "ms": 909,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "medium",
+      "case": "para-zero-sha",
+      "category": "paraphrase",
+      "baseline": 1,
+      "recall": 1,
+      "ms": 817,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "medium",
+      "case": "para-id-letters",
+      "category": "paraphrase",
+      "baseline": 1,
+      "recall": 1,
+      "ms": 803,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "medium",
+      "case": "para-who-is-working",
+      "category": "paraphrase",
+      "baseline": 0.5,
+      "recall": 0.5,
+      "ms": 829,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "medium",
+      "case": "ml-id-zod",
+      "category": "multilingual",
+      "baseline": 1,
+      "recall": 1,
+      "ms": 777,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "medium",
+      "case": "ml-id-agent-commit",
+      "category": "multilingual",
+      "baseline": 0,
+      "recall": 0,
+      "ms": 818,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "medium",
+      "case": "ml-id-delete",
+      "category": "multilingual",
+      "baseline": 1,
+      "recall": 1,
+      "ms": 740,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "medium",
+      "case": "ml-en-index-edit",
+      "category": "multilingual",
+      "baseline": 1,
+      "recall": 1,
+      "ms": 800,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "medium",
+      "case": "ml-en-summary-lines",
+      "category": "multilingual",
+      "baseline": 1,
+      "recall": 1,
+      "ms": 894,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "medium",
+      "case": "ml-en-token-estimate",
+      "category": "multilingual",
+      "baseline": 1,
+      "recall": 1,
+      "ms": 778,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "medium",
+      "case": "trap-retrieval",
+      "category": "trap",
+      "baseline": 1,
+      "recall": 1,
+      "ms": 768,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "medium",
+      "case": "trap-linter",
+      "category": "trap",
+      "baseline": 1,
+      "recall": 1,
+      "ms": 795,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "medium",
+      "case": "trap-agent-commits",
+      "category": "trap",
+      "baseline": 1,
+      "recall": 1,
+      "ms": 804,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "medium",
+      "case": "trap-default-status",
+      "category": "trap",
+      "baseline": 1,
+      "recall": 1,
+      "ms": 894,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "medium",
+      "case": "hard-para-erase",
+      "category": "paraphrase",
+      "baseline": 1,
+      "recall": 0,
+      "ms": 776,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "medium",
+      "case": "hard-para-quiet-checker",
+      "category": "paraphrase",
+      "baseline": 1,
+      "recall": 1,
+      "ms": 806,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "medium",
+      "case": "hard-para-busy",
+      "category": "paraphrase",
+      "baseline": 1,
+      "recall": 0,
+      "ms": 762,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "medium",
+      "case": "hard-para-collision",
+      "category": "paraphrase",
+      "baseline": 1,
+      "recall": 1,
+      "ms": 760,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "medium",
+      "case": "hard-para-offline-first",
+      "category": "paraphrase",
+      "baseline": 0,
+      "recall": 1,
+      "ms": 864,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "medium",
+      "case": "hard-ml-id-hapus",
+      "category": "multilingual",
+      "baseline": 1,
+      "recall": 0,
+      "ms": 766,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "medium",
+      "case": "hard-ml-id-rahasia",
+      "category": "multilingual",
+      "baseline": 1,
+      "recall": 1,
+      "ms": 820,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "medium",
+      "case": "hard-ml-id-bahasa",
+      "category": "multilingual",
+      "baseline": 1,
+      "recall": 0,
+      "ms": 710,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "medium",
+      "case": "hard-ml-en-oneline",
+      "category": "multilingual",
+      "baseline": 1,
+      "recall": 1,
+      "ms": 793,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "medium",
+      "case": "hard-ml-en-noninteractive",
+      "category": "multilingual",
+      "baseline": 1,
+      "recall": 1,
+      "ms": 746,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "t7-heldout",
+      "case": "heldout-withdraw-false-knowledge",
+      "category": "paraphrase",
+      "baseline": 1,
+      "recall": 1,
+      "ms": 813,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "t7-heldout",
+      "case": "heldout-competing-workers",
+      "category": "paraphrase",
+      "baseline": 1,
+      "recall": 0,
+      "ms": 788,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "t7-heldout",
+      "case": "heldout-disconnected-laptop",
+      "category": "paraphrase",
+      "baseline": 0,
+      "recall": 0,
+      "ms": 805,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "t7-heldout",
+      "case": "heldout-present-ownership",
+      "category": "paraphrase",
+      "baseline": 0,
+      "recall": 0,
+      "ms": 742,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "t7-heldout",
+      "case": "heldout-id-lint",
+      "category": "multilingual",
+      "baseline": 0,
+      "recall": 1,
+      "ms": 809,
+      "budgetOk": true,
+      "violations": []
+    },
+    {
+      "set": "t7-heldout",
+      "case": "heldout-id-index",
+      "category": "multilingual",
+      "baseline": 0.5,
+      "recall": 0.5,
+      "ms": 868,
+      "budgetOk": true,
+      "violations": []
+    }
+  ]
+}
