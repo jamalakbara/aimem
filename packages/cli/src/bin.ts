@@ -81,5 +81,7 @@ process.exitCode = await run(process.argv.slice(2), {
       env: process.env,
       cwd: process.cwd(),
       loadEmbedder,
+      loadRanker,
+      loadLlm: (config) => loadLlmProvider(config, { runner: execaRunner(), env: process.env }),
     }),
 });

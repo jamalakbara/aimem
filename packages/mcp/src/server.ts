@@ -7,6 +7,7 @@ import {
   buildBriefing,
   buildQuery,
   type Clock,
+  contextWithRewrites,
   createCallLog,
   type EmbeddingProvider,
   type EmbeddingStatus,
@@ -15,18 +16,22 @@ import {
   type Git,
   gitDiagnostics,
   HIDDEN_STATUSES,
+  type LlmStatus,
+  type LocalRanker,
   loadIndex,
   loadProject,
   loggedEmbeddingProvider,
+  loggedLlmProvider,
   NOTICE,
   type Notebook,
   type NotebookIndex,
+  type QueryDeps,
   type Random,
   type ResolvedProject,
   renderIndexMd,
   resolveEmbeddingProvider,
   type SemanticInput,
-  search,
+  searchWithRewrites,
   semanticForQuery,
   slugify,
   supersedeRecord,
@@ -51,6 +56,10 @@ export interface McpDeps {
   cwd: string;
   embedder?: EmbeddingProvider;
   loadEmbedder?: (config: ResolvedProject, allowDownload: boolean) => Promise<EmbeddingStatus>;
+  loadLlm?: (config: ResolvedProject) => LlmStatus;
+  loadRanker?: (
+    allowDownload: boolean,
+  ) => Promise<{ available: true; provider: LocalRanker } | { available: false; reason: string }>;
 }
 
 /** 05 §5 / 09 §3: shared with `aimem ask` (core/render/frame). */
@@ -148,6 +157,36 @@ export function createAimemServer(deps: McpDeps): McpServer {
     return "scores" in s ? { semantic: s, off: "" } : { off: s.reason };
   };
   const strs = (v: string[] | undefined) => (v?.length ? v : undefined);
+  const retrieval = async (nb: Notebook, index: NotebookIndex, mode = "hybrid"): Promise<QueryDeps> => {
+    const result: QueryDeps = {
+      now: deps.clock.now(),
+      semanticFor: async (query) =>
+        mode === "lexical" ? undefined : (await semantic(nb, index, query)).semantic,
+    };
+    if (nb.config.retrieval?.query_rewrite === "llm" && nb.config.retrieval.llm?.allow_remote === true) {
+      const status = deps.loadLlm?.(nb.config);
+      if (status?.available) result.llm = loggedLlmProvider(status.provider, createCallLog(nb, deps));
+    }
+    if (nb.config.retrieval?.rerank === "cross-encoder") {
+      try {
+        const status = await deps.loadRanker?.(false);
+        if (status?.available) {
+          const provider = status.provider;
+          const log = createCallLog(nb, deps);
+          result.ranker = {
+            id: provider.id,
+            score: (query, docs) =>
+              log.run({ kind: "rerank.local", id: provider.id, refCount: docs.length }, () =>
+                provider.score(query, docs),
+              ),
+          };
+        }
+      } catch {
+        /* Core returns a bounded unavailable-model warning. */
+      }
+    }
+    return result;
+  };
 
   server.registerTool(
     "aimem_context",
@@ -174,18 +213,35 @@ export function createAimemServer(deps: McpDeps): McpServer {
           ...(a.budget_tokens !== undefined ? { budget: a.budget_tokens } : {}),
         };
         const sem = await semantic(nb, index, buildQuery(nb, index, input));
-        const b = buildBriefing(
+        const retrievalInput = {
+          ...input,
+          ...(sem.semantic ? { semantic: sem.semantic } : { semanticOff: sem.off }),
+        };
+        const retrieved = await contextWithRewrites(
           nb,
           index,
-          { ...input, ...(sem.semantic ? { semantic: sem.semantic } : { semanticOff: sem.off }) },
+          retrievalInput,
           deps.clock.now(),
+          await retrieval(nb, index),
         );
+        const b = buildBriefing(nb, index, retrievalInput, deps.clock.now(), retrieved.scored);
         const refs = [b.handoff, b.task, ...b.decisions, ...b.memories, ...b.other]
           .filter((x) => !!x)
           .map((x) => x?.ref);
         return ok(
-          { header: b.header, warnings: b.warnings, refs, more: b.more, moreOmitted: b.moreOmitted },
-          b.markdown,
+          {
+            header: b.header,
+            warnings: [...retrieved.warnings, ...b.warnings],
+            refs,
+            more: b.more,
+            moreOmitted: b.moreOmitted,
+          },
+          retrieved.warnings.length
+            ? cap(
+                `${retrieved.warnings.map((w) => `warning: ${w}`).join("\n")}\n\n${b.markdown}`,
+                b.header.budget,
+              )
+            : b.markdown,
         );
       }),
   );
@@ -213,7 +269,8 @@ export function createAimemServer(deps: McpDeps): McpServer {
           throw new AimemError("USAGE", `mode must be lexical or hybrid (got '${mode}')`);
         const { nb, index } = await open();
         const sem = mode === "hybrid" ? await semantic(nb, index, a.query) : { off: "lexical mode" };
-        const hits = search(
+        const retrieved = await searchWithRewrites(
+          nb,
           index,
           a.query,
           {
@@ -222,10 +279,15 @@ export function createAimemServer(deps: McpDeps): McpServer {
             ...(strs(a.status) ? { statuses: a.status } : {}),
             ...(strs(a.tags) ? { tags: a.tags } : {}),
           },
-          sem.semantic ? { scores: sem.semantic.scores } : undefined,
+          {
+            ...(await retrieval(nb, index, mode)),
+            ...(sem.semantic ? { semantic: { scores: sem.semantic.scores } } : {}),
+          },
         );
+        const hits = retrieved.hits;
         const data = {
           mode: sem.semantic ? "hybrid" : "lexical",
+          ...(retrieved.warnings.length ? { warnings: retrieved.warnings } : {}),
           hits: hits.map((h) => ({
             ref: h.record.id,
             title: h.record.title,
@@ -241,7 +303,10 @@ export function createAimemServer(deps: McpDeps): McpServer {
               .map((h) => `- ${h.record.id} [${h.record.trust}] ${h.record.title} — ${h.record.summary}`)
               .join("\n")
           : "No matches.";
-        return ok(data, cap(text, a.budget_tokens));
+        return ok(
+          data,
+          cap([...retrieved.warnings.map((w) => `warning: ${w}`), text].join("\n"), a.budget_tokens),
+        );
       }),
   );
 
