@@ -6,6 +6,14 @@ The MCP server is a **thin adapter over `@aimem/core`**: every tool maps 1:1 to 
 
 ## 1. Transports
 
+`aimem_context` and `aimem_search` honor opt-in query rewriting and local
+cross-encoder ranking through the same core pipeline as the CLI (15 §7/§9).
+Rewriting requires project remote consent and sends only explicit query/task text.
+Ranker loading never permits downloads in MCP; prepare it with
+`aimem index --reranker`. Missing providers warn and retain original retrieval.
+Warnings appear in tool text and structured results; defaults and tool input
+schemas are unchanged. Calls use the existing metadata-only local diagnostics.
+
 | Transport | Use | Auth |
 |-----------|-----|------|
 | stdio | Local; spawned by the agent tool in the repo working directory | none (local user) |
