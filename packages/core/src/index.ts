@@ -38,6 +38,8 @@ export {
 } from "./records/text.js";
 export * from "./render/frame.js";
 export * from "./render/index-md.js";
+export * from "./retrieval/query.js";
+export * from "./retrieval/rewrite.js";
 export * from "./search/bm25.js";
 export * from "./search/search.js";
 export * from "./secrets/scan.js";

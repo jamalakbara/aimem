@@ -180,6 +180,13 @@ Default (no LLM): concatenate task text, ticket/branch tokens, the task record's
 
 Optional (`retrieval.query_rewrite: llm`): a configured LLM produces 2–3 reformulations (e.g. "idempotency", "duplicate webhook delivery", "retry handling"); each is searched and results are fused. Off by default (latency, cost, privacy).
 
+The rewrite provider receives only the original query (at most 4096 characters),
+never records. Remote consent is required even with an injected provider.
+Responses must be a JSON array of 2–3 distinct single-line queries, each at most
+512 characters, different from the original; the response cap is 2048 characters.
+Missing consent/provider, invalid output and provider errors retain the original
+query exactly and add a warning. The original always participates in retrieval.
+
 ## 8. Graph expansion ("GraphRAG-lite")
 
 Deterministic, from `links` / `supersedes`:
