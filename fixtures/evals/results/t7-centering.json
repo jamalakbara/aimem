@@ -1,0 +1,210 @@
+{
+  "before": [
+    {
+      "name": "medium",
+      "lexical": {
+        "keyword": {
+          "n": 8,
+          "recall": 1,
+          "inBriefing": 1,
+          "violations": 0
+        },
+        "multilingual": {
+          "n": 11,
+          "recall": 0.6364,
+          "inBriefing": 0.6364,
+          "violations": 0
+        },
+        "paraphrase": {
+          "n": 11,
+          "recall": 0.7727,
+          "inBriefing": 0.8636,
+          "violations": 0
+        },
+        "trap": {
+          "n": 4,
+          "recall": 1,
+          "inBriefing": 1,
+          "violations": 0
+        }
+      },
+      "hybrid": {
+        "keyword": {
+          "n": 8,
+          "recall": 1,
+          "inBriefing": 1,
+          "violations": 0
+        },
+        "multilingual": {
+          "n": 11,
+          "recall": 0.9091,
+          "inBriefing": 1,
+          "violations": 0
+        },
+        "paraphrase": {
+          "n": 11,
+          "recall": 0.8636,
+          "inBriefing": 1,
+          "violations": 0
+        },
+        "trap": {
+          "n": 4,
+          "recall": 1,
+          "inBriefing": 1,
+          "violations": 0
+        }
+      },
+      "overall": {
+        "n": 34,
+        "recall": 0.9265,
+        "inBriefing": 1,
+        "violations": 0,
+        "budgetOk": 1,
+        "deterministic": 1
+      }
+    },
+    {
+      "name": "t7-heldout",
+      "lexical": {
+        "multilingual": {
+          "n": 2,
+          "recall": 0.5,
+          "inBriefing": 0.5,
+          "violations": 0
+        },
+        "paraphrase": {
+          "n": 4,
+          "recall": 0.25,
+          "inBriefing": 1,
+          "violations": 0
+        }
+      },
+      "hybrid": {
+        "multilingual": {
+          "n": 2,
+          "recall": 0.25,
+          "inBriefing": 1,
+          "violations": 0
+        },
+        "paraphrase": {
+          "n": 4,
+          "recall": 0.5,
+          "inBriefing": 1,
+          "violations": 0
+        }
+      },
+      "overall": {
+        "n": 6,
+        "recall": 0.4167,
+        "inBriefing": 1,
+        "violations": 0,
+        "budgetOk": 1,
+        "deterministic": 1
+      }
+    }
+  ],
+  "centered": [
+    {
+      "name": "medium",
+      "lexical": {
+        "keyword": {
+          "n": 8,
+          "recall": 1,
+          "inBriefing": 1,
+          "violations": 0
+        },
+        "multilingual": {
+          "n": 11,
+          "recall": 0.6364,
+          "inBriefing": 0.6364,
+          "violations": 0
+        },
+        "paraphrase": {
+          "n": 11,
+          "recall": 0.7727,
+          "inBriefing": 0.8636,
+          "violations": 0
+        },
+        "trap": {
+          "n": 4,
+          "recall": 1,
+          "inBriefing": 1,
+          "violations": 0
+        }
+      },
+      "hybrid": {
+        "keyword": {
+          "n": 8,
+          "recall": 1,
+          "inBriefing": 1,
+          "violations": 0
+        },
+        "multilingual": {
+          "n": 11,
+          "recall": 0.9091,
+          "inBriefing": 1,
+          "violations": 0
+        },
+        "paraphrase": {
+          "n": 11,
+          "recall": 0.8636,
+          "inBriefing": 1,
+          "violations": 0
+        },
+        "trap": {
+          "n": 4,
+          "recall": 1,
+          "inBriefing": 1,
+          "violations": 0
+        }
+      },
+      "overall": {
+        "n": 34,
+        "recall": 0.9265,
+        "inBriefing": 1,
+        "violations": 0,
+        "budgetOk": 1,
+        "deterministic": 1
+      }
+    },
+    {
+      "name": "t7-heldout",
+      "lexical": {
+        "multilingual": {
+          "n": 2,
+          "recall": 0.5,
+          "inBriefing": 0.5,
+          "violations": 0
+        },
+        "paraphrase": {
+          "n": 4,
+          "recall": 0.25,
+          "inBriefing": 1,
+          "violations": 0
+        }
+      },
+      "hybrid": {
+        "multilingual": {
+          "n": 2,
+          "recall": 0.75,
+          "inBriefing": 1,
+          "violations": 0
+        },
+        "paraphrase": {
+          "n": 4,
+          "recall": 0.5,
+          "inBriefing": 1,
+          "violations": 0
+        }
+      },
+      "overall": {
+        "n": 6,
+        "recall": 0.5833,
+        "inBriefing": 1,
+        "violations": 0,
+        "budgetOk": 1,
+        "deterministic": 1
+      }
+    }
+  ]
+}
