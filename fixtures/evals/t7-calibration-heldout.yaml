@@ -1,0 +1,55 @@
+# Authored before relevance-calibration experiments on 2026-11-18.
+# Expected refs follow record content; keep questions and answers fixed across comparisons.
+project: medium
+clock: 2026-10-12T00:00:00Z
+k: 10
+cases:
+  - id: calibration-airplane-notebook
+    category: paraphrase
+    task: "On an airplane with networking disabled, will saved project knowledge remain usable?"
+    must_include: [dec-3by2wh28]
+  - id: calibration-service-outage
+    category: paraphrase
+    task: "If the shared service disappears, do we still possess a complete copy of our project knowledge?"
+    must_include: [dec-3by2wh28]
+  - id: calibration-active-assignee
+    category: paraphrase
+    task: "How can a teammate discover which worker currently holds an assignment?"
+    must_include: [dec-g17nvbca, mem-peqcrkme]
+  - id: calibration-retract-error
+    category: paraphrase
+    task: "We learned an earlier entry was inaccurate. What preserves the audit trail while correcting it?"
+    must_include: [dec-b0gymeq0]
+  - id: calibration-dependency-boundary
+    category: paraphrase
+    task: "May the shared domain library depend on the command-line or protocol-server packages?"
+    must_include: [mem-69etphrn]
+  - id: calibration-secret-examples
+    category: paraphrase
+    task: "May we copy actual customer details or authentication material into example notebooks?"
+    must_include: [mem-nrdpy59z]
+  - id: calibration-offline-id
+    category: multilingual
+    task: "Saat koneksi terputus, apakah isi buku proyek tetap bisa dipakai tanpa layanan pusat?"
+    must_include: [dec-3by2wh28]
+  - id: calibration-owner-id
+    category: multilingual
+    task: "Apakah pemegang tugas yang aktif ditulis di catatan permanen atau di status sementara?"
+    must_include: [dec-g17nvbca, mem-peqcrkme]
+  - id: calibration-index-id
+    category: multilingual
+    task: "Daftar isi notebook perlu diperbarui. Bolehkah saya mengubah INDEX.md langsung?"
+    must_include: [mem-xx4j8c41, dec-v868xmvq]
+  - id: calibration-schema-keyword
+    category: keyword
+    task: "Zod export JSON Schema"
+    must_include: [dec-094vmt9t]
+    must_not_include: [dec-0b20v421]
+  - id: calibration-workspace-keyword
+    category: keyword
+    task: "pnpm workspaces package manager"
+    must_include: [mem-8syrq6ke]
+  - id: calibration-cli-contract
+    category: keyword
+    task: "JSON output exit codes contracts"
+    must_include: [mem-2h82g3bk]
