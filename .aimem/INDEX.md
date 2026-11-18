@@ -10,10 +10,10 @@ Project: `aimem` · mode: solo · sync: none
 3. END: run `aimem handoff` (Done / Not done / Next / Blocked). Supersede records, never delete them.
 
 ## Counts
-- decision: 1 (accepted 1)
-- task: 12 (open 1, done 11)
-- memory: 7 (active 7)
-- handoff: 38 (final 38)
+- decision: 2 (accepted 2)
+- task: 12 (done 12)
+- memory: 8 (active 8)
+- handoff: 39 (final 39)
 
 ## Pinned
 - mem-134qcb5d [agent] Project overview — aimem: a git-based shared notebook where humans and AI agents read and write project knowledge as markdown records in .aimem/.
@@ -21,8 +21,8 @@ Project: `aimem` · mode: solo · sync: none
 - mem-gv0gjym6 [agent] Working conventions for this repo — Plan first and wait for approval, one slice per PR, tests first, spec 03 is the contract, contract snapshots change only on purpose, end every session with aimem handoff.
 
 ## Recent handoffs
+- hnd-k7q8wkpf 2026-11-18 (agent:codex) — Done: Completed and merged T7 in PR #56 after all six OS/Node checks passed; Linux real-model workflow 44319378283 also passed. Default local corpus-vocabulary matching raises original paraphrase rec…
 - hnd-b3355dks 2026-11-17 (agent:codex) — Done: Merged CI repair #54 and implementation/research stack #38-#53 in order after all six OS/Node checks passed; verified each merge tree equals its tested head. Completed T8 opt-in rewrite/local r…
 - hnd-qvme4yxp 2026-11-17 (agent:codex) — Done: Implemented approved T8 query rewriting and local cross-encoder ranking across core, CLI and MCP; explicit ranker setup/doctor and metadata diagnostics. Implemented T9 explicit per-session usag…
 - hnd-342wkzjm 2026-11-16 (agent:codex) — Done: Reviewed the stacked codex/t8-ask-rerank changes against main: inspected ask reranking logic, validation/fallback, tests, spec and user docs; no concrete blocker found in reviewed paths. · Next…
 - hnd-jz905gsd 2026-11-16 (agent:codex) — Done: Recapped repository progress from the latest project handoff, briefing, and Git state. · Next: Review the draft PR on codex/t8-ask-rerank; investigate answer citation quality before recommendin…
-- hnd-06ent6zq 2026-11-16 (agent:codex) — Done: Implemented approved opt-in ask reranking via configured LLM and Claude Code login: 50 eligible candidates, 64000-character full rerank prompt cap, privacy and trust framing, strict ref validat…

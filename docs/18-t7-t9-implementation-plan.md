@@ -1,11 +1,11 @@
 # T7–T9 implementation plan
 
 Status: approved on 2026-11-17; T8 and T9 merged on 2026-11-18.
-T7's numerical target remains open; no regressing default was shipped.
+T7 also merged on 2026-11-18 in PR #56, meeting its numerical target.
 
 | Task | Outcome |
 |------|---------|
-| T7 | Default gain remains +0.0909; centering and E5-base findings are recorded in 15 §4.2. |
+| T7 | Default local context gains +0.1818 (0.9545 vs lexical 0.7727), retaining keyword 1.0, multilingual 0.9091 and trap 1.0. See 15 §7 and the 68-question final report. |
 | T8 | Core, CLI and MCP features are implemented; both defaults remain none. Real answer deltas include regressions; see 19. |
 | T9 | Explicit per-session usage command and local cache are implemented and tested; see 04 and 15 §18. |
 

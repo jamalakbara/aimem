@@ -144,6 +144,9 @@ npm-linked CLI or MCP binary. `aimem doctor` diagnoses missing/older compiled
 output in recognized development checkouts (04, development-build freshness).
 The binary path and optional filesystem timestamp port are injected; normal
 installed packages do not scan the user's notebook source.
+If the warning remains after an incremental build, run `pnpm exec tsc -b --force`
+and check doctor again. Unchanged emitted JavaScript can retain an older
+timestamp; this diagnostic compares modification times, not content equivalence.
 
 ## 6. CI pipeline (GitHub Actions)
 1. Install, lint, typecheck.
