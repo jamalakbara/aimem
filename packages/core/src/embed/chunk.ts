@@ -2,13 +2,13 @@ import { createHash } from "node:crypto";
 import type { IndexedRecord } from "../index/build.js";
 
 /** Bumped when chunking changes; any change forces a full vector rebuild (15 §4.3). */
-export const CHUNKER_VERSION = 1;
+export const CHUNKER_VERSION = 2;
 const MAX_CHARS = 300 * 4; // ~300 tokens
 const OVERLAP_CHARS = 40 * 4; // ~40 tokens
 
 export interface Chunk {
   ref: string;
-  /** `head`, a `##` section title, or `body` for records without sections. */
+  /** `head`, a `##` section title, `body`, or `lexicon` for auxiliary word vectors. */
   section: string;
   /** Index of the part within a split section. */
   part: number;
@@ -16,6 +16,8 @@ export interface Chunk {
   text: string;
   /** Short hash of the record body; part of the cache key. */
   bodySha: string;
+  /** Auxiliary corpus-word vector; excluded from ordinary record similarity. */
+  term?: string;
 }
 
 function split(text: string): string[] {

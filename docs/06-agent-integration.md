@@ -66,6 +66,13 @@ Hybrid lexical + semantic retrieval (details in 15). Works fully offline: with a
 - Section caps are scaled by `budget / 4000`; unused allowance flows on; the whole briefing never exceeds the budget (property-tested). Minimum budget 300.
 - Headings inside record bodies are demoted to level ≥ 4 so a record cannot pose as a briefing section (09 §3).
 
+With the version-2 local vector cache, a confident corpus-word match adds a
+context scoring view (15 §7). The original query always participates. Each view
+uses this same metadata, trust, freshness, filtering and pin policy; the final
+score is the maximum complete score for each record. `--explain` shows the
+winning view's components, so its lexical component can reflect the matched
+corpus word. No LLM or cross-encoder is enabled by this operation.
+
 ### 2.3 Output skeleton (markdown)
 ```
 # aimem briefing — acme-platform / backend  (team, sync: git)

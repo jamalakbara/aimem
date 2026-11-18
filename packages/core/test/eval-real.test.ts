@@ -19,7 +19,7 @@ import { FIXTURES, fixedRandom } from "./helpers.js";
  * model once into $AIMEM_HOME/models or ~/.cache/aimem/models). Runs in the nightly/manual eval workflow.
  */
 describe.runIf(process.env.AIMEM_REAL_MODEL === "1")("M2 gate with the default local model", () => {
-  it("hybrid beats lexical on paraphrase and multilingual, keeps keyword, overall ≥ 0.85", async () => {
+  it("hybrid gains ≥ 0.15 on paraphrase, beats multilingual, keeps keyword, overall ≥ 0.85", async () => {
     const root = mkdtempSync(join(tmpdir(), "aimem-real-"));
     try {
       cpSync(join(FIXTURES, "medium"), root, { recursive: true });
@@ -34,8 +34,9 @@ describe.runIf(process.env.AIMEM_REAL_MODEL === "1")("M2 gate with the default l
       const lexical = await runEvalSet(nb, index, set);
       const hybrid = await runEvalSet(nb, index, set, { provider, fs: nodeFs });
       const cat = (r: typeof lexical, c: string) => r.byCategory[c]?.recall ?? 0;
-      expect(cat(hybrid, "paraphrase")).toBeGreaterThan(cat(lexical, "paraphrase"));
+      expect(cat(hybrid, "paraphrase") - cat(lexical, "paraphrase")).toBeGreaterThanOrEqual(0.15);
       expect(cat(hybrid, "multilingual")).toBeGreaterThan(cat(lexical, "multilingual"));
+      expect(cat(hybrid, "multilingual")).toBeGreaterThanOrEqual(0.9091);
       expect(cat(hybrid, "keyword")).toBeGreaterThanOrEqual(cat(lexical, "keyword"));
       expect(hybrid.overall.recall).toBeGreaterThanOrEqual(0.85);
       expect(hybrid.overall).toMatchObject({ violations: 0, budgetOk: 1, deterministic: 1 });

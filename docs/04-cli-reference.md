@@ -98,7 +98,14 @@ Returns the briefing (algorithm in 06 §2). With no args, infers paths from `git
 `--explain` prints why each record was selected and its score (a table after the briefing, not counted in the budget; always present in JSON as `explain`).
 `--format json` prints the briefing object; `--json` wraps it in the 04 §7 envelope (the markdown is in `data.markdown`). `--budget` must be ≥ 300. `--mode` defaults to `retrieval.mode` (else `hybrid`); hybrid uses semantic scores when a provider and an up-to-date vector cache exist, otherwise it falls back to lexical, reports the reason in the header (`semanticReason`), and warns only if `--mode hybrid` was given explicitly. `--no-live` is accepted (claims arrive in M3); `--deep` is reserved and ignored with a warning (OQ-30).
 
+Local hybrid `context` can match a confident corpus word as another scoring view
+(15 §7), using the existing embedding model. Run `aimem index --embeddings` after
+upgrading to build the version-2 vocabulary cache. This is deterministic local
+retrieval; optional LLM rewriting and cross-encoder ranking remain disabled by
+default. Search and ask continue to use their existing ranking paths.
+
 ### `aimem search <query>`
+
 ```
 aimem search "<query>" [--type decision,memory] [--status ...] [--tag ...] [--role ...]
                        [--repo ...] [--paths <glob>] [--limit 10] [--include-superseded]

@@ -4,6 +4,8 @@ import type { NotebookIndex } from "../index/build.js";
 import type { Fs, Random } from "../ports.js";
 import type { Notebook } from "../project/load.js";
 import { writeFileAtomic } from "../records/store.js";
+import { tokenize } from "../search/bm25.js";
+import { HIDDEN_STATUSES } from "../search/search.js";
 import { scanSecrets } from "../secrets/scan.js";
 import { CHUNKER_VERSION, type Chunk, chunkRecord } from "./chunk.js";
 import type { EmbeddingProvider } from "./provider.js";
@@ -14,11 +16,11 @@ const BATCH = 64;
 const HEAD_BONUS = 1.05;
 
 export interface VectorCacheMeta {
-  version: 1;
+  version: 1 | 2;
   provider: string;
   dimensions: number;
   chunkerVersion: number;
-  chunks: { key: string; ref: string; section: string; part: number; bodySha: string }[];
+  chunks: { key: string; ref: string; section: string; part: number; bodySha: string; term?: string }[];
   /** Records deliberately not embedded (no-embed, possible secret); absent in older caches. */
   excluded?: string[];
 }
@@ -47,7 +49,7 @@ const paths = (nb: Notebook) => ({
 });
 const keyOf = (c: Chunk, providerId: string) =>
   createHash("sha256")
-    .update(`${c.ref}\0${c.section}\0${c.part}\0${c.bodySha}\0${providerId}`)
+    .update(`${c.ref}\0${c.section}\0${c.part}\0${c.bodySha}\0${providerId}\0${c.term ?? ""}`)
     .digest("hex")
     .slice(0, 24);
 
@@ -63,7 +65,11 @@ export async function loadVectorCache(
   } catch {
     return { problem: "no vector cache yet" };
   }
-  if (meta.version !== 1 || !Array.isArray(meta.chunks) || !Number.isInteger(meta.dimensions))
+  if (
+    (meta.version !== 1 && meta.version !== 2) ||
+    !Array.isArray(meta.chunks) ||
+    !Number.isInteger(meta.dimensions)
+  )
     return { problem: "vector cache metadata is corrupt" };
   let bytes: Uint8Array;
   try {
@@ -157,10 +163,44 @@ async function updateVectorCache(
     else if (scanSecrets(r.text).length) excluded.push({ ref: r.id, reason: "possible secret" });
     else chunks.push(...chunkRecord(r));
   }
+  // A bounded vocabulary lets the local encoder bridge a query to a precise corpus word.
+  // Each word is embedded once; ownership keeps exclusions and incremental invalidation explicit.
+  if (provider.id.startsWith("local:")) {
+    const excludedRefs = new Set(excluded.map((r) => r.ref));
+    const bodyHashes = new Map(chunks.map((c) => [c.ref, c.bodySha]));
+    const vocabulary = new Map<string, { ref: string; bodySha: string; frequency: number }>();
+    for (const r of [...index.records].sort((a, b) => (a.id < b.id ? -1 : 1))) {
+      if (excludedRefs.has(r.id) || HIDDEN_STATUSES.has(r.status)) continue;
+      const bodySha = bodyHashes.get(r.id);
+      if (!bodySha) continue;
+      for (const term of new Set(tokenize(`${r.title} ${r.summary} ${r.body}`))) {
+        if (!/^\p{L}{3,32}$/u.test(term)) continue;
+        const prior = vocabulary.get(term);
+        if (prior) prior.frequency++;
+        else vocabulary.set(term, { ref: r.id, bodySha, frequency: 1 });
+      }
+    }
+    const selected = [...vocabulary.entries()]
+      .sort(([a, x], [b, y]) => y.frequency - x.frequency || (a < b ? -1 : 1))
+      .slice(0, 4096)
+      .sort(([a], [b]) => (a < b ? -1 : 1));
+    for (const [term, source] of selected)
+      chunks.push({
+        ref: source.ref,
+        bodySha: source.bodySha,
+        section: "lexicon",
+        part: 0,
+        text: term,
+        term,
+      });
+  }
   const previous = new Map<string, Float32Array>();
+  const previousTerms = new Map<string, Float32Array>();
   if (old) {
     old.meta.chunks.forEach((c, i) => {
-      previous.set(c.key, old.vectors.subarray(i * old.meta.dimensions, (i + 1) * old.meta.dimensions));
+      const vector = old.vectors.subarray(i * old.meta.dimensions, (i + 1) * old.meta.dimensions);
+      previous.set(c.key, vector);
+      if (typeof c.term === "string") previousTerms.set(c.term, vector);
     });
   }
 
@@ -169,12 +209,18 @@ async function updateVectorCache(
   const vectors = new Float32Array(chunks.length * d);
   const todo: number[] = [];
   keys.forEach((k, i) => {
-    const v = previous.get(k);
+    const term = chunks[i]?.term;
+    const v = term ? previousTerms.get(term) : previous.get(k);
     if (v) vectors.set(v, i * d);
     else todo.push(i);
   });
-  for (let b = 0; b < todo.length; b += BATCH) {
-    const batch = todo.slice(b, b + BATCH);
+  for (let b = 0; b < todo.length; ) {
+    const batch = [todo[b++] as number];
+    // Quantized short-word vectors depend on batch composition. Isolate vocabulary
+    // inputs so adding/removing unrelated words cannot change a reusable vector.
+    if (!chunks[batch[0] as number]?.term)
+      while (b < todo.length && batch.length < BATCH && !chunks[todo[b] as number]?.term)
+        batch.push(todo[b++] as number);
     const out = await provider.embed(
       batch.map((i) => chunks[i]?.text ?? ""),
       "document",
@@ -190,7 +236,7 @@ async function updateVectorCache(
   const keySet = new Set(keys);
   const removed = old ? old.meta.chunks.filter((c) => !keySet.has(c.key)).length : 0;
   const meta: VectorCacheMeta = {
-    version: 1,
+    version: chunks.some((c) => c.term !== undefined) ? 2 : 1,
     provider: provider.id,
     dimensions: d,
     chunkerVersion: CHUNKER_VERSION,
@@ -200,6 +246,7 @@ async function updateVectorCache(
       section: c.section,
       part: c.part,
       bodySha: c.bodySha,
+      ...(c.term ? { term: c.term } : {}),
     })),
     excluded: excluded.map((e) => e.ref),
   };
@@ -224,6 +271,16 @@ export async function semanticScores(
   provider: EmbeddingProvider,
   query: string,
 ): Promise<Map<string, number>> {
+  return (await semanticMatches(cache, provider, query)).scores;
+}
+
+/** Record similarities and, for a confident local match, one corpus-derived lexical bridge. */
+export async function semanticMatches(
+  cache: VectorCache,
+  provider: EmbeddingProvider,
+  query: string,
+  eligibleSources?: ReadonlySet<string>,
+): Promise<{ scores: Map<string, number>; expansionTerm?: string }> {
   if (cache.meta.provider !== provider.id || cache.meta.dimensions !== provider.dimensions) {
     throw new Error(
       `vector cache was built with a different provider (${cache.meta.provider}); run aimem index --embeddings`,
@@ -233,11 +290,45 @@ export async function semanticScores(
   const qv = normalise(q ?? []);
   const d = cache.meta.dimensions;
   const scores = new Map<string, number>();
+  const terms: { term: string; score: number; row: number }[] = [];
   cache.meta.chunks.forEach((c, i) => {
     let dot = 0;
     for (let k = 0; k < d; k++) dot += (qv[k] ?? 0) * (cache.vectors[i * d + k] ?? 0);
+    if (c.term !== undefined) {
+      if (
+        provider.id.startsWith("local:") &&
+        typeof c.term === "string" &&
+        /^\p{L}{3,32}$/u.test(c.term) &&
+        (!eligibleSources || eligibleSources.has(c.ref)) &&
+        Number.isFinite(dot)
+      )
+        terms.push({ term: c.term, score: dot, row: i });
+      return;
+    }
     const s = Math.min(1, Math.max(0, c.section === "head" ? dot * HEAD_BONUS : dot));
     if (s > (scores.get(c.ref) ?? 0)) scores.set(c.ref, s);
   });
-  return scores;
+  terms.sort((a, b) => b.score - a.score || (a.term < b.term ? -1 : 1));
+  const best = terms[0];
+  // Attested singular/plural forms are one concept, not competing meanings.
+  // Require strong embedding agreement rather than stemming arbitrary query words.
+  const variant =
+    best &&
+    terms.find((t) => {
+      if (t.term !== `${best.term}s` && best.term !== `${t.term}s`) return false;
+      let similarity = 0;
+      for (let k = 0; k < d; k++)
+        similarity += (cache.vectors[best.row * d + k] ?? 0) * (cache.vectors[t.row * d + k] ?? 0);
+      return similarity >= 0.8;
+    });
+  const second = terms.find((t) => t !== best && t !== variant);
+  const expansionTerm =
+    best &&
+    second &&
+    best.score >= 0.4 &&
+    best.score - second.score >= 0.01 &&
+    !tokenize(query).includes(best.term)
+      ? [best.term, ...(variant ? [variant.term] : [])].join(" ")
+      : undefined;
+  return { scores, ...(expansionTerm ? { expansionTerm } : {}) };
 }
