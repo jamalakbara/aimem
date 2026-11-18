@@ -1,0 +1,56 @@
+# Locked after choosing corpus-term matching; do not tune the method against this final check.
+project: medium
+clock: 2026-10-12T00:00:00Z
+k: 10
+cases:
+  - id: final-branch-protection
+    category: keyword
+    task: "protect main GitHub branch"
+    must_include: [tsk-631d60cw]
+  - id: final-lockfile-repair
+    category: keyword
+    task: "lockfile drift pnpm 12 frozen install"
+    must_include: [inc-kxhfs6xz]
+  - id: final-restart-context
+    category: paraphrase
+    task: "I lost the previous conversation. How do I recover the work state before making edits?"
+    must_include: [run-g3kgy4yf]
+  - id: final-commit-checks
+    category: paraphrase
+    task: "Which automatic checks precede commits and pushes?"
+    must_include: [mem-rmqc83gx, run-gea7sjyn]
+  - id: final-field-preservation
+    category: multilingual
+    task: "If a writer does not recognize an extra frontmatter property, may it discard that property?"
+    must_include: [mem-e1fa6v95]
+  - id: final-authoritative-id
+    category: paraphrase
+    task: "When a filename slug drifts after a rename, what identifies the record and prevents branch collisions?"
+    must_include: [dec-j2t35mx0]
+  - id: final-role-read-access
+    category: paraphrase
+    task: "Does a role label prevent a colleague from reading a notebook entry?"
+    must_include: [dec-2znaykpx]
+  - id: final-source-of-truth
+    category: paraphrase
+    task: "When the database index is gone, what retains the authoritative project knowledge?"
+    must_include: [dec-3by2wh28]
+  - id: final-offline-debug-topic
+    category: paraphrase
+    task: "How are executable git operations performed by the application?"
+    must_include: [dec-ndgz6y7a]
+  - id: final-index-regeneration
+    category: multilingual
+    task: "Mengapa INDEX.md harus dihasilkan ulang saat ada konflik merge?"
+    must_include: [dec-v868xmvq]
+  - id: final-current-schema
+    category: trap
+    task: "Which Zod version exports our current JSON Schema?"
+    must_include: [dec-094vmt9t]
+    must_not_include: [dec-0b20v421]
+  - id: final-present-retrieval
+    category: trap
+    task: "How does current retrieval combine keywords and multilingual vectors?"
+    must_include: [dec-mtbcq7yr]
+    must_not_include: [dec-fe8ev4k4]
+
