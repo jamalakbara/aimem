@@ -36,5 +36,8 @@ All three slices merged on 2026-11-18 after all six OS/Node checks passed.
 [CI repair #54](https://github.com/jamalakbara/aimem/pull/54) uses supported Intel
 macOS runners after Arm runner-acquisition failures, and tests both optional
 inference-runtime failure states (docs/12). The final suite passes 848 tests,
-with one skipped. The task audit records 11 done and T7 open: its +0.15 default
-paraphrase target remains unmet (+0.0909).
+with one skipped. That audit recorded 11 done and T7 open (+0.0909).
+Subsequent [T7 PR #56](https://github.com/jamalakbara/aimem/pull/56) reaches
++0.1818 while preserving keyword, multilingual and trap scores (15 §7).
+All twelve tracked tasks are now done; the expanded suite passes 864 tests with
+one skipped, and the real-model gate passes separately on Windows and Linux CI.

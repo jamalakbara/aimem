@@ -3,14 +3,14 @@ aimem: 1
 id: tsk-31rbbwr6
 type: task
 title: "T7: Paraphrase retrieval gain to +0.15"
-summary: Close the paraphrase gap from +0.09 to the +0.15 target over lexical.
-status: open
+summary: Default local hybrid context gains +0.1818 paraphrase recall over lexical, meeting the +0.15 target.
+status: done
 trust: agent
 roles: [all]
 paths: [packages/core/src/context/score.ts, packages/core/src/embed/chunk.ts, packages/core/src/search/, fixtures/evals/]
 author: agent:claude-code
 created: 2026-11-15T17:27:23Z
-updated: 2026-11-17T18:17:13Z
+updated: 2026-11-18T14:07:37Z
 priority: p2
 ---
 
@@ -18,10 +18,10 @@ priority: p2
 Improve default offline paraphrase retrieval without regressing keyword cases or weakening trust/freshness rules.
 
 ## Acceptance criteria
-- [ ] Paraphrase set reaches +0.15 over lexical
-- [x] Keyword set does not regress (shipped defaults unchanged)
-- [x] Eval deltas recorded in PRs
-- [x] Model experiments include before/after evidence
+- [x] Original frozen paraphrase set gains at least +0.15 over lexical: 0.9545 versus 0.7727 (+0.1818)
+- [x] Keyword recall stays 1.0; multilingual stays 0.9091 versus lexical 0.6364; trap recall stays 1.0
+- [x] Eval deltas and per-case evidence recorded in PR #56 and fixtures/evals/results/t7-final.json
+- [x] Rejected model/scoring experiments recorded; the existing local MiniLM model remains default
 
 ## Notes
-Still open: default MiniLM paraphrase recall is 0.8636 versus lexical 0.7727 (+0.0909). Centering, phrase queries, constraint focus and durable-decision policies do not close the original target; E5-base regresses paraphrase recall. Qwen3-0.6B instruction variants retain paraphrase 0.8636 but regress multilingual to 0.5455 versus MiniLM 0.9091, so no new model/default ships. Six plus four additional questions were written before experiments. Results and caveats: docs/15, PRs #38/#47/#50. Optional T8 ranking and the separate search handoff fix do not close T7.
+Merged in PR #56 after all six OS/Node checks passed; the stricter real-model gate also passed on Linux in run 44319378283. Local context matches a confident cached corpus word, groups attested embedding-aligned word forms, and max-fuses complete scoring views. No curated synonym/ref map, LLM generation or cross-encoder is enabled. The 68 fixed questions retain budget compliance, determinism and zero forbidden refs. Twelve final validation questions were committed before first evaluation and stayed at recall 1.0. Full suite: 864 passed, one skipped; real-model gate passed separately; lexical context and fake-answer baselines unchanged. Version-2 local caches need index --embeddings after upgrade; legacy caches retain prior behavior, older CLIs fall back lexically. This workspace's local cache is rebuilt with coverage 100%. See docs/15 section 7 for costs, confidence limits and the remaining ownership-memory miss; meeting the target does not imply perfect retrieval.
