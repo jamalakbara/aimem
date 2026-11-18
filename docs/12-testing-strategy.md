@@ -58,10 +58,28 @@ Metrics: recall@k of `must_include`, precision (no `must_not_include`), budget c
 - A `must_not_include` record is a violation if it appears anywhere in the briefing, including "More".
 - `pnpm eval` prints the per-case table and category summary and compares with `fixtures/evals/baseline/<set>.lexical.json`; `--update-baseline` rewrites it. The test suite fails if results differ from the committed baseline, so scoring changes must update it deliberately and report the deltas.
 - PR gates (stub embedder): keyword recall@10 ≥ 0.85, 0 violations, budget 100%, deterministic, labelled, baseline equality.
-- Real-model gate (`AIMEM_REAL_MODEL=1`, `packages/core/test/eval-real.test.ts`, workflow `.github/workflows/evals.yml` nightly + manual, models cached): hybrid beats lexical on paraphrase and multilingual, keyword not lower, overall ≥ 0.85, 0 violations. `pnpm compare-models` re-runs the model comparison.
+- Real-model gate (`AIMEM_REAL_MODEL=1`, `packages/core/test/eval-real.test.ts`, workflow `.github/workflows/evals.yml` nightly + manual, models cached): hybrid paraphrase gain ≥ 0.15 over lexical, multilingual beats lexical, keyword not lower, overall ≥ 0.85, 0 violations. `pnpm compare-models` re-runs the model comparison.
 Gate: recall ≥ 0.85, 0 `must_not_include`, budget 100%. Hybrid must additionally beat lexical-only on the paraphrase and multilingual subsets (target: +0.15 recall, tuned after the first run) without regressing keyword cases, and `ask` must refuse unanswerable cases.
 Unit tests use a deterministic **stub embedder** (hash-based vectors) so results are reproducible without a model.  
 Weights in 06 §2 are tuned against these evals; any weight change must show eval deltas in the PR.
+
+T7's default local vocabulary matching is covered by
+`core/test/semantic-bridge.test.ts`: deduplication, bounds, incremental reuse,
+single-input quantized word embeddings, confidence/ambiguity guards, attested
+word forms, privacy/status exclusions (including stale cache sources), complete
+score fusion, trust/freshness and legacy/nonlocal fallback. Three new behavior
+tests failed before implementation. The real-model assertion now retains T7's
+numerical gate rather than merely checking a positive gain.
+
+After building, `node scripts/eval-t7-final.mjs` requires cached MiniLM weights
+and compares lexical, prior hybrid and production hybrid across 68 fixed
+questions. Its `prior:` provider facade disables only the vocabulary bridge,
+while retaining exactly the same document vectors and model inference. The
+original lexical fixture baseline is unchanged. Twelve calibration questions
+were committed before investigation; a separate final twelve were committed
+after choosing the method and before their first evaluation, and were not tuned
+after that run. Results and limitations are in 15 §7 and
+`fixtures/evals/results/t7-final.json`.
 
 ### 3.1 Answer evals for `aimem ask` (T5)
 

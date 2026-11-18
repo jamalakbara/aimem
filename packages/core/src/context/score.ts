@@ -2,7 +2,7 @@ import { TRUST_WEIGHT, type Trust } from "@aimem/schema";
 import { AimemError } from "../errors.js";
 import type { IndexedRecord, NotebookIndex } from "../index/build.js";
 import type { Notebook } from "../project/load.js";
-import { bm25 } from "../search/bm25.js";
+import { bm25, tokenize } from "../search/bm25.js";
 import { FIELD_BOOSTS, HIDDEN_STATUSES } from "../search/search.js";
 import { matchGlob, staticPrefix } from "../util/glob.js";
 import { normaliseSemantic } from "../util/normalise.js";
@@ -16,6 +16,8 @@ export interface SemanticInput {
   provider: string;
   /** Share of eligible records that have vectors, 0..1. */
   coverage: number;
+  /** Confident local corpus word, optionally with an attested plural form. */
+  expansionTerm?: string;
 }
 
 export type Fusion = "weighted" | "rrf";
@@ -187,8 +189,44 @@ export function scoreCandidates(
   input: ContextInput,
   now: Date,
 ): { candidates: Candidate[]; refTask?: IndexedRecord; fusion: Fusion } {
+  const baseline = scoreQueryCandidates(nb, index, input, now);
+  const bridge = input.semantic?.expansionTerm;
+  if (!bridge || bridge.length > 65) return baseline;
+  const terms = bridge.split(" ");
+  if (
+    !terms.length ||
+    terms.length > 2 ||
+    terms.some((t) => !/^\p{L}{3,32}$/u.test(t)) ||
+    (terms.length === 2 && terms[0] !== `${terms[1]}s` && terms[1] !== `${terms[0]}s`)
+  )
+    return baseline;
+  const literal = new Set(tokenize(buildQuery(nb, index, input)));
+  const fused = new Map(baseline.candidates.map((c) => [c.record.id, c]));
+  for (const term of new Set(terms)) {
+    if (literal.has(term)) continue;
+    for (const c of scoreQueryCandidates(nb, index, input, now, term).candidates) {
+      const prior = fused.get(c.record.id);
+      if (!prior || c.parts.total > prior.parts.total) fused.set(c.record.id, c);
+    }
+  }
+  return {
+    ...baseline,
+    candidates: [...fused.values()].sort(
+      (a, b) => b.parts.total - a.parts.total || (a.record.id < b.record.id ? -1 : 1),
+    ),
+  };
+}
+
+function scoreQueryCandidates(
+  nb: Notebook,
+  index: NotebookIndex,
+  input: ContextInput,
+  now: Date,
+  queryOverride?: string,
+): { candidates: Candidate[]; refTask?: IndexedRecord; fusion: Fusion } {
   const project = nb.config.project;
-  const { byId, pool, refTask, pathParts, query } = prepare(nb, index, input);
+  const { byId, pool, refTask, pathParts, query: original } = prepare(nb, index, input);
+  const query = queryOverride ?? original;
   const inPool = new Set(pool.map((r) => r.id));
   const fusion: Fusion = input.fusion ?? (nb.config.retrieval?.fusion === "rrf" ? "rrf" : "weighted");
   const semantic = input.semantic;

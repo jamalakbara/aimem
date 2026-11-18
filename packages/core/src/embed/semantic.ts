@@ -2,7 +2,9 @@ import type { SemanticInput } from "../context/score.js";
 import type { NotebookIndex } from "../index/build.js";
 import type { Fs } from "../ports.js";
 import type { Notebook } from "../project/load.js";
-import { loadVectorCache, semanticScores } from "./cache.js";
+import { HIDDEN_STATUSES } from "../search/search.js";
+import { scanSecrets } from "../secrets/scan.js";
+import { loadVectorCache, semanticMatches } from "./cache.js";
 import type { EmbeddingProvider } from "./provider.js";
 
 /**
@@ -27,6 +29,22 @@ export async function semanticForQuery(
   const eligible = index.records.filter((r) => !excluded.has(r.id)).map((r) => r.id);
   const cached = new Set(cache.meta.chunks.map((c) => c.ref));
   const coverage = eligible.length ? eligible.filter((id) => cached.has(id)).length / eligible.length : 1;
-  const scores = query.trim() ? await semanticScores(cache, provider, query) : new Map<string, number>();
-  return { scores, provider: provider.id, coverage: Math.round(coverage * 10000) / 10000 };
+  const sources =
+    provider.id.startsWith("local:") && cache.meta.chunks.some((c) => c.term !== undefined)
+      ? new Set(
+          index.records
+            .filter(
+              (r) =>
+                !HIDDEN_STATUSES.has(r.status) &&
+                !r.tags.includes("no-embed") &&
+                scanSecrets(r.text).length === 0 &&
+                (!nb.config.repo || !r.repo || r.repo === nb.config.repo || r.repo === "all"),
+            )
+            .map((r) => r.id),
+        )
+      : undefined;
+  const matches = query.trim()
+    ? await semanticMatches(cache, provider, query, sources)
+    : { scores: new Map<string, number>() };
+  return { ...matches, provider: provider.id, coverage: Math.round(coverage * 10000) / 10000 };
 }

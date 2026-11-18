@@ -85,7 +85,7 @@ interface EmbeddingProvider {
 | **paraphrase-multilingual-MiniLM-L12-v2** | 118 MB | 1.00 | 0.86 | 0.91 | **0.93** | 4 s |
 | bge-m3 | 570 MB | 1.00 | 0.86 | 0.91 | 0.93 | 46 s |
 
-The first comparison failed the gate for every model because raw cosine was used; real models compress cosine into a narrow band (e.g. 0.73–0.88), so semantic scores are now **min-max normalised over the candidate pool** as §6 specifies, then re-run. The +0.15 paraphrase target (12 §3) is not yet met (+0.09); the M2 acceptance (hybrid beats lexical on both sets, overall ≥ 0.85) is.
+The first comparison failed the gate for every model because raw cosine was used; real models compress cosine into a narrow band (e.g. 0.73–0.88), so semantic scores are now **min-max normalised over the candidate pool** as §6 specifies, then re-run. This initial comparison left the +0.15 paraphrase target unmet (+0.09), while meeting M2 acceptance. The later vocabulary-matching result in §7 reaches the target with the same MiniLM weights.
 
 **T7 investigation (2026-11-16, Windows):** reproduced the original 34-case set with
 the real default model. No cases, expected refs, scoring defaults or model defaults
@@ -156,7 +156,7 @@ All are diagnostic scripts (`eval-t7-queries`, `eval-t7-qwen`, `eval-t7-constrai
 `eval-t7-durable`); results are in `t7-query-phrases.json`, `t7-qwen.json` and
 `t7-durable-policy.json`. T7 remains open and defaults remain unchanged.
 
-Current hybrid misses in score-order top 10:
+Hybrid misses before vocabulary matching, in score-order top 10:
 
 | Case | Expected ref outside top 10 | Rank | Observation |
 |------|-----------------------------|------|-------------|
@@ -168,7 +168,7 @@ All expected refs nevertheless appear in the packed hybrid briefing (`inBriefing
 1.0000); overall recall@10 is 0.9265, budget compliance and determinism 1.0000,
 with zero forbidden-ref violations or missing labels. This distinguishes ranking
 quality from whether the agent receives the answer. Do not change the metric to
-claim the +0.15 goal: T7 remains unfinished. Before expanding into reranking or
+claim the +0.15 goal. At this point T7 remained unfinished. Before expanding into reranking or
 query rewriting (T8), review that scope and add independent evaluation questions
 to reduce the risk of tuning around these three cases.
 
@@ -188,7 +188,18 @@ The index stores `provider`, `model`, `dimensions`, `chunker_version`. Any chang
 
 Vectors are **never committed to git**: large, unreadable diffs, model-specific, and reproducible.
 
-**Implementation (v0.1, slice 2.3):** `.aimem/.cache/vectors/meta.json` (`version`, `provider`, `dimensions`, `chunkerVersion`, `chunks[] {key, ref, section, part, bodySha}`) + `vectors.f32` (rows of L2-normalised float32 in `chunks` order), both written atomically. Chunk key = hash of `(ref, section, part, bodySha, provider id)`. A missing/corrupt cache (size check), or a different provider, dimension count or chunker version, triggers a full rebuild; otherwise only new or changed chunks are embedded. `no-embed` and secret-flagged records are excluded and reported. Semantic score = best chunk cosine, head chunk × 1.05, clamped to 0..1. Tests use a deterministic hash-based stub embedder (word overlap, not meaning). Until slice 2.4 no real provider is installed, so semantic search reports `off` with a reason and everything uses lexical retrieval.
+**Cache implementation:** `.aimem/.cache/vectors/meta.json` (`version`, `provider`, `dimensions`, `chunkerVersion`, `chunks[] {key, ref, section, part, bodySha, term?}`) + `vectors.f32` (rows of L2-normalised float32 in `chunks` order), both written atomically. Chunk key hashes `(ref, section, part, bodySha, provider id, term)`. A missing/corrupt cache (size check), or a different provider, dimension count or chunker version, triggers a full rebuild; otherwise vectors are reused. `no-embed` and secret-flagged records are excluded and reported. Ordinary record similarity remains best chunk cosine, head chunk × 1.05, clamped to 0..1; auxiliary `term` rows never participate in that maximum. Tests use a deterministic hash-based stub embedder (word overlap, not meaning).
+
+Cache version 2 / chunker version 2 additionally stores up to 4096 unique local
+corpus words (3–32 Unicode letters) as `section: lexicon` rows with `term` set.
+Words come from title, summary and body of current eligible records, ordered by
+document frequency then lexical order; the lexically first source ref owns each
+word. Hidden, `no-embed` and secret-flagged sources are excluded. Each word is
+embedded independently because quantized outputs vary with batch composition;
+unchanged word vectors are reused even if ownership or its source body changes.
+Nonlocal providers do not build this vocabulary. Version-1 caches remain readable
+with the prior behavior; run `index --embeddings` to activate vocabulary matching.
+Older CLIs reject version 2 and fall back lexically until their index rebuilds it.
 
 **Incremental embeddings on write (T1):** every write (`add`/`decide`/`remember`/…, `update`, `supersede`, `verify`, `handoff`, and the MCP write tools) refreshes the cache right after re-rendering `INDEX.md`, embedding only new or changed chunks; untouched chunks keep their keys and vectors. It runs only when a cache built with the current provider already exists — a write never starts a cold build or downloads a model (that stays with `aimem index --embeddings`), and the CLI loads the model only when `meta.json` exists. A refresh failure never fails the write: the record is saved, a warning says `embeddings not updated: …`, and the next write or `index --embeddings` catches up. The MCP server keeps the loaded model for the session. `aimem doctor` reports `coverage N%` (records with vectors ÷ eligible records) and warns below 100%. `--json` write output is unchanged. Concurrent writers (CLI + MCP at the same moment) can drop one record's chunks (last atomic write wins); coverage shows it and the next write repairs it.
 
@@ -245,6 +256,56 @@ after adding the history-query exception. T7's default context recall target
 remains open.
 
 Default (no LLM): concatenate task text, ticket/branch tokens, the task record's title+goal, and top path-derived tags; embed as a *query*.
+
+### Local vocabulary matching (T7)
+
+Default local hybrid **context** additionally compares that same query vector
+with cached corpus-word vectors. Select a word only at cosine ≥ 0.4 with a ≥ 0.01
+margin over the next meaning, and only if it is not already a literal query word.
+Attested singular/plural forms differing by `s` count as one meaning only when
+their embedding cosine is ≥ 0.8; at most two word forms are used. There is no
+curated synonym list, fixture-ref lookup, generation, or extra query-model call.
+Every source is checked again for current status, repo and privacy eligibility.
+
+Each selected word supplies another context scoring view with the original
+query's semantic scores. The original view remains. Fuse by maximum **complete**
+score per record: each view independently retains hard filters, metadata,
+trust/freshness multipliers and pins. `--explain` shows the winning view's parts.
+This applies to the shared CLI/MCP context scorer; search/ask ranking and lexical
+fallback keep their existing paths. `query_rewrite` and `rerank` remain `none`
+by default. The cache format changes, not the model, record format or JSON envelope.
+
+Production validation on 2026-11-18 (`node scripts/eval-t7-final.mjs`):
+
+| Set / measure | Prior hybrid | New default hybrid | Lexical |
+|---------------|--------------|--------------------|---------|
+| Original medium paraphrase | 0.8636 | **0.9545** | 0.7727 |
+| Original medium keyword | 1.0000 | 1.0000 | 1.0000 |
+| Original medium multilingual | 0.9091 | 0.9091 | 0.6364 |
+| Original medium trap | 1.0000 | 1.0000 | 1.0000 |
+| Original medium overall | 0.9265 | 0.9559 | 0.8088 |
+| Six earlier additional questions, overall | 0.4167 | 0.6667 | 0.3333 |
+| Four longer questions, overall | 0.7500 | 0.7500 | 0.5000 |
+| Twelve calibration questions, overall | 0.7083 | 0.7083 | 0.5417 |
+| Twelve final validation questions, overall | 1.0000 | 1.0000 | 0.7917 |
+
+The original paraphrase gain is **+0.1818**, meeting T7's +0.15 requirement.
+All sets have zero forbidden-ref violations, full budget compliance and
+deterministic results. Questions, expected refs and the lexical baseline were
+not changed. The prior facade suppresses only vocabulary matching over the same
+cache/model, reproducing the previous baseline. The final twelve questions were
+locked after selecting the method and before their first evaluation; their
+answers were not adjusted after results.
+
+The medium cache contains 1905 vectors instead of 490 body/head vectors, about
+2.9 MB instead of 0.75 MB at 384 dimensions. Cold indexing was about 12 seconds
+in the observed local run; this is not an isolated performance benchmark.
+Matching remains corpus-dependent and can choose an imperfect word; the original
+scoring view is retained but another record can still overtake it. This small
+shared-project evaluation does not establish generalization. The missing
+Indonesian ownership memory in `para-who-is-working` remains outside the top ten.
+The stronger-model, density, PCA, passage, token-interaction and local-ranker
+fusion probes did not meet the original target and were not shipped.
 
 Optional (`retrieval.query_rewrite: llm`): a configured LLM produces 2–3 reformulations (e.g. "idempotency", "duplicate webhook delivery", "retry handling"); each is searched and results are fused. Off by default (latency, cost, privacy).
 

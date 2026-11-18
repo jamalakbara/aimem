@@ -23,6 +23,14 @@ Local call diagnostics use `.aimem/.cache/calls.jsonl` (15 §17). This git-ignor
 disposable cache is not a record and is never included in notebook indexing or sync.
 No project configuration or record fields are added for logging.
 
+Local embedding caches also remain disposable, gitignored data (15 §5). Cache
+metadata version 2 adds optional `chunks[].term` for bounded corpus-word vectors;
+the existing `meta.json` / `vectors.f32` layout is retained. Version 1 is still
+readable without vocabulary matching. Chunker version 2 makes the next explicit
+`index --embeddings` rebuild the cache. Older CLIs reject cache version 2 and fall
+back to lexical retrieval until their own index command rebuilds it. This does
+not change `aimem: 1`, record fields, or notebook layout.
+
 Optional local cross-encoder files share the existing `$AIMEM_HOME/models` cache
 with embedding models (15 §9); they are not notebook records or project config.
 Only explicit `aimem index --reranker` setup permits ranker downloads.

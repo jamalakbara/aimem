@@ -1,0 +1,2983 @@
+{
+  "model": "local:paraphrase-multilingual-minilm",
+  "method": "Original document vectors and scoring versus production corpus-term bridge; prior: facade only suppresses bridge, same cache and embeddings",
+  "buildMs": 13270,
+  "built": {
+    "provider": "local:paraphrase-multilingual-minilm",
+    "chunks": 1905,
+    "built": 1905,
+    "reused": 0,
+    "removed": 0,
+    "rebuilt": true,
+    "reason": "no vector cache yet",
+    "excluded": []
+  },
+  "cacheVersion": 2,
+  "parameters": {
+    "maxWords": 4096,
+    "minimumCosine": 0.4,
+    "minimumMargin": 0.01,
+    "wordFormCosine": 0.8
+  },
+  "reports": [
+    {
+      "name": "medium",
+      "lexical": {
+        "cases": [
+          {
+            "id": "kw-zod-json-schema",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "kw-claims-cas",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "kw-biome-preset",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "kw-defer-odoo",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "kw-secret-fixtures",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "kw-stacked-prs",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "kw-git-binary",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "kw-mcp-paths",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "para-delete-note",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "para-same-work",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "para-lint-silent",
+            "category": "paraphrase",
+            "recall": 0,
+            "inBriefing": 0,
+            "missing": [
+              "mem-rj2t0xj9"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "para-zero-sha",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "para-id-letters",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "para-who-is-working",
+            "category": "paraphrase",
+            "recall": 0.5,
+            "inBriefing": 0.5,
+            "missing": [
+              "mem-peqcrkme"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "ml-id-zod",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "ml-id-agent-commit",
+            "category": "multilingual",
+            "recall": 0,
+            "inBriefing": 0,
+            "missing": [
+              "dec-ek66gxgx"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "ml-id-delete",
+            "category": "multilingual",
+            "recall": 0,
+            "inBriefing": 0,
+            "missing": [
+              "dec-b0gymeq0"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "ml-en-index-edit",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "ml-en-summary-lines",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "ml-en-token-estimate",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "trap-retrieval",
+            "category": "trap",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "trap-linter",
+            "category": "trap",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "trap-agent-commits",
+            "category": "trap",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "trap-default-status",
+            "category": "trap",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "hard-para-erase",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "hard-para-quiet-checker",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "hard-para-busy",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "hard-para-collision",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "hard-para-offline-first",
+            "category": "paraphrase",
+            "recall": 0,
+            "inBriefing": 1,
+            "missing": [
+              "dec-3by2wh28"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "hard-ml-id-hapus",
+            "category": "multilingual",
+            "recall": 0,
+            "inBriefing": 0,
+            "missing": [
+              "dec-b0gymeq0"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "hard-ml-id-rahasia",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "hard-ml-id-bahasa",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "hard-ml-en-oneline",
+            "category": "multilingual",
+            "recall": 0,
+            "inBriefing": 0,
+            "missing": [
+              "mem-dcsz2htx"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "hard-ml-en-noninteractive",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          }
+        ],
+        "byCategory": {
+          "keyword": {
+            "n": 8,
+            "recall": 1,
+            "inBriefing": 1,
+            "violations": 0
+          },
+          "multilingual": {
+            "n": 11,
+            "recall": 0.6364,
+            "inBriefing": 0.6364,
+            "violations": 0
+          },
+          "paraphrase": {
+            "n": 11,
+            "recall": 0.7727,
+            "inBriefing": 0.8636,
+            "violations": 0
+          },
+          "trap": {
+            "n": 4,
+            "recall": 1,
+            "inBriefing": 1,
+            "violations": 0
+          }
+        },
+        "overall": {
+          "n": 34,
+          "recall": 0.8088,
+          "inBriefing": 0.8382,
+          "violations": 0,
+          "budgetOk": 1,
+          "deterministic": 1
+        }
+      },
+      "before": {
+        "cases": [
+          {
+            "id": "kw-zod-json-schema",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "kw-claims-cas",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "kw-biome-preset",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "kw-defer-odoo",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "kw-secret-fixtures",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "kw-stacked-prs",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "kw-git-binary",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "kw-mcp-paths",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "para-delete-note",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "para-same-work",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "para-lint-silent",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "para-zero-sha",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "para-id-letters",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "para-who-is-working",
+            "category": "paraphrase",
+            "recall": 0.5,
+            "inBriefing": 1,
+            "missing": [
+              "mem-peqcrkme"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "ml-id-zod",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "ml-id-agent-commit",
+            "category": "multilingual",
+            "recall": 0,
+            "inBriefing": 1,
+            "missing": [
+              "dec-ek66gxgx"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "ml-id-delete",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "ml-en-index-edit",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "ml-en-summary-lines",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "ml-en-token-estimate",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "trap-retrieval",
+            "category": "trap",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "trap-linter",
+            "category": "trap",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "trap-agent-commits",
+            "category": "trap",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "trap-default-status",
+            "category": "trap",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "hard-para-erase",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "hard-para-quiet-checker",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "hard-para-busy",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "hard-para-collision",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "hard-para-offline-first",
+            "category": "paraphrase",
+            "recall": 0,
+            "inBriefing": 1,
+            "missing": [
+              "dec-3by2wh28"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "hard-ml-id-hapus",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "hard-ml-id-rahasia",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "hard-ml-id-bahasa",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "hard-ml-en-oneline",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "hard-ml-en-noninteractive",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          }
+        ],
+        "byCategory": {
+          "keyword": {
+            "n": 8,
+            "recall": 1,
+            "inBriefing": 1,
+            "violations": 0
+          },
+          "multilingual": {
+            "n": 11,
+            "recall": 0.9091,
+            "inBriefing": 1,
+            "violations": 0
+          },
+          "paraphrase": {
+            "n": 11,
+            "recall": 0.8636,
+            "inBriefing": 1,
+            "violations": 0
+          },
+          "trap": {
+            "n": 4,
+            "recall": 1,
+            "inBriefing": 1,
+            "violations": 0
+          }
+        },
+        "overall": {
+          "n": 34,
+          "recall": 0.9265,
+          "inBriefing": 1,
+          "violations": 0,
+          "budgetOk": 1,
+          "deterministic": 1
+        }
+      },
+      "after": {
+        "cases": [
+          {
+            "id": "kw-zod-json-schema",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "kw-claims-cas",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "kw-biome-preset",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "kw-defer-odoo",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "kw-secret-fixtures",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "kw-stacked-prs",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "kw-git-binary",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "kw-mcp-paths",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "para-delete-note",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "para-same-work",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "para-lint-silent",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "para-zero-sha",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "para-id-letters",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "para-who-is-working",
+            "category": "paraphrase",
+            "recall": 0.5,
+            "inBriefing": 1,
+            "missing": [
+              "mem-peqcrkme"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "ml-id-zod",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "ml-id-agent-commit",
+            "category": "multilingual",
+            "recall": 0,
+            "inBriefing": 1,
+            "missing": [
+              "dec-ek66gxgx"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "ml-id-delete",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "ml-en-index-edit",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "ml-en-summary-lines",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "ml-en-token-estimate",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "trap-retrieval",
+            "category": "trap",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "trap-linter",
+            "category": "trap",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "trap-agent-commits",
+            "category": "trap",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "trap-default-status",
+            "category": "trap",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "hard-para-erase",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "hard-para-quiet-checker",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "hard-para-busy",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "hard-para-collision",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "hard-para-offline-first",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "hard-ml-id-hapus",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "hard-ml-id-rahasia",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "hard-ml-id-bahasa",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "hard-ml-en-oneline",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "hard-ml-en-noninteractive",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          }
+        ],
+        "byCategory": {
+          "keyword": {
+            "n": 8,
+            "recall": 1,
+            "inBriefing": 1,
+            "violations": 0
+          },
+          "multilingual": {
+            "n": 11,
+            "recall": 0.9091,
+            "inBriefing": 1,
+            "violations": 0
+          },
+          "paraphrase": {
+            "n": 11,
+            "recall": 0.9545,
+            "inBriefing": 1,
+            "violations": 0
+          },
+          "trap": {
+            "n": 4,
+            "recall": 1,
+            "inBriefing": 1,
+            "violations": 0
+          }
+        },
+        "overall": {
+          "n": 34,
+          "recall": 0.9559,
+          "inBriefing": 1,
+          "violations": 0,
+          "budgetOk": 1,
+          "deterministic": 1
+        }
+      },
+      "expansions": [
+        {
+          "id": "kw-git-binary",
+          "term": "github"
+        },
+        {
+          "id": "para-delete-note",
+          "term": "erased"
+        },
+        {
+          "id": "para-zero-sha",
+          "term": "checking"
+        },
+        {
+          "id": "ml-id-delete",
+          "term": "erased"
+        },
+        {
+          "id": "ml-en-token-estimate",
+          "term": "anggaran"
+        },
+        {
+          "id": "trap-default-status",
+          "term": "decisions decision"
+        },
+        {
+          "id": "hard-para-busy",
+          "term": "runners runner"
+        },
+        {
+          "id": "hard-para-offline-first",
+          "term": "offline"
+        },
+        {
+          "id": "hard-ml-id-hapus",
+          "term": "discarded"
+        },
+        {
+          "id": "hard-ml-id-rahasia",
+          "term": "keys key"
+        }
+      ]
+    },
+    {
+      "name": "t7-heldout",
+      "lexical": {
+        "cases": [
+          {
+            "id": "heldout-withdraw-false-knowledge",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "heldout-competing-workers",
+            "category": "paraphrase",
+            "recall": 0,
+            "inBriefing": 1,
+            "missing": [
+              "dec-kqfc1se7"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "heldout-disconnected-laptop",
+            "category": "paraphrase",
+            "recall": 0,
+            "inBriefing": 1,
+            "missing": [
+              "dec-3by2wh28"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "heldout-present-ownership",
+            "category": "paraphrase",
+            "recall": 0,
+            "inBriefing": 1,
+            "missing": [
+              "dec-g17nvbca"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "heldout-id-lint",
+            "category": "multilingual",
+            "recall": 0,
+            "inBriefing": 0,
+            "missing": [
+              "mem-rj2t0xj9"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "heldout-id-index",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          }
+        ],
+        "byCategory": {
+          "multilingual": {
+            "n": 2,
+            "recall": 0.5,
+            "inBriefing": 0.5,
+            "violations": 0
+          },
+          "paraphrase": {
+            "n": 4,
+            "recall": 0.25,
+            "inBriefing": 1,
+            "violations": 0
+          }
+        },
+        "overall": {
+          "n": 6,
+          "recall": 0.3333,
+          "inBriefing": 0.8333,
+          "violations": 0,
+          "budgetOk": 1,
+          "deterministic": 1
+        }
+      },
+      "before": {
+        "cases": [
+          {
+            "id": "heldout-withdraw-false-knowledge",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "heldout-competing-workers",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "heldout-disconnected-laptop",
+            "category": "paraphrase",
+            "recall": 0,
+            "inBriefing": 1,
+            "missing": [
+              "dec-3by2wh28"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "heldout-present-ownership",
+            "category": "paraphrase",
+            "recall": 0,
+            "inBriefing": 1,
+            "missing": [
+              "dec-g17nvbca"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "heldout-id-lint",
+            "category": "multilingual",
+            "recall": 0,
+            "inBriefing": 1,
+            "missing": [
+              "mem-rj2t0xj9"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "heldout-id-index",
+            "category": "multilingual",
+            "recall": 0.5,
+            "inBriefing": 1,
+            "missing": [
+              "dec-v868xmvq"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          }
+        ],
+        "byCategory": {
+          "multilingual": {
+            "n": 2,
+            "recall": 0.25,
+            "inBriefing": 1,
+            "violations": 0
+          },
+          "paraphrase": {
+            "n": 4,
+            "recall": 0.5,
+            "inBriefing": 1,
+            "violations": 0
+          }
+        },
+        "overall": {
+          "n": 6,
+          "recall": 0.4167,
+          "inBriefing": 1,
+          "violations": 0,
+          "budgetOk": 1,
+          "deterministic": 1
+        }
+      },
+      "after": {
+        "cases": [
+          {
+            "id": "heldout-withdraw-false-knowledge",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "heldout-competing-workers",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "heldout-disconnected-laptop",
+            "category": "paraphrase",
+            "recall": 0,
+            "inBriefing": 1,
+            "missing": [
+              "dec-3by2wh28"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "heldout-present-ownership",
+            "category": "paraphrase",
+            "recall": 0,
+            "inBriefing": 1,
+            "missing": [
+              "dec-g17nvbca"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "heldout-id-lint",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "heldout-id-index",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          }
+        ],
+        "byCategory": {
+          "multilingual": {
+            "n": 2,
+            "recall": 1,
+            "inBriefing": 1,
+            "violations": 0
+          },
+          "paraphrase": {
+            "n": 4,
+            "recall": 0.5,
+            "inBriefing": 1,
+            "violations": 0
+          }
+        },
+        "overall": {
+          "n": 6,
+          "recall": 0.6667,
+          "inBriefing": 1,
+          "violations": 0,
+          "budgetOk": 1,
+          "deterministic": 1
+        }
+      },
+      "expansions": [
+        {
+          "id": "heldout-competing-workers",
+          "term": "concurrency"
+        },
+        {
+          "id": "heldout-id-lint",
+          "term": "dimatikan"
+        },
+        {
+          "id": "heldout-id-index",
+          "term": "index"
+        }
+      ]
+    },
+    {
+      "name": "t7-query-heldout",
+      "lexical": {
+        "cases": [
+          {
+            "id": "query-heldout-disconnected-work",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "query-heldout-ephemeral-ownership",
+            "category": "paraphrase",
+            "recall": 0,
+            "inBriefing": 0.5,
+            "missing": [
+              "dec-g17nvbca",
+              "mem-peqcrkme"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "query-heldout-withdraw-id",
+            "category": "multilingual",
+            "recall": 0,
+            "inBriefing": 0,
+            "missing": [
+              "dec-b0gymeq0"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "query-heldout-schema-export",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          }
+        ],
+        "byCategory": {
+          "keyword": {
+            "n": 1,
+            "recall": 1,
+            "inBriefing": 1,
+            "violations": 0
+          },
+          "multilingual": {
+            "n": 1,
+            "recall": 0,
+            "inBriefing": 0,
+            "violations": 0
+          },
+          "paraphrase": {
+            "n": 2,
+            "recall": 0.5,
+            "inBriefing": 0.75,
+            "violations": 0
+          }
+        },
+        "overall": {
+          "n": 4,
+          "recall": 0.5,
+          "inBriefing": 0.625,
+          "violations": 0,
+          "budgetOk": 1,
+          "deterministic": 1
+        }
+      },
+      "before": {
+        "cases": [
+          {
+            "id": "query-heldout-disconnected-work",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "query-heldout-ephemeral-ownership",
+            "category": "paraphrase",
+            "recall": 0,
+            "inBriefing": 1,
+            "missing": [
+              "dec-g17nvbca",
+              "mem-peqcrkme"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "query-heldout-withdraw-id",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "query-heldout-schema-export",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          }
+        ],
+        "byCategory": {
+          "keyword": {
+            "n": 1,
+            "recall": 1,
+            "inBriefing": 1,
+            "violations": 0
+          },
+          "multilingual": {
+            "n": 1,
+            "recall": 1,
+            "inBriefing": 1,
+            "violations": 0
+          },
+          "paraphrase": {
+            "n": 2,
+            "recall": 0.5,
+            "inBriefing": 1,
+            "violations": 0
+          }
+        },
+        "overall": {
+          "n": 4,
+          "recall": 0.75,
+          "inBriefing": 1,
+          "violations": 0,
+          "budgetOk": 1,
+          "deterministic": 1
+        }
+      },
+      "after": {
+        "cases": [
+          {
+            "id": "query-heldout-disconnected-work",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "query-heldout-ephemeral-ownership",
+            "category": "paraphrase",
+            "recall": 0,
+            "inBriefing": 1,
+            "missing": [
+              "dec-g17nvbca",
+              "mem-peqcrkme"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "query-heldout-withdraw-id",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "query-heldout-schema-export",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          }
+        ],
+        "byCategory": {
+          "keyword": {
+            "n": 1,
+            "recall": 1,
+            "inBriefing": 1,
+            "violations": 0
+          },
+          "multilingual": {
+            "n": 1,
+            "recall": 1,
+            "inBriefing": 1,
+            "violations": 0
+          },
+          "paraphrase": {
+            "n": 2,
+            "recall": 0.5,
+            "inBriefing": 1,
+            "violations": 0
+          }
+        },
+        "overall": {
+          "n": 4,
+          "recall": 0.75,
+          "inBriefing": 1,
+          "violations": 0,
+          "budgetOk": 1,
+          "deterministic": 1
+        }
+      },
+      "expansions": [
+        {
+          "id": "query-heldout-ephemeral-ownership",
+          "term": "placeholder"
+        },
+        {
+          "id": "query-heldout-schema-export",
+          "term": "modelcontextprotocol"
+        }
+      ]
+    },
+    {
+      "name": "t7-calibration-heldout",
+      "lexical": {
+        "cases": [
+          {
+            "id": "calibration-airplane-notebook",
+            "category": "paraphrase",
+            "recall": 0,
+            "inBriefing": 1,
+            "missing": [
+              "dec-3by2wh28"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "calibration-service-outage",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "calibration-active-assignee",
+            "category": "paraphrase",
+            "recall": 0,
+            "inBriefing": 0.5,
+            "missing": [
+              "dec-g17nvbca",
+              "mem-peqcrkme"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "calibration-retract-error",
+            "category": "paraphrase",
+            "recall": 0,
+            "inBriefing": 1,
+            "missing": [
+              "dec-b0gymeq0"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "calibration-dependency-boundary",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "calibration-secret-examples",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "calibration-offline-id",
+            "category": "multilingual",
+            "recall": 0,
+            "inBriefing": 1,
+            "missing": [
+              "dec-3by2wh28"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "calibration-owner-id",
+            "category": "multilingual",
+            "recall": 0.5,
+            "inBriefing": 0.5,
+            "missing": [
+              "dec-g17nvbca"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "calibration-index-id",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "calibration-schema-keyword",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "calibration-workspace-keyword",
+            "category": "keyword",
+            "recall": 0,
+            "inBriefing": 1,
+            "missing": [
+              "mem-8syrq6ke"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "calibration-cli-contract",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          }
+        ],
+        "byCategory": {
+          "keyword": {
+            "n": 3,
+            "recall": 0.6667,
+            "inBriefing": 1,
+            "violations": 0
+          },
+          "multilingual": {
+            "n": 3,
+            "recall": 0.5,
+            "inBriefing": 0.8333,
+            "violations": 0
+          },
+          "paraphrase": {
+            "n": 6,
+            "recall": 0.5,
+            "inBriefing": 0.9167,
+            "violations": 0
+          }
+        },
+        "overall": {
+          "n": 12,
+          "recall": 0.5417,
+          "inBriefing": 0.9167,
+          "violations": 0,
+          "budgetOk": 1,
+          "deterministic": 1
+        }
+      },
+      "before": {
+        "cases": [
+          {
+            "id": "calibration-airplane-notebook",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "calibration-service-outage",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "calibration-active-assignee",
+            "category": "paraphrase",
+            "recall": 0,
+            "inBriefing": 1,
+            "missing": [
+              "dec-g17nvbca",
+              "mem-peqcrkme"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "calibration-retract-error",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "calibration-dependency-boundary",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "calibration-secret-examples",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "calibration-offline-id",
+            "category": "multilingual",
+            "recall": 0,
+            "inBriefing": 1,
+            "missing": [
+              "dec-3by2wh28"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "calibration-owner-id",
+            "category": "multilingual",
+            "recall": 0.5,
+            "inBriefing": 1,
+            "missing": [
+              "dec-g17nvbca"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "calibration-index-id",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "calibration-schema-keyword",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "calibration-workspace-keyword",
+            "category": "keyword",
+            "recall": 0,
+            "inBriefing": 1,
+            "missing": [
+              "mem-8syrq6ke"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "calibration-cli-contract",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          }
+        ],
+        "byCategory": {
+          "keyword": {
+            "n": 3,
+            "recall": 0.6667,
+            "inBriefing": 1,
+            "violations": 0
+          },
+          "multilingual": {
+            "n": 3,
+            "recall": 0.5,
+            "inBriefing": 1,
+            "violations": 0
+          },
+          "paraphrase": {
+            "n": 6,
+            "recall": 0.8333,
+            "inBriefing": 1,
+            "violations": 0
+          }
+        },
+        "overall": {
+          "n": 12,
+          "recall": 0.7083,
+          "inBriefing": 1,
+          "violations": 0,
+          "budgetOk": 1,
+          "deterministic": 1
+        }
+      },
+      "after": {
+        "cases": [
+          {
+            "id": "calibration-airplane-notebook",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "calibration-service-outage",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "calibration-active-assignee",
+            "category": "paraphrase",
+            "recall": 0,
+            "inBriefing": 1,
+            "missing": [
+              "dec-g17nvbca",
+              "mem-peqcrkme"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "calibration-retract-error",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "calibration-dependency-boundary",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "calibration-secret-examples",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "calibration-offline-id",
+            "category": "multilingual",
+            "recall": 0,
+            "inBriefing": 1,
+            "missing": [
+              "dec-3by2wh28"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "calibration-owner-id",
+            "category": "multilingual",
+            "recall": 0.5,
+            "inBriefing": 1,
+            "missing": [
+              "dec-g17nvbca"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "calibration-index-id",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "calibration-schema-keyword",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "calibration-workspace-keyword",
+            "category": "keyword",
+            "recall": 0,
+            "inBriefing": 1,
+            "missing": [
+              "mem-8syrq6ke"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "calibration-cli-contract",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          }
+        ],
+        "byCategory": {
+          "keyword": {
+            "n": 3,
+            "recall": 0.6667,
+            "inBriefing": 1,
+            "violations": 0
+          },
+          "multilingual": {
+            "n": 3,
+            "recall": 0.5,
+            "inBriefing": 1,
+            "violations": 0
+          },
+          "paraphrase": {
+            "n": 6,
+            "recall": 0.8333,
+            "inBriefing": 1,
+            "violations": 0
+          }
+        },
+        "overall": {
+          "n": 12,
+          "recall": 0.7083,
+          "inBriefing": 1,
+          "violations": 0,
+          "budgetOk": 1,
+          "deterministic": 1
+        }
+      },
+      "expansions": [
+        {
+          "id": "calibration-service-outage",
+          "term": "sharing"
+        },
+        {
+          "id": "calibration-active-assignee",
+          "term": "worktrees"
+        },
+        {
+          "id": "calibration-secret-examples",
+          "term": "notebook"
+        },
+        {
+          "id": "calibration-offline-id",
+          "term": "unlinked"
+        },
+        {
+          "id": "calibration-owner-id",
+          "term": "statuses"
+        }
+      ]
+    },
+    {
+      "name": "t7-final-heldout",
+      "lexical": {
+        "cases": [
+          {
+            "id": "final-branch-protection",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "final-lockfile-repair",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "final-restart-context",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "final-commit-checks",
+            "category": "paraphrase",
+            "recall": 0.5,
+            "inBriefing": 1,
+            "missing": [
+              "run-gea7sjyn"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "final-field-preservation",
+            "category": "multilingual",
+            "recall": 0,
+            "inBriefing": 1,
+            "missing": [
+              "mem-e1fa6v95"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "final-authoritative-id",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "final-role-read-access",
+            "category": "paraphrase",
+            "recall": 0,
+            "inBriefing": 1,
+            "missing": [
+              "dec-2znaykpx"
+            ],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "final-source-of-truth",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "final-offline-debug-topic",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "final-index-regeneration",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "final-current-schema",
+            "category": "trap",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "final-present-retrieval",
+            "category": "trap",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          }
+        ],
+        "byCategory": {
+          "keyword": {
+            "n": 2,
+            "recall": 1,
+            "inBriefing": 1,
+            "violations": 0
+          },
+          "multilingual": {
+            "n": 2,
+            "recall": 0.5,
+            "inBriefing": 1,
+            "violations": 0
+          },
+          "paraphrase": {
+            "n": 6,
+            "recall": 0.75,
+            "inBriefing": 1,
+            "violations": 0
+          },
+          "trap": {
+            "n": 2,
+            "recall": 1,
+            "inBriefing": 1,
+            "violations": 0
+          }
+        },
+        "overall": {
+          "n": 12,
+          "recall": 0.7917,
+          "inBriefing": 1,
+          "violations": 0,
+          "budgetOk": 1,
+          "deterministic": 1
+        }
+      },
+      "before": {
+        "cases": [
+          {
+            "id": "final-branch-protection",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "final-lockfile-repair",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "final-restart-context",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "final-commit-checks",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "final-field-preservation",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "final-authoritative-id",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "final-role-read-access",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "final-source-of-truth",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "final-offline-debug-topic",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "final-index-regeneration",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "final-current-schema",
+            "category": "trap",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "final-present-retrieval",
+            "category": "trap",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          }
+        ],
+        "byCategory": {
+          "keyword": {
+            "n": 2,
+            "recall": 1,
+            "inBriefing": 1,
+            "violations": 0
+          },
+          "multilingual": {
+            "n": 2,
+            "recall": 1,
+            "inBriefing": 1,
+            "violations": 0
+          },
+          "paraphrase": {
+            "n": 6,
+            "recall": 1,
+            "inBriefing": 1,
+            "violations": 0
+          },
+          "trap": {
+            "n": 2,
+            "recall": 1,
+            "inBriefing": 1,
+            "violations": 0
+          }
+        },
+        "overall": {
+          "n": 12,
+          "recall": 1,
+          "inBriefing": 1,
+          "violations": 0,
+          "budgetOk": 1,
+          "deterministic": 1
+        }
+      },
+      "after": {
+        "cases": [
+          {
+            "id": "final-branch-protection",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "final-lockfile-repair",
+            "category": "keyword",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "final-restart-context",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "final-commit-checks",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "final-field-preservation",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "final-authoritative-id",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "final-role-read-access",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "final-source-of-truth",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "final-offline-debug-topic",
+            "category": "paraphrase",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "final-index-regeneration",
+            "category": "multilingual",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "final-current-schema",
+            "category": "trap",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          },
+          {
+            "id": "final-present-retrieval",
+            "category": "trap",
+            "recall": 1,
+            "inBriefing": 1,
+            "missing": [],
+            "violations": [],
+            "budgetOk": true,
+            "deterministic": true,
+            "unlabelled": []
+          }
+        ],
+        "byCategory": {
+          "keyword": {
+            "n": 2,
+            "recall": 1,
+            "inBriefing": 1,
+            "violations": 0
+          },
+          "multilingual": {
+            "n": 2,
+            "recall": 1,
+            "inBriefing": 1,
+            "violations": 0
+          },
+          "paraphrase": {
+            "n": 6,
+            "recall": 1,
+            "inBriefing": 1,
+            "violations": 0
+          },
+          "trap": {
+            "n": 2,
+            "recall": 1,
+            "inBriefing": 1,
+            "violations": 0
+          }
+        },
+        "overall": {
+          "n": 12,
+          "recall": 1,
+          "inBriefing": 1,
+          "violations": 0,
+          "budgetOk": 1,
+          "deterministic": 1
+        }
+      },
+      "expansions": [
+        {
+          "id": "final-commit-checks",
+          "term": "checking"
+        },
+        {
+          "id": "final-authoritative-id",
+          "term": "slugs slug"
+        },
+        {
+          "id": "final-role-read-access",
+          "term": "roles"
+        },
+        {
+          "id": "final-offline-debug-topic",
+          "term": "github"
+        },
+        {
+          "id": "final-index-regeneration",
+          "term": "conflicts conflict"
+        }
+      ]
+    }
+  ]
+}
