@@ -13,6 +13,7 @@ export * from "./eval/ask.js";
 export * from "./eval/rerank.js";
 export * from "./eval/run.js";
 export * from "./git/git.js";
+export * from "./git/live.js";
 export * from "./index/build.js";
 export * from "./llm/claude-cli.js";
 export * from "./llm/provider.js";
