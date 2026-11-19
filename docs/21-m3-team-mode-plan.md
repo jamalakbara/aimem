@@ -1,6 +1,6 @@
 # 21 — M3 Team Mode Plan
 
-Slice 3.1 was approved. Later slices are proposals.
+Slices 3.1 and 3.2 were approved. Later slices are proposals.
 
 ## Slice order
 
@@ -61,7 +61,7 @@ After approval, implement on a feature branch, run lint, typecheck and the full 
 
 ## 3.2 — Acquire an exclusive Git task claim
 
-Proposed for approval. The acceptance criteria are 12 §4 scenarios 1 and 3. Two clones racing for one task must produce one winner and one `CLAIM_CONFLICT`. A concurrent update to a different task must survive the retry.
+The acceptance criteria are 12 §4 scenarios 1 and 3. Two clones racing for one task must produce one winner and one `CLAIM_CONFLICT`. A concurrent update to a different task must survive the retry.
 
 ### CLI and claim identity
 

@@ -13,7 +13,7 @@ Binary: `aimem`. Designed for two audiences: humans (interactive) and agents (no
 | `--offline` | Do not fetch/push or contact the server |
 | `--quiet` / `--verbose` | Log level |
 
-Environment: `AIMEM_TOKEN` (server token), `AIMEM_AUTHOR` (e.g. `agent:claude-code`), `AIMEM_NONINTERACTIVE`, `AIMEM_HOME` (cache dir).
+Environment: `AIMEM_TOKEN` (server token), `AIMEM_AUTHOR` (e.g. `agent:claude-code`), `AIMEM_SESSION` (claim session), `AIMEM_NONINTERACTIVE`, `AIMEM_HOME` (cache dir).
 
 Exit codes: `0` ok · `1` warnings (strict mode) / not found · `2` validation or usage error · `3` conflict (e.g. claim lost, likely duplicate) · `4` network/sync failure (operation may have partially applied — see message).
 
@@ -230,16 +230,26 @@ Writes a `handoff` record, releases this session's claims (default), updates `IN
 ## 5. Task and claim commands
 
 ```
+aimem task claim <ref> [--author <who>] [--session <id>]
+                      [--paths <globs>] [--note <text>] [--ttl <minutes>m]
+```
+
+- Exclusive claims require an online Git-backed team notebook and a task in its local records. Use either the task ID or its project-qualified ref. The TTL comes from `claims.ttl_minutes` (default 180) unless overridden.
+- Session precedence is `--session`, `AIMEM_SESSION`, then a random ID generated for this invocation. Supply an opaque 1–64 character ID beginning with a letter or digit and containing only letters, digits, underscores or hyphens. Reuse it across invocations for the same session.
+- Success prints the session or returns `data.claim` in the `task claim` JSON envelope. An identical holder and session gets the existing claim back. A different holder or session gets `CLAIM_CONFLICT` (exit 3, `details.holder` and `details.since`). An uncertain Git failure returns `SYNC_FAILED` (exit 4). Retry with the same session ID to recover the result.
+- `--paths` accepts comma-separated globs. Explicit claim metadata goes to the live branch, where repository readers can see it. The CLI checks it for likely secrets before contacting Git.
+
+The rest of the task interface is planned. Existing claims remain in place until lifecycle support lands.
+
+```
 aimem task create --title "..." [--priority p1] [--assignee rina] [--roles dev,qa] [--paths ...]
 aimem task list [--status open] [--mine] [--claimed]
-aimem task claim <ref> [--paths "src/webhooks/**"] [--ttl 180m] [--note "..."] [--share] [--local]
 aimem task heartbeat [<ref>]            # extend TTL; `context` also heartbeats active claims
 aimem task release <ref> [--status done|open|blocked|review]
 aimem task status <ref> <status>
 aimem live [--watch]                    # show all live claims and presence (--watch streams updates; server mode)
 ```
-`--share` lets another holder co-claim (pairing). `--local` creates an unsynced local claim when the remote/server is unreachable; it is pushed on the next successful sync and clearly marked until then (07 §2.4).
-`claim` semantics: atomic. Exit `3` with the current holder printed if someone else holds a non-expired claim. `--steal` is allowed only for expired claims or by a human (`--steal --reason "..."`), recorded in the claim log.
+Planned claim extensions include `--share` for pairing, `--local` for offline reconciliation (07 §2.4), and `--steal` for takeover with a claim log.
 
 ## 6. Maintenance commands
 

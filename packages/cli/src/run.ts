@@ -9,6 +9,7 @@ import { init } from "./commands/init.js";
 import { indexCmd, validateCmd } from "./commands/maintain.js";
 import { list, searchCmd, show } from "./commands/read.js";
 import { doctor, type HandoffOptions, handoff, status } from "./commands/session.js";
+import { taskClaim } from "./commands/task.js";
 import { usageRecord } from "./commands/usage.js";
 import { type AddOptions, add, supersede, update, verify } from "./commands/write.js";
 import type { CliDeps, CommandResult, GlobalOptions } from "./deps.js";
@@ -45,8 +46,8 @@ export async function run(argv: string[], deps: CliDeps): Promise<number> {
     .configureOutput({ writeOut: (s) => deps.stdout(s), writeErr: () => undefined });
 
   /** Global flags (04 §1) are accepted on every command. */
-  const cmd = (name: string, description: string) =>
-    program
+  const cmd = (name: string, description: string, parent = program) =>
+    parent
       .command(name)
       .description(description)
       .exitOverride()
@@ -106,6 +107,16 @@ export async function run(argv: string[], deps: CliDeps): Promise<number> {
       "agents, claude, cursor, copilot, gemini, or none (default: AGENTS.md, plus CLAUDE.md if present)",
     )
     .action(action("init", (g, _a, o) => init(deps, g, o as Parameters<typeof init>[2])));
+
+  const task = program.command("task").description("manage task claims").exitOverride();
+  cmd("claim <ref>", "claim a task for this session", task)
+    .option("--author <who>", "human:<handle> or agent:<tool>[:<model>]")
+    .option("--session <id>", "opaque claim session ID")
+    .option("--paths <globs>", "comma-separated claim paths")
+    .option("--note <text>", "short claim note")
+    .option("--ttl <minutes>m", "claim duration, for example 180m")
+    .option("--offline", "disable network access")
+    .action(action("task claim", (g, [ref], o) => taskClaim(deps, g, ref as string, o)));
 
   cmd("context", "start-of-session briefing (06 §2)")
     .option("--task <text>", "what you were asked to do")
