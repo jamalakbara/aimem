@@ -29,6 +29,7 @@ Status: **draft v0.1** — produced from the initial brainstorm. Working name `a
 | 18 | [T7–T9 Implementation Plan](18-t7-t9-implementation-plan.md) | Approved slices, acceptance criteria and validation |
 | 19 | [T8 Quality Report](19-t8-quality-report.md) | Local model comparison and generated-answer validation status |
 | 20 | [Dogfood Fix Plan](20-dogfood-fix-plan.md) | Approved default-branch, stale-build and search fixes with validation evidence |
+| 21 | [M3 Team Mode Plan](21-m3-team-mode-plan.md) | Proposed slice order and acceptance criteria for live-branch setup |
 
 ## Reading paths
 
