@@ -58,3 +58,42 @@ Validate local setup inputs before creating the remote branch. For online initia
 Use OQ-5's default of a separate live branch with direct pushes even on repositories with protected main branches. The proposed `origin` convention follows 07 §2.2. Confirm later slices against OQ-3 (one notebook at the repository root), OQ-7 (aimem-native tasks), and OQ-11 (tool-provided session ID where available). The first claim slice must specify ownership across separate CLI invocations and reconcile 07 §2.1's expired-claim takeover with 04 §5's human override before exposing `--steal`.
 
 After approval, implement on a feature branch, run lint, typecheck and the full test suite, and require green CI before closing the slice.
+
+## 3.2 — Acquire an exclusive Git task claim
+
+Proposed for approval. The acceptance criteria are 12 §4 scenarios 1 and 3. Two clones racing for one task must produce one winner and one `CLAIM_CONFLICT`. A concurrent update to a different task must survive the retry.
+
+### CLI and claim identity
+
+- Add `aimem task claim <ref> [--author <who>] [--session <id>] [--paths <globs>] [--note <text>] [--ttl <minutes>m]` for online Git-backed team notebooks. Use the configured `claims.ttl_minutes` or the existing 180-minute default. Reject invalid TTLs and values that would yield an invalid expiry timestamp.
+- Use the existing author resolver for `holder`. Follow OQ-11 by taking the opaque session ID from `--session`, then `AIMEM_SESSION`, then generating a random ID per invocation. Use the same 1–64 character alphabet as `aimem usage record`. Return the chosen ID in the claim and show it in human output so it can be reused.
+- Resolve a local task ID or an equivalent project-qualified ref against the local notebook. Use its validated task ID in the filename `claims/<id>.json` and its project-qualified ref in the JSON. Return `USAGE` for invalid syntax or a non-task ref, and `NOT_FOUND` for an unknown or foreign task. Task record contents stay local.
+- Bind ownership to both `holder` and `session`. The same pair gets the original claim back on retry, with its timestamps and metadata intact. A different session using the same holder gets `CLAIM_CONFLICT`. Persist `task`, `holder`, `session`, `started`, `heartbeat`, `ttl_minutes`, and any explicit `paths` or `note` using 07 §2.1. Use the injected clock for the initial timestamps. The `on_behalf_of` field is optional and awaits a source for that identity.
+- Return `data.claim` in the existing success envelope and use `CLAIM_CONFLICT` (exit 3) with `details.holder` and `details.since` on contention. A missing live branch, corrupt claim, or remote failure uses `SYNC_FAILED` (exit 4). Tell callers with a missing branch how to run the upgrade command. Validate claim input and scan explicit metadata with the existing secret scanner before any remote call. Use `USAGE` for an offline invocation or a notebook without Git claim support.
+
+Existing claims stay in place in this slice. Heartbeat, expiry-driven recovery, release and takeover belong to 3.3. Before 3.3, settle the difference between expired-only takeover in 07 §2.1 and the additional human override in 04 §5. Pairing, path overlap warnings, offline reconciliation and MCP come later.
+
+### Git compare-and-swap
+
+1. Fetch only the live branch into a private, per-invocation ref. Disable updates to `FETCH_HEAD`, ordinary tracking refs and tags. Read the current snapshot by object ID. Verify that any existing task entry is a regular blob with valid claim JSON for this task. Fail closed if the entry is invalid.
+2. If the task path is absent, write the claim JSON as a Git blob. Read the live tree into a unique temporary index, add only the validated claim path, and create a commit whose sole parent is the fetched tip. Use the injected Git runner throughout. Extend its options for explicit stdin and per-call environment so the production index stays untouched.
+3. Push only the live ref, with a lease bound to the exact fetched tip and tag following disabled. The proposed commit is always a child of the leased tip. The lease also stops a stale writer from recreating a ref removed during an attempt.
+4. After a failed push, fetch again and re-evaluate the task. A different owner means conflict. A matching owner means the retry can return the existing claim. If the tip moved and the path is still free, build from that tip and retry, up to three pushes total. If verification is unavailable or publication still fails, return a sanitized `SYNC_FAILED`. Advise callers to reuse their explicit session ID when retrying an uncertain push result.
+5. Clean up the private ref and index on normal and error exits. Cleanup failure leaves an isolated temporary artifact and preserves any confirmed claim result.
+
+This proposes an amendment to 07 §2.2. An isolated index and temporary ref provide the existing checkout safety requirement while reusing the repository's Git configuration, relative remotes and object store. An isolated clone or worktree follows the current wording and adds checkout lifecycle and configuration handling. The update will also replace the rebase explanation with fetch-and-reapply semantics and document ownership across CLI invocations in 07 and 14.
+
+### Tests to write first
+
+1. Use two clones of a bare remote and a barrier before the first push. For a single task, verify one success, conflict details for the loser, and one persisted claim. Use the same holder with different sessions to check ownership.
+2. Race claims for different tasks from the same tip. Verify a stale attempt retries and the final tree contains both claims. Exercise two concurrent invocations from one checkout and verify staged entries, working files, the current branch and normal tracking refs.
+3. Verify identical-session retries return the original claim without moving the live tip. Simulate a push that reached the remote but returned an error, and verify the read-back result. Cover ref deletion, an unreachable remote, a corrupt entry and three rejected pushes.
+4. Test flag and environment precedence, generated sessions, local/global ref equivalence, JSON success and conflict shapes, and invalid input. Verify offline and unsupported notebooks, missing tasks and secret findings cause no network calls.
+
+### Expected files
+
+| Area | Files |
+|---|---|
+| Core | `packages/core/src/claims/acquire.ts` and `packages/core/test/claim-acquire.test.ts` (new), `packages/core/src/git/git.ts`, `packages/core/src/git/live.ts`, `packages/core/src/index.ts` |
+| CLI | `packages/cli/src/run.ts`, `packages/cli/src/commands/task.ts` and `packages/cli/test/task-claim.test.ts` (new) |
+| Docs | `docs/04-cli-reference.md`, `docs/07-sync-and-concurrency.md`, `docs/14-decisions-and-open-questions.md` |
