@@ -231,25 +231,28 @@ Writes a `handoff` record, releases this session's claims (default), updates `IN
 
 ```
 aimem task claim <ref> [--author <who>] [--session <id>]
-                      [--paths <globs>] [--note <text>] [--ttl <minutes>m]
+                      [--paths <globs>] [--note <text>] [--ttl <minutes>m] [--steal]
+aimem task heartbeat <ref> [--author <who>] [--session <id>]
+aimem task release <ref> [--author <who>] [--session <id>]
+aimem live
 ```
 
 - Exclusive claims require an online Git-backed team notebook and a task in its local records. Use either the task ID or its project-qualified ref. The TTL comes from `claims.ttl_minutes` (default 180) unless overridden.
 - Session precedence is `--session`, `AIMEM_SESSION`, then a random ID generated for this invocation. Supply an opaque 1–64 character ID beginning with a letter or digit and containing only letters, digits, underscores or hyphens. Reuse it across invocations for the same session.
-- Success prints the session or returns `data.claim` in the `task claim` JSON envelope. An identical holder and session gets the existing claim back. A different holder or session gets `CLAIM_CONFLICT` (exit 3, `details.holder` and `details.since`). An uncertain Git failure returns `SYNC_FAILED` (exit 4). Retry with the same session ID to recover the result.
+- Claim success prints the session or returns `data.claim` in the `task claim` JSON envelope. An identical holder and session gets an active claim back. An occupied path, expired heartbeat, premature takeover or changed target during a retry can return `CLAIM_CONFLICT` (exit 3, `details.holder` and `details.since`). An uncertain Git failure returns `SYNC_FAILED` (exit 4).
 - `--paths` accepts comma-separated globs. Explicit claim metadata goes to the live branch, where repository readers can see it. The CLI checks it for likely secrets before contacting Git.
+- `task heartbeat` and `task release` require the existing session ID via `--session` or `AIMEM_SESSION`. Heartbeat extends an active claim and returns `data.claim`. Release removes an owned claim even after expiry or after its durable task file has been removed. It returns `data.released`, which is false if the claim was already absent when the command started.
+- `--steal` replaces an expired claim once its five-minute clock-skew allowance has passed. The same rule applies to all callers. The takeover commit records the previous holder. A missing claim returns `NOT_FOUND`.
+- `live` fetches a snapshot and lists claims in task-ref order. JSON returns `data.claims` with `expired` and `expiresAt` on each entry. Human output marks expired claims as “possibly abandoned.”
 
-The rest of the task interface is planned. Existing claims remain in place until lifecycle support lands.
+Batch heartbeat, release with a durable status change, and streaming live updates are planned.
 
 ```
 aimem task create --title "..." [--priority p1] [--assignee rina] [--roles dev,qa] [--paths ...]
 aimem task list [--status open] [--mine] [--claimed]
-aimem task heartbeat [<ref>]            # extend TTL; `context` also heartbeats active claims
-aimem task release <ref> [--status done|open|blocked|review]
 aimem task status <ref> <status>
-aimem live [--watch]                    # show all live claims and presence (--watch streams updates; server mode)
 ```
-Planned claim extensions include `--share` for pairing, `--local` for offline reconciliation (07 §2.4), and `--steal` for takeover with a claim log.
+Planned claim extensions include `--share` for pairing and `--local` for offline reconciliation (07 §2.4).
 
 ## 6. Maintenance commands
 

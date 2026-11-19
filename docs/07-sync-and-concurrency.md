@@ -44,21 +44,21 @@ Rules:
 - A claim may also be **path-only** (no task) for ad-hoc work: `aimem task claim --paths "..." --note "..."`.
 - Path overlap between claims by different holders produces a **warning**, never a block (two tasks may legitimately touch the same area).
 - A *shared* claim (pairing) is allowed with `--share`; both holders are listed.
-- Expired claims are shown as "possibly abandoned" and may be taken over (`--steal`), with the previous holder recorded.
-- Heartbeat: sent by `context`, `task heartbeat`, and `handoff`; default every 20 min of activity. Not sent by idle sessions.
+- `live` shows a claim as "possibly abandoned" at nominal expiry. Any caller can take over five minutes after nominal expiry by passing `--steal`. The previous holder is recorded in the takeover commit and remains visible until live-branch compaction.
+- `task heartbeat <ref>` extends an active claim for its owning holder and session. Automatic heartbeats from `context` and `handoff` are planned at 20-minute intervals during activity.
 
 ### 2.2 `sync: git` — claims on the `aimem-live` branch
 - `aimem init --team --sync git` and `aimem init --upgrade --sync git` ensure `refs/heads/aimem-live` on `origin`. Setup queries that ref before writing notebook files. If the remote reports it missing, aimem creates a parentless commit with an empty tree and pushes only the live ref. After a rejected push, it checks the ref again to detect concurrent creation. An unreachable remote or missing required `origin` returns `SYNC_FAILED`. Offline setup defers the remote step.
 - Setup uses the repository's object database and preserves the current branch, index and working files. Claim operations use a private, per-invocation ref and temporary index in that repository. They preserve `FETCH_HEAD` and ordinary remote-tracking refs. The live branch tree contains only `claims/<id>.json` entries.
 - A claim operation reads and writes the same endpoint, using the sole effective push URL for `origin`. Claim acquisition requires Git 2.31 or newer to configure that endpoint for each command. [Git 2.31 command options](https://git-scm.com/docs/git/2.31.0.html)
 - **Claim algorithm (CAS via git):**
-  1. Fetch `aimem-live` into a private ref and read the task entry from that tip. If an entry exists, the same holder and session gets it back. Any other owner gets `CLAIM_CONFLICT` (exit 3). An invalid entry yields `SYNC_FAILED`.
-  2. Add the claim to a temporary index based on that tip. Create a commit whose sole parent is the tip, then push the commit to `aimem-live` with an exact-tip lease. Every successful acquisition advances the live branch by one commit. The lease rejects a changed or deleted ref.
-  3. After a failed push, fetch again. Return the observed claim or conflict if the path is occupied. If the ref advanced and the path is still free, rebuild on the new tip. Allow up to three pushes and return `SYNC_FAILED` if the result cannot be confirmed.
-  4. Remove the private ref and temporary index after each invocation. Slice 3.2 keeps existing claims in place. Release, heartbeat, and expiry-driven recovery arrive in slice 3.3.
-- **Release:** delete the file, commit, push.
+  1. Fetch `aimem-live` into a private ref and read the task entry from that tip. Ordinary acquisition returns an active claim to its owner, or `CLAIM_CONFLICT` (exit 3) if another claim occupies the path. An invalid entry yields `SYNC_FAILED`.
+  2. Add, replace or delete the claim in a temporary index based on that tip. Create a commit whose sole parent is the tip, then push it to `aimem-live` with an exact-tip lease. A per-invocation operation ID in the commit trailer distinguishes otherwise identical edits. The lease rejects a changed or deleted ref.
+  3. After a failed push, fetch again. Ordinary acquisition retries if the tip advanced and the path is still free. For heartbeat, release and takeover, an attempted commit in the fetched tip's ancestry confirms the operation. An absent entry also confirms release. Otherwise retry only when the target path's latest change commit is the same as initially observed. Allow up to three pushes and return `SYNC_FAILED` if the result cannot be confirmed.
+  4. Remove the private ref and temporary index after each invocation.
+- **Release:** the owning holder and session can remove an active or expired live claim. The durable task record is independent.
 - **History noise:** each heartbeat is a commit. History of `aimem-live` is disposable; a scheduled job (or `aimem sync --compact`, maintainers only) recreates the branch from its current tree using `--force-with-lease`.
-- **Latency:** visibility is limited by fetch frequency; `context` always fetches first unless `--offline`.
+- **Latency:** `live` fetches a fresh snapshot on each invocation. Context integration is planned.
 - Branch protection must allow direct pushes to `aimem-live` by team members/agents (it is separate from main).
 
 ### 2.3 `sync: server` — claims in the sync server
@@ -70,8 +70,8 @@ Section 4 below. Typical visibility latency < 1 s.
 | Git remote down in git mode | `claim` fails with `SYNC_FAILED`; `--local` creates an **unsynced local claim** marked as such and warns; it syncs on next success |
 | Server down in server mode | Same: fail, or `--local` unsynced claim. We never silently fall back to a second backend (avoids split-brain) |
 | Holder crashed | Claim expires by TTL |
-| Clock skew | Expiry computed from server/remote commit time where available; otherwise local clock with 5-min tolerance |
-| Two humans both `--steal` | CAS decides; loser gets `CLAIM_CONFLICT` |
+| Clock skew | Git compares its local clock to `heartbeat + ttl`. Takeover opens five minutes after nominal expiry because Git commit times are client-supplied. |
+| Two sessions both `--steal` | CAS decides. The loser gets `CLAIM_CONFLICT`. |
 
 ## 3. Duplicate knowledge (not just duplicate work)
 

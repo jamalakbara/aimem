@@ -129,3 +129,54 @@ describe("local claim validation", () => {
     expect(runner.calls).toEqual([]);
   });
 });
+
+it("lists claims in task order and exposes heartbeat, expiry, takeover and release contracts", async () => {
+  await setupOrigin();
+  const env = { AIMEM_AUTHOR: "agent:fixture", AIMEM_SESSION: "owner" };
+  const command = (args: string[], minutes = 0, json = true) =>
+    cli([...args, "--dir", dir, ...(json ? ["--json"] : [])], {
+      git,
+      env,
+      clock: { now: () => new Date(Date.parse("2026-10-12T00:00:00Z") + minutes * 60_000) },
+    });
+  expect((await command(["live"])).json.data).toEqual({ claims: [] });
+  expect((await command(["task", "claim", other])).code).toBe(0);
+  expect((await command(["task", "claim", task, "--ttl", "1m"])).code).toBe(0);
+  const beat = await command(["task", "heartbeat", task], 0.5);
+  expect(beat.json).toMatchObject({
+    ok: true,
+    command: "task heartbeat",
+    data: { claim: { heartbeat: "2026-10-12T00:00:30.000Z", session: "owner" } },
+  });
+  const views = (await command(["live"], 2)).json.data.claims;
+  expect(views.map((entry: { task: string }) => entry.task)).toEqual(
+    [task, other].map((id) => `acme-ledger:${id}`),
+  );
+  expect(views[0]).toMatchObject({ expired: true, expiresAt: "2026-10-12T00:01:30.000Z" });
+  expect((await command(["live"], 2, false)).stdout).toContain("possibly abandoned");
+  const takeover = await command(["task", "claim", task, "--steal", "--session", "next"], 7);
+  expect(takeover.json.data.claim.session).toBe("next");
+  expect((await command(["task", "release", task], 7)).code).toBe(3);
+  const release = ["task", "release", task, "--session", "next"];
+  expect((await command(release, 7)).json).toMatchObject({
+    command: "task release",
+    data: { released: true },
+  });
+  expect((await command(release, 7)).json.data).toEqual({ released: false });
+});
+
+it.each([
+  { args: ["live", "--offline"] },
+  { args: ["task", "heartbeat", task] },
+  { args: ["task", "release", task, "--offline", "--session", "fixture"] },
+])("rejects invalid lifecycle invocation $args before remote work", async ({ args }) => {
+  team();
+  const runner = fakeGit();
+  const result = await cli([...args, "--dir", dir, "--json"], {
+    git: runner,
+    env: { AIMEM_AUTHOR: "agent:fixture" },
+  });
+  expect(result.code).toBe(2);
+  expect(result.json.error.code).toBe("USAGE");
+  expect(runner.calls).toEqual([]);
+});

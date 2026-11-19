@@ -46,6 +46,7 @@ Decision log in ADR style. Status: **accepted** (decided in brainstorm), **propo
 ### ADR-009 — Claims via compare-and-swap on a dedicated branch
 - **Status:** accepted
 - **Decision:** `aimem-live` orphan branch; same-path writes make races conflict; one push wins.
+- **Takeover:** In Git mode, any caller can take over an expired claim after the five-minute clock-skew allowance. The caller-supplied author label carries no authority to override an active claim. Record the previous holder in the takeover commit.
 
 ### ADR-010 — Roles are a relevance lens, not access control
 - **Status:** accepted

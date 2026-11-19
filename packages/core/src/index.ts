@@ -1,6 +1,8 @@
 export * from "./ask/ask.js";
 export * from "./ask/rerank.js";
-export { acquireTaskClaim, type TaskClaim, type TaskClaimInput } from "./claims/acquire.js";
+export { acquireTaskClaim, type TaskClaimInput } from "./claims/acquire.js";
+export { heartbeatTaskClaim, listLiveClaims, releaseTaskClaim } from "./claims/lifecycle.js";
+export type { TaskClaim } from "./claims/model.js";
 export * from "./context/briefing.js";
 export * from "./context/score.js";
 export * from "./embed/cache.js";

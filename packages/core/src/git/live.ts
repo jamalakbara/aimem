@@ -70,8 +70,11 @@ export async function openLiveBranch(
     return result.stdout;
   };
   const network = (args: string[]) => git.run([...remoteConfig, ...args], cwd, { env: remoteEnv });
-  const usingIndex = (args: string[]) =>
-    local(["-c", "core.splitIndex=false", "-c", "core.sparseCheckout=false", ...args], { index: true });
+  const usingIndex = (args: string[], input?: string) =>
+    local(["-c", "core.splitIndex=false", "-c", "core.sparseCheckout=false", ...args], {
+      index: true,
+      ...(input === undefined ? {} : { input }),
+    });
 
   return {
     async fetch(): Promise<string> {
@@ -105,17 +108,37 @@ export async function openLiveBranch(
       if (!oid) throw new AimemError("SYNC_FAILED", "The live claim entry is not a regular file.");
       return local(["cat-file", "blob", oid]);
     },
-    async publish(tip: string, path: string, data: string): Promise<boolean> {
+    async listPaths(tip: string): Promise<string[]> {
+      const paths = await local(["ls-tree", "--full-tree", "-rz", "--name-only", tip, "--", "claims"]);
+      return paths.split("\0").filter(Boolean);
+    },
+    lastChange(tip: string, path: string): Promise<string> {
+      return local(["log", "--first-parent", "-1", "--format=%H", tip, "--", `:(top,literal)${path}`]);
+    },
+    async contains(tip: string, commit: string): Promise<boolean> {
+      const result = await git.run(["merge-base", "--is-ancestor", commit, tip], cwd, { env: localEnv });
+      if (result.code === 0) return true;
+      if (result.code === 1) return false;
+      throw new AimemError("SYNC_FAILED", "Could not confirm the attempted Git claim update.");
+    },
+    async publish(tip: string, path: string, data: string | null, message: string) {
       try {
         await fs.mkdir(cache);
       } catch {
         throw new AimemError("SYNC_FAILED", "Could not prepare the temporary Git claim index.");
       }
-      const blob = await local(["hash-object", "-w", "--stdin"], { input: data });
       await usingIndex(["read-tree", tip]);
-      await usingIndex(["update-index", "--add", "--cacheinfo", `100644,${blob},${path}`]);
+      if (data === null) {
+        await usingIndex(["update-index", "--index-info"], `0 ${"0".repeat(tip.length)}\t${path}\n`);
+      } else {
+        const blob = await local(["hash-object", "-w", "--stdin"], { input: data });
+        await usingIndex(["update-index", "--add", "--cacheinfo", `100644,${blob},${path}`]);
+      }
       const tree = await usingIndex(["write-tree"]);
-      const next = await local(["commit-tree", tree, "-p", tip, "-m", "aimem: claim task"]);
+      // Two concurrent edits may otherwise create identical Git objects within one second.
+      const next = await local(["commit-tree", tree, "-p", tip, "-F", "-"], {
+        input: `${message}\n\nAimem-Operation: ${id}\n`,
+      });
       const push = await network([
         "push",
         "--no-follow-tags",
@@ -124,7 +147,7 @@ export async function openLiveBranch(
         remote,
         `${next}:${LIVE_REF}`,
       ]);
-      return push.code === 0;
+      return { accepted: push.code === 0, commit: next };
     },
     async close(): Promise<void> {
       await Promise.allSettled([git.run(["update-ref", "-d", ref], cwd), fs.unlink(index)]);

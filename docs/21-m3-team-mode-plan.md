@@ -1,6 +1,6 @@
 # 21 — M3 Team Mode Plan
 
-Slices 3.1 and 3.2 were approved. Later slices are proposals.
+Slices 3.1 through 3.3 were approved. Later slices are proposals.
 
 ## Slice order
 
@@ -100,7 +100,7 @@ This proposes an amendment to 07 §2.2. An isolated index and temporary ref prov
 
 ## 3.3 — Heartbeat, release, expiry and takeover
 
-Proposed for approval. This slice satisfies 12 §4 scenarios 2 and 4. A claim left by a stopped process becomes visibly expired and can be taken over. The 20-clone × 5-task stress test must finish with one valid claim per task.
+This slice satisfies 12 §4 scenarios 2 and 4. A claim left by a stopped process becomes visibly expired and can be taken over. The 20-clone × 5-task stress test must finish with one valid claim per task.
 
 ### CLI behavior
 
