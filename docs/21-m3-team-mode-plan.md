@@ -145,3 +145,85 @@ On a rejected or uncertain push, refetch and look for the attempted commit in th
 | Core | `packages/core/src/claims/acquire.ts`, new `claims/lifecycle.ts` and shared claim model if needed, `packages/core/src/git/live.ts`, `packages/core/src/index.ts`, lifecycle and stress tests under `packages/core/test/` |
 | CLI | `packages/cli/src/run.ts`, `packages/cli/src/commands/task.ts`, `packages/cli/test/task-claim.test.ts` |
 | CI and docs | New `.github/workflows/claims-stress.yml`, `docs/04-cli-reference.md`, `docs/07-sync-and-concurrency.md`, `docs/12-testing-strategy.md`, `docs/14-decisions-and-open-questions.md` |
+
+## 3.4 — Path-only and shared claims, overlap warnings and offline reconciliation
+
+Status: proposal, awaiting approval. This slice closes 12 §4 scenario 5 and the remaining 07 §2.1 and §2.4 claim rules. Split it into three PRs. Each PR is usable alone and keeps the M3.3 contract for existing exclusive task claims.
+
+| PR | Scope | Acceptance evidence |
+|---|---|---|
+| 3.4a | Path validation, path-only claims and overlap warnings | Real-remote tests for path-only claim lifecycle and overlap warnings between holders |
+| 3.4b | Shared (pairing) claims with `--share` | Two-session join, per-participant heartbeat and release, takeover of a fully expired shared claim |
+| 3.4c | `--local` unsynced claims and reconciliation | Scenario 5: unreachable remote, `--local`, recovery, and loss to an earlier live claim |
+
+### Decisions to confirm before coding
+
+1. **Overlap warns and never blocks.** 07 §2.1 says path overlap between different holders produces a warning, because two tasks may touch the same area. The task itself stays exclusive. Recommended: keep the spec. Blocking on overlap would need a spec change in 07 and 04.
+2. **Overlap is approximate.** Two globs cannot be compared exactly in general. Compare each glob's static prefix, meaning the segments before the first `*`, `?`, `[` or `{`. Two paths overlap when one prefix equals the other or is a whole-segment ancestor of it. `src/api` overlaps `src/api/routes.ts`; `src/api-v2/routes.ts` does not. False positives are acceptable because the result is only a warning.
+3. **Mixed CLI versions.** M3.3 clients read only known claim fields. If an M3.3 client heartbeats a shared claim, it rewrites the file and drops the participants. Recommended: record that team members must upgrade before using `--share`. M3 is unreleased, so no compatibility shim is planned.
+4. **Offline claims have no priority.** A `--local` claim never displaces a claim already on `aimem-live`. On reconnection, the CAS decides as for any other claim. Local work is never touched, because claims do not modify the worktree.
+
+### 3.4a — Paths, path-only claims and overlap warnings
+
+**Path validation** (applies to `--paths` on every claim command):
+
+- Normalize to POSIX with `toPosix` and trim each entry.
+- Reject empty entries, absolute paths, drive letters, `..` segments, control characters and leading `./`.
+- Allow up to 32 entries of up to 256 characters each.
+- Invalid input returns `USAGE` before any network call.
+
+**Path-only claims:**
+
+- `aimem task claim --paths "<globs>" [--note <text>]` with no ref creates an ad-hoc claim. It is stored at `claims/<cid>.json`, where `<cid>` is `clm-` plus 8 characters in the existing ID alphabet. The `clm` prefix is added to the live-path grammar only, not to `RECORD_TYPES`.
+- The JSON omits `task`, requires `paths`, and adds `id`. Heartbeat, release and `--steal` accept the `clm-` ID in place of a task ref.
+- `live` lists path-only claims after task claims, sorted by ID. `live` currently rejects non-task paths, so this widens its validator. One malformed entry is reported as a warning naming its path instead of failing the whole listing. A malformed task-claim entry still fails a claim operation on that task, as before.
+
+**Overlap warnings:**
+
+- On claim and on `--steal`, compare the new paths with every other active claim in the same fetched tip. Ignore claims that are expired or held by the same holder.
+- Add one envelope warning per overlapping claim, and add `data.overlaps: [{ ref, holder, paths }]`. The new data field is a deliberate contract addition, documented in 04 §5.
+- This needs no extra network call and does not affect the push.
+
+**Follow-up from the #58–#61 review:** when claiming a task whose durable status is `done` or `cancelled`, return a warning, not an error. The status may still be changing on another branch.
+
+### 3.4b — Shared claims
+
+- `aimem task claim <ref> --share` creates a shareable claim. The claim gains `shared: true` and `participants: [{ holder, session, joined, heartbeat }]`. The top-level `holder` and `session` keep naming the first participant for older readers.
+- A second session joins with `--share` only if the active claim is shared. An exclusive request against a shared claim, or `--share` against an exclusive claim, returns `CLAIM_CONFLICT`.
+- The participant limit is 8.
+- **Expiry:** each participant has its own heartbeat. The claim is active while any participant is active. Its nominal expiry is the latest participant heartbeat plus TTL.
+- **Heartbeat** updates only the caller's participant entry.
+- **Release** removes only the caller. The last release deletes the file.
+- **Takeover** with `--steal` is allowed only when every participant has expired and the five-minute allowance has passed. The takeover commit records every previous participant as a separate `Aimem-Previous-Holder` trailer. This fits the existing history rule: evidence lives in `aimem-live` commits until compaction.
+- Every edit reuses `mutateClaim`, so the M3.3 path-revision guard protects joins that race with release or takeover.
+
+### 3.4c — `--local` and reconciliation
+
+- Add `--local` to `task claim`. If the online attempt fails with `SYNC_FAILED`, or `--offline` is set, write the intended claim to `.aimem/.cache/claims-pending/<id>.json`. Return success with `data.claim.unsynced: true` and a warning, so strict mode exits 1. Without `--local`, behavior is unchanged: `SYNC_FAILED`, exit 4.
+- `--local` cannot be combined with `--steal`, because takeover requires a live read.
+- **Reconciliation:** the next online claim command, or `live`, first pushes pending claims through the normal acquire path with their stored session.
+  - On success, delete the pending file. `started` stays at the local time, and `heartbeat` is set to the sync time.
+  - On `CLAIM_CONFLICT`, delete the pending file and warn with the live holder, since time and paths.
+  - On `SYNC_FAILED`, keep the pending file.
+- If a pending claim's TTL elapsed before sync, drop it with a warning.
+- `live` includes pending local claims and marks them `unsynced` in human output and JSON.
+- Pending files are in the gitignored cache. They are written atomically and scanned for secrets like any claim metadata.
+
+### Tests to write first
+
+1. **Paths:** a validation table covering absolute paths, `..`, backslashes, empty entries, limits and control characters. Static-prefix overlap as a property test with `fast-check`, including segment-boundary cases.
+2. **Path-only claims:** claim, heartbeat, release and `--steal` against a bare remote. `live` ordering, plus one malformed entry that warns instead of failing.
+3. **Overlap:** two holders with overlapping and disjoint paths. Same-holder and expired claims produce no warning. Check the JSON `overlaps` shape and the warning text.
+4. **Shared claims:** join, reject a mismatched mode, enforce the participant limit, heartbeat and release per participant, last release deletes the file, takeover only after every participant has expired with all previous holders in trailers, and a join racing a release or takeover.
+5. **Scenario 5:** point `origin` at an unreachable path. Claim without `--local` returns `SYNC_FAILED`. With `--local`, a pending file is created. Restore the remote and run `live` to sync it. Repeat with another clone claiming first, so the pending claim is dropped with a warning. Also cover a TTL that elapsed while offline and confirm the user's index and worktree are unchanged.
+6. **CLI:** flag combinations (`--local` with `--steal`, `--share` with a path-only claim) and JSON contract snapshots updated deliberately.
+
+### Expected files
+
+| Area | Files |
+|---|---|
+| Core | `packages/core/src/claims/model.ts`, `acquire.ts`, `lifecycle.ts`, new `claims/paths.ts` and `claims/pending.ts`, `packages/core/src/index.ts`, tests under `packages/core/test/` |
+| CLI | `packages/cli/src/run.ts`, `packages/cli/src/commands/task.ts`, `packages/cli/test/task-claim.test.ts`, contract snapshots |
+| Docs | `docs/03-spec-file-format.md` (claim JSON fields), `docs/04-cli-reference.md` §5, `docs/07-sync-and-concurrency.md` §2.1 and §2.4, `docs/14-decisions-and-open-questions.md` |
+
+After approval, implement 3.4a first on its own branch. Run lint, typecheck and the full suite, require green CI and the claim stress workflow, then continue with 3.4b and 3.4c.
