@@ -82,7 +82,9 @@ export async function heartbeatSessionClaims(
     const mine = participantOf(claim, me);
     if (mine && now >= participantExpiry(claim, mine)) continue;
     const last = Date.parse(mine?.heartbeat ?? claim.heartbeat);
-    if (now - last < AUTO_HEARTBEAT_MINUTES * 60_000) continue;
+    // A claim with a TTL of 20 minutes or less would expire before the 20-minute mark: renew at half its TTL.
+    const due = Math.min(AUTO_HEARTBEAT_MINUTES, claim.ttl_minutes / 2) * 60_000;
+    if (now - last < due) continue;
     const ref = claimRef(claim);
     try {
       await heartbeatTaskClaim(nb, ref, me, deps);

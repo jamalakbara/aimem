@@ -1,10 +1,22 @@
 import { join } from "node:path";
 import { AimemError } from "../errors.js";
 import type { Fs, Random } from "../ports.js";
-import type { Git } from "./git.js";
+import { GIT_TIMEOUT_CODE, type Git } from "./git.js";
 
 const LIVE_REF = "refs/heads/aimem-live";
 const MIN_GIT = [2, 31] as const;
+/** Upper bound for each fetch, push or ls-remote to origin, so an unresponsive remote cannot hang a session. */
+export const LIVE_TIMEOUT_MS = 10_000;
+const net = { timeoutMs: LIVE_TIMEOUT_MS };
+
+function timedOut(code: number): AimemError | undefined {
+  return code === GIT_TIMEOUT_CODE
+    ? new AimemError(
+        "SYNC_FAILED",
+        `origin did not respond in time (default limit ${LIVE_TIMEOUT_MS / 1000} s). Check the connection, or raise AIMEM_LIVE_TIMEOUT_MS.`,
+      )
+    : undefined;
+}
 
 /** Claim operations pass the endpoint with `--config-env`, added in Git 2.31 (07 §2.2). */
 async function requireClaimGit(git: Git, cwd: string): Promise<void> {
@@ -20,8 +32,10 @@ async function requireClaimGit(git: Git, cwd: string): Promise<void> {
 /** Bootstrap the live branch using only Git objects, without a checkout. */
 export async function ensureLiveBranch(git: Git, cwd: string): Promise<void> {
   const lookup = ["ls-remote", "--exit-code", "--refs", "origin", LIVE_REF];
-  const remote = await git.run(lookup, cwd);
+  const remote = await git.run(lookup, cwd, net);
   if (remote.code === 0) return;
+  const late = timedOut(remote.code);
+  if (late) throw late;
   // ls-remote returns 2 when it reached the remote but found no matching ref.
   if (remote.code !== 2) {
     throw new AimemError("SYNC_FAILED", "Could not check aimem-live on origin. Check access and retry.");
@@ -45,8 +59,9 @@ export async function ensureLiveBranch(git: Git, cwd: string): Promise<void> {
   const push = await git.run(
     ["push", "--no-follow-tags", "origin", `${commit.stdout.trim()}:${LIVE_REF}`],
     cwd,
+    net,
   );
-  if (push.code === 0 || (await git.run(lookup, cwd)).code === 0) return;
+  if (push.code === 0 || (await git.run(lookup, cwd, net)).code === 0) return;
   throw new AimemError("SYNC_FAILED", "Could not publish aimem-live on origin. Check push access and retry.");
 }
 
@@ -82,7 +97,7 @@ export async function openLiveBranch(
       throw new AimemError("SYNC_FAILED", "Could not read or prepare the Git live branch.");
     return result.stdout;
   };
-  const network = (args: string[]) => git.run([...remoteConfig, ...args], cwd, { env: remoteEnv });
+  const network = (args: string[]) => git.run([...remoteConfig, ...args], cwd, { env: remoteEnv, ...net });
   const usingIndex = (args: string[], input?: string) =>
     local(["-c", "core.splitIndex=false", "-c", "core.sparseCheckout=false", ...args], {
       index: true,
@@ -103,13 +118,15 @@ export async function openLiveBranch(
         `+${LIVE_REF}:${ref}`,
       ]);
       if (result.code !== 0) {
+        const late = timedOut(result.code);
+        if (late) throw late;
         const lookup = await network(["ls-remote", "--exit-code", "--refs", remote, LIVE_REF]);
         if (lookup.code === 2) {
           throw new AimemError("SYNC_FAILED", "aimem-live is missing. Run aimem init --upgrade --sync git.");
         }
         throw new AimemError(
           "SYNC_FAILED",
-          "Could not fetch aimem-live. Check Git access and retry with the same session ID.",
+          "Could not fetch aimem-live. Check the connection and Git access, then retry.",
         );
       }
       return local(["rev-parse", "--verify", `${ref}^{commit}`]);

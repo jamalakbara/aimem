@@ -22,7 +22,11 @@ import { serveStdio } from "@aimem/mcp";
 import { run } from "./run.js";
 
 const modelsDir = join(process.env.AIMEM_HOME ?? join(homedir(), ".cache", "aimem"), "models");
-const git = execaGit();
+const liveTimeout = Number(process.env.AIMEM_LIVE_TIMEOUT_MS);
+const git = execaGit(
+  {},
+  Number.isFinite(liveTimeout) && liveTimeout > 0 ? { networkTimeoutMs: liveTimeout } : {},
+);
 const loadRanker = async (allowDownload: boolean) => {
   try {
     if (allowDownload)
