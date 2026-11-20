@@ -167,6 +167,8 @@ Scenarios (git mode, bare remote, N clones as separate dirs):
 6. Two branches add different records, merge → no conflicts; `INDEX.md` regenerated after merge.
 7. Two branches edit the same record → conflict surfaces, `validate --fix` restores derived fields.
 
+Fast Git claim races run in the regular CI matrix. The dedicated Git claim stress workflow runs on relevant PRs, nightly, and on demand. To run the same 20-clone test locally, set `AIMEM_CLAIM_STRESS=1` and run `pnpm exec vitest run packages/core/test/claim-acquire.test.ts -t "20 clones"`.
+
 Server mode: same scenarios through the API with parallel requests, plus transaction-isolation tests on the claim-acquire path, expiry sweeping, SSE resume with `since`.
 
 ## 5. Specific high-risk areas

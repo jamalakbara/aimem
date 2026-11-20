@@ -1,6 +1,6 @@
 # 21 — M3 Team Mode Plan
 
-Slices 3.1 and 3.2 were approved. Later slices are proposals.
+Slices 3.1 through 3.3 were approved. Later slices are proposals.
 
 ## Slice order
 
@@ -97,3 +97,51 @@ This proposes an amendment to 07 §2.2. An isolated index and temporary ref prov
 | Core | `packages/core/src/claims/acquire.ts` and `packages/core/test/claim-acquire.test.ts` (new), `packages/core/src/git/git.ts`, `packages/core/src/git/live.ts`, `packages/core/src/index.ts` |
 | CLI | `packages/cli/src/run.ts`, `packages/cli/src/commands/task.ts` and `packages/cli/test/task-claim.test.ts` (new) |
 | Docs | `docs/04-cli-reference.md`, `docs/07-sync-and-concurrency.md`, `docs/14-decisions-and-open-questions.md` |
+
+## 3.3 — Heartbeat, release, expiry and takeover
+
+This slice satisfies 12 §4 scenarios 2 and 4. A claim left by a stopped process becomes visibly expired and can be taken over. The 20-clone × 5-task stress test must finish with one valid claim per task.
+
+### CLI behavior
+
+| Command | Result |
+|---|---|
+| `aimem task heartbeat <ref>` | Extend an active claim owned by the same author and session. Keep the original start, TTL and metadata. If the local time is equal to or earlier than the stored heartbeat, return the current claim without a push. Missing live entry returns `NOT_FOUND`. |
+| `aimem task release <ref>` | Remove the entry owned by the same author and session, including an expired one. Return `data.released: false` for an already absent entry and `true` when the requested deletion is applied or confirmed. |
+| `aimem task claim <ref> --steal` | Replace an eligible expired claim with a fresh claim. Require an existing entry. An identical-session retry returns the existing replacement while it is active. |
+| `aimem live` | Fetch once and list claims sorted by task ref. Include expired claims and label them “possibly abandoned” in human output. JSON returns `data.claims` with the existing fields plus derived `expired` and `expiresAt`. A successful read with no claims returns an empty list. |
+
+For heartbeat and release, require the existing session ID through `--session` or `AIMEM_SESSION`. Reuse the author resolver and accept local or project-qualified task refs. Look up heartbeat and release in the live tree so a claim can be released even if its durable task record was removed. Ordinary acquisition and takeover still require a local task record.
+
+Heartbeat returns `data.claim`, and takeover preserves the M3.2 claim response. Use `CLAIM_CONFLICT` with the existing holder and since details for ownership conflicts, expired heartbeat, and a takeover before its eligibility window. Ref changes during retries use the same conflict code. Remote errors or malformed live entries use `SYNC_FAILED`. Unsupported or offline invocations fail before network access.
+
+This slice exposes explicit per-task heartbeat and release. Batch heartbeat, automatic context and handoff integration, and release combined with a durable status change need their own plan or contract. Git `live` is a one-shot listing.
+
+### Expiry and takeover policy
+
+- Calculate nominal expiry from the stored heartbeat plus TTL. A claim is visibly expired at that instant, and heartbeat cannot revive it. For Git, use the injected local clock because Git commit timestamps come from clients. Require the five-minute skew allowance in 07 §2.4 to elapse past nominal expiry before takeover.
+- Require `--steal` to replace an expired entry, even when the caller was its owner. Ordinary acquire returns a conflict that explains whether the claim is expired. The owner can still release an expired claim during the grace period.
+- **Recommend expired-only takeover for all callers.** An active human override would need an authority model and audit contract. The CLI's `human:` author prefix is caller-supplied, and the Git branch authorizes by push access. Resolve the earlier CLI wording in 04 §5 and record the choice in 14.
+- Record the previous holder in the takeover commit message on `aimem-live`. Keep the existing claim JSON fields. This history lasts until live-branch compaction.
+
+### Git mutation and retries
+
+Reuse the private ref and temporary index from M3.2. Extend the tree update path to replace or delete one entry, and return the attempted commit ID for read-back. Every mutation creates a child of the fetched tip and pushes with the existing exact-tip lease.
+
+On a rejected or uncertain push, refetch and look for the attempted commit in the new tip's ancestry. If present, return the confirmed result. For release, an absent entry also confirms the requested outcome. Retry an unrelated advance only if the target's most recent path-changing commit is the one originally observed. This protects a later claim even when it reuses a holder, session or identical JSON. A changed target produces a conflict. Honor the three-push limit and preserve the M3.2 behavior on an ordinary acquisition retry.
+
+### Tests to write first
+
+1. Using a fake clock and a real bare remote, check both expiry boundaries, a clock moving backward, expiry without release, and previous-holder evidence in the takeover commit.
+2. Check heartbeat and release for correct and incorrect sessions, including the same author with a different session. Verify release after task removal, idempotent repeat release, and preservation of the durable task contents and the user's Git state.
+3. Force two takeovers to race and assert exactly one winner. Force a heartbeat or release to race with takeover and verify stale operations preserve the replacement. Exercise unrelated advances, lost responses and release followed by recreation with identical metadata.
+4. Check CLI flags, JSON responses, deterministic listing, malformed remote data, and absence of network calls on offline or unsupported invocations.
+5. Run 20 real Git clones against one bare remote in five rounds. All 20 sessions contend for the same task in each round, covering five distinct tasks and 100 attempts overall. Require five successes, 95 conflicts, and exactly five parseable claims owned by the returned winners. Keep fast races in normal CI and run the stress test in a dedicated Linux workflow for claim-related PRs, nightly, and on demand.
+
+### Expected files
+
+| Area | Files |
+|---|---|
+| Core | `packages/core/src/claims/acquire.ts`, new `claims/lifecycle.ts` and shared claim model if needed, `packages/core/src/git/live.ts`, `packages/core/src/index.ts`, lifecycle and stress tests under `packages/core/test/` |
+| CLI | `packages/cli/src/run.ts`, `packages/cli/src/commands/task.ts`, `packages/cli/test/task-claim.test.ts` |
+| CI and docs | New `.github/workflows/claims-stress.yml`, `docs/04-cli-reference.md`, `docs/07-sync-and-concurrency.md`, `docs/12-testing-strategy.md`, `docs/14-decisions-and-open-questions.md` |

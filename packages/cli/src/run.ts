@@ -9,7 +9,7 @@ import { init } from "./commands/init.js";
 import { indexCmd, validateCmd } from "./commands/maintain.js";
 import { list, searchCmd, show } from "./commands/read.js";
 import { doctor, type HandoffOptions, handoff, status } from "./commands/session.js";
-import { taskClaim } from "./commands/task.js";
+import { liveClaims, taskClaim, taskHeartbeat, taskRelease } from "./commands/task.js";
 import { usageRecord } from "./commands/usage.js";
 import { type AddOptions, add, supersede, update, verify } from "./commands/write.js";
 import type { CliDeps, CommandResult, GlobalOptions } from "./deps.js";
@@ -109,14 +109,26 @@ export async function run(argv: string[], deps: CliDeps): Promise<number> {
     .action(action("init", (g, _a, o) => init(deps, g, o as Parameters<typeof init>[2])));
 
   const task = program.command("task").description("manage task claims").exitOverride();
-  cmd("claim <ref>", "claim a task for this session", task)
-    .option("--author <who>", "human:<handle> or agent:<tool>[:<model>]")
-    .option("--session <id>", "opaque claim session ID")
+  const claimCmd = (name: string, description: string) =>
+    cmd(`${name} <ref>`, description, task)
+      .option("--author <who>", "human:<handle> or agent:<tool>[:<model>]")
+      .option("--session <id>", "opaque claim session ID")
+      .option("--offline", "disable network access");
+  claimCmd("claim", "claim a task for this session")
     .option("--paths <globs>", "comma-separated claim paths")
     .option("--note <text>", "short claim note")
     .option("--ttl <minutes>m", "claim duration, for example 180m")
-    .option("--offline", "disable network access")
+    .option("--steal", "take over an eligible expired claim")
     .action(action("task claim", (g, [ref], o) => taskClaim(deps, g, ref as string, o)));
+  claimCmd("heartbeat", "extend this session's claim").action(
+    action("task heartbeat", (g, [ref], o) => taskHeartbeat(deps, g, ref as string, o)),
+  );
+  claimCmd("release", "release this session's claim").action(
+    action("task release", (g, [ref], o) => taskRelease(deps, g, ref as string, o)),
+  );
+  cmd("live", "list live Git task claims")
+    .option("--offline", "disable network access")
+    .action(action("live", (g, _args, o) => liveClaims(deps, g, o)));
 
   cmd("context", "start-of-session briefing (06 §2)")
     .option("--task <text>", "what you were asked to do")
