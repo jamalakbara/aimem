@@ -209,7 +209,9 @@ export function buildBriefing(
   const liveClaims: BriefClaim[] = liveState.claims.map((claim) => {
     const holders = claimHolders(claim);
     const title = titleOf(claim);
-    const overlaps = !!claim.paths && ownPaths.length > 0 && anyPathOverlap(ownPaths, claim.paths);
+    const mine = !!input.liveHolder && holders.includes(input.liveHolder);
+    // 06 §2.2 step 7: only other holders' claims can overlap "your" paths.
+    const overlaps = !mine && !!claim.paths && ownPaths.length > 0 && anyPathOverlap(ownPaths, claim.paths);
     return {
       ref: claimRef(claim),
       ...(title ? { title } : {}),
@@ -220,7 +222,7 @@ export function buildBriefing(
       expired: claim.expired,
       ...(claim.shared ? { shared: true as const } : {}),
       ...(claim.unsynced ? { unsynced: true as const } : {}),
-      ...(input.liveHolder && holders.includes(input.liveHolder) ? { mine: true as const } : {}),
+      ...(mine ? { mine: true as const } : {}),
       ...(overlaps ? { overlaps: true as const } : {}),
     };
   });
@@ -290,7 +292,9 @@ export function buildBriefing(
   section(CAPS.live, (add) => {
     if (liveState.status === "off" || (liveState.status === "skipped" && !liveOrder.length)) return;
     if (!add("## Live\n")) return;
-    if (!liveOrder.length) add("- No active claims.\n");
+    // An unavailable remote is not an empty result: never tell the reader the area is free.
+    if (liveState.status === "unavailable") add("- Not checked: team claims are unavailable.\n");
+    else if (!liveOrder.length) add("- No active claims.\n");
     // Show as many claims as fit (at most LIVE_LINES) plus a marker for the rest, added as one piece.
     const lines = liveOrder.map((c) => {
       const flags = [

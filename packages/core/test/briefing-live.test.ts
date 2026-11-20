@@ -93,6 +93,30 @@ describe("briefing live section (06 §2.3)", () => {
       "human:rina claimed clm-11111111 18m ago on src/ledger/**, which overlaps your paths.",
     ]);
     expect(b.markdown).toContain("— unsynced, overlaps your paths");
+    // 06 §2.2 step 7: only other holders' claims overlap "your" paths, in markdown, JSON and order.
+    expect(b.markdown).toContain("- clm-22222222 — agent:me (you) — src/ledger/** — 18m\n");
+    const own = b.live.claims.find((c) => c.ref === "clm-22222222");
+    expect(own).toMatchObject({ mine: true });
+    expect(own).not.toHaveProperty("overlaps");
+  });
+
+  it("does not flag the caller's own task claim as overlapping its own task paths", () => {
+    const b = brief(
+      {
+        status: "on",
+        claims: [
+          claim({ task: "acme-ledger:tsk-3c4d5e6f", paths: ["db/migrations/**"], holder: "agent:me" }),
+          claim({ id: "clm-66666666", paths: ["db/migrations/0002.sql"] }),
+        ],
+      },
+      { ref: "tsk-3c4d5e6f" },
+    );
+    expect(b.warnings).toEqual([
+      "human:rina claimed clm-66666666 18m ago on db/migrations/0002.sql, which overlaps your paths.",
+    ]);
+    const live = b.markdown.slice(b.markdown.indexOf("## Live"));
+    expect(live.indexOf("clm-66666666")).toBeLessThan(live.indexOf("acme-ledger:tsk-3c4d5e6f"));
+    expect(live).not.toMatch(/agent:me \(you\)[^\n]*overlaps your paths/);
   });
 
   it("separates an unavailable remote from an empty result", () => {
@@ -100,6 +124,17 @@ describe("briefing live section (06 §2.3)", () => {
     expect(down.markdown).toContain("live claims: unavailable");
     expect(down.warnings[0]).toBe(
       "Team claims could not be checked (Could not fetch aimem-live.). Run aimem live once the connection is back.",
+    );
+    // An unavailable remote must not read as "nobody is working here".
+    expect(down.markdown).toContain("## Live\n- Not checked: team claims are unavailable.");
+    expect(down.markdown).not.toContain("No active claims");
+    const downWithLocal = brief({
+      status: "unavailable",
+      reason: "Could not fetch aimem-live.",
+      claims: [claim({ id: "clm-77777777", paths: ["docs/**"], holder: "agent:me", unsynced: true })],
+    });
+    expect(downWithLocal.markdown).toContain(
+      "## Live\n- Not checked: team claims are unavailable.\n- clm-77777777",
     );
     const empty = brief({ status: "on", claims: [] });
     expect(empty.markdown).toContain("## Live\n- No active claims.");
