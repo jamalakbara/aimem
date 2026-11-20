@@ -1,5 +1,6 @@
 export * from "./ask/ask.js";
 export * from "./ask/rerank.js";
+export { acquireTaskClaim, type TaskClaim, type TaskClaimInput } from "./claims/acquire.js";
 export * from "./context/briefing.js";
 export * from "./context/score.js";
 export * from "./embed/cache.js";
@@ -13,7 +14,7 @@ export * from "./eval/ask.js";
 export * from "./eval/rerank.js";
 export * from "./eval/run.js";
 export * from "./git/git.js";
-export * from "./git/live.js";
+export { ensureLiveBranch } from "./git/live.js";
 export * from "./index/build.js";
 export * from "./llm/claude-cli.js";
 export * from "./llm/provider.js";
