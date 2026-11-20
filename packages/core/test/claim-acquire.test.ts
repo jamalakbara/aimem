@@ -2,18 +2,21 @@ import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:f
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
+  AUTO_HEARTBEAT_MINUTES,
   acquireClaim,
   acquireTaskClaim,
   cryptoRandom,
   ensureLiveBranch,
   execaGit,
   type Git,
+  heartbeatSessionClaims,
   heartbeatTaskClaim,
   listLiveClaims,
   listUnsyncedClaims,
   loadProject,
   nodeFs,
   readLiveClaims,
+  readLiveState,
   reconcileLocalClaims,
   releaseTaskClaim,
   saveLocalClaim,
@@ -803,6 +806,93 @@ describe("unsynced local claims (scenario 5)", () => {
       id,
       paths: ["docs/**"],
       started: at(0).clock.now().toISOString(),
+    });
+  });
+});
+
+describe("live state for briefings and status (M3.5a)", () => {
+  const me = { holder: "agent:test", session: "me" };
+
+  it("reports on, skipped and unavailable without throwing", async () => {
+    const nb = await loadProject(nodeFs, first);
+    await acquireTaskClaim(nb, task, me, at(0));
+    const on = await readLiveState(nb, at(1));
+    expect(on.status).toBe("on");
+    expect(on.claims.map((c) => ("task" in c ? c.task : c.id))).toEqual([`acme-ledger:${task}`]);
+    const calls: string[][] = [];
+    const counting: Git = {
+      run: (args, cwd, options) => {
+        calls.push(args);
+        return git.run(args, cwd, options);
+      },
+    };
+    expect(await readLiveState(nb, { ...at(1), git: counting }, { skip: true })).toEqual({
+      status: "skipped",
+      reason: "--no-live",
+      claims: [],
+    });
+    expect(calls).toEqual([]);
+    await sh(first, "remote", "set-url", "origin", join(root, "missing.git"));
+    await saveLocalClaim(nb, other, me, at(1));
+    const down = await readLiveState(nb, at(2));
+    expect(down).toMatchObject({ status: "unavailable", reason: expect.stringContaining("aimem-live") });
+    expect(down.claims).toEqual([expect.objectContaining({ unsynced: true, task: `acme-ledger:${other}` })]);
+  });
+
+  it("extends only this session's active claims after 20 minutes", async () => {
+    const nb = await loadProject(nodeFs, first);
+    await acquireTaskClaim(nb, task, me, at(0));
+    await acquireTaskClaim(nb, other, { holder: "human:fixture", session: "them" }, at(0));
+    const tip = await sh(remote, "rev-parse", live);
+    const early = await heartbeatSessionClaims(nb, await readLiveState(nb, at(19.99)), me, at(19.99));
+    expect(early).toEqual({ extended: [], warnings: [] });
+    expect(
+      await heartbeatSessionClaims(nb, await readLiveState(nb, at(25)), { holder: me.holder }, at(25)),
+    ).toEqual({
+      extended: [],
+      warnings: [],
+    });
+    expect(await sh(remote, "rev-parse", live)).toBe(tip);
+    const due = await heartbeatSessionClaims(
+      nb,
+      await readLiveState(nb, at(AUTO_HEARTBEAT_MINUTES)),
+      me,
+      at(20),
+    );
+    expect(due.extended).toEqual([`acme-ledger:${task}`]);
+    const stored = JSON.parse(await sh(remote, "show", `${live}:claims/${task}.json`));
+    expect(stored.heartbeat).toBe(at(20).clock.now().toISOString());
+    expect(JSON.parse(await sh(remote, "show", `${live}:claims/${other}.json`)).heartbeat).toBe(
+      at(0).clock.now().toISOString(),
+    );
+    const expired = await heartbeatSessionClaims(nb, await readLiveState(nb, at(500)), me, at(500));
+    expect(expired.extended).toEqual([]);
+  });
+
+  it("copies the task's paths into a claim without --paths", async () => {
+    const nb = await loadProject(nodeFs, first);
+    expect((await acquireTaskClaim(nb, other, me, deps)).paths).toEqual(["src/ledger/rounding.ts"]);
+    expect((await acquireTaskClaim(nb, task, { ...me, paths: ["docs/**"] }, deps)).paths).toEqual([
+      "docs/**",
+    ]);
+  });
+
+  it("explains a missing session, the same holder's other session and an exclusive claim", async () => {
+    const nb = await loadProject(nodeFs, first);
+    await acquireTaskClaim(nb, task, me, deps);
+    await expect(heartbeatTaskClaim(nb, task, { holder: me.holder }, deps)).rejects.toMatchObject({
+      code: "USAGE",
+      message: expect.stringContaining("Pass --session <id> or set AIMEM_SESSION"),
+    });
+    await expect(acquireTaskClaim(nb, task, { ...me, session: "other" }, deps)).rejects.toMatchObject({
+      code: "CLAIM_CONFLICT",
+      message: expect.stringContaining("You already hold"),
+    });
+    await expect(
+      acquireClaim(nb, task, { holder: "human:fixture", session: "x", share: true }, deps),
+    ).rejects.toMatchObject({
+      code: "CLAIM_CONFLICT",
+      message: expect.stringContaining("claimed exclusively by agent:test"),
     });
   });
 });

@@ -22,6 +22,16 @@ export {
   saveLocalClaim,
   type UnsyncedClaim,
 } from "./claims/pending.js";
+export {
+  AUTO_HEARTBEAT_MINUTES,
+  claimHolders,
+  heartbeatSessionClaims,
+  type LiveClaimEntry,
+  type LiveState,
+  type LiveStatus,
+  readLiveState,
+  summarizeLiveState,
+} from "./claims/session.js";
 export * from "./context/briefing.js";
 export * from "./context/score.js";
 export * from "./embed/cache.js";

@@ -1,4 +1,5 @@
 import { TRUST_WEIGHT, type Trust } from "@aimem/schema";
+import type { LiveState } from "../claims/session.js";
 import { AimemError } from "../errors.js";
 import type { IndexedRecord, NotebookIndex } from "../index/build.js";
 import type { Notebook } from "../project/load.js";
@@ -39,6 +40,10 @@ export interface ContextInput {
   semanticOff?: string;
   /** Lexical/semantic fusion (default from `retrieval.fusion`, else weighted). */
   fusion?: Fusion;
+  /** Live claims for the Live section and overlap warnings (06 §2.2 step 7). Not used for scoring. */
+  live?: LiveState;
+  /** The caller's author, to mark its own claims. */
+  liveHolder?: string;
 }
 
 /** Components are 0..1; `total` = weighted sum × trust × freshness (06 §2 step 5, 15 §6). */

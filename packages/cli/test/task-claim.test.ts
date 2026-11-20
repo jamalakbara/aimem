@@ -216,7 +216,12 @@ it("claims paths without a task, warns about overlaps and lists path-only claims
   expect(human.stderr).toContain(`warning: Paths overlap ${id} held by agent:fixture`);
 
   const live = await cli(["live", "--dir", dir], as("agent:fixture", "one"));
-  expect(live.stdout.trim().split("\n").at(-1)).toContain(`${id} (src/api/**)  agent:fixture  active`);
+  expect(live.stdout.split("\n")[0]).toMatch(/^REF\s+TITLE\s+HOLDER\s+PATHS\s+SINCE\s+EXPIRES IN\s+STATUS$/);
+  expect(live.stdout.trim().split("\n").at(-1)).toMatch(
+    new RegExp(
+      `^${id}\\s+\\(paths only\\)\\s+agent:fixture \\(you\\)\\s+src/api/\\*\\*\\s+0m\\s+3h00m\\s+active$`,
+    ),
+  );
   const beat = await cli(["task", "heartbeat", id, "--dir", dir, "--json"], as("agent:fixture", "one"));
   expect(beat.json.data.claim.id).toBe(id);
   const release = await cli(["task", "release", id, "--dir", dir, "--json"], as("agent:fixture", "one"));
@@ -253,7 +258,7 @@ it("creates and joins a shared claim and shows its participants", async () => {
   expect(exclusive.code).toBe(3);
   expect(exclusive.json.error.message).toContain("Use --share to join");
   const live = await cli(["live", "--dir", dir], as("agent:ana", "ana"));
-  expect(live.stdout).toContain("agent:ana, human:ben  active  shared");
+  expect(live.stdout).toMatch(/agent:ana, human:ben \(you\)\s+.*active, shared · 2 participants/);
   const leave = await cli(["task", "release", task, "--dir", dir, "--json"], as("human:ben", "ben"));
   expect(leave.json.data).toEqual({ released: true });
   const again = await cli(["task", "release", task, "--dir", dir, "--json"], as("human:ben", "ben"));
@@ -283,7 +288,9 @@ it("saves a --local claim when the remote is unreachable and syncs it on the nex
   expect(saved.json.data.claim).toMatchObject({ task: `acme-ledger:${task}`, unsynced: true });
   expect(saved.json.warnings.at(-1)).toContain("Saved an unsynced local claim");
   const offline = await cli(["live", "--offline", "--dir", dir], { git: fakeGit(), env });
-  expect(offline.stdout).toContain(`acme-ledger:${task}  agent:fixture  active  unsynced`);
+  expect(offline.stdout).toMatch(
+    new RegExp(`^${task}\\s+Add currency column.*agent:fixture \\(you\\).*active, unsynced$`, "m"),
+  );
   const offlineClaim = await claim([other, "--local", "--offline"], { git: fakeGit(), env });
   expect(offlineClaim.code).toBe(0);
   expect(offlineClaim.json.data.claim.unsynced).toBe(true);
@@ -313,4 +320,81 @@ it.each([
   expect(result.code).toBe(2);
   expect(result.json.error.code).toBe("USAGE");
   expect(runner.calls.filter((args: string[]) => args[0] !== "config")).toEqual([]);
+});
+
+describe("live claims in status and context (M3.5a)", () => {
+  const at = (minutes: number) => ({
+    now: () => new Date(Date.parse("2026-10-12T00:00:00Z") + minutes * 60_000),
+  });
+  const counting = () => {
+    const calls: string[][] = [];
+    const runner: typeof git = {
+      run: (args, cwd, options) => {
+        calls.push(args);
+        return git.run(args, cwd, options);
+      },
+    };
+    return {
+      runner,
+      network: () => calls.filter((a) => a.some((x) => ["fetch", "push", "ls-remote"].includes(x))),
+    };
+  };
+
+  it("summarises claims in status and skips the fetch with --no-live", async () => {
+    await setupOrigin();
+    const env = { AIMEM_AUTHOR: "agent:fixture", AIMEM_SESSION: "mine" };
+    await claim([task], { git, env });
+    await claim([other], { git, env: { AIMEM_AUTHOR: "human:peer", AIMEM_SESSION: "peer" } });
+    const s = await cli(["status", "--json", "--dir", dir], { git, env });
+    expect(s.json.data.claims).toEqual({
+      status: "on",
+      active: 2,
+      expired: 0,
+      unsynced: 0,
+      mine: [{ ref: `acme-ledger:${task}`, expiresAt: "2026-10-12T03:00:00.000Z" }],
+    });
+    expect((await cli(["status", "--dir", dir], { git, env })).stdout).toContain(
+      "Live claims: 2 active (1 yours) · 0 expired · 0 unsynced (aimem live for details)",
+    );
+    const quiet = counting();
+    const skipped = await cli(["status", "--no-live", "--json", "--dir", dir], { git: quiet.runner, env });
+    expect(skipped.json.data.claims).toMatchObject({ status: "skipped", active: 0 });
+    expect(quiet.network()).toEqual([]);
+  });
+
+  it("warns in context when the task is held by someone else and heartbeats this session", async () => {
+    await setupOrigin();
+    const peer = { AIMEM_AUTHOR: "human:peer", AIMEM_SESSION: "peer" };
+    const me = { AIMEM_AUTHOR: "agent:fixture", AIMEM_SESSION: "mine" };
+    await claim([other], { git, env: peer });
+    await claim([task], { git, env: me });
+    const ctx = await cli(["context", "--ref", other, "--format", "json", "--json", "--dir", dir], {
+      git,
+      env: me,
+      clock: at(25),
+    });
+    expect(ctx.json.data.header.live).toBe("on");
+    expect(ctx.json.data.warnings[0]).toBe(
+      `${other} is claimed by human:peer (25m ago). Check with them before working on it.`,
+    );
+    expect(ctx.json.data.markdown).toMatch(
+      /## Live\n- acme-ledger:tsk-4d5e6f7g .*human:peer .* overlaps your paths\n- acme-ledger:tsk-3c4d5e6f .*agent:fixture \(you\)/,
+    );
+    const live = await cli(["live", "--json", "--dir", dir], { git, env: me, clock: at(25) });
+    const heartbeats = Object.fromEntries(
+      live.json.data.claims.map((c: { task: string; heartbeat: string }) => [c.task, c.heartbeat]),
+    );
+    expect(heartbeats).toEqual({
+      [`acme-ledger:${task}`]: "2026-10-12T00:25:00.000Z",
+      [`acme-ledger:${other}`]: "2026-10-12T00:00:00.000Z",
+    });
+    const quiet = counting();
+    const offline = await cli(["context", "--ref", other, "--no-live", "--dir", dir], {
+      git: quiet.runner,
+      env: me,
+      clock: at(50),
+    });
+    expect(offline.stdout).toContain("live claims: skipped (--no-live)");
+    expect(quiet.network()).toEqual([]);
+  });
 });

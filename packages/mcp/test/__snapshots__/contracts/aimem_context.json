@@ -10,9 +10,14 @@
       "fusion": "weighted",
       "live": "off",
       "budget": 4000,
-      "used": 693
+      "used": 694
     },
     "warnings": [],
+    "live": {
+      "status": "off",
+      "reason": "no team Git sync",
+      "claims": []
+    },
     "refs": [
       "hnd-8h9j0k1m",
       "tsk-3c4d5e6f",

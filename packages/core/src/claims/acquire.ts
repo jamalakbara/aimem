@@ -99,7 +99,7 @@ export async function prepareClaim(
   const ttl = input.ttlMinutes ?? nb.config.claims?.ttl_minutes ?? PROJECT_DEFAULTS.claims.ttl_minutes;
   if (!validTtl(ttl, started))
     throw new AimemError("USAGE", "Claim TTL must be positive whole minutes with a valid expiry.");
-  const paths = input.paths === undefined ? undefined : normalizeClaimPaths(input.paths);
+  let paths = input.paths === undefined ? undefined : normalizeClaimPaths(input.paths);
   const metadata = [owner.holder, owner.session, ...(paths ?? []), input.note ?? ""].join("\n");
   if (scanSecrets(metadata, await loadSecretIgnore(deps.fs, nb.dir)).length) {
     throw new AimemError("SECRET_DETECTED", "Possible secret in claim metadata. Remove it and retry.");
@@ -109,6 +109,14 @@ export async function prepareClaim(
     const index = await loadIndex(nb, deps);
     const record = index.records.find((r) => r.id === target.id && r.type === "task");
     if (!record) throw new AimemError("NOT_FOUND", "Task ref does not resolve in this notebook.");
+    // 3.5 decision 7: a task claim without --paths carries the task's paths, so overlaps are visible.
+    if (paths === undefined && record.paths.length > 0) {
+      try {
+        paths = normalizeClaimPaths(record.paths);
+      } catch {
+        warnings.push(`${target.task} has paths that are not valid claim paths; claiming without paths.`);
+      }
+    }
     if (CLOSED_TASK_STATUSES.has(record.status)) {
       warnings.push(`${target.task} is ${record.status} in this checkout.`);
     }
@@ -209,6 +217,18 @@ export async function acquireClaim(
           throw claimConflict(
             current,
             `${label} is a shared claim held by ${current.holder}. Use --share to join.`,
+          );
+        }
+        if (input.share) {
+          throw claimConflict(
+            current,
+            `${label} is claimed exclusively by ${current.holder}. Ask them to release it and re-claim with --share, or wait for release.`,
+          );
+        }
+        if (current.holder === owner.holder) {
+          throw claimConflict(
+            current,
+            `You already hold ${label} from another session (${current.session}). Reuse it with --session ${current.session} or AIMEM_SESSION, or release it first.`,
           );
         }
         throw claimConflict(current, `${label} is claimed by ${current.holder}.`);

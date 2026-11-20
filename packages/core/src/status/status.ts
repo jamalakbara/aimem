@@ -1,4 +1,5 @@
 import { RECORD_TYPES } from "@aimem/schema";
+import { type LiveState, summarizeLiveState } from "../claims/session.js";
 import type { IndexedRecord, NotebookIndex } from "../index/build.js";
 import type { Notebook } from "../project/load.js";
 import { HIDDEN_STATUSES } from "../search/search.js";
@@ -15,7 +16,12 @@ const meta = (r: IndexedRecord) => ({
 const byId = (a: IndexedRecord, b: IndexedRecord) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 
 /** `aimem status` (04 §3): counts, urgent tasks, stale items, unreviewed records, latest handoff. */
-export function summarizeNotebook(nb: Notebook, index: NotebookIndex, now: Date) {
+export function summarizeNotebook(
+  nb: Notebook,
+  index: NotebookIndex,
+  now: Date,
+  live?: { state: LiveState; holder?: string },
+) {
   const recs = index.records;
   const counts: Record<string, Record<string, number>> = {};
   for (const t of RECORD_TYPES) {
@@ -61,7 +67,8 @@ export function summarizeNotebook(nb: Notebook, index: NotebookIndex, now: Date)
     lastHandoff: last
       ? { ref: last.id, created: last.created, author: last.author, summary: last.summary }
       : null,
-    claims: "live claims arrive in M3",
+    /** `null` when the notebook has no team Git sync (3.5 decision 3). */
+    claims: live ? summarizeLiveState(live.state, live.holder) : null,
   };
 }
 

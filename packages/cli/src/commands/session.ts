@@ -10,6 +10,7 @@ import {
   loadProject,
   loadVectorCache,
   parseHandoffFile,
+  readLiveState,
   resolveAuthorWithGit,
   semanticForQuery,
   slugify,
@@ -93,9 +94,27 @@ export async function handoff(deps: CliDeps, g: GlobalOptions, o: HandoffOptions
 }
 
 /** `aimem status` (04 §3). */
-export async function status(deps: CliDeps, g: GlobalOptions): Promise<CommandResult> {
+/** The caller's author for marking "yours", or undefined when none is configured. */
+export async function currentAuthor(deps: CliDeps, root: string): Promise<string | undefined> {
+  return resolveAuthorWithGit({ env: deps.env, git: deps.git, cwd: root }).catch(() => undefined);
+}
+
+export async function status(
+  deps: CliDeps,
+  g: GlobalOptions,
+  o: { live?: boolean } = {},
+): Promise<CommandResult> {
   const nb = await loadProject(deps.fs, g.dir);
-  const s = summarizeNotebook(nb, await loadIndex(nb, { fs: deps.fs }), deps.clock.now());
+  const state = await readLiveState(nb, deps, { skip: o.live === false });
+  const holder = state.status === "off" ? undefined : await currentAuthor(deps, nb.root);
+  const s = summarizeNotebook(nb, await loadIndex(nb, { fs: deps.fs }), deps.clock.now(), {
+    state,
+    ...(holder ? { holder } : {}),
+  });
+  const warnings =
+    state.status === "unavailable"
+      ? [`Team claims could not be checked (${state.reason}). Run aimem live once the connection is back.`]
+      : [];
   const lines = [`aimem — ${s.project} (${s.mode}, sync: ${s.sync}) · ${s.total} records`, "", "Counts:"];
   for (const t of RECORD_TYPES) {
     const c = s.counts[t];
@@ -125,8 +144,18 @@ export async function status(deps: CliDeps, g: GlobalOptions): Promise<CommandRe
       ? `Last handoff: ${s.lastHandoff.ref} ${s.lastHandoff.created.slice(0, 10)} (${s.lastHandoff.author}) — ${s.lastHandoff.summary}`
       : "Last handoff: none",
   );
-  lines.push(`Live claims: ${s.claims}`);
-  return { data: s, text: `${lines.join("\n")}\n` };
+  const c = s.claims;
+  const yours = c ? c.mine.filter((m) => !m.expired && !m.unsynced).length : 0;
+  lines.push(
+    !c
+      ? "Live claims: off (no team Git sync)"
+      : c.status === "on"
+        ? `Live claims: ${c.active} active (${yours} yours) · ${c.expired} expired · ${c.unsynced} unsynced (aimem live for details)`
+        : c.status === "skipped"
+          ? `Live claims: not checked (--no-live) · ${c.unsynced} unsynced`
+          : `Live claims: unavailable, team claims could not be checked · ${c.unsynced} unsynced`,
+  );
+  return { data: s, text: `${lines.join("\n")}\n`, warnings };
 }
 
 type Check = { name: string; status: "ok" | "warn" | "info"; detail: string };
