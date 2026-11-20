@@ -230,7 +230,7 @@ After approval, implement 3.4a first on its own branch. Run lint, typecheck and 
 
 ## 3.5 — Live claims in context, status, handoff and MCP
 
-Status: approved with the recommended defaults, including the team input below. 3.5a is implemented. Today `context` prints "live claims: off", `status` returns a placeholder string for `claims`, `handoff --release-claims` reports `claimsReleased: 0`, and MCP lists no claim tools. 06 §2.2 steps 7 and 11, 04 §3 and §4, 05 §2 and 06 §3 describe the target. Split the work into three PRs.
+Status: approved with the recommended defaults, including the team input below. 3.5a and 3.5b are implemented. The handoff claim summary goes to the command output and JSON, not into the handoff record, so the record format (03) is unchanged. Today `context` prints "live claims: off", `status` returns a placeholder string for `claims`, `handoff --release-claims` reports `claimsReleased: 0`, and MCP lists no claim tools. 06 §2.2 steps 7 and 11, 04 §3 and §4, 05 §2 and 06 §3 describe the target. Split the work into three PRs.
 
 | PR | Scope | Acceptance evidence |
 |---|---|---|

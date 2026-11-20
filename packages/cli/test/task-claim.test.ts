@@ -398,3 +398,52 @@ describe("live claims in status and context (M3.5a)", () => {
     expect(quiet.network()).toEqual([]);
   });
 });
+
+describe("handoff releases this session's claims (M3.5b)", () => {
+  const handoff = (extra: string[], env: Record<string, string>) =>
+    cli(
+      [
+        "handoff",
+        "--done",
+        "Wrote it",
+        "--not-done",
+        "Tests",
+        "--next",
+        "Test it",
+        ...extra,
+        "--json",
+        "--dir",
+        dir,
+      ],
+      { git, env },
+    );
+
+  it("releases claims, keeps other sessions' and honours --no-release-claims", async () => {
+    await setupOrigin();
+    const me = { AIMEM_AUTHOR: "agent:fixture", AIMEM_SESSION: "mine" };
+    await claim([task], { git, env: me });
+    await claim([other], { git, env: { ...me, AIMEM_SESSION: "older" } });
+    const kept = await handoff(["--no-release-claims"], me);
+    expect(kept.code).toBe(0);
+    expect(kept.json.data.claimsReleased).toBe(0);
+    expect(kept.json.data.claims.kept.map((k: { ref: string }) => k.ref)).toEqual([
+      `acme-ledger:${task}`,
+      `acme-ledger:${other}`,
+    ]);
+    const r = await handoff(["--task", task], me);
+    expect(r.code).toBe(0);
+    expect(r.json.data.claims.released).toEqual([`acme-ledger:${task}`]);
+    expect(r.json.data.claims.kept).toEqual([
+      { ref: `acme-ledger:${other}`, reason: "held by session older" },
+    ]);
+    expect(r.json.warnings.at(-1)).toContain(`aimem task release acme-ledger:${other} --session <id>`);
+    const text = await cli(["handoff", "--done", "a", "--not-done", "b", "--next", "c", "--dir", dir], {
+      git,
+      env: { AIMEM_AUTHOR: "agent:fixture" },
+    });
+    expect(text.stdout).toContain(
+      `Still held: acme-ledger:${other} (no session given (held by session older))`,
+    );
+    expect(text.stdout).toContain("run aimem live before picking this up");
+  });
+});

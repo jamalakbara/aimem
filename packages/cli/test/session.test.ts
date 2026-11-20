@@ -55,10 +55,11 @@ describe("handoff", () => {
     expect(r.json.error.code).toBe("INVALID_RECORD");
   });
 
-  it("--release-claims is accepted and says claims arrive in M3", async () => {
+  it("--release-claims is accepted and a solo notebook has no claims to release", async () => {
     const r = await cli([...HANDOFF, "--release-claims", "--json", "--dir", dir], agent);
     expect(r.json.data.claimsReleased).toBe(0);
-    expect(r.json.warnings.join(" ")).toMatch(/M3/);
+    expect(r.json.data).not.toHaveProperty("claims");
+    expect(r.json.warnings.join(" ")).not.toMatch(/claim/);
   });
 
   it("--commit commits even for a human author", async () => {

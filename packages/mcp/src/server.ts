@@ -1,6 +1,7 @@
 import { join } from "node:path";
 import {
   AimemError,
+  acquireClaim,
   addHandoff,
   addRecord,
   applyWritePolicy,
@@ -18,8 +19,10 @@ import {
   gitDiagnostics,
   HIDDEN_STATUSES,
   heartbeatSessionClaims,
+  heartbeatTaskClaim,
   type LlmStatus,
   type LocalRanker,
+  listClaimsWithLocal,
   loadIndex,
   loadProject,
   loggedEmbeddingProvider,
@@ -31,9 +34,13 @@ import {
   type Random,
   type ResolvedProject,
   readLiveState,
+  reconcileLocalClaims,
+  releaseSessionClaims,
+  releaseTaskClaim,
   renderIndexMd,
   resolveEmbeddingProvider,
   type SemanticInput,
+  saveLocalClaim,
   searchWithRewrites,
   semanticForQuery,
   slugify,
@@ -83,9 +90,14 @@ type ToolResult = {
   isError?: boolean;
 };
 
-const ok = (data: unknown, text: string): ToolResult => ({
-  content: [{ type: "text", text }],
-  structuredContent: { ok: true, data },
+const ok = (data: unknown, text: string, warnings?: string[]): ToolResult => ({
+  content: [
+    {
+      type: "text",
+      text: warnings?.length ? `${warnings.map((w) => `warning: ${w}`).join("\n")}\n\n${text}` : text,
+    },
+  ],
+  structuredContent: { ok: true, data, ...(warnings ? { warnings } : {}) },
 });
 
 async function guarded(fn: () => Promise<ToolResult>): Promise<ToolResult> {
@@ -105,7 +117,17 @@ async function guarded(fn: () => Promise<ToolResult>): Promise<ToolResult> {
 }
 
 /** The aimem MCP server (05): a thin adapter over @aimem/core. */
-export function createAimemServer(deps: McpDeps): McpServer {
+/** Claim tools are listed only for team notebooks with Git sync (05 §2): agents see tools that work. */
+export async function claimToolsAvailable(deps: Pick<McpDeps, "fs" | "cwd">): Promise<boolean> {
+  try {
+    const nb = await loadProject(deps.fs, deps.cwd);
+    return nb.config.mode === "team" && nb.config.sync === "git";
+  } catch {
+    return false;
+  }
+}
+
+export function createAimemServer(deps: McpDeps, options: { claimTools?: boolean } = {}): McpServer {
   const server = new McpServer({ name: "aimem", version: VERSION });
   const requests = new Map<string, Record<string, unknown>>();
   const w = { fs: deps.fs, clock: deps.clock, random: deps.random };
@@ -561,6 +583,7 @@ export function createAimemServer(deps: McpDeps): McpServer {
       description:
         "Call at the end of every session that changed code or state: what was done, not done, what is next, and what blocks it.",
       inputSchema: {
+        release_claims: z.boolean().optional(),
         done: z.string(),
         not_done: z.string(),
         next: z.string(),
@@ -594,9 +617,28 @@ export function createAimemServer(deps: McpDeps): McpServer {
             ?.replace(/^\s*[-*+]\s+/, "")
             .trim() ?? "";
         const git = await commit(nb, r.changed, `aimem: handoff ${r.ref} ${first}`.slice(0, 120));
+        // 3.5 decision 4: the record stands even when releasing claims fails.
+        const index = await loadIndex(nb, { fs: deps.fs });
+        const task = a.task
+          ? index.records.find(
+              (rec) => rec.type === "task" && (rec.id === a.task || a.task?.endsWith(`:${rec.id}`)),
+            )
+          : undefined;
+        const released = await releaseSessionClaims(nb, { holder: author(), session: sessionId() }, deps, {
+          release: a.release_claims !== false,
+          ...(task ? { task: { ref: task.id, paths: task.paths } } : {}),
+        });
+        const c = released.claims;
         return ok(
-          { ref: r.ref, file: r.file, git: git.action, claimsReleased: 0 },
-          `Handoff ${r.ref} recorded.`,
+          {
+            ref: r.ref,
+            file: r.file,
+            git: git.action,
+            claimsReleased: c.released.length,
+            ...(c.status === "off" ? {} : { claims: c }),
+          },
+          `Handoff ${r.ref} recorded.${c.status === "off" ? "" : ` Released claims: ${c.released.length ? c.released.join(", ") : "none"}. Claims checked at ${c.checkedAt}; run aimem_live before picking this up.`}`,
+          c.status === "off" ? undefined : released.warnings,
         );
       }),
   );
@@ -621,6 +663,135 @@ export function createAimemServer(deps: McpDeps): McpServer {
         return ok({ passed, errors, warnings, issues }, cap(text));
       }),
   );
+
+  if (options.claimTools) {
+    const claimSession = (a: { session?: string | undefined }) => a.session ?? sessionId();
+    server.registerTool(
+      "aimem_task_claim",
+      {
+        title: "Claim a task or paths",
+        description:
+          "Call before starting work on a task so others see it is taken. If it returns CLAIM_CONFLICT, stop and tell the user who holds it. Omit `ref` and pass `paths` to claim an area without a task. `share` joins a pairing claim; `local` saves an unsynced claim when the remote is down.",
+        inputSchema: {
+          ref: z.string().optional(),
+          paths: z.array(z.string()).optional(),
+          note: z.string().optional(),
+          ttl_minutes: z.number().int().optional(),
+          share: z.boolean().optional(),
+          steal: z.boolean().optional(),
+          local: z.boolean().optional(),
+          session: z.string().optional(),
+        },
+      },
+      (a) =>
+        guarded(async () => {
+          const { nb } = await open();
+          const input = {
+            holder: author(),
+            session: claimSession(a),
+            ...(a.paths ? { paths: a.paths } : {}),
+            ...(a.note !== undefined ? { note: a.note } : {}),
+            ...(a.ttl_minutes !== undefined ? { ttlMinutes: a.ttl_minutes } : {}),
+            ...(a.share ? { share: true } : {}),
+            ...(a.steal ? { steal: true } : {}),
+          };
+          if (a.local && (a.steal || a.share))
+            throw new AimemError("USAGE", "--local cannot be combined with --steal or --share.");
+          let synced: string[] = [];
+          let result: Awaited<ReturnType<typeof acquireClaim>>;
+          try {
+            synced = await reconcileLocalClaims(nb, deps);
+            result = await acquireClaim(nb, a.ref, input, deps);
+          } catch (error) {
+            if (!a.local || !(error instanceof AimemError) || error.code !== "SYNC_FAILED") throw error;
+            result = await saveLocalClaim(nb, a.ref, input, deps);
+          }
+          const { claim, overlaps } = result;
+          const ref = "task" in claim ? claim.task : claim.id;
+          return ok(
+            { claim, overlaps },
+            `${claim.unsynced ? "Saved an unsynced local claim" : "Claimed"} ${ref} (session ${result.session}).`,
+            [...synced, ...result.warnings],
+          );
+        }),
+    );
+    server.registerTool(
+      "aimem_task_heartbeat",
+      {
+        title: "Extend a claim",
+        description:
+          "Call during long work to keep this session's claim alive. aimem_context already extends claims older than 20 minutes.",
+        inputSchema: { ref: z.string(), session: z.string().optional() },
+      },
+      (a) =>
+        guarded(async () => {
+          const { nb } = await open();
+          const synced = await reconcileLocalClaims(nb, deps);
+          const claim = await heartbeatTaskClaim(
+            nb,
+            a.ref,
+            { holder: author(), session: claimSession(a) },
+            deps,
+          );
+          return ok({ claim }, `Extended the claim on ${a.ref} at ${claim.heartbeat}.`, synced);
+        }),
+    );
+    server.registerTool(
+      "aimem_task_release",
+      {
+        title: "Release a claim",
+        description:
+          "Call when you stop working on a claimed task or area without a handoff. aimem_handoff releases this session's claims itself.",
+        inputSchema: { ref: z.string(), session: z.string().optional() },
+      },
+      (a) =>
+        guarded(async () => {
+          const { nb } = await open();
+          const synced = await reconcileLocalClaims(nb, deps);
+          const released = await releaseTaskClaim(
+            nb,
+            a.ref,
+            { holder: author(), session: claimSession(a) },
+            deps,
+          );
+          return ok(
+            { released },
+            released ? `Released the claim on ${a.ref}.` : `No live claim on ${a.ref} for this session.`,
+            synced,
+          );
+        }),
+    );
+    server.registerTool(
+      "aimem_live",
+      {
+        title: "Who is working on what",
+        description:
+          "List live claims (who holds which task or paths, and until when) before picking up work. `offline` lists only unsynced local claims.",
+        inputSchema: { offline: z.boolean().optional() },
+      },
+      (a) =>
+        guarded(async () => {
+          const { nb } = await open();
+          const synced = a.offline ? [] : await reconcileLocalClaims(nb, deps);
+          const { claims, warnings } = await listClaimsWithLocal(nb, Boolean(a.offline), deps);
+          const lines = claims.map((c) => {
+            const holders = claimHolders(c).join(", ");
+            const state = [
+              c.expired ? "possibly abandoned" : "active",
+              c.shared ? "shared" : "",
+              c.unsynced ? "unsynced" : "",
+            ]
+              .filter(Boolean)
+              .join(", ");
+            return `- ${"task" in c ? c.task : c.id} — ${holders} — ${(c.paths ?? ["—"]).join(", ")} — ${state} (expires ${c.expiresAt})`;
+          });
+          return ok({ claims }, lines.length ? lines.join("\n") : "No live claims.", [
+            ...synced,
+            ...warnings,
+          ]);
+        }),
+    );
+  }
 
   // Resources (05 §3).
   const text = (uri: URL, body: string, mimeType = "text/markdown") => ({
@@ -726,7 +897,7 @@ export function createAimemServer(deps: McpDeps): McpServer {
 
 /** `aimem serve mcp`: serve over stdio until the client disconnects. */
 export async function serveStdio(deps: McpDeps): Promise<void> {
-  const server = createAimemServer(deps);
+  const server = createAimemServer(deps, { claimTools: await claimToolsAvailable(deps) });
   const transport = new StdioServerTransport();
   // The transport does not report a client that simply closes stdin, so watch stdin too;
   // otherwise the process ends with an unsettled await (and a non-zero exit code).
