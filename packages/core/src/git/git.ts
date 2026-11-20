@@ -27,13 +27,15 @@ export interface Git {
  * keeps the pipes open, so only a tree kill ends the call; elsewhere a remote helper may stay
  * behind, so the pipes are closed to let the caller continue.
  */
-function killTree(sub: ReturnType<typeof execa>): void {
-  if (process.platform === "win32" && sub.pid !== undefined) {
-    execa("taskkill", ["/pid", String(sub.pid), "/T", "/F"], { reject: false }).catch(() => undefined);
-  }
+async function killTree(sub: ReturnType<typeof execa>): Promise<void> {
+  const tree =
+    process.platform === "win32" && sub.pid !== undefined
+      ? execa("taskkill", ["/pid", String(sub.pid), "/T", "/F"], { reject: false }).catch(() => undefined)
+      : undefined;
   sub.kill("SIGKILL");
   sub.stdout?.destroy();
   sub.stderr?.destroy();
+  await tree;
 }
 
 /** Run the installed git binary, so credentials, hooks and config behave as for the user (ADR-012). */
@@ -53,10 +55,11 @@ export function execaGit(
         ...(options?.input === undefined ? { stdin: "ignore" } : { input: options.input }),
       });
       let timedOut = false;
+      let killed: Promise<void> | undefined;
       const timer = timeout
         ? setTimeout(() => {
             timedOut = true;
-            killTree(sub);
+            killed = killTree(sub);
           }, timeout)
         : undefined;
       // Even if a killed process tree lingers, stop waiting shortly after the timeout.
@@ -70,6 +73,8 @@ export function execaGit(
       const r = deadline ? await Promise.race([sub, deadline]) : await sub;
       if (timer) clearTimeout(timer);
       cancelGuard();
+      // Let the tree kill finish (bounded) so callers can remove the working directory afterwards.
+      if (killed) await Promise.race([killed, new Promise((resolve) => setTimeout(resolve, 3000))]);
       if (timedOut || r === undefined) return { code: GIT_TIMEOUT_CODE, stdout: "", stderr: "git timed out" };
       if (r.exitCode === undefined)
         return { code: 127, stdout: "", stderr: r.shortMessage ?? "git could not be started" };

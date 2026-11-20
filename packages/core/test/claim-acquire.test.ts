@@ -105,7 +105,7 @@ beforeEach(async () => {
   await sh(second, "config", "user.email", "fixture@example.invalid");
 });
 
-afterEach(() => rmSync(root, { recursive: true, force: true }));
+afterEach(() => rmSync(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 }));
 
 it("publishes a single claim when two clones with the same holder race", async () => {
   const runner = racePushes();
