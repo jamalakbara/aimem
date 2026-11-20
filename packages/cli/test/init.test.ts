@@ -106,7 +106,7 @@ describe("init --solo", () => {
     const auto = await cli(["init", "--json", "--dir", dir]);
     expect(auto.json.data.files).toEqual(expect.arrayContaining(["AGENTS.md", "CLAUDE.md"]));
     expect(
-      readFileSync(join(dir, "CLAUDE.md"), "utf8").startsWith("# Claude notes\n\n<!-- aimem:begin v1 -->"),
+      readFileSync(join(dir, "CLAUDE.md"), "utf8").startsWith("# Claude notes\n\n<!-- aimem:begin v2 -->"),
     ).toBe(true);
     expect(
       (await cli(["init", "--force", "--adapters", "vscode", "--json", "--dir", dir])).json.error.code,

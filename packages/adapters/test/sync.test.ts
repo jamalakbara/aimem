@@ -120,7 +120,7 @@ describe("removeAdapters", () => {
 describe("adapterStatus", () => {
   it("lists each target's state", async () => {
     await syncAdapters(nb, deps, { targets: ["agents"] });
-    write("GEMINI.md", `${protocolBlock().replace("v1", "v0")}\n`);
+    write("GEMINI.md", `${protocolBlock().replace("v2", "v0")}\n`);
     const s = await adapterStatus(nb, nodeFs, { targets: ["agents", "claude", "gemini"] });
     expect(s.map((x) => [x.target, x.state])).toEqual([
       ["agents", "current"],
