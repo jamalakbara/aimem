@@ -1,11 +1,11 @@
 /** Bumped whenever the block text changes; `adapters sync` then rewrites it (06 §3). */
-export const BLOCK_VERSION = 1;
+export const BLOCK_VERSION = 2;
 const BEGIN_RE = /<!-- aimem:begin v(\d+) -->/g;
 const END = "<!-- aimem:end -->";
 
 /**
- * The agent protocol (06 §3). v1 omits the `aimem task claim` step: claims arrive in M3 and the
- * line returns with the next block version.
+ * The agent protocol (06 §3). v2 restores the claim step (M3.5c); solo notebooks have no claims,
+ * so the step names team notebooks.
  */
 export function protocolBlock(): string {
   return [
@@ -16,6 +16,7 @@ export function protocolBlock(): string {
     "START of every session:",
     "1. Read `.aimem/INDEX.md`.",
     '2. Run `aimem context --task "<what the user asked>" --yes` (or call the aimem_context MCP tool).',
+    "3. In a team notebook, before working on a task run `aimem task claim <ref>` (or the aimem_task_claim MCP tool). If someone else holds it, stop and tell the user.",
     "",
     "DURING work — record only what a future agent would otherwise have to rediscover:",
     "- A choice with reasons or rejected alternatives → `aimem decide`",
@@ -24,7 +25,7 @@ export function protocolBlock(): string {
     "Before adding, run `aimem search` to avoid duplicates. Never record secrets or personal data.",
     "",
     "END of every session (or when stopping):",
-    "- Run `aimem handoff` with Done / Not done / Next / Blocked.",
+    "- Run `aimem handoff` with Done / Not done / Next / Blocked. It also releases this session's claims.",
     "Do not edit `.aimem/INDEX.md` by hand. Do not delete records; supersede them.",
     END,
   ].join("\n");

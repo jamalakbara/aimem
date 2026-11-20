@@ -24,8 +24,23 @@ describe("protocol block (06 §3)", () => {
     }
   });
 
-  it("v1 leaves out the claim step until claims exist (M3)", () => {
-    expect(BLOCK).not.toContain("task claim");
+  it("v2 restores the claim step for team notebooks (M3.5c)", () => {
+    expect(BLOCK_VERSION).toBe(2);
+    expect(BLOCK).toContain("3. In a team notebook, before working on a task run `aimem task claim <ref>`");
+    expect(BLOCK).toContain("If someone else holds it, stop and tell the user.");
+    expect(BLOCK).toContain("It also releases this session's claims.");
+  });
+
+  it("upgrades a v1 block in place and leaves the rest of the file alone", () => {
+    const v1 = BLOCK.replace("v2 -->", "v1 -->")
+      .replace(/\n3\. In a team notebook[^\n]*/, "")
+      .replace(" It also releases this session's claims.", "");
+    const file = `# My agents\n\nKeep PRs small.\n\n${v1}\n\n## Local notes\nUse pnpm.\n`;
+    expect(inspectBlock(file)).toMatchObject({ state: "outdated", version: 1 });
+    const upgraded = upsertBlock(file);
+    expect(upgraded).toBe(`# My agents\n\nKeep PRs small.\n\n${BLOCK}\n\n## Local notes\nUse pnpm.\n`);
+    expect(inspectBlock(upgraded).state).toBe("current");
+    expect(upsertBlock(upgraded)).toBe(upgraded);
   });
 });
 
