@@ -28,14 +28,13 @@ export interface Git {
  * behind, so the pipes are closed to let the caller continue.
  */
 async function killTree(sub: ReturnType<typeof execa>): Promise<void> {
-  const tree =
-    process.platform === "win32" && sub.pid !== undefined
-      ? execa("taskkill", ["/pid", String(sub.pid), "/T", "/F"], { reject: false }).catch(() => undefined)
-      : undefined;
+  // taskkill must see the wrapper alive to find its children, so it runs before any other kill.
+  if (process.platform === "win32" && sub.pid !== undefined) {
+    await execa("taskkill", ["/pid", String(sub.pid), "/T", "/F"], { reject: false }).catch(() => undefined);
+  }
   sub.kill("SIGKILL");
   sub.stdout?.destroy();
   sub.stderr?.destroy();
-  await tree;
 }
 
 /** Run the installed git binary, so credentials, hooks and config behave as for the user (ADR-012). */
