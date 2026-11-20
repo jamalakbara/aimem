@@ -16,6 +16,10 @@ interface ClaimOptions {
   offline?: boolean;
 }
 
+function holderLabel(claim: LiveClaim): string {
+  return claim.participants ? claim.participants.map((p) => p.holder).join(", ") : claim.holder;
+}
+
 function claimLabel(claim: LiveClaim): string {
   return "task" in claim ? claim.task : `${claim.id} (${claim.paths.join(", ")})`;
 }
@@ -35,7 +39,7 @@ export async function taskClaim(
   deps: CliDeps,
   g: GlobalOptions,
   ref: string | undefined,
-  o: ClaimOptions & { paths?: string; note?: string; ttl?: string; steal?: boolean },
+  o: ClaimOptions & { paths?: string; note?: string; ttl?: string; steal?: boolean; share?: boolean },
 ): Promise<CommandResult> {
   if (o.ttl !== undefined && !/^\d+m$/.test(o.ttl)) {
     throw new AimemError("USAGE", "Claim TTL must be given in whole minutes, for example 180m.");
@@ -45,7 +49,7 @@ export async function taskClaim(
     ?.split(",")
     .map((path) => path.trim())
     .filter(Boolean);
-  const { claim, overlaps, warnings } = await acquireClaim(
+  const { claim, session, overlaps, warnings } = await acquireClaim(
     nb,
     ref,
     {
@@ -54,12 +58,15 @@ export async function taskClaim(
       ...(o.note === undefined ? {} : { note: o.note }),
       ...(o.ttl === undefined ? {} : { ttlMinutes: Number(o.ttl.slice(0, -1)) }),
       ...(o.steal ? { steal: true } : {}),
+      ...(o.share ? { share: true } : {}),
     },
     deps,
   );
   return {
     data: { claim, overlaps },
-    text: `Claimed ${claimLabel(claim)} for ${claim.holder} (session ${claim.session}).\n`,
+    text: claim.shared
+      ? `Holding the shared claim for ${claimLabel(claim)} (session ${session}). Participants: ${holderLabel(claim)}.\n`
+      : `Claimed ${claimLabel(claim)} for ${claim.holder} (session ${claim.session}).\n`,
     warnings,
   };
 }
@@ -98,7 +105,8 @@ export async function liveClaims(
   const { claims, warnings } = await readLiveClaims(nb, Boolean(o.offline), deps);
   const lines = claims.map((claim) => {
     const status = claim.expired ? "possibly abandoned" : "active";
-    return `${claimLabel(claim)}  ${claim.holder}  ${status}  (expires ${claim.expiresAt})`;
+    const shared = claim.shared ? "  shared" : "";
+    return `${claimLabel(claim)}  ${holderLabel(claim)}  ${status}${shared}  (expires ${claim.expiresAt})`;
   });
   return {
     data: { claims },

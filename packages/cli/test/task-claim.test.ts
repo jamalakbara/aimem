@@ -237,3 +237,38 @@ it.each([
   expect(result.json.error.code).toBe("USAGE");
   expect(runner.calls).toEqual([]);
 });
+
+it("creates and joins a shared claim and shows its participants", async () => {
+  await setupOrigin();
+  const as = (author: string, session: string) => ({
+    git,
+    env: { AIMEM_AUTHOR: author, AIMEM_SESSION: session },
+  });
+  const created = await claim([task, "--share"], as("agent:ana", "ana"));
+  expect(created.code).toBe(0);
+  expect(created.json.data.claim).toMatchObject({ shared: true, participants: [{ holder: "agent:ana" }] });
+  const joined = await claim([task, "--share"], as("human:ben", "ben"), false);
+  expect(joined.code).toBe(0);
+  expect(joined.stdout).toContain("(session ben). Participants: agent:ana, human:ben.");
+  const exclusive = await claim([task], as("agent:carol", "carol"));
+  expect(exclusive.code).toBe(3);
+  expect(exclusive.json.error.message).toContain("Use --share to join");
+  const live = await cli(["live", "--dir", dir], as("agent:ana", "ana"));
+  expect(live.stdout).toContain("agent:ana, human:ben  active  shared");
+  const leave = await cli(["task", "release", task, "--dir", dir, "--json"], as("human:ben", "ben"));
+  expect(leave.json.data).toEqual({ released: true });
+  const again = await cli(["task", "release", task, "--dir", dir, "--json"], as("human:ben", "ben"));
+  expect(again.json.data).toEqual({ released: false });
+});
+
+it("rejects --share without a task ref before any Git calls", async () => {
+  team();
+  const runner = fakeGit();
+  const result = await claim(["--paths", "src", "--share"], {
+    git: runner,
+    env: { AIMEM_AUTHOR: "agent:fixture" },
+  });
+  expect(result.code).toBe(2);
+  expect(result.json.error.code).toBe("USAGE");
+  expect(runner.calls).toEqual([]);
+});

@@ -13,11 +13,14 @@ import {
   claimTarget,
   expiry,
   type LiveClaim,
+  MAX_PARTICIPANTS,
   newPathClaimTarget,
   ownsClaim,
+  participantExpiry,
   requireOnlineGitClaims,
   type TaskClaim,
   validTtl,
+  withParticipants,
 } from "./model.js";
 import { anyPathOverlap, normalizeClaimPaths } from "./paths.js";
 
@@ -32,6 +35,12 @@ export interface TaskClaimInput {
   ttlMinutes?: number;
   offline?: boolean;
   steal?: boolean;
+  /** Create a shared (pairing) claim, or join an active shared claim (07 §2.1). */
+  share?: boolean;
+}
+
+function holders(claim: LiveClaim): string[] {
+  return claim.participants?.map((p) => p.holder) ?? [claim.holder];
 }
 
 /** An active claim by another holder whose paths overlap the acquired claim (07 §2.1). */
@@ -43,6 +52,8 @@ export interface ClaimOverlap {
 
 export interface ClaimResult {
   claim: LiveClaim;
+  /** The caller's session, which differs from `claim.session` after joining a shared claim. */
+  session: string;
   overlaps: ClaimOverlap[];
   warnings: string[];
 }
@@ -52,7 +63,7 @@ function overlapsWith(claim: LiveClaim, owner: ClaimOwner, others: LiveClaim[], 
   return others
     .filter(
       (other) =>
-        other.holder !== owner.holder &&
+        !holders(other).includes(owner.holder) &&
         now < expiry(other) &&
         other.paths !== undefined &&
         anyPathOverlap(claim.paths ?? [], other.paths),
@@ -77,6 +88,9 @@ export async function acquireClaim(
   }
   const target = ref === undefined ? newPathClaimTarget(deps.random) : claimTarget(nb, ref);
   const label = target.task ?? target.id;
+  if (input.share && target.task === undefined) {
+    throw new AimemError("USAGE", "Shared claims require a task ref.");
+  }
   const owner = claimOwner(input.holder, input.session ?? Buffer.from(deps.random.bytes(16)).toString("hex"));
   const started = deps.clock.now().toISOString();
   const ttl = input.ttlMinutes ?? nb.config.claims?.ttl_minutes ?? PROJECT_DEFAULTS.claims.ttl_minutes;
@@ -105,6 +119,9 @@ export async function acquireClaim(
       ttl_minutes: ttl,
       ...(claimPaths === undefined ? {} : { paths: claimPaths }),
       ...(input.note === undefined ? {} : { note: input.note }),
+      ...(input.share
+        ? { shared: true as const, participants: [{ ...owner, joined: started, heartbeat: started }] }
+        : {}),
     };
     return target.task === undefined
       ? { id: target.id, ...fields, paths: claimPaths ?? [] }
@@ -114,6 +131,7 @@ export async function acquireClaim(
     const overlaps = overlapsWith(claim, owner, others, deps.clock.now().getTime());
     return {
       claim,
+      session: owner.session,
       overlaps,
       warnings: [
         ...warnings,
@@ -146,6 +164,27 @@ export async function acquireClaim(
       const expires = expiry(current);
       if (now < expires) {
         if (ownsClaim(current, owner)) return { result: result(current, others) };
+        if (current.shared && input.share) {
+          const active = (current.participants ?? []).filter((p) => now < participantExpiry(current, p));
+          if (active.length >= MAX_PARTICIPANTS) {
+            throw claimConflict(current, `${label} already has ${MAX_PARTICIPANTS} participants.`);
+          }
+          const joined = withParticipants(current, [
+            ...active,
+            { ...owner, joined: started, heartbeat: started },
+          ]);
+          if (!joined) throw new AimemError("SYNC_FAILED", "Could not join the shared claim.");
+          return {
+            result: result(joined, others),
+            change: { claim: joined, message: "aimem: join shared task claim" },
+          };
+        }
+        if (current.shared) {
+          throw claimConflict(
+            current,
+            `${label} is a shared claim held by ${current.holder}. Use --share to join.`,
+          );
+        }
         throw claimConflict(current, `${label} is claimed by ${current.holder}.`);
       }
       if (!input.steal) {
@@ -161,7 +200,12 @@ export async function acquireClaim(
       const claim = build(paths ?? (target.task === undefined ? current.paths : undefined));
       return {
         result: result(claim, others),
-        change: { claim, message: `aimem: take over task claim\n\nAimem-Previous-Holder: ${current.holder}` },
+        change: {
+          claim,
+          message: `aimem: take over task claim\n\n${[...new Set(holders(current))]
+            .map((holder) => `Aimem-Previous-Holder: ${holder}`)
+            .join("\n")}`,
+        },
       };
     },
     { readOthers: true },

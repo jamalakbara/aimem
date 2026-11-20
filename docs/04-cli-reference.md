@@ -231,7 +231,7 @@ Writes a `handoff` record, releases this session's claims (default), updates `IN
 
 ```
 aimem task claim [<ref>] [--author <who>] [--session <id>]
-                        [--paths <globs>] [--note <text>] [--ttl <minutes>m] [--steal]
+                        [--paths <globs>] [--note <text>] [--ttl <minutes>m] [--steal] [--share]
 aimem task heartbeat <ref> [--author <who>] [--session <id>]
 aimem task release <ref> [--author <who>] [--session <id>]
 aimem live
@@ -242,6 +242,8 @@ aimem live
 - Claim success prints the session or returns `data.claim` and `data.overlaps` in the `task claim` JSON envelope. An identical holder and session gets an active claim back. An occupied path, expired heartbeat, premature takeover or changed target during a retry can return `CLAIM_CONFLICT` (exit 3, `details.holder` and `details.since`). An uncertain Git failure returns `SYNC_FAILED` (exit 4).
 - `--paths` accepts up to 32 comma-separated, repo-relative globs of at most 256 characters each. Backslashes become `/` and duplicates are removed. Absolute paths, drive letters, empty, `.` or `..` segments and control characters return `USAGE` before any Git call. Explicit claim metadata goes to the live branch, where repository readers can see it. The CLI checks it for likely secrets before contacting Git.
 - Without `<ref>`, `--paths` creates a **path-only claim** for ad-hoc work. Its ID is `clm-` plus eight ID characters, returned as `data.claim.id` instead of `task`. Pass that ID to `task heartbeat`, `task release` and `task claim --steal`. A takeover without `--paths` keeps the abandoned claim's paths. An unknown `clm-` ID returns `NOT_FOUND`.
+- `--share` creates a **shared (pairing) claim** on a task, or joins an active one. The claim gains `shared: true` and `participants: [{ holder, session, joined, heartbeat }]`, with at most 8 participants. Top-level `holder` and `session` name the first participant, and `heartbeat` is the latest participant heartbeat. `--share` against an exclusive claim, or a claim without `--share` against a shared one, returns `CLAIM_CONFLICT`. `--share` requires a task ref. Every teammate must run a CLI with shared-claim support before using `--share`. Older CLIs drop `participants` when they rewrite the claim.
+- In a shared claim, `task heartbeat` extends only the caller's entry, and an expired participant cannot heartbeat. A join drops expired participants. `task release` removes only the caller, and the last one deletes the claim. Release by a session that is not a participant returns `released: false`. `--steal` works only when every participant has expired and the five-minute allowance has passed. The takeover commit records each previous holder.
 - **Overlap warns and never blocks** (07 §2.1). After a claim, `data.overlaps` lists active claims by other holders whose paths overlap, as `{ ref, holder, paths }`, and each overlap adds a warning. Overlap compares the static segments before the first wildcard segment, so it may report false positives. Claiming a task that is `done` or `cancelled` in the local checkout also adds a warning.
 - `task heartbeat` and `task release` require the existing session ID via `--session` or `AIMEM_SESSION`. Heartbeat extends an active claim and returns `data.claim`. Release removes an owned claim even after expiry or after its durable task file has been removed. It returns `data.released`, which is false if the claim was already absent when the command started.
 - `--steal` replaces an expired claim once its five-minute clock-skew allowance has passed. The same rule applies to all callers. The takeover commit records the previous holder. A missing claim returns `NOT_FOUND`.
@@ -254,7 +256,7 @@ aimem task create --title "..." [--priority p1] [--assignee rina] [--roles dev,q
 aimem task list [--status open] [--mine] [--claimed]
 aimem task status <ref> <status>
 ```
-Planned claim extensions include `--share` for pairing and `--local` for offline reconciliation (07 §2.4).
+A planned claim extension is `--local` for offline reconciliation (07 §2.4).
 
 ## 6. Maintenance commands
 
