@@ -22,6 +22,20 @@ export interface Git {
   run(args: string[], cwd: string, options?: GitOptions): Promise<GitResult>;
 }
 
+/**
+ * Stop a timed-out git and everything it started. On Windows `git.exe` is a wrapper whose child
+ * keeps the pipes open, so only a tree kill ends the call; elsewhere a remote helper may stay
+ * behind, so the pipes are closed to let the caller continue.
+ */
+function killTree(sub: ReturnType<typeof execa>): void {
+  if (process.platform === "win32" && sub.pid !== undefined) {
+    execa("taskkill", ["/pid", String(sub.pid), "/T", "/F"], { reject: false }).catch(() => undefined);
+  }
+  sub.kill("SIGKILL");
+  sub.stdout?.destroy();
+  sub.stderr?.destroy();
+}
+
 /** Run the installed git binary, so credentials, hooks and config behave as for the user (ADR-012). */
 export function execaGit(
   env: Record<string, string> = {},
@@ -32,14 +46,31 @@ export function execaGit(
     async run(args, cwd, options) {
       const timeout =
         options?.timeoutMs === undefined ? undefined : (overrides.networkTimeoutMs ?? options.timeoutMs);
-      const r = await execa("git", args, {
+      const sub = execa("git", args, {
         cwd,
         env: { ...env, ...options?.env },
         reject: false,
-        ...(timeout ? { timeout, forceKillAfterDelay: 1000 } : {}),
         ...(options?.input === undefined ? { stdin: "ignore" } : { input: options.input }),
       });
-      if (r.timedOut) return { code: GIT_TIMEOUT_CODE, stdout: "", stderr: "git timed out" };
+      let timedOut = false;
+      const timer = timeout
+        ? setTimeout(() => {
+            timedOut = true;
+            killTree(sub);
+          }, timeout)
+        : undefined;
+      // Even if a killed process tree lingers, stop waiting shortly after the timeout.
+      let cancelGuard = () => {};
+      const deadline = timeout
+        ? new Promise<undefined>((resolve) => {
+            const handle = setTimeout(resolve, timeout + 3000);
+            cancelGuard = () => clearTimeout(handle);
+          })
+        : undefined;
+      const r = deadline ? await Promise.race([sub, deadline]) : await sub;
+      if (timer) clearTimeout(timer);
+      cancelGuard();
+      if (timedOut || r === undefined) return { code: GIT_TIMEOUT_CODE, stdout: "", stderr: "git timed out" };
       if (r.exitCode === undefined)
         return { code: 127, stdout: "", stderr: r.shortMessage ?? "git could not be started" };
       return { code: r.exitCode, stdout: String(r.stdout), stderr: String(r.stderr) };
