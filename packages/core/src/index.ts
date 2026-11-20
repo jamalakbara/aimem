@@ -16,6 +16,12 @@ export {
 } from "./claims/lifecycle.js";
 export type { LiveClaim, PathClaim, TaskClaim } from "./claims/model.js";
 export { normalizeClaimPaths, pathsOverlap, staticPrefix } from "./claims/paths.js";
+export {
+  listUnsyncedClaims,
+  reconcileLocalClaims,
+  saveLocalClaim,
+  type UnsyncedClaim,
+} from "./claims/pending.js";
 export * from "./context/briefing.js";
 export * from "./context/score.js";
 export * from "./embed/cache.js";

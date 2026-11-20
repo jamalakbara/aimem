@@ -49,6 +49,7 @@ Decision log in ADR style. Status: **accepted** (decided in brainstorm), **propo
 - **Takeover:** In Git mode, any caller can take over an expired claim after the five-minute clock-skew allowance. The caller-supplied author label carries no authority to override an active claim. Record the previous holder in the takeover commit.
 - **Paths (M3.4a):** Path overlap between holders is a warning, as in 07 §2.1, not a block. Overlap is approximated by static glob prefixes. Path-only claims use `clm-` IDs that exist only on `aimem-live`, not as notebook records.
 - **Sharing (M3.4b):** Shared claims keep the exclusive claim's top-level fields for older readers and add `shared` and `participants`. No compatibility shim: teammates upgrade before using `--share`, because older CLIs drop unknown fields on rewrite.
+- **Offline (M3.4c):** `--local` claims wait in the gitignored cache and have no priority over live claims; reconciliation runs before each online claim command and `live`.
 
 ### ADR-010 — Roles are a relevance lens, not access control
 - **Status:** accepted

@@ -1,12 +1,18 @@
 import {
   AimemError,
   acquireClaim,
+  type ClaimResult,
   heartbeatTaskClaim,
   type LiveClaim,
+  listUnsyncedClaims,
   loadProject,
+  type Notebook,
   readLiveClaims,
+  reconcileLocalClaims,
   releaseTaskClaim,
   resolveAuthorWithGit,
+  saveLocalClaim,
+  type TaskClaimInput,
 } from "@aimem/core";
 import type { CliDeps, CommandResult, GlobalOptions } from "../deps.js";
 
@@ -24,6 +30,11 @@ function claimLabel(claim: LiveClaim): string {
   return "task" in claim ? claim.task : `${claim.id} (${claim.paths.join(", ")})`;
 }
 
+/** Publish saved `--local` claims before an online claim command (07 §2.4). */
+async function reconcile(deps: CliDeps, nb: Notebook, offline?: boolean): Promise<string[]> {
+  return offline ? [] : reconcileLocalClaims(nb, deps);
+}
+
 async function claimIdentity(deps: CliDeps, root: string, o: ClaimOptions) {
   const holder = await resolveAuthorWithGit({
     ...(o.author ? { flag: o.author } : {}),
@@ -39,7 +50,14 @@ export async function taskClaim(
   deps: CliDeps,
   g: GlobalOptions,
   ref: string | undefined,
-  o: ClaimOptions & { paths?: string; note?: string; ttl?: string; steal?: boolean; share?: boolean },
+  o: ClaimOptions & {
+    paths?: string;
+    note?: string;
+    ttl?: string;
+    steal?: boolean;
+    share?: boolean;
+    local?: boolean;
+  },
 ): Promise<CommandResult> {
   if (o.ttl !== undefined && !/^\d+m$/.test(o.ttl)) {
     throw new AimemError("USAGE", "Claim TTL must be given in whole minutes, for example 180m.");
@@ -49,26 +67,38 @@ export async function taskClaim(
     ?.split(",")
     .map((path) => path.trim())
     .filter(Boolean);
-  const { claim, session, overlaps, warnings } = await acquireClaim(
-    nb,
-    ref,
-    {
-      ...(await claimIdentity(deps, nb.root, o)),
-      ...(paths === undefined ? {} : { paths }),
-      ...(o.note === undefined ? {} : { note: o.note }),
-      ...(o.ttl === undefined ? {} : { ttlMinutes: Number(o.ttl.slice(0, -1)) }),
-      ...(o.steal ? { steal: true } : {}),
-      ...(o.share ? { share: true } : {}),
-    },
-    deps,
-  );
-  return {
-    data: { claim, overlaps },
-    text: claim.shared
-      ? `Holding the shared claim for ${claimLabel(claim)} (session ${session}). Participants: ${holderLabel(claim)}.\n`
-      : `Claimed ${claimLabel(claim)} for ${claim.holder} (session ${claim.session}).\n`,
-    warnings,
+  const input: TaskClaimInput = {
+    ...(await claimIdentity(deps, nb.root, o)),
+    ...(paths === undefined ? {} : { paths }),
+    ...(o.note === undefined ? {} : { note: o.note }),
+    ...(o.ttl === undefined ? {} : { ttlMinutes: Number(o.ttl.slice(0, -1)) }),
+    ...(o.steal ? { steal: true } : {}),
+    ...(o.share ? { share: true } : {}),
   };
+  let synced: string[] = [];
+  let result: ClaimResult;
+  if (o.local && o.offline) {
+    result = await saveLocalClaim(nb, ref, input, deps);
+  } else {
+    if (o.local && (o.steal || o.share)) {
+      throw new AimemError("USAGE", "--local cannot be combined with --steal or --share.");
+    }
+    try {
+      synced = await reconcile(deps, nb, o.offline);
+      result = await acquireClaim(nb, ref, input, deps);
+    } catch (error) {
+      // 07 §2.4: with --local, an unreachable remote saves an unsynced claim instead of failing.
+      if (!o.local || !(error instanceof AimemError) || error.code !== "SYNC_FAILED") throw error;
+      result = await saveLocalClaim(nb, ref, input, deps);
+    }
+  }
+  const { claim, session, overlaps, warnings } = result;
+  const text = claim.unsynced
+    ? `Saved an unsynced local claim for ${claimLabel(claim)} (session ${claim.session}).\n`
+    : claim.shared
+      ? `Holding the shared claim for ${claimLabel(claim)} (session ${session}). Participants: ${holderLabel(claim)}.\n`
+      : `Claimed ${claimLabel(claim)} for ${claim.holder} (session ${claim.session}).\n`;
+  return { data: { claim, overlaps }, text, warnings: [...synced, ...warnings] };
 }
 
 export async function taskHeartbeat(
@@ -78,8 +108,14 @@ export async function taskHeartbeat(
   o: ClaimOptions,
 ): Promise<CommandResult> {
   const nb = await loadProject(deps.fs, g.dir);
-  const claim = await heartbeatTaskClaim(nb, ref, await claimIdentity(deps, nb.root, o), deps);
-  return { data: { claim }, text: `Extended the claim for ${claimLabel(claim)} at ${claim.heartbeat}.\n` };
+  const identity = await claimIdentity(deps, nb.root, o);
+  const synced = await reconcile(deps, nb, o.offline);
+  const claim = await heartbeatTaskClaim(nb, ref, identity, deps);
+  return {
+    data: { claim },
+    text: `Extended the claim for ${claimLabel(claim)} at ${claim.heartbeat}.\n`,
+    warnings: synced,
+  };
 }
 
 export async function taskRelease(
@@ -89,10 +125,13 @@ export async function taskRelease(
   o: ClaimOptions,
 ): Promise<CommandResult> {
   const nb = await loadProject(deps.fs, g.dir);
-  const released = await releaseTaskClaim(nb, ref, await claimIdentity(deps, nb.root, o), deps);
+  const identity = await claimIdentity(deps, nb.root, o);
+  const synced = await reconcile(deps, nb, o.offline);
+  const released = await releaseTaskClaim(nb, ref, identity, deps);
   return {
     data: { released },
     text: released ? `Released the claim for ${ref}.\n` : `No live claim for ${ref}.\n`,
+    warnings: synced,
   };
 }
 
@@ -102,9 +141,25 @@ export async function liveClaims(
   o: { offline?: boolean },
 ): Promise<CommandResult> {
   const nb = await loadProject(deps.fs, g.dir);
-  const { claims, warnings } = await readLiveClaims(nb, Boolean(o.offline), deps);
+  const synced = await reconcile(deps, nb, o.offline);
+  // Offline, `live` lists only unsynced local claims; online, it adds any that could not sync yet.
+  const remote = o.offline ? { claims: [], warnings: [] } : await readLiveClaims(nb, false, deps);
+  const local = await listUnsyncedClaims(nb, deps);
+  const now = deps.clock.now().getTime();
+  const claims = [
+    ...remote.claims,
+    ...local.claims.map((claim) => {
+      const expires = Date.parse(claim.heartbeat) + claim.ttl_minutes * 60_000;
+      return { ...claim, expired: now >= expires, expiresAt: new Date(expires).toISOString() };
+    }),
+  ];
+  const warnings = [
+    ...synced,
+    ...remote.warnings,
+    ...local.invalid.map((file) => `Skipped unreadable unsynced claim file ${file}.`),
+  ];
   const lines = claims.map((claim) => {
-    const status = claim.expired ? "possibly abandoned" : "active";
+    const status = `${claim.expired ? "possibly abandoned" : "active"}${"unsynced" in claim ? "  unsynced" : ""}`;
     const shared = claim.shared ? "  shared" : "";
     return `${claimLabel(claim)}  ${holderLabel(claim)}  ${status}${shared}  (expires ${claim.expiresAt})`;
   });

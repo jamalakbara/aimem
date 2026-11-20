@@ -167,7 +167,6 @@ it("lists claims in task order and exposes heartbeat, expiry, takeover and relea
 });
 
 it.each([
-  { args: ["live", "--offline"] },
   { args: ["task", "heartbeat", task] },
   { args: ["task", "release", task, "--offline", "--session", "fixture"] },
 ])("rejects invalid lifecycle invocation $args before remote work", async ({ args }) => {
@@ -271,4 +270,47 @@ it("rejects --share without a task ref before any Git calls", async () => {
   expect(result.code).toBe(2);
   expect(result.json.error.code).toBe("USAGE");
   expect(runner.calls).toEqual([]);
+});
+
+it("saves a --local claim when the remote is unreachable and syncs it on the next live", async () => {
+  await setupOrigin();
+  const env = { AIMEM_AUTHOR: "agent:fixture", AIMEM_SESSION: "local" };
+  await sh(dir, "remote", "set-url", "origin", join(root, "missing.git"));
+  const failed = await claim([task], { git, env });
+  expect(failed.json.error.code).toBe("SYNC_FAILED");
+  const saved = await claim([task, "--local"], { git, env });
+  expect(saved.code).toBe(0);
+  expect(saved.json.data.claim).toMatchObject({ task: `acme-ledger:${task}`, unsynced: true });
+  expect(saved.json.warnings.at(-1)).toContain("Saved an unsynced local claim");
+  const offline = await cli(["live", "--offline", "--dir", dir], { git: fakeGit(), env });
+  expect(offline.stdout).toContain(`acme-ledger:${task}  agent:fixture  active  unsynced`);
+  const offlineClaim = await claim([other, "--local", "--offline"], { git: fakeGit(), env });
+  expect(offlineClaim.code).toBe(0);
+  expect(offlineClaim.json.data.claim.unsynced).toBe(true);
+
+  await sh(dir, "remote", "set-url", "origin", join(root, "remote.git"));
+  const live = await cli(["live", "--dir", dir, "--json"], { git, env });
+  expect(live.json.warnings).toEqual([
+    `Synced the unsynced claim for acme-ledger:${task}.`,
+    `Synced the unsynced claim for acme-ledger:${other}.`,
+  ]);
+  expect(live.json.data.claims.map((c: { task: string; unsynced?: true }) => [c.task, c.unsynced])).toEqual([
+    [`acme-ledger:${task}`, undefined],
+    [`acme-ledger:${other}`, undefined],
+  ]);
+});
+
+it.each([
+  ["--steal", [task, "--local", "--steal"]],
+  ["--share", [task, "--local", "--share", "--offline"]],
+])("rejects --local with %s before any Git calls", async (_flag, args) => {
+  team();
+  const runner = fakeGit();
+  const result = await claim(args, {
+    git: runner,
+    env: { AIMEM_AUTHOR: "agent:fixture", AIMEM_SESSION: "s" },
+  });
+  expect(result.code).toBe(2);
+  expect(result.json.error.code).toBe("USAGE");
+  expect(runner.calls.filter((args: string[]) => args[0] !== "config")).toEqual([]);
 });
