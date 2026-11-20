@@ -41,7 +41,7 @@ describe("hybrid scoring (15 §6)", () => {
     const b = buildBriefing(nb, index, { task: "zod json schema export" }, NOW);
     expect(b.header.semanticSearch).toBe("off");
     for (const e of b.explain) expect(e.parts.semantic).toBe(0);
-    expect(b.markdown).toContain("> semantic search: off · live claims: off (arrive in M3)");
+    expect(b.markdown).toContain("> semantic search: off · live claims: off (no team Git sync)");
   });
 
   it("with semantic input uses 0.25 lexical + 0.25 semantic and admits semantic-only matches", () => {

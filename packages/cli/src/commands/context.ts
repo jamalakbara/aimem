@@ -6,13 +6,16 @@ import {
   contextWithRewrites,
   gitChangedFiles,
   gitDiagnostics,
+  heartbeatSessionClaims,
   loadIndex,
   loadProject,
+  readLiveState,
 } from "@aimem/core";
 import type { CliDeps, CommandResult, GlobalOptions } from "../deps.js";
 import { table } from "../output.js";
 import { retrievalDeps } from "./retrieval.js";
 import { retrievalMode, semanticFor } from "./semantic.js";
+import { currentAuthor } from "./session.js";
 
 export interface ContextOptions {
   task?: string;
@@ -23,6 +26,7 @@ export interface ContextOptions {
   format: string;
   includeSuperseded?: boolean;
   live?: boolean;
+  session?: string;
   explain?: boolean;
   mode?: string;
   deep?: boolean;
@@ -53,6 +57,11 @@ export async function context(deps: CliDeps, g: GlobalOptions, o: ContextOptions
     ...(o.includeSuperseded ? { includeSuperseded: true } : {}),
     ...(branch ? { branch } : {}),
   };
+  // 06 §2.2 step 7: one live fetch per briefing; a failure is shown, never thrown.
+  const live = await readLiveState(nb, deps, { skip: o.live === false });
+  const holder = live.status === "off" ? undefined : await currentAuthor(deps, nb.root);
+  input.live = live;
+  if (holder) input.liveHolder = holder;
   const mode = retrievalMode(nb, o.mode);
   const sem = await semanticFor(deps, nb, index, buildQuery(nb, index, input), mode, o.mode !== undefined);
   warnings.push(...sem.warnings);
@@ -69,6 +78,12 @@ export async function context(deps: CliDeps, g: GlobalOptions, o: ContextOptions
   );
   warnings.push(...retrieved.warnings);
   const b = buildBriefing(nb, index, retrievalInput, deps.clock.now(), retrieved.scored);
+  // 06 §2.2 step 11: extend this session's claims, at most every 20 minutes.
+  const session = o.session ?? deps.env.AIMEM_SESSION;
+  if (holder) {
+    const beat = await heartbeatSessionClaims(nb, live, { holder, ...(session ? { session } : {}) }, deps);
+    warnings.push(...beat.warnings);
+  }
   const data = {
     ...b,
     ...(inferPaths ? { inferred: { paths: usedPaths, ...(branch ? { branch } : {}) } } : {}),

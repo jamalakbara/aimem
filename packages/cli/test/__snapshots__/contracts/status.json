@@ -177,7 +177,7 @@
       "author": "agent:claude-code",
       "summary": "Done: medium fixture topic chosen: aimem itself · Next: write the records"
     },
-    "claims": "live claims arrive in M3"
+    "claims": null
   },
   "warnings": []
 }

@@ -131,6 +131,6 @@ describe("summarizeNotebook (aimem status)", () => {
     expect(s.unreviewed.agent).toBeGreaterThan(0);
     expect(s.lastHandoff?.ref).toBe("hnd-yqdkq1wv");
     expect(s.problems).toBe(0);
-    expect(s.claims).toMatch(/M3/);
+    expect(s.claims).toBeNull();
   });
 });

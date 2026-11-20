@@ -144,7 +144,8 @@ export async function run(argv: string[], deps: CliDeps): Promise<number> {
     .option("--budget <tokens>", "token budget (default from project.yaml, else 4000)", positiveInt)
     .addOption(new Option("--format <format>", "md | json").default("md"))
     .option("--include-superseded", "include superseded/rejected/cancelled/done/retired records")
-    .option("--no-live", "skip live claims (claims arrive in M3)")
+    .option("--no-live", "skip the live claim fetch and heartbeat")
+    .option("--session <id>", "claim session to heartbeat (default: AIMEM_SESSION)")
     .option("--explain", "show why each record was selected")
     .option("--mode <mode>", "lexical | hybrid (default: retrieval.mode, else hybrid)")
     .option("--deep", "reserved (not defined yet)")
@@ -260,7 +261,9 @@ export async function run(argv: string[], deps: CliDeps): Promise<number> {
     .option("--author <who>", "human:<handle> or agent:<tool>[:<model>]")
     .action(action("handoff", (g, _a, o) => handoff(deps, g, o as HandoffOptions)));
 
-  cmd("status", "project overview").action(action("status", (g) => status(deps, g)));
+  cmd("status", "project overview")
+    .option("--no-live", "skip the live claim fetch")
+    .action(action("status", (g, _a, o) => status(deps, g, o as { live?: boolean })));
   cmd("doctor", "diagnose the environment (read-only, no network)").action(
     action("doctor", (g) => doctor(deps, g)),
   );

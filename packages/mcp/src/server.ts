@@ -7,6 +7,7 @@ import {
   buildBriefing,
   buildQuery,
   type Clock,
+  claimHolders,
   contextWithRewrites,
   createCallLog,
   type EmbeddingProvider,
@@ -16,6 +17,7 @@ import {
   type Git,
   gitDiagnostics,
   HIDDEN_STATUSES,
+  heartbeatSessionClaims,
   type LlmStatus,
   type LocalRanker,
   loadIndex,
@@ -28,6 +30,7 @@ import {
   type QueryDeps,
   type Random,
   type ResolvedProject,
+  readLiveState,
   renderIndexMd,
   resolveEmbeddingProvider,
   type SemanticInput,
@@ -114,6 +117,12 @@ export function createAimemServer(deps: McpDeps): McpServer {
   /** 05 §5: `agent:<client>` unless AIMEM_AUTHOR is set. */
   const author = () =>
     deps.env.AIMEM_AUTHOR ?? `agent:${slugify(server.server.getClientVersion()?.name ?? "mcp")}`;
+  /** OQ-11: one claim session per server process unless AIMEM_SESSION is set; created on first use. */
+  let session: string | undefined = deps.env.AIMEM_SESSION;
+  const sessionId = () => {
+    session ??= Buffer.from(deps.random.bytes(16)).toString("hex");
+    return session;
+  };
   const commit = (nb: Notebook, files: string[], message: string) =>
     applyWritePolicy({ git: deps.git, nb, author: author(), files, message });
   const find = (nb: Notebook, index: NotebookIndex, ref: string) => {
@@ -205,12 +214,15 @@ export function createAimemServer(deps: McpDeps): McpServer {
     (a) =>
       guarded(async () => {
         const { nb, index } = await open();
+        const live = await readLiveState(nb, deps);
         const input = {
           ...(a.task ? { task: a.task } : {}),
           ...(a.ref ? { ref: a.ref } : {}),
           ...(a.paths?.length ? { paths: a.paths } : {}),
           ...(a.role ? { role: a.role } : {}),
           ...(a.budget_tokens !== undefined ? { budget: a.budget_tokens } : {}),
+          live,
+          liveHolder: author(),
         };
         const sem = await semantic(nb, index, buildQuery(nb, index, input));
         const retrievalInput = {
@@ -225,6 +237,16 @@ export function createAimemServer(deps: McpDeps): McpServer {
           await retrieval(nb, index),
         );
         const b = buildBriefing(nb, index, retrievalInput, deps.clock.now(), retrieved.scored);
+        // 06 §2.2 step 11: extend this session's claims, at most every 20 minutes.
+        if (live.claims.some((c) => claimHolders(c).includes(author()))) {
+          const beat = await heartbeatSessionClaims(
+            nb,
+            live,
+            { holder: author(), session: sessionId() },
+            deps,
+          );
+          retrieved.warnings.push(...beat.warnings);
+        }
         const refs = [b.handoff, b.task, ...b.decisions, ...b.memories, ...b.other]
           .filter((x) => !!x)
           .map((x) => x?.ref);
@@ -232,6 +254,7 @@ export function createAimemServer(deps: McpDeps): McpServer {
           {
             header: b.header,
             warnings: [...retrieved.warnings, ...b.warnings],
+            live: b.live,
             refs,
             more: b.more,
             moreOmitted: b.moreOmitted,

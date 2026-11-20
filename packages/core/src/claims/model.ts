@@ -102,7 +102,13 @@ export function validPaths(paths: unknown): paths is string[] {
 
 export function claimOwner(holder: string, session?: string): ClaimOwner {
   if (!validAuthor(holder)) throw new AimemError("USAGE", "Invalid claim author.");
-  if (session === undefined || !SESSION_ID.test(session)) {
+  if (session === undefined) {
+    throw new AimemError(
+      "USAGE",
+      "This claim belongs to a session. Pass --session <id> or set AIMEM_SESSION (aimem live --json shows sessions).",
+    );
+  }
+  if (!SESSION_ID.test(session)) {
     throw new AimemError(
       "USAGE",
       "Provide a session ID of 1–64 letters, digits, underscores or hyphens, starting with a letter or digit.",

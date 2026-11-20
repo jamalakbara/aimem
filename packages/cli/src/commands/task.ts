@@ -1,10 +1,12 @@
 import {
   AimemError,
   acquireClaim,
+  ageLabel,
   type ClaimResult,
   heartbeatTaskClaim,
   type LiveClaim,
   listUnsyncedClaims,
+  loadIndex,
   loadProject,
   type Notebook,
   readLiveClaims,
@@ -15,6 +17,8 @@ import {
   type TaskClaimInput,
 } from "@aimem/core";
 import type { CliDeps, CommandResult, GlobalOptions } from "../deps.js";
+import { table } from "../output.js";
+import { currentAuthor } from "./session.js";
 
 interface ClaimOptions {
   author?: string;
@@ -158,14 +162,35 @@ export async function liveClaims(
     ...remote.warnings,
     ...local.invalid.map((file) => `Skipped unreadable unsynced claim file ${file}.`),
   ];
-  const lines = claims.map((claim) => {
-    const status = `${claim.expired ? "possibly abandoned" : "active"}${"unsynced" in claim ? "  unsynced" : ""}`;
-    const shared = claim.shared ? "  shared" : "";
-    return `${claimLabel(claim)}  ${holderLabel(claim)}  ${status}${shared}  (expires ${claim.expiresAt})`;
+  // Human output: words, not colour, for every state; exact ISO times stay in --json.
+  const index = claims.length ? await loadIndex(nb, { fs: deps.fs }) : undefined;
+  const me = claims.length ? await currentAuthor(deps, nb.root) : undefined;
+  const rows = claims.map((claim) => {
+    const ref = "task" in claim ? claim.task.replace(`${nb.config.project}:`, "") : claim.id;
+    const record =
+      "task" in claim ? index?.records.find((r) => r.type === "task" && r.id === ref) : undefined;
+    const title = record ? record.title : "task" in claim ? "" : "(paths only)";
+    const holders = claim.participants ? claim.participants.map((p) => p.holder) : [claim.holder];
+    const status = [
+      claim.expired ? "possibly abandoned" : "active",
+      claim.shared ? `shared · ${holders.length} participants` : "",
+      "unsynced" in claim ? "unsynced" : "",
+    ].filter(Boolean);
+    return [
+      ref,
+      title.length > 30 ? `${title.slice(0, 29)}…` : title,
+      `${holders.join(", ")}${me && holders.includes(me) ? " (you)" : ""}`,
+      (claim.paths ?? ["—"]).join(", "),
+      ageLabel(now - Date.parse(claim.started)),
+      claim.expired ? "—" : ageLabel(Date.parse(claim.expiresAt) - now),
+      status.join(", "),
+    ];
   });
   return {
     data: { claims },
-    text: lines.length ? `${lines.join("\n")}\n` : "No live claims.\n",
+    text: rows.length
+      ? table(["REF", "TITLE", "HOLDER", "PATHS", "SINCE", "EXPIRES IN", "STATUS"], rows)
+      : "No live claims.\n",
     warnings,
   };
 }
