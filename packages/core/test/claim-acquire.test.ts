@@ -903,7 +903,11 @@ describe("M3.5 hardening", () => {
   it("gives up on an origin that accepts connections but never answers", async () => {
     const { createServer } = await import("node:net");
     const sockets: import("node:net").Socket[] = [];
-    const silent = createServer((socket) => sockets.push(socket));
+    const silent = createServer((socket) => {
+      // The client is killed on timeout, so the connection is reset; that is expected here.
+      socket.on("error", () => undefined);
+      sockets.push(socket);
+    });
     await new Promise<void>((resolve) => silent.listen(0, "127.0.0.1", resolve));
     const port = (silent.address() as { port: number }).port;
     try {
