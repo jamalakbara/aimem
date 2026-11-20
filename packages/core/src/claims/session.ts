@@ -1,6 +1,6 @@
 import { AimemError } from "../errors.js";
 import type { Notebook } from "../project/load.js";
-import { heartbeatTaskClaim, type LiveClaimView, readLiveClaims } from "./lifecycle.js";
+import { heartbeatTaskClaim, type LiveClaimView, readLiveClaims, releaseTaskClaim } from "./lifecycle.js";
 import {
   type ClaimDeps,
   type ClaimOwner,
@@ -10,7 +10,8 @@ import {
   participantExpiry,
   participantOf,
 } from "./model.js";
-import { listUnsyncedClaims } from "./pending.js";
+import { anyPathOverlap } from "./paths.js";
+import { discardLocalClaims, listUnsyncedClaims } from "./pending.js";
 
 /**
  * Live state for a briefing or status (06 §2.2 step 7). `unavailable` is a connection or remote
@@ -116,5 +117,111 @@ export function summarizeLiveState(state: LiveState, holder?: string) {
               ...(c.unsynced ? { unsynced: true } : {}),
               ...(c.shared ? { shared: true } : {}),
             })),
+  };
+}
+
+/** What `handoff` did with live claims (04 §4, 3.5 decision 4). */
+export interface HandoffClaims {
+  status: LiveStatus;
+  /** When live state was read, so the receiver knows when to recheck `aimem live`. */
+  checkedAt: string;
+  /** Claims released (or left, for shared claims) and unsynced local claims discarded. */
+  released: string[];
+  /** The caller's claims that are still held, with the reason. */
+  kept: { ref: string; reason: string }[];
+  /** Active claims by other holders on the handed-off task or overlapping its paths. */
+  related: { ref: string; holders: string[]; paths?: string[] }[];
+}
+
+/**
+ * Release this session's claims after a handoff record is written. Never throws for Git or
+ * ownership problems: they become `kept` entries and warnings, so the handoff itself stands.
+ */
+export async function releaseSessionClaims(
+  nb: Notebook,
+  owner: Partial<ClaimOwner> & { holder: string },
+  deps: ClaimDeps,
+  options: { release?: boolean; task?: { ref: string; paths: string[] } } = {},
+): Promise<{ claims: HandoffClaims; warnings: string[] }> {
+  const checkedAt = deps.clock.now().toISOString();
+  const state = await readLiveState(nb, deps);
+  const claims: HandoffClaims = { status: state.status, checkedAt, released: [], kept: [], related: [] };
+  const warnings: string[] = [];
+  if (state.status === "off") return { claims, warnings };
+  if (state.status === "unavailable") {
+    warnings.push(
+      `Team claims could not be checked (${state.reason ?? "remote unavailable"}); your claims may still be active. Retry aimem task release <ref> with the same session.`,
+    );
+  }
+  const session = owner.session;
+  for (const claim of state.claims) {
+    const ref = claimRef(claim);
+    const holders = claimHolders(claim);
+    const mine = session !== undefined && ownsClaim(claim, { holder: owner.holder, session });
+    if (!holders.includes(owner.holder)) {
+      const task = options.task;
+      const relatedToTask =
+        task !== undefined &&
+        (ref.endsWith(`:${task.ref}`) ||
+          (claim.paths !== undefined && task.paths.length > 0 && anyPathOverlap(task.paths, claim.paths)));
+      if (relatedToTask && !claim.expired && !claim.unsynced) {
+        claims.related.push({ ref, holders, ...(claim.paths ? { paths: claim.paths } : {}) });
+      }
+      continue;
+    }
+    if (options.release === false) {
+      claims.kept.push({ ref, reason: "kept with --no-release-claims" });
+      continue;
+    }
+    if (!mine) {
+      const other = claim.participants?.find((p) => p.holder === owner.holder)?.session ?? claim.session;
+      claims.kept.push({
+        ref,
+        reason:
+          session === undefined ? `no session given (held by session ${other})` : `held by session ${other}`,
+      });
+      continue;
+    }
+    if (claim.unsynced) continue;
+    try {
+      if (await releaseTaskClaim(nb, ref, { holder: owner.holder, session }, deps)) claims.released.push(ref);
+    } catch (error) {
+      if (!(error instanceof AimemError)) throw error;
+      claims.kept.push({ ref, reason: error.message });
+    }
+  }
+  if (session !== undefined && options.release !== false) {
+    claims.released.push(...(await discardLocalClaims(nb, { holder: owner.holder, session }, deps)));
+  }
+  for (const k of claims.kept) {
+    if (k.reason === "kept with --no-release-claims") continue;
+    warnings.push(
+      `The claim on ${k.ref} is still active (${k.reason}). Release it with aimem task release ${k.ref} --session <id>.`,
+    );
+  }
+  return { claims, warnings };
+}
+
+/**
+ * `aimem live` and MCP `aimem_live`: live claims (unless offline) followed by unsynced local claims.
+ * Unlike `readLiveState`, a Git failure is an error here.
+ */
+export async function listClaimsWithLocal(
+  nb: Notebook,
+  offline: boolean,
+  deps: ClaimDeps,
+): Promise<{ claims: LiveClaimEntry[]; warnings: string[] }> {
+  if (nb.config.mode !== "team" || nb.config.sync !== "git") {
+    throw new AimemError("USAGE", "Task claims require a team notebook with Git sync.");
+  }
+  const remote = offline ? { claims: [], warnings: [] } : await readLiveClaims(nb, false, deps);
+  const local = await listUnsyncedClaims(nb, deps);
+  const now = deps.clock.now().getTime();
+  return {
+    claims: [...remote.claims, ...local.claims.map((claim) => localView(claim, now))],
+    warnings: [
+      ...remote.warnings,
+      ...local.invalid.map((file) => `Skipped unreadable unsynced claim file ${file}.`),
+    ],
   };
 }

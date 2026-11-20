@@ -41,18 +41,19 @@ All tools return structured JSON plus a short human-readable text. Write tools r
 | `aimem_update` | `ref`, `set?`, `body?` | updated record | handoff bodies rejected |
 | `aimem_supersede` | `old`, `new` | ok | |
 | `aimem_task_create` | `title`, `priority?`, `roles?`, `paths?` | `{ref}` | |
-| `aimem_task_claim` | `ref`, `paths?`, `note?`, `ttl_minutes?` | claim or `CLAIM_CONFLICT{holder}` | atomic |
-| `aimem_task_release` | `ref`, `status?` | ok | |
+| `aimem_task_claim` | `ref?`, `paths?`, `note?`, `ttl_minutes?`, `share?`, `steal?`, `local?`, `session?` | `{claim, overlaps}` or `CLAIM_CONFLICT{holder, since}` | atomic; same data as `aimem task claim` |
+| `aimem_task_heartbeat` | `ref`, `session?` | `{claim}` | |
+| `aimem_task_release` | `ref`, `session?` | `{released}` | |
 | `aimem_task_status` | `ref`, `status` | ok | |
-| `aimem_live` | — | claims + presence | |
-| `aimem_handoff` | `done`, `not_done`, `next`, `blocked?`, `notes?`, `task?` | `{ref}` | releases claims |
+| `aimem_live` | `offline?` | `{claims}` | same data as `aimem live --json` |
+| `aimem_handoff` | `done`, `not_done`, `next`, `blocked?`, `notes?`, `task?`, `release_claims?` | `{ref, claimsReleased, claims?}` | releases this session's claims after writing |
 | `aimem_validate` | `strict?` | issues[] | |
 
 Tool descriptions must tell the model *when* to call them (e.g. "Call at the start of every session before reading code").
 
 **v0.1 (slice 2.6):**
 - Served over stdio by `aimem serve mcp` (official `@modelcontextprotocol/sdk`). HTTP arrives with the sync server (M6).
-- `aimem_task_claim`, `aimem_task_release` and `aimem_live` are **not listed until claims exist (M3)**; agents only see tools that work.
+- `aimem_task_claim`, `aimem_task_heartbeat`, `aimem_task_release` and `aimem_live` are listed only when the server starts in a team notebook with Git sync (M3.5b); agents only see tools that work. The claim session is the `session` argument, else `AIMEM_SESSION`, else one random ID per server process created on first use. Claim tools and `aimem_handoff` return warnings in `structuredContent.warnings`.
 - `aimem_task_create` takes `title`, `summary`, `goal`, optional `acceptance[]`, `priority`, `assignee`, `roles`, `paths` (a task needs a summary and a body). `aimem_search` and `aimem_get` accept `budget_tokens` for the output cap. `aimem_update` cannot change handoff bodies (no `force` over MCP).
 - `structuredContent` is `{ok: true, data}` or `{ok: false, error: {code, message, details?}}` with `isError: true`.
 - `aimem_context` returns the briefing markdown (safety notice, trust labels, demoted headings — 06 §2.2a); `aimem_get` and resources wrap bodies in `<aimem-record>` tags, with any such tag inside a record escaped so it cannot close its wrapper.

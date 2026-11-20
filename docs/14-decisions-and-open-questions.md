@@ -160,7 +160,7 @@ key; skipping that setup does not prevent local evaluation (12 §3.1).
 | OQ-8 | Windows support level | Best-effort; CI on Linux+macOS; Windows smoke tests in M7 | M7 |
 | OQ-9 | Open source or private; license | Decide before first publish; MIT/Apache-2.0 if open | M7 |
 | OQ-10 | Semantic search (embeddings) | **Resolved → ADR-014**: in scope for v1 (M2), local model default | — |
-| OQ-11 | How should sessions be identified across tools (session id)? | Git claims use `--session`, then `AIMEM_SESSION`, then a random ID per invocation. Ownership is the holder and session pair. Tools pass the same ID on subsequent calls. The MCP server uses `AIMEM_SESSION`, else one random ID per server process, created on first use. Handoff integration is planned. | M3 |
+| OQ-11 | How should sessions be identified across tools (session id)? | Git claims use `--session`, then `AIMEM_SESSION`, then a random ID per invocation. Ownership is the holder and session pair. Tools pass the same ID on subsequent calls. The MCP server uses `AIMEM_SESSION`, else one random ID per server process, created on first use. `handoff` releases the claims of its session (M3.5b). | M3 |
 | OQ-12 | Per-tool hooks (auto start/end) — build or document only? | Document recipes first; package later | M2/M7 |
 | OQ-13 | Hosting for the team server (VPS, container platform, existing infra) | Single container + managed Postgres on existing infra | M6 |
 | OQ-14 | Private notes: allow `visibility: private` records that stay out of git? | No for v1 (breaks the files-in-git rule); use a private repo | post-v1 |

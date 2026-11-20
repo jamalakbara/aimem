@@ -256,7 +256,9 @@ export async function run(argv: string[], deps: CliDeps): Promise<number> {
       "--from-file <path>",
       "markdown with ## Done / ## Not done / ## Next / ## Blocked / ## Notes for next agent",
     )
-    .option("--release-claims", "release this session's claims (claims arrive in M3)")
+    .option("--release-claims", "release this session's claims (default)")
+    .option("--no-release-claims", "keep this session's claims")
+    .option("--session <id>", "claim session to release (default: AIMEM_SESSION)")
     .option("--commit", "commit the handoff even if write_policy only stages")
     .option("--author <who>", "human:<handle> or agent:<tool>[:<model>]")
     .action(action("handoff", (g, _a, o) => handoff(deps, g, o as HandoffOptions)));

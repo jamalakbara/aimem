@@ -217,7 +217,7 @@ Delete a record. Allowed **only** if it was never `verified` and nothing links t
 ### `aimem handoff`
 ```
 aimem handoff [--task <ref>] --done "..." --not-done "..." --next "..." [--blocked "..."] [--notes "..."]
-              [--from-file <path>] [--release-claims] [--commit]
+              [--from-file <path>] [--release-claims | --no-release-claims] [--session <id>] [--commit]
 ```
 Writes a `handoff` record, releases this session's claims (default), updates `INDEX.md`.
 - `--done`, `--not-done`, `--next` are required (from flags or `--from-file`, a markdown file with `## Done` / `## Not done` / `## Next` / `## Blocked` / `## Notes for next agent`; flags win). `--blocked` and `--notes` default to `none`.
@@ -225,7 +225,7 @@ Writes a `handoff` record, releases this session's claims (default), updates `IN
 - Applies `write_policy` like other writes; `--commit` requests a commit regardless
   of policy, but an agent still cannot commit on a guarded/default branch (03 §6).
   Explicit human commits remain supported there.
-- v0.1: claims arrive in M3, so `--release-claims` is accepted and reports `claimsReleased: 0` with a warning.
+- **Claims (team notebooks with Git sync).** The record is written first; releasing claims never undoes it. Then `handoff` releases every live claim owned by this holder and session (`--session`, else `AIMEM_SESSION`): exclusive and path-only claims are released, shared claims are left, and this session's unsynced local claims are discarded. `--no-release-claims` keeps them. JSON adds `claimsReleased` (a count) and `claims: { status, checkedAt, released[], kept[{ref, reason}], related[{ref, holders, paths?}] }`. `kept` lists the caller's claims still held (another session, no session given, or a failed release), each with a warning that names the release command. `related` lists other holders' active claims on the `--task` or overlapping its paths. If the remote is unavailable, the handoff still succeeds with a warning that claims may still be active. Human output lists released, still held and related claims and when they were checked. Solo notebooks report `claimsReleased: 0` and no `claims`.
 
 ## 5. Task and claim commands
 

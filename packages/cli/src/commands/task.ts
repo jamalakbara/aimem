@@ -5,11 +5,10 @@ import {
   type ClaimResult,
   heartbeatTaskClaim,
   type LiveClaim,
-  listUnsyncedClaims,
+  listClaimsWithLocal,
   loadIndex,
   loadProject,
   type Notebook,
-  readLiveClaims,
   reconcileLocalClaims,
   releaseTaskClaim,
   resolveAuthorWithGit,
@@ -147,21 +146,10 @@ export async function liveClaims(
   const nb = await loadProject(deps.fs, g.dir);
   const synced = await reconcile(deps, nb, o.offline);
   // Offline, `live` lists only unsynced local claims; online, it adds any that could not sync yet.
-  const remote = o.offline ? { claims: [], warnings: [] } : await readLiveClaims(nb, false, deps);
-  const local = await listUnsyncedClaims(nb, deps);
+  const listed = await listClaimsWithLocal(nb, Boolean(o.offline), deps);
+  const claims = listed.claims;
   const now = deps.clock.now().getTime();
-  const claims = [
-    ...remote.claims,
-    ...local.claims.map((claim) => {
-      const expires = Date.parse(claim.heartbeat) + claim.ttl_minutes * 60_000;
-      return { ...claim, expired: now >= expires, expiresAt: new Date(expires).toISOString() };
-    }),
-  ];
-  const warnings = [
-    ...synced,
-    ...remote.warnings,
-    ...local.invalid.map((file) => `Skipped unreadable unsynced claim file ${file}.`),
-  ];
+  const warnings = [...synced, ...listed.warnings];
   // Human output: words, not colour, for every state; exact ISO times stay in --json.
   const index = claims.length ? await loadIndex(nb, { fs: deps.fs }) : undefined;
   const me = claims.length ? await currentAuthor(deps, nb.root) : undefined;

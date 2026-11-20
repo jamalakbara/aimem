@@ -11,6 +11,7 @@ import {
   loadVectorCache,
   parseHandoffFile,
   readLiveState,
+  releaseSessionClaims,
   resolveAuthorWithGit,
   semanticForQuery,
   slugify,
@@ -26,6 +27,7 @@ export interface HandoffOptions extends HandoffSections {
   task?: string;
   fromFile?: string;
   releaseClaims?: boolean;
+  session?: string;
   commit?: boolean;
   author?: string;
 }
@@ -77,7 +79,35 @@ export async function handoff(deps: CliDeps, g: GlobalOptions, o: HandoffOptions
     ...(o.commit ? { override: "commit" as const } : {}),
   });
   const warnings = [...r.warnings, ...git.warnings];
-  if (o.releaseClaims) warnings.push("live claims arrive in M3; nothing to release");
+  // 3.5 decision 4: the record is written first; releasing claims never undoes it.
+  const session = o.session ?? deps.env.AIMEM_SESSION;
+  const taskRecord = o.task
+    ? (await loadIndex(nb, { fs: deps.fs })).records.find(
+        (rec) => rec.type === "task" && (rec.id === o.task || o.task?.endsWith(`:${rec.id}`)),
+      )
+    : undefined;
+  const released = await releaseSessionClaims(nb, { holder: who, ...(session ? { session } : {}) }, deps, {
+    release: o.releaseClaims !== false,
+    ...(taskRecord ? { task: { ref: taskRecord.id, paths: taskRecord.paths } } : {}),
+  });
+  warnings.push(...released.warnings);
+  const c = released.claims;
+  const lines = [`Handoff ${r.ref} → ${r.file}`];
+  if (c.status !== "off") {
+    lines.push(
+      c.released.length
+        ? `Released claims: ${c.released.join(", ")}`
+        : c.status === "unavailable"
+          ? "Claims: not checked (team claims unavailable)"
+          : "Released claims: none",
+    );
+    for (const k of c.kept) lines.push(`Still held: ${k.ref} (${k.reason})`);
+    for (const rel of c.related)
+      lines.push(
+        `Also claimed: ${rel.ref} by ${rel.holders.join(", ")}${rel.paths ? ` on ${rel.paths.join(", ")}` : ""}`,
+      );
+    lines.push(`Claims checked at ${c.checkedAt}; run aimem live before picking this up.`);
+  }
   return {
     data: {
       ref: r.ref,
@@ -86,9 +116,10 @@ export async function handoff(deps: CliDeps, g: GlobalOptions, o: HandoffOptions
       ...(o.task ? { task: o.task } : {}),
       ...(branch ? { branch } : {}),
       git: git.action,
-      claimsReleased: 0,
+      claimsReleased: c.released.length,
+      ...(c.status === "off" ? {} : { claims: c }),
     },
-    text: `Handoff ${r.ref} → ${r.file}\n`,
+    text: `${lines.join("\n")}\n`,
     warnings,
   };
 }

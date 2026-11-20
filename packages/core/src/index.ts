@@ -25,11 +25,14 @@ export {
 export {
   AUTO_HEARTBEAT_MINUTES,
   claimHolders,
+  type HandoffClaims,
   heartbeatSessionClaims,
   type LiveClaimEntry,
   type LiveState,
   type LiveStatus,
+  listClaimsWithLocal,
   readLiveState,
+  releaseSessionClaims,
   summarizeLiveState,
 } from "./claims/session.js";
 export * from "./context/briefing.js";

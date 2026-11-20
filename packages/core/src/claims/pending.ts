@@ -101,6 +101,25 @@ export async function saveLocalClaim(
   };
 }
 
+/** Delete this session's unsynced local claims (handoff). Returns their refs. */
+export async function discardLocalClaims(
+  nb: Notebook,
+  owner: { holder: string; session: string },
+  deps: Pick<ClaimDeps, "fs">,
+): Promise<string[]> {
+  if (nb.config.mode !== "team" || nb.config.sync !== "git") return [];
+  const { claims } = await listUnsyncedClaims(nb, deps);
+  const removed: string[] = [];
+  for (const claim of claims) {
+    if (!ownsClaim(claim, owner)) continue;
+    const ref = "task" in claim ? claim.task : claim.id;
+    const id = "task" in claim ? ref.slice(ref.indexOf(":") + 1) : ref;
+    await deps.fs.unlink(join(pendingDir(nb), `${id}.json`)).catch(() => undefined);
+    removed.push(ref);
+  }
+  return removed;
+}
+
 /**
  * Publish saved local claims before an online claim command. A claim that lost to an earlier live
  * claim, expired, or no longer resolves is dropped with a warning. A sync failure keeps the rest.
