@@ -231,10 +231,10 @@ Writes a `handoff` record, releases this session's claims (default), updates `IN
 
 ```
 aimem task claim [<ref>] [--author <who>] [--session <id>]
-                        [--paths <globs>] [--note <text>] [--ttl <minutes>m] [--steal] [--share]
+                        [--paths <globs>] [--note <text>] [--ttl <minutes>m] [--steal] [--share] [--local]
 aimem task heartbeat <ref> [--author <who>] [--session <id>]
 aimem task release <ref> [--author <who>] [--session <id>]
-aimem live
+aimem live [--offline]
 ```
 
 - Exclusive claims require an online Git-backed team notebook and a task in its local records. Use either the task ID or its project-qualified ref. The TTL comes from `claims.ttl_minutes` (default 180) unless overridden.
@@ -256,7 +256,7 @@ aimem task create --title "..." [--priority p1] [--assignee rina] [--roles dev,q
 aimem task list [--status open] [--mine] [--claimed]
 aimem task status <ref> <status>
 ```
-A planned claim extension is `--local` for offline reconciliation (07 §2.4).
+- `--local` saves an **unsynced local claim** when the remote is unreachable (`SYNC_FAILED`) or with `--offline`. It is stored in `.aimem/.cache/claims-pending/<id>.json` and returned with `data.claim.unsynced: true` and a warning. It cannot be combined with `--steal` or `--share`. Before every online `task claim`, `task heartbeat`, `task release` and `live`, saved claims are published through the normal compare-and-swap, keeping their local `started` time with `heartbeat` set to the sync time. A claim that lost to an earlier live claim, expired before syncing, or no longer resolves is dropped with a warning naming the live holder. A sync failure keeps it for the next attempt. `live --offline` lists only unsynced local claims, marked `unsynced`.
 
 ## 6. Maintenance commands
 

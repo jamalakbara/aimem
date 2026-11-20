@@ -148,7 +148,7 @@ On a rejected or uncertain push, refetch and look for the attempted commit in th
 
 ## 3.4 — Path-only and shared claims, overlap warnings and offline reconciliation
 
-Status: approved with the recommended defaults below. 3.4a and 3.4b are implemented; 3.4c follows. This slice closes 12 §4 scenario 5 and the remaining 07 §2.1 and §2.4 claim rules. Split it into three PRs. Each PR is usable alone and keeps the M3.3 contract for existing exclusive task claims.
+Status: approved with the recommended defaults below. 3.4a, 3.4b and 3.4c are implemented. This slice closes 12 §4 scenario 5 and the remaining 07 §2.1 and §2.4 claim rules. Split it into three PRs. Each PR is usable alone and keeps the M3.3 contract for existing exclusive task claims.
 
 | PR | Scope | Acceptance evidence |
 |---|---|---|
@@ -199,7 +199,7 @@ Status: approved with the recommended defaults below. 3.4a and 3.4b are implemen
 
 ### 3.4c — `--local` and reconciliation
 
-- Add `--local` to `task claim`. If the online attempt fails with `SYNC_FAILED`, or `--offline` is set, write the intended claim to `.aimem/.cache/claims-pending/<id>.json`. Return success with `data.claim.unsynced: true` and a warning, so strict mode exits 1. Without `--local`, behavior is unchanged: `SYNC_FAILED`, exit 4.
+- Add `--local` to `task claim`. If the online attempt fails with `SYNC_FAILED`, or `--offline` is set, write the intended claim to `.aimem/.cache/claims-pending/<id>.json`. Return success with `data.claim.unsynced: true` and a warning. Without `--local`, behavior is unchanged: `SYNC_FAILED`, exit 4.
 - `--local` cannot be combined with `--steal`, because takeover requires a live read.
 - **Reconciliation:** the next online claim command, or `live`, first pushes pending claims through the normal acquire path with their stored session.
   - On success, delete the pending file. `started` stays at the local time, and `heartbeat` is set to the sync time.

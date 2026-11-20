@@ -68,7 +68,7 @@ Section 4 below. Typical visibility latency < 1 s.
 ### 2.4 Failure semantics
 | Situation | Behaviour |
 |-----------|-----------|
-| Git remote down in git mode | `claim` fails with `SYNC_FAILED`; `--local` creates an **unsynced local claim** marked as such and warns; it syncs on next success |
+| Git remote down in git mode | `claim` fails with `SYNC_FAILED`; `--local` creates an **unsynced local claim** in `.aimem/.cache/claims-pending/`, marked as such, and warns. The next online claim command or `live` publishes it through the CAS. It never displaces a live claim: if another holder claimed first, or its TTL elapsed, it is dropped with a warning. Work in the checkout is untouched. |
 | Server down in server mode | Same: fail, or `--local` unsynced claim. We never silently fall back to a second backend (avoids split-brain) |
 | Holder crashed | Claim expires by TTL |
 | Clock skew | Git compares its local clock to `heartbeat + ttl`. Takeover opens five minutes after nominal expiry because Git commit times are client-supplied. |

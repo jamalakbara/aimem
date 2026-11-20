@@ -10,10 +10,13 @@ import {
   type Git,
   heartbeatTaskClaim,
   listLiveClaims,
+  listUnsyncedClaims,
   loadProject,
   nodeFs,
   readLiveClaims,
+  reconcileLocalClaims,
   releaseTaskClaim,
+  saveLocalClaim,
 } from "@aimem/core";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { FIXTURES } from "./helpers.js";
@@ -724,6 +727,82 @@ describe("shared claims", () => {
       acquireClaim(await loadProject(nodeFs, first), task, share(ben), deps),
     ).rejects.toMatchObject({
       code: "SYNC_FAILED",
+    });
+  });
+});
+
+describe("unsynced local claims (scenario 5)", () => {
+  const local = { holder: "agent:test", session: "local" };
+  const offline = async () => sh(first, "remote", "set-url", "origin", join(root, "missing.git"));
+  const online = async () => sh(first, "remote", "set-url", "origin", remote);
+  const gitState = async () => [
+    await sh(first, "rev-parse", "HEAD"),
+    await sh(first, "status", "--porcelain", "--untracked-files=no"),
+    await sh(first, "ls-files", "--stage"),
+  ];
+
+  it("fails without --local, saves an unsynced claim, and syncs it when the remote returns", async () => {
+    const nb = await loadProject(nodeFs, first);
+    const before = await gitState();
+    await offline();
+    await expect(acquireClaim(nb, task, local, at(0))).rejects.toMatchObject({ code: "SYNC_FAILED" });
+    const saved = await saveLocalClaim(nb, task, { ...local, paths: ["src/**"] }, at(0));
+    expect(saved.claim).toMatchObject({ task: `acme-ledger:${task}`, unsynced: true, paths: ["src/**"] });
+    expect(saved.warnings.at(-1)).toContain("Saved an unsynced local claim");
+    expect((await saveLocalClaim(nb, task, local, at(1))).claim.started).toBe(saved.claim.started);
+    await expect(saveLocalClaim(nb, task, { ...local, session: "other" }, at(1))).rejects.toMatchObject({
+      code: "CLAIM_CONFLICT",
+    });
+    expect((await listUnsyncedClaims(nb, deps)).claims).toHaveLength(1);
+    expect(await reconcileLocalClaims(nb, at(2))).toEqual([]);
+    expect((await listUnsyncedClaims(nb, deps)).claims).toHaveLength(1);
+
+    await online();
+    expect(await reconcileLocalClaims(nb, at(3))).toEqual([
+      `Synced the unsynced claim for acme-ledger:${task}.`,
+    ]);
+    expect((await listUnsyncedClaims(nb, deps)).claims).toEqual([]);
+    expect(JSON.parse(await sh(remote, "show", `${live}:claims/${task}.json`))).toMatchObject({
+      holder: local.holder,
+      session: "local",
+      started: at(0).clock.now().toISOString(),
+      heartbeat: at(3).clock.now().toISOString(),
+      paths: ["src/**"],
+    });
+    expect(await gitState()).toEqual(before);
+  });
+
+  it("drops an unsynced claim that lost to an earlier live claim or expired offline", async () => {
+    const a = await loadProject(nodeFs, first);
+    const b = await loadProject(nodeFs, second);
+    await offline();
+    await saveLocalClaim(a, task, local, at(0));
+    await saveLocalClaim(a, other, { ...local, ttlMinutes: 1 }, at(0));
+    await acquireTaskClaim(b, task, nextOwner, at(1));
+    await online();
+    const warnings = await reconcileLocalClaims(a, at(2));
+    expect(warnings).toEqual([
+      `Dropped the unsynced claim for acme-ledger:${task}: the live claim is held by human:fixture since ${at(1).clock.now().toISOString()}.`,
+      `Dropped the unsynced claim for acme-ledger:${other}: it expired before it could sync.`,
+    ]);
+    expect((await listUnsyncedClaims(a, deps)).claims).toEqual([]);
+    expect(JSON.parse(await sh(remote, "show", `${live}:claims/${task}.json`))).toMatchObject(nextOwner);
+  });
+
+  it("syncs an unsynced path-only claim under its local ID", async () => {
+    const nb = await loadProject(nodeFs, first);
+    await offline();
+    const saved = await saveLocalClaim(nb, undefined, { ...local, paths: ["docs/**"] }, at(0));
+    const id = (saved.claim as { id: string }).id;
+    await expect(saveLocalClaim(nb, task, { ...local, steal: true }, deps)).rejects.toMatchObject({
+      code: "USAGE",
+    });
+    await online();
+    expect(await reconcileLocalClaims(nb, at(1))).toEqual([`Synced the unsynced claim for ${id}.`]);
+    expect(JSON.parse(await sh(remote, "show", `${live}:claims/${id}.json`))).toMatchObject({
+      id,
+      paths: ["docs/**"],
+      started: at(0).clock.now().toISOString(),
     });
   });
 });

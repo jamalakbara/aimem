@@ -37,6 +37,11 @@ export interface TaskClaimInput {
   steal?: boolean;
   /** Create a shared (pairing) claim, or join an active shared claim (07 §2.1). */
   share?: boolean;
+  /**
+   * Internal, for reconciling an unsynced local claim (07 §2.4): keep its local start time and allow
+   * creating its own `clm-` ID. The heartbeat is the sync time.
+   */
+  restoreStarted?: string;
 }
 
 function holders(claim: LiveClaim): string[] {
@@ -51,7 +56,8 @@ export interface ClaimOverlap {
 }
 
 export interface ClaimResult {
-  claim: LiveClaim;
+  /** `unsynced` marks a claim saved locally with `--local` that is not on `aimem-live` yet. */
+  claim: LiveClaim & { unsynced?: true };
   /** The caller's session, which differs from `claim.session` after joining a shared claim. */
   session: string;
   overlaps: ClaimOverlap[];
@@ -71,17 +77,13 @@ function overlapsWith(claim: LiveClaim, owner: ClaimOwner, others: LiveClaim[], 
     .map((other) => ({ ref: claimRef(other), holder: other.holder, paths: other.paths ?? [] }));
 }
 
-/**
- * Acquire an exclusive task claim, or a path-only claim when `ref` is omitted.
- * Path overlap with other holders is reported, never blocking. No durable notebook records are written.
- */
-export async function acquireClaim(
+/** Validate claim input locally, before any Git call, and return what a new claim needs. */
+export async function prepareClaim(
   nb: Notebook,
   ref: string | undefined,
   input: TaskClaimInput,
   deps: ClaimDeps,
-): Promise<ClaimResult> {
-  requireOnlineGitClaims(nb, input.offline);
+) {
   if (ref === undefined && input.steal) throw new AimemError("USAGE", "Provide the claim to take over.");
   if (ref === undefined && input.paths === undefined) {
     throw new AimemError("USAGE", "Provide a task ref or --paths for a path-only claim.");
@@ -92,7 +94,8 @@ export async function acquireClaim(
     throw new AimemError("USAGE", "Shared claims require a task ref.");
   }
   const owner = claimOwner(input.holder, input.session ?? Buffer.from(deps.random.bytes(16)).toString("hex"));
-  const started = deps.clock.now().toISOString();
+  const now = deps.clock.now().toISOString();
+  const started = input.restoreStarted ?? now;
   const ttl = input.ttlMinutes ?? nb.config.claims?.ttl_minutes ?? PROJECT_DEFAULTS.claims.ttl_minutes;
   if (!validTtl(ttl, started))
     throw new AimemError("USAGE", "Claim TTL must be positive whole minutes with a valid expiry.");
@@ -115,18 +118,41 @@ export async function acquireClaim(
     const fields = {
       ...owner,
       started,
-      heartbeat: started,
+      heartbeat: now,
       ttl_minutes: ttl,
       ...(claimPaths === undefined ? {} : { paths: claimPaths }),
       ...(input.note === undefined ? {} : { note: input.note }),
       ...(input.share
-        ? { shared: true as const, participants: [{ ...owner, joined: started, heartbeat: started }] }
+        ? { shared: true as const, participants: [{ ...owner, joined: started, heartbeat: now }] }
         : {}),
     };
     return target.task === undefined
       ? { id: target.id, ...fields, paths: claimPaths ?? [] }
       : ({ task: target.task, ...fields } satisfies TaskClaim);
   };
+  return { target, label, owner, started, now, ttl, paths, warnings, build };
+}
+
+/**
+ * Acquire an exclusive task claim, or a path-only claim when `ref` is omitted.
+ * Path overlap with other holders is reported, never blocking. No durable notebook records are written.
+ */
+export async function acquireClaim(
+  nb: Notebook,
+  ref: string | undefined,
+  input: TaskClaimInput,
+  deps: ClaimDeps,
+): Promise<ClaimResult> {
+  requireOnlineGitClaims(nb, input.offline);
+  const {
+    target,
+    label,
+    owner,
+    now: joinedAt,
+    paths,
+    warnings,
+    build,
+  } = await prepareClaim(nb, ref, input, deps);
   const result = (claim: LiveClaim, others: LiveClaim[]): ClaimResult => {
     const overlaps = overlapsWith(claim, owner, others, deps.clock.now().getTime());
     return {
@@ -151,7 +177,7 @@ export async function acquireClaim(
     (current, others) => {
       if (current === undefined) {
         if (input.steal) throw new AimemError("NOT_FOUND", "There is no live claim to take over.");
-        if (ref !== undefined && target.task === undefined) {
+        if (ref !== undefined && target.task === undefined && input.restoreStarted === undefined) {
           throw new AimemError("NOT_FOUND", "There is no live path-only claim with that ID.");
         }
         const claim = build(paths);
@@ -171,7 +197,7 @@ export async function acquireClaim(
           }
           const joined = withParticipants(current, [
             ...active,
-            { ...owner, joined: started, heartbeat: started },
+            { ...owner, joined: joinedAt, heartbeat: joinedAt },
           ]);
           if (!joined) throw new AimemError("SYNC_FAILED", "Could not join the shared claim.");
           return {

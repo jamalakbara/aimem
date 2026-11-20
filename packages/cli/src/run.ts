@@ -120,6 +120,7 @@ export async function run(argv: string[], deps: CliDeps): Promise<number> {
     .option("--ttl <minutes>m", "claim duration, for example 180m")
     .option("--steal", "take over an eligible expired claim")
     .option("--share", "create or join a shared (pairing) claim")
+    .option("--local", "save an unsynced local claim if the remote is unreachable")
     .action(action("task claim", (g, [ref], o) => taskClaim(deps, g, ref as string | undefined, o)));
   claimCmd("heartbeat", "extend this session's claim").action(
     action("task heartbeat", (g, [ref], o) => taskHeartbeat(deps, g, ref as string, o)),
