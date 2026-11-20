@@ -12,6 +12,23 @@ export type ClaimOwner = { holder: string; session: string };
 /** A task claim has `task`; a path-only claim (07 §2.1) has a `clm-` ID instead. */
 export type ClaimTarget = { id: string; task?: string; path: string };
 
+/** Claim notes are free text from other people's clients; keep them short and printable. */
+export const MAX_NOTE_LENGTH = 500;
+
+/** Replace control characters (ANSI escapes, NUL, newlines) with spaces and collapse whitespace. */
+export function cleanNote(note: string): string {
+  return note
+    .replace(/\p{Cc}+/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** For display: a note read from `aimem-live` may come from an older or foreign client. */
+export function displayNote(note: string): string {
+  const clean = cleanNote(note);
+  return clean.length > MAX_NOTE_LENGTH ? `${clean.slice(0, MAX_NOTE_LENGTH - 1)}…` : clean;
+}
+
 /** Path-only claim IDs live only on `aimem-live`; they are not notebook record IDs. */
 export const CLAIM_ID_RE = /^clm-[0-9a-hjkmnp-tv-z]{8}$/;
 
@@ -234,7 +251,7 @@ export function readClaim(text: string, target: Pick<ClaimTarget, "id" | "task">
     ttl_minutes,
     ...(on_behalf_of === undefined ? {} : { on_behalf_of }),
     ...(paths === undefined ? {} : { paths }),
-    ...(note === undefined ? {} : { note }),
+    ...(note === undefined ? {} : { note: displayNote(note) }),
     ...(shared === undefined
       ? {}
       : {

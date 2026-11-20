@@ -11,8 +11,10 @@ import {
   claimOwner,
   claimRef,
   claimTarget,
+  cleanNote,
   expiry,
   type LiveClaim,
+  MAX_NOTE_LENGTH,
   MAX_PARTICIPANTS,
   newPathClaimTarget,
   ownsClaim,
@@ -100,7 +102,11 @@ export async function prepareClaim(
   if (!validTtl(ttl, started))
     throw new AimemError("USAGE", "Claim TTL must be positive whole minutes with a valid expiry.");
   let paths = input.paths === undefined ? undefined : normalizeClaimPaths(input.paths);
-  const metadata = [owner.holder, owner.session, ...(paths ?? []), input.note ?? ""].join("\n");
+  const note = input.note === undefined ? undefined : cleanNote(input.note);
+  if (note !== undefined && note.length > MAX_NOTE_LENGTH) {
+    throw new AimemError("USAGE", `Keep the claim note under ${MAX_NOTE_LENGTH} characters.`);
+  }
+  const metadata = [owner.holder, owner.session, ...(paths ?? []), note ?? ""].join("\n");
   if (scanSecrets(metadata, await loadSecretIgnore(deps.fs, nb.dir)).length) {
     throw new AimemError("SECRET_DETECTED", "Possible secret in claim metadata. Remove it and retry.");
   }
@@ -129,7 +135,7 @@ export async function prepareClaim(
       heartbeat: now,
       ttl_minutes: ttl,
       ...(claimPaths === undefined ? {} : { paths: claimPaths }),
-      ...(input.note === undefined ? {} : { note: input.note }),
+      ...(note === undefined || note === "" ? {} : { note }),
       ...(input.share
         ? { shared: true as const, participants: [{ ...owner, joined: started, heartbeat: now }] }
         : {}),

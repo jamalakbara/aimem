@@ -10,7 +10,12 @@ export interface GitResult {
 export interface GitOptions {
   input?: string;
   env?: Record<string, string>;
+  /** Network calls set this; the process is killed after it and the result has code 124. */
+  timeoutMs?: number;
 }
+
+/** Exit code reported when a git call was stopped by its timeout (as in coreutils `timeout`). */
+export const GIT_TIMEOUT_CODE = 124;
 
 /** The only way core runs a process (docs/11 §2.1). Never throws for a failing command. */
 export interface Git {
@@ -18,15 +23,23 @@ export interface Git {
 }
 
 /** Run the installed git binary, so credentials, hooks and config behave as for the user (ADR-012). */
-export function execaGit(env: Record<string, string> = {}): Git {
+export function execaGit(
+  env: Record<string, string> = {},
+  /** Replaces every network call's timeout, e.g. from AIMEM_LIVE_TIMEOUT_MS. */
+  overrides: { networkTimeoutMs?: number } = {},
+): Git {
   return {
     async run(args, cwd, options) {
+      const timeout =
+        options?.timeoutMs === undefined ? undefined : (overrides.networkTimeoutMs ?? options.timeoutMs);
       const r = await execa("git", args, {
         cwd,
         env: { ...env, ...options?.env },
         reject: false,
+        ...(timeout ? { timeout, forceKillAfterDelay: 1000 } : {}),
         ...(options?.input === undefined ? { stdin: "ignore" } : { input: options.input }),
       });
+      if (r.timedOut) return { code: GIT_TIMEOUT_CODE, stdout: "", stderr: "git timed out" };
       if (r.exitCode === undefined)
         return { code: 127, stdout: "", stderr: r.shortMessage ?? "git could not be started" };
       return { code: r.exitCode, stdout: String(r.stdout), stderr: String(r.stderr) };

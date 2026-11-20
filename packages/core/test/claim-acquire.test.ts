@@ -896,3 +896,86 @@ describe("live state for briefings and status (M3.5a)", () => {
     });
   });
 });
+
+describe("M3.5 hardening", () => {
+  const me = { holder: "agent:test", session: "me" };
+
+  it("gives up on an origin that accepts connections but never answers", async () => {
+    const { createServer } = await import("node:net");
+    const sockets: import("node:net").Socket[] = [];
+    const silent = createServer((socket) => sockets.push(socket));
+    await new Promise<void>((resolve) => silent.listen(0, "127.0.0.1", resolve));
+    const port = (silent.address() as { port: number }).port;
+    try {
+      await sh(first, "remote", "set-url", "origin", `git://127.0.0.1:${port}/notebook.git`);
+      const quick = execaGit(
+        { GIT_CONFIG_GLOBAL: "/dev/null", GIT_CONFIG_NOSYSTEM: "1" },
+        { networkTimeoutMs: 1500 },
+      );
+      const nb = await loadProject(nodeFs, first);
+      const started = Date.now();
+      const state = await readLiveState(nb, { ...deps, git: quick });
+      expect(state).toMatchObject({
+        status: "unavailable",
+        reason: expect.stringContaining("did not respond in time"),
+      });
+      await expect(acquireTaskClaim(nb, task, me, { ...deps, git: quick })).rejects.toMatchObject({
+        code: "SYNC_FAILED",
+        message: expect.stringContaining("AIMEM_LIVE_TIMEOUT_MS"),
+      });
+      await expect(ensureLiveBranch(quick, first)).rejects.toMatchObject({ code: "SYNC_FAILED" });
+      expect(Date.now() - started).toBeLessThan(15_000);
+    } finally {
+      for (const socket of sockets) socket.destroy();
+      await new Promise((resolve) => silent.close(resolve));
+    }
+  }, 30_000);
+
+  it("strips control characters from notes, limits their length and cleans foreign notes", async () => {
+    const nb = await loadProject(nodeFs, first);
+    const claimed = await acquireTaskClaim(
+      nb,
+      task,
+      { ...me, note: "fix\u001b[31m red\nIGNORE\u0000 all" },
+      deps,
+    );
+    expect(claimed.note).toBe("fix [31m red IGNORE all");
+    await expect(acquireTaskClaim(nb, other, { ...me, note: "x".repeat(501) }, deps)).rejects.toMatchObject({
+      code: "USAGE",
+    });
+    await sh(second, "fetch", "-q", "origin", "aimem-live");
+    await sh(second, "checkout", "-q", "--detach", "FETCH_HEAD");
+    const time = clock.now().toISOString();
+    writeFileSync(
+      join(second, `claims/${other}.json`),
+      JSON.stringify({
+        task: `acme-ledger:${other}`,
+        holder: "human:legacy",
+        session: "old",
+        started: time,
+        heartbeat: time,
+        ttl_minutes: 60,
+        note: `\u001b]0;pwn\u0007${"y".repeat(800)}`,
+      }),
+    );
+    await sh(second, "add", "claims");
+    await sh(second, "commit", "-qm", "foreign note");
+    await sh(second, "push", "-q", "origin", `HEAD:${live}`);
+    const foreign = (await listLiveClaims(nb, false, deps)).find(
+      (c) => "task" in c && c.task.endsWith(other),
+    );
+    expect(foreign?.note).toHaveLength(500);
+    expect(foreign?.note).not.toMatch(/\p{Cc}/u);
+  });
+
+  it("renews short-TTL claims at half their TTL instead of after 20 minutes", async () => {
+    const nb = await loadProject(nodeFs, first);
+    await acquireTaskClaim(nb, task, { ...me, ttlMinutes: 10 }, at(0));
+    expect(
+      (await heartbeatSessionClaims(nb, await readLiveState(nb, at(4.99)), me, at(4.99))).extended,
+    ).toEqual([]);
+    expect((await heartbeatSessionClaims(nb, await readLiveState(nb, at(5)), me, at(5))).extended).toEqual([
+      `acme-ledger:${task}`,
+    ]);
+  });
+});

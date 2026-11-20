@@ -230,7 +230,7 @@ After approval, implement 3.4a first on its own branch. Run lint, typecheck and 
 
 ## 3.5 — Live claims in context, status, handoff and MCP
 
-Status: approved with the recommended defaults, including the team input below. 3.5a, 3.5b and 3.5c are implemented. The handoff claim summary goes to the command output and JSON, not into the handoff record, so the record format (03) is unchanged. Today `context` prints "live claims: off", `status` returns a placeholder string for `claims`, `handoff --release-claims` reports `claimsReleased: 0`, and MCP lists no claim tools. 06 §2.2 steps 7 and 11, 04 §3 and §4, 05 §2 and 06 §3 describe the target. Split the work into three PRs.
+Status: approved with the recommended defaults, including the team input below. 3.5a, 3.5b and 3.5c are implemented, followed by a hardening PR for QA findings (see "3.5 closure evidence"). The handoff claim summary goes to the command output and JSON, not into the handoff record, so the record format (03) is unchanged. Today `context` prints "live claims: off", `status` returns a placeholder string for `claims`, `handoff --release-claims` reports `claimsReleased: 0`, and MCP lists no claim tools. 06 §2.2 steps 7 and 11, 04 §3 and §4, 05 §2 and 06 §3 describe the target. Split the work into three PRs.
 
 | PR | Scope | Acceptance evidence |
 |---|---|---|
@@ -327,3 +327,18 @@ Status: approved with the recommended defaults, including the team input below. 
 | Docs | `docs/04-cli-reference.md` §3–§4, `docs/05-mcp-server.md`, `docs/06-agent-integration.md`, `docs/07-sync-and-concurrency.md`, `docs/14-decisions-and-open-questions.md` (OQ-11) |
 
 After approval, implement 3.5a first. Each PR needs lint, typecheck, the full suite, green CI and the claim stress workflow.
+
+### 3.5 closure evidence
+
+| Item | Evidence |
+|---|---|
+| PRs | #66 plan, #67 3.5a, #68 display fixes, #69 3.5b, #70 3.5c, and the hardening PR |
+| CI | Six OS/Node jobs green on each PR; the 20-clone claim stress workflow green on PRs that touch claim code |
+| CLI and MCP agree | `packages/mcp/test/claims.test.ts`: two MCP servers on one bare remote; claim data from MCP equals core `acquireTaskClaim`; conflict, heartbeat, live and release across servers |
+| Handoff | Release succeeded, skipped with `--no-release-claims`, kept for another session, and remote unavailable (record still written, warning names the claims) |
+| Unavailable vs empty | Briefing Live says "Not checked: team claims are unavailable." and still lists unsynced local claims (#68); `status.claims.status` is `unavailable` |
+| Silent remote | A TCP server that accepts and never answers: `context` and `status` finish with `unavailable`, claims return `SYNC_FAILED`, in under 15 s with a 1.5 s limit (hardening PR) |
+| Short TTL | Claims with a TTL under 40 minutes are renewed at half their TTL, so a 10-minute claim renews at 5 minutes (hardening PR) |
+| Claim notes | Control characters stripped, 500-character limit on write, foreign notes cleaned and cut on read (hardening PR) |
+| Adapter v1 → v2 | `block.test.ts` upgrade test; text outside the markers is unchanged |
+| Manual run | Global CLI at `4daadfe` with two clones: overlap warning, task-held warning in `context`, `status` counts, handoff release with related claims |
