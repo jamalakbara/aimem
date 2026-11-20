@@ -616,22 +616,90 @@ describe("shared claims", () => {
     expect(message).toContain("Aimem-Previous-Holder: agent:carol");
   });
 
-  it("keeps both outcomes when a join races a release", async () => {
+  /** The leader pushes first; the follower pushes from the tip it read before, so it must retry. */
+  function orderedPushes(): { leader: Git; follower: Git } {
+    let followerReady!: () => void;
+    let leaderDone!: () => void;
+    const ready = new Promise<void>((resolve) => {
+      followerReady = resolve;
+    });
+    const done = new Promise<void>((resolve) => {
+      leaderDone = resolve;
+    });
+    let leaderPushed = false;
+    let followerWaited = false;
+    return {
+      leader: {
+        async run(args, cwd, options) {
+          if (!args.includes("push") || leaderPushed) return git.run(args, cwd, options);
+          leaderPushed = true;
+          await ready;
+          const result = await git.run(args, cwd, options);
+          leaderDone();
+          return result;
+        },
+      },
+      follower: {
+        async run(args, cwd, options) {
+          if (args.includes("push") && !followerWaited) {
+            followerWaited = true;
+            followerReady();
+            await done;
+          }
+          return git.run(args, cwd, options);
+        },
+      },
+    };
+  }
+
+  it.each(["join", "release"] as const)(
+    "keeps both outcomes when a join races a release (%s first)",
+    async (leader) => {
+      const a = await loadProject(nodeFs, first);
+      const b = await loadProject(nodeFs, second);
+      await acquireClaim(a, task, share(ana), deps);
+      await acquireClaim(a, task, share({ holder: "agent:dan", session: "dan" }), deps);
+      const order = orderedPushes();
+      const [joinGit, releaseGit] =
+        leader === "join" ? [order.leader, order.follower] : [order.follower, order.leader];
+      const [joined, released] = await Promise.all([
+        acquireClaim(b, task, share(ben), { ...deps, git: joinGit }),
+        releaseTaskClaim(a, task, ana, { ...deps, git: releaseGit }),
+      ]);
+      expect(joined.claim.shared).toBe(true);
+      expect(released).toBe(true);
+      expect((await stored()).participants.map((p: { holder: string }) => p.holder).sort()).toEqual([
+        "agent:dan",
+        "human:ben",
+      ]);
+    },
+  );
+
+  it("keeps a participant heartbeat when another session joins first", async () => {
     const a = await loadProject(nodeFs, first);
     const b = await loadProject(nodeFs, second);
-    await acquireClaim(a, task, share(ana), deps);
-    await acquireClaim(a, task, share({ holder: "agent:dan", session: "dan" }), deps);
-    const runner = racePushes();
-    const [joined, released] = await Promise.allSettled([
-      acquireClaim(b, task, share(ben), { ...deps, git: runner }),
-      releaseTaskClaim(a, task, ana, { ...deps, git: runner }),
+    await acquireClaim(a, task, share(ana), at(0));
+    const order = orderedPushes();
+    const [, beat] = await Promise.all([
+      acquireClaim(b, task, share(ben), { ...at(1), git: order.leader }),
+      heartbeatTaskClaim(a, task, ana, { ...at(1), git: order.follower }),
     ]);
-    expect(joined.status).toBe("fulfilled");
-    expect(released).toMatchObject({ status: "fulfilled", value: true });
-    expect((await stored()).participants.map((p: { holder: string }) => p.holder).sort()).toEqual([
-      "agent:dan",
-      "human:ben",
+    expect(beat.participants?.map((p) => p.holder)).toEqual([ana.holder, ben.holder]);
+    expect((await stored()).participants[0].heartbeat).toBe(at(1).clock.now().toISOString());
+  });
+
+  it("still rejects a stale release after a takeover of the shared claim", async () => {
+    const a = await loadProject(nodeFs, first);
+    const b = await loadProject(nodeFs, second);
+    await acquireClaim(a, task, { ...share(ana), ttlMinutes: 1 }, at(0));
+    const order = orderedPushes();
+    const [taken, released] = await Promise.allSettled([
+      acquireClaim(b, task, { ...ben, steal: true }, { ...at(6), git: order.leader }),
+      releaseTaskClaim(a, task, ana, { ...at(6), git: order.follower }),
     ]);
+    expect(taken.status).toBe("fulfilled");
+    expect(released).toMatchObject({ status: "rejected", reason: { code: "CLAIM_CONFLICT" } });
+    expect(await stored()).toMatchObject({ holder: ben.holder, session: "ben" });
   });
 
   it("rejects a shared entry whose holder does not match its first participant", async () => {
