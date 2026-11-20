@@ -230,8 +230,8 @@ Writes a `handoff` record, releases this session's claims (default), updates `IN
 ## 5. Task and claim commands
 
 ```
-aimem task claim <ref> [--author <who>] [--session <id>]
-                      [--paths <globs>] [--note <text>] [--ttl <minutes>m] [--steal]
+aimem task claim [<ref>] [--author <who>] [--session <id>]
+                        [--paths <globs>] [--note <text>] [--ttl <minutes>m] [--steal]
 aimem task heartbeat <ref> [--author <who>] [--session <id>]
 aimem task release <ref> [--author <who>] [--session <id>]
 aimem live
@@ -239,11 +239,13 @@ aimem live
 
 - Exclusive claims require an online Git-backed team notebook and a task in its local records. Use either the task ID or its project-qualified ref. The TTL comes from `claims.ttl_minutes` (default 180) unless overridden.
 - Session precedence is `--session`, `AIMEM_SESSION`, then a random ID generated for this invocation. Supply an opaque 1–64 character ID beginning with a letter or digit and containing only letters, digits, underscores or hyphens. Reuse it across invocations for the same session.
-- Claim success prints the session or returns `data.claim` in the `task claim` JSON envelope. An identical holder and session gets an active claim back. An occupied path, expired heartbeat, premature takeover or changed target during a retry can return `CLAIM_CONFLICT` (exit 3, `details.holder` and `details.since`). An uncertain Git failure returns `SYNC_FAILED` (exit 4).
-- `--paths` accepts comma-separated globs. Explicit claim metadata goes to the live branch, where repository readers can see it. The CLI checks it for likely secrets before contacting Git.
+- Claim success prints the session or returns `data.claim` and `data.overlaps` in the `task claim` JSON envelope. An identical holder and session gets an active claim back. An occupied path, expired heartbeat, premature takeover or changed target during a retry can return `CLAIM_CONFLICT` (exit 3, `details.holder` and `details.since`). An uncertain Git failure returns `SYNC_FAILED` (exit 4).
+- `--paths` accepts up to 32 comma-separated, repo-relative globs of at most 256 characters each. Backslashes become `/` and duplicates are removed. Absolute paths, drive letters, empty, `.` or `..` segments and control characters return `USAGE` before any Git call. Explicit claim metadata goes to the live branch, where repository readers can see it. The CLI checks it for likely secrets before contacting Git.
+- Without `<ref>`, `--paths` creates a **path-only claim** for ad-hoc work. Its ID is `clm-` plus eight ID characters, returned as `data.claim.id` instead of `task`. Pass that ID to `task heartbeat`, `task release` and `task claim --steal`. A takeover without `--paths` keeps the abandoned claim's paths. An unknown `clm-` ID returns `NOT_FOUND`.
+- **Overlap warns and never blocks** (07 §2.1). After a claim, `data.overlaps` lists active claims by other holders whose paths overlap, as `{ ref, holder, paths }`, and each overlap adds a warning. Overlap compares the static segments before the first wildcard segment, so it may report false positives. Claiming a task that is `done` or `cancelled` in the local checkout also adds a warning.
 - `task heartbeat` and `task release` require the existing session ID via `--session` or `AIMEM_SESSION`. Heartbeat extends an active claim and returns `data.claim`. Release removes an owned claim even after expiry or after its durable task file has been removed. It returns `data.released`, which is false if the claim was already absent when the command started.
 - `--steal` replaces an expired claim once its five-minute clock-skew allowance has passed. The same rule applies to all callers. The takeover commit records the previous holder. A missing claim returns `NOT_FOUND`.
-- `live` fetches a snapshot and lists claims in task-ref order. JSON returns `data.claims` with `expired` and `expiresAt` on each entry. Human output marks expired claims as “possibly abandoned.”
+- `live` fetches a snapshot and lists task claims in task-ref order, then path-only claims by ID. JSON returns `data.claims` with `expired` and `expiresAt` on each entry. Human output marks expired claims as “possibly abandoned.” A malformed live entry is skipped with a warning naming its path. A claim operation on that same entry still returns `SYNC_FAILED`.
 
 Batch heartbeat, release with a durable status change, and streaming live updates are planned.
 

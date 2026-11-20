@@ -4,6 +4,18 @@ import type { Fs, Random } from "../ports.js";
 import type { Git } from "./git.js";
 
 const LIVE_REF = "refs/heads/aimem-live";
+const MIN_GIT = [2, 31] as const;
+
+/** Claim operations pass the endpoint with `--config-env`, added in Git 2.31 (07 §2.2). */
+async function requireClaimGit(git: Git, cwd: string): Promise<void> {
+  const result = await git.run(["--version"], cwd);
+  const match = /(\d+)\.(\d+)/.exec(result.stdout);
+  const [major, minor] = match ? [Number(match[1]), Number(match[2])] : [0, 0];
+  if (result.code !== 0 || major < MIN_GIT[0] || (major === MIN_GIT[0] && minor < MIN_GIT[1])) {
+    const found = match ? ` Found ${major}.${minor}.` : "";
+    throw new AimemError("SYNC_FAILED", `Git claims require Git ${MIN_GIT.join(".")} or newer.${found}`);
+  }
+}
 
 /** Bootstrap the live branch using only Git objects, without a checkout. */
 export async function ensureLiveBranch(git: Git, cwd: string): Promise<void> {
@@ -44,6 +56,7 @@ export async function openLiveBranch(
   cache: string,
   { git, fs, random }: { git: Git; fs: Fs; random: Random },
 ) {
+  await requireClaimGit(git, cwd);
   const origin = await git.run(["remote", "get-url", "--push", "--all", "origin"], cwd);
   const [url, ...otherUrls] = origin.stdout.trim().split(/\r?\n/);
   if (origin.code !== 0 || !url || otherUrls.length) {

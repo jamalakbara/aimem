@@ -1,9 +1,10 @@
 import {
   AimemError,
-  acquireTaskClaim,
+  acquireClaim,
   heartbeatTaskClaim,
-  listLiveClaims,
+  type LiveClaim,
   loadProject,
+  readLiveClaims,
   releaseTaskClaim,
   resolveAuthorWithGit,
 } from "@aimem/core";
@@ -13,6 +14,10 @@ interface ClaimOptions {
   author?: string;
   session?: string;
   offline?: boolean;
+}
+
+function claimLabel(claim: LiveClaim): string {
+  return "task" in claim ? claim.task : `${claim.id} (${claim.paths.join(", ")})`;
 }
 
 async function claimIdentity(deps: CliDeps, root: string, o: ClaimOptions) {
@@ -29,7 +34,7 @@ async function claimIdentity(deps: CliDeps, root: string, o: ClaimOptions) {
 export async function taskClaim(
   deps: CliDeps,
   g: GlobalOptions,
-  ref: string,
+  ref: string | undefined,
   o: ClaimOptions & { paths?: string; note?: string; ttl?: string; steal?: boolean },
 ): Promise<CommandResult> {
   if (o.ttl !== undefined && !/^\d+m$/.test(o.ttl)) {
@@ -40,7 +45,7 @@ export async function taskClaim(
     ?.split(",")
     .map((path) => path.trim())
     .filter(Boolean);
-  const claim = await acquireTaskClaim(
+  const { claim, overlaps, warnings } = await acquireClaim(
     nb,
     ref,
     {
@@ -53,8 +58,9 @@ export async function taskClaim(
     deps,
   );
   return {
-    data: { claim },
-    text: `Claimed ${claim.task} for ${claim.holder} (session ${claim.session}).\n`,
+    data: { claim, overlaps },
+    text: `Claimed ${claimLabel(claim)} for ${claim.holder} (session ${claim.session}).\n`,
+    warnings,
   };
 }
 
@@ -66,7 +72,7 @@ export async function taskHeartbeat(
 ): Promise<CommandResult> {
   const nb = await loadProject(deps.fs, g.dir);
   const claim = await heartbeatTaskClaim(nb, ref, await claimIdentity(deps, nb.root, o), deps);
-  return { data: { claim }, text: `Extended the claim for ${claim.task} at ${claim.heartbeat}.\n` };
+  return { data: { claim }, text: `Extended the claim for ${claimLabel(claim)} at ${claim.heartbeat}.\n` };
 }
 
 export async function taskRelease(
@@ -89,10 +95,14 @@ export async function liveClaims(
   o: { offline?: boolean },
 ): Promise<CommandResult> {
   const nb = await loadProject(deps.fs, g.dir);
-  const claims = await listLiveClaims(nb, Boolean(o.offline), deps);
+  const { claims, warnings } = await readLiveClaims(nb, Boolean(o.offline), deps);
   const lines = claims.map((claim) => {
     const status = claim.expired ? "possibly abandoned" : "active";
-    return `${claim.task}  ${claim.holder}  ${status}  (expires ${claim.expiresAt})`;
+    return `${claimLabel(claim)}  ${claim.holder}  ${status}  (expires ${claim.expiresAt})`;
   });
-  return { data: { claims }, text: lines.length ? `${lines.join("\n")}\n` : "No live claims.\n" };
+  return {
+    data: { claims },
+    text: lines.length ? `${lines.join("\n")}\n` : "No live claims.\n",
+    warnings,
+  };
 }

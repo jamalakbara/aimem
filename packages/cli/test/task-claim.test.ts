@@ -70,6 +70,7 @@ it("returns a claim and reports conflicts by holder and session", async () => {
         paths: ["db/**", "src/**"],
         note: "Pair later.",
       },
+      overlaps: [],
     },
     warnings: [],
   });
@@ -176,6 +177,62 @@ it.each([
     git: runner,
     env: { AIMEM_AUTHOR: "agent:fixture" },
   });
+  expect(result.code).toBe(2);
+  expect(result.json.error.code).toBe("USAGE");
+  expect(runner.calls).toEqual([]);
+});
+
+it("claims paths without a task, warns about overlaps and lists path-only claims", async () => {
+  await setupOrigin();
+  const as = (author: string, session: string) => ({
+    git,
+    env: { AIMEM_AUTHOR: author, AIMEM_SESSION: session },
+  });
+  const held = await claim(["--paths", "src/api/**", "--note", "Hotfix."], as("agent:fixture", "one"));
+  expect(held.code).toBe(0);
+  const id = held.json.data.claim.id as string;
+  expect(id).toMatch(/^clm-[0-9a-hjkmnp-tv-z]{8}$/);
+  expect(held.json.data).toEqual({
+    claim: {
+      id,
+      holder: "agent:fixture",
+      session: "one",
+      started: "2026-10-12T00:00:00.000Z",
+      heartbeat: "2026-10-12T00:00:00.000Z",
+      ttl_minutes: 180,
+      paths: ["src/api/**"],
+      note: "Hotfix.",
+    },
+    overlaps: [],
+  });
+
+  const overlapping = await claim([task, "--paths", "src/api/routes.ts"], as("human:peer", "two"));
+  expect(overlapping.code).toBe(0);
+  expect(overlapping.json.data.overlaps).toEqual([
+    { ref: id, holder: "agent:fixture", paths: ["src/api/**"] },
+  ]);
+  expect(overlapping.json.warnings).toEqual([`Paths overlap ${id} held by agent:fixture (src/api/**).`]);
+  const human = await claim([other, "--paths", "src/api"], as("human:peer", "three"), false);
+  expect(human.code).toBe(0);
+  expect(human.stderr).toContain(`warning: Paths overlap ${id} held by agent:fixture`);
+
+  const live = await cli(["live", "--dir", dir], as("agent:fixture", "one"));
+  expect(live.stdout.trim().split("\n").at(-1)).toContain(`${id} (src/api/**)  agent:fixture  active`);
+  const beat = await cli(["task", "heartbeat", id, "--dir", dir, "--json"], as("agent:fixture", "one"));
+  expect(beat.json.data.claim.id).toBe(id);
+  const release = await cli(["task", "release", id, "--dir", dir, "--json"], as("agent:fixture", "one"));
+  expect(release.json.data).toEqual({ released: true });
+});
+
+it.each([
+  { name: "no ref or paths", args: [] },
+  { name: "a parent path", args: ["--paths", "../outside"] },
+  { name: "an absolute path", args: [task, "--paths", "/etc/**"] },
+  { name: "a path-only takeover without an ID", args: ["--paths", "src", "--steal"] },
+])("rejects $name before any Git calls", async ({ args }) => {
+  team();
+  const runner = fakeGit();
+  const result = await claim(args, { git: runner, env: { AIMEM_AUTHOR: "agent:fixture" } });
   expect(result.code).toBe(2);
   expect(result.json.error.code).toBe("USAGE");
   expect(runner.calls).toEqual([]);

@@ -109,17 +109,17 @@ export async function run(argv: string[], deps: CliDeps): Promise<number> {
     .action(action("init", (g, _a, o) => init(deps, g, o as Parameters<typeof init>[2])));
 
   const task = program.command("task").description("manage task claims").exitOverride();
-  const claimCmd = (name: string, description: string) =>
-    cmd(`${name} <ref>`, description, task)
+  const claimCmd = (name: string, description: string, ref = "<ref>") =>
+    cmd(`${name} ${ref}`, description, task)
       .option("--author <who>", "human:<handle> or agent:<tool>[:<model>]")
       .option("--session <id>", "opaque claim session ID")
       .option("--offline", "disable network access");
-  claimCmd("claim", "claim a task for this session")
+  claimCmd("claim", "claim a task, or paths only when no ref is given", "[ref]")
     .option("--paths <globs>", "comma-separated claim paths")
     .option("--note <text>", "short claim note")
     .option("--ttl <minutes>m", "claim duration, for example 180m")
     .option("--steal", "take over an eligible expired claim")
-    .action(action("task claim", (g, [ref], o) => taskClaim(deps, g, ref as string, o)));
+    .action(action("task claim", (g, [ref], o) => taskClaim(deps, g, ref as string | undefined, o)));
   claimCmd("heartbeat", "extend this session's claim").action(
     action("task heartbeat", (g, [ref], o) => taskHeartbeat(deps, g, ref as string, o)),
   );

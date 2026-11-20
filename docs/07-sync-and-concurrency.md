@@ -41,16 +41,17 @@ Two kinds of data, two mechanisms (ADR-002):
 Rules:
 - In Git, the claim JSON for a task is stored at `claims/<task-id>.json` with a project-qualified `task` ref inside it. `on_behalf_of`, `paths`, and `note` are optional.
 - A task has **at most one** active claim. Expiry = `heartbeat + ttl`.
-- A claim may also be **path-only** (no task) for ad-hoc work: `aimem task claim --paths "..." --note "..."`.
-- Path overlap between claims by different holders produces a **warning**, never a block (two tasks may legitimately touch the same area).
+- A claim may also be **path-only** (no task) for ad-hoc work: `aimem task claim --paths "..." --note "..."`. It is stored at `claims/clm-<8 ID characters>.json` with `id` instead of `task`, and `paths` is required.
+- Claim paths are repo-relative POSIX globs (04 §5 lists the limits).
+- Path overlap between active claims by different holders produces a **warning**, never a block (two tasks may legitimately touch the same area). Two globs overlap when the static segments before the first wildcard segment of one equal, or are a whole-segment ancestor of, the other's. `src/api` overlaps `src/api/routes.ts` but not `src/api-v2/routes.ts`. False positives are acceptable for a warning.
 - A *shared* claim (pairing) is allowed with `--share`; both holders are listed.
 - `live` shows a claim as "possibly abandoned" at nominal expiry. Any caller can take over five minutes after nominal expiry by passing `--steal`. The previous holder is recorded in the takeover commit and remains visible until live-branch compaction.
 - `task heartbeat <ref>` extends an active claim for its owning holder and session. Automatic heartbeats from `context` and `handoff` are planned at 20-minute intervals during activity.
 
 ### 2.2 `sync: git` — claims on the `aimem-live` branch
 - `aimem init --team --sync git` and `aimem init --upgrade --sync git` ensure `refs/heads/aimem-live` on `origin`. Setup queries that ref before writing notebook files. If the remote reports it missing, aimem creates a parentless commit with an empty tree and pushes only the live ref. After a rejected push, it checks the ref again to detect concurrent creation. An unreachable remote or missing required `origin` returns `SYNC_FAILED`. Offline setup defers the remote step.
-- Setup uses the repository's object database and preserves the current branch, index and working files. Claim operations use a private, per-invocation ref and temporary index in that repository. They preserve `FETCH_HEAD` and ordinary remote-tracking refs. The live branch tree contains only `claims/<id>.json` entries.
-- A claim operation reads and writes the same endpoint, using the sole effective push URL for `origin`. Claim acquisition requires Git 2.31 or newer to configure that endpoint for each command. [Git 2.31 command options](https://git-scm.com/docs/git/2.31.0.html)
+- Setup uses the repository's object database and preserves the current branch, index and working files. Claim operations use a private, per-invocation ref and temporary index in that repository. They preserve `FETCH_HEAD` and ordinary remote-tracking refs. The live branch tree contains only `claims/<id>.json` entries, where `<id>` is a task ID or a path-only `clm-` ID.
+- A claim operation reads and writes the same endpoint, using the sole effective push URL for `origin`. Claim operations require Git 2.31 or newer to configure that endpoint for each command. They check `git --version` first and return `SYNC_FAILED` with the found version on older Git. [Git 2.31 command options](https://git-scm.com/docs/git/2.31.0.html)
 - **Claim algorithm (CAS via git):**
   1. Fetch `aimem-live` into a private ref and read the task entry from that tip. Ordinary acquisition returns an active claim to its owner, or `CLAIM_CONFLICT` (exit 3) if another claim occupies the path. An invalid entry yields `SYNC_FAILED`.
   2. Add, replace or delete the claim in a temporary index based on that tip. Create a commit whose sole parent is the tip, then push it to `aimem-live` with an exact-tip lease. A per-invocation operation ID in the commit trailer distinguishes otherwise identical edits. The lease rejects a changed or deleted ref.
