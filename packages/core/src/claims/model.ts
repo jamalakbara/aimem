@@ -1,4 +1,4 @@
-import { baseFrontmatterSchema, parseRef, REF_RE, typeFromId } from "@aimem/schema";
+import { baseFrontmatterSchema, ID_ALPHABET, parseRef, REF_RE, typeFromId } from "@aimem/schema";
 import { AimemError } from "../errors.js";
 import type { Git } from "../git/git.js";
 import type { Clock, Fs, Random } from "../ports.js";
@@ -9,10 +9,13 @@ const UTC_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/;
 
 export type ClaimDeps = { fs: Fs; clock: Clock; random: Random; git: Git };
 export type ClaimOwner = { holder: string; session: string };
-export type ClaimTarget = { id: string; task: string; path: string };
+/** A task claim has `task`; a path-only claim (07 §2.1) has a `clm-` ID instead. */
+export type ClaimTarget = { id: string; task?: string; path: string };
 
-export interface TaskClaim extends ClaimOwner {
-  task: string;
+/** Path-only claim IDs live only on `aimem-live`; they are not notebook record IDs. */
+export const CLAIM_ID_RE = /^clm-[0-9a-hjkmnp-tv-z]{8}$/;
+
+interface ClaimFields extends ClaimOwner {
   on_behalf_of?: string;
   paths?: string[];
   note?: string;
@@ -21,13 +24,36 @@ export interface TaskClaim extends ClaimOwner {
   ttl_minutes: number;
 }
 
+export interface TaskClaim extends ClaimFields {
+  task: string;
+}
+
+export interface PathClaim extends ClaimFields {
+  id: string;
+  paths: string[];
+}
+
+export type LiveClaim = TaskClaim | PathClaim;
+
+export function claimRef(claim: LiveClaim): string {
+  return "task" in claim ? claim.task : claim.id;
+}
+
 export function requireOnlineGitClaims(nb: Notebook, offline?: boolean): void {
   if (offline || nb.config.mode !== "team" || nb.config.sync !== "git") {
     throw new AimemError("USAGE", "Task claims require an online team notebook with Git sync.");
   }
 }
 
+export function newPathClaimTarget(random: Random): ClaimTarget {
+  const bytes = random.bytes(8);
+  let id = "clm-";
+  for (let i = 0; i < 8; i++) id += ID_ALPHABET[(bytes[i] ?? 0) % 32];
+  return { id, path: `claims/${id}.json` };
+}
+
 export function claimTarget(nb: Notebook, ref: string): ClaimTarget {
+  if (CLAIM_ID_RE.test(ref)) return { id: ref, path: `claims/${ref}.json` };
   const { id, project } = parseRef(ref);
   if (!REF_RE.test(ref) || typeFromId(id) !== "task") {
     throw new AimemError("USAGE", "Provide a valid task ref.");
@@ -74,27 +100,35 @@ export function claimOwner(holder: string, session?: string): ClaimOwner {
   return { holder, session };
 }
 
-export function ownsClaim(claim: TaskClaim, owner: ClaimOwner): boolean {
+export function ownsClaim(claim: LiveClaim, owner: ClaimOwner): boolean {
   return claim.holder === owner.holder && claim.session === owner.session;
 }
 
-export function expiry(claim: TaskClaim): number {
+export function expiry(claim: LiveClaim): number {
   return Date.parse(claim.heartbeat) + claim.ttl_minutes * 60_000;
 }
 
-export function claimConflict(claim: TaskClaim, message: string): AimemError {
+export function claimConflict(claim: LiveClaim, message: string): AimemError {
   return new AimemError("CLAIM_CONFLICT", message, { holder: claim.holder, since: claim.started });
 }
 
-export function readClaim(text: string, task: string): TaskClaim {
-  let claim: Partial<TaskClaim> | undefined;
+export function readClaim(text: string, target: Pick<ClaimTarget, "id" | "task">): LiveClaim {
+  let claim: (Partial<TaskClaim> & Partial<PathClaim>) | undefined;
   try {
     claim = JSON.parse(text);
   } catch {
     // Handle invalid JSON the same way as invalid claim fields.
   }
+  const identity =
+    target.task === undefined
+      ? claim?.id === target.id &&
+        claim.task === undefined &&
+        validPaths(claim.paths) &&
+        claim.paths.length > 0
+      : claim?.task === target.task && claim.id === undefined;
   if (
-    claim?.task !== task ||
+    !claim ||
+    !identity ||
     !validAuthor(claim.holder) ||
     typeof claim.session !== "string" ||
     !SESSION_ID.test(claim.session) ||
@@ -109,8 +143,7 @@ export function readClaim(text: string, task: string): TaskClaim {
     throw new AimemError("SYNC_FAILED", "The existing Git claim has invalid content.");
   }
   const { holder, session, started, heartbeat, ttl_minutes, on_behalf_of, paths, note } = claim;
-  return {
-    task,
+  const fields = {
     holder,
     session,
     started,
@@ -120,4 +153,7 @@ export function readClaim(text: string, task: string): TaskClaim {
     ...(paths === undefined ? {} : { paths }),
     ...(note === undefined ? {} : { note }),
   };
+  return target.task === undefined
+    ? { id: target.id, ...fields, paths: paths as string[] }
+    : { task: target.task, ...fields };
 }

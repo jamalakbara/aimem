@@ -3,22 +3,26 @@ import { AimemError } from "../errors.js";
 import { loadIndex } from "../index/build.js";
 import type { Notebook } from "../project/load.js";
 import { loadSecretIgnore, scanSecrets } from "../secrets/scan.js";
-import { toPosix } from "../util/path.js";
 import { mutateClaim } from "./lifecycle.js";
 import {
   type ClaimDeps,
+  type ClaimOwner,
   claimConflict,
   claimOwner,
+  claimRef,
   claimTarget,
   expiry,
+  type LiveClaim,
+  newPathClaimTarget,
   ownsClaim,
   requireOnlineGitClaims,
   type TaskClaim,
-  validPaths,
   validTtl,
 } from "./model.js";
+import { anyPathOverlap, normalizeClaimPaths } from "./paths.js";
 
 const TAKEOVER_GRACE_MS = 5 * 60_000;
+const CLOSED_TASK_STATUSES = new Set(["done", "cancelled"]);
 
 export interface TaskClaimInput {
   holder: string;
@@ -30,64 +34,146 @@ export interface TaskClaimInput {
   steal?: boolean;
 }
 
-/** Acquire an exclusive claim without writing any durable notebook records. */
+/** An active claim by another holder whose paths overlap the acquired claim (07 §2.1). */
+export interface ClaimOverlap {
+  ref: string;
+  holder: string;
+  paths: string[];
+}
+
+export interface ClaimResult {
+  claim: LiveClaim;
+  overlaps: ClaimOverlap[];
+  warnings: string[];
+}
+
+function overlapsWith(claim: LiveClaim, owner: ClaimOwner, others: LiveClaim[], now: number): ClaimOverlap[] {
+  if (!claim.paths) return [];
+  return others
+    .filter(
+      (other) =>
+        other.holder !== owner.holder &&
+        now < expiry(other) &&
+        other.paths !== undefined &&
+        anyPathOverlap(claim.paths ?? [], other.paths),
+    )
+    .map((other) => ({ ref: claimRef(other), holder: other.holder, paths: other.paths ?? [] }));
+}
+
+/**
+ * Acquire an exclusive task claim, or a path-only claim when `ref` is omitted.
+ * Path overlap with other holders is reported, never blocking. No durable notebook records are written.
+ */
+export async function acquireClaim(
+  nb: Notebook,
+  ref: string | undefined,
+  input: TaskClaimInput,
+  deps: ClaimDeps,
+): Promise<ClaimResult> {
+  requireOnlineGitClaims(nb, input.offline);
+  if (ref === undefined && input.steal) throw new AimemError("USAGE", "Provide the claim to take over.");
+  if (ref === undefined && input.paths === undefined) {
+    throw new AimemError("USAGE", "Provide a task ref or --paths for a path-only claim.");
+  }
+  const target = ref === undefined ? newPathClaimTarget(deps.random) : claimTarget(nb, ref);
+  const label = target.task ?? target.id;
+  const owner = claimOwner(input.holder, input.session ?? Buffer.from(deps.random.bytes(16)).toString("hex"));
+  const started = deps.clock.now().toISOString();
+  const ttl = input.ttlMinutes ?? nb.config.claims?.ttl_minutes ?? PROJECT_DEFAULTS.claims.ttl_minutes;
+  if (!validTtl(ttl, started))
+    throw new AimemError("USAGE", "Claim TTL must be positive whole minutes with a valid expiry.");
+  const paths = input.paths === undefined ? undefined : normalizeClaimPaths(input.paths);
+  const metadata = [owner.holder, owner.session, ...(paths ?? []), input.note ?? ""].join("\n");
+  if (scanSecrets(metadata, await loadSecretIgnore(deps.fs, nb.dir)).length) {
+    throw new AimemError("SECRET_DETECTED", "Possible secret in claim metadata. Remove it and retry.");
+  }
+  const warnings: string[] = [];
+  if (target.task !== undefined) {
+    const index = await loadIndex(nb, deps);
+    const record = index.records.find((r) => r.id === target.id && r.type === "task");
+    if (!record) throw new AimemError("NOT_FOUND", "Task ref does not resolve in this notebook.");
+    if (CLOSED_TASK_STATUSES.has(record.status)) {
+      warnings.push(`${target.task} is ${record.status} in this checkout.`);
+    }
+  }
+
+  const build = (claimPaths: string[] | undefined): LiveClaim => {
+    const fields = {
+      ...owner,
+      started,
+      heartbeat: started,
+      ttl_minutes: ttl,
+      ...(claimPaths === undefined ? {} : { paths: claimPaths }),
+      ...(input.note === undefined ? {} : { note: input.note }),
+    };
+    return target.task === undefined
+      ? { id: target.id, ...fields, paths: claimPaths ?? [] }
+      : ({ task: target.task, ...fields } satisfies TaskClaim);
+  };
+  const result = (claim: LiveClaim, others: LiveClaim[]): ClaimResult => {
+    const overlaps = overlapsWith(claim, owner, others, deps.clock.now().getTime());
+    return {
+      claim,
+      overlaps,
+      warnings: [
+        ...warnings,
+        ...overlaps.map(
+          (overlap) =>
+            `Paths overlap ${overlap.ref} held by ${overlap.holder} (${overlap.paths.join(", ")}).`,
+        ),
+      ],
+    };
+  };
+
+  return mutateClaim(
+    nb,
+    target,
+    deps,
+    Boolean(input.steal),
+    (current, others) => {
+      if (current === undefined) {
+        if (input.steal) throw new AimemError("NOT_FOUND", "There is no live claim to take over.");
+        if (ref !== undefined && target.task === undefined) {
+          throw new AimemError("NOT_FOUND", "There is no live path-only claim with that ID.");
+        }
+        const claim = build(paths);
+        return {
+          result: result(claim, others),
+          change: { claim, message: target.task ? "aimem: claim task" : "aimem: claim paths" },
+        };
+      }
+      const now = deps.clock.now().getTime();
+      const expires = expiry(current);
+      if (now < expires) {
+        if (ownsClaim(current, owner)) return { result: result(current, others) };
+        throw claimConflict(current, `${label} is claimed by ${current.holder}.`);
+      }
+      if (!input.steal) {
+        throw claimConflict(
+          current,
+          `${label} has an expired claim. Use --steal to take it over when eligible.`,
+        );
+      }
+      if (now < expires + TAKEOVER_GRACE_MS) {
+        throw claimConflict(current, `${label} is still within the five-minute clock-skew allowance.`);
+      }
+      // A path-only takeover keeps the abandoned paths unless new ones are given.
+      const claim = build(paths ?? (target.task === undefined ? current.paths : undefined));
+      return {
+        result: result(claim, others),
+        change: { claim, message: `aimem: take over task claim\n\nAimem-Previous-Holder: ${current.holder}` },
+      };
+    },
+    { readOthers: true },
+  );
+}
+
+/** Acquire an exclusive task claim and return only the claim (M3.2 contract). */
 export async function acquireTaskClaim(
   nb: Notebook,
   ref: string,
   input: TaskClaimInput,
   deps: ClaimDeps,
 ): Promise<TaskClaim> {
-  requireOnlineGitClaims(nb, input.offline);
-  const target = claimTarget(nb, ref);
-  const owner = claimOwner(input.holder, input.session ?? Buffer.from(deps.random.bytes(16)).toString("hex"));
-  const started = deps.clock.now().toISOString();
-  const ttl = input.ttlMinutes ?? nb.config.claims?.ttl_minutes ?? PROJECT_DEFAULTS.claims.ttl_minutes;
-  if (!validTtl(ttl, started))
-    throw new AimemError("USAGE", "Claim TTL must be positive whole minutes with a valid expiry.");
-  if (input.paths !== undefined && (!validPaths(input.paths) || input.paths.length === 0))
-    throw new AimemError("USAGE", "Provide one or more claim paths.");
-  const paths = input.paths?.map(toPosix);
-  const metadata = [owner.holder, owner.session, ...(paths ?? []), input.note ?? ""].join("\n");
-  if (scanSecrets(metadata, await loadSecretIgnore(deps.fs, nb.dir)).length) {
-    throw new AimemError("SECRET_DETECTED", "Possible secret in claim metadata. Remove it and retry.");
-  }
-  const index = await loadIndex(nb, deps);
-  if (!index.records.some((record) => record.id === target.id && record.type === "task")) {
-    throw new AimemError("NOT_FOUND", "Task ref does not resolve in this notebook.");
-  }
-
-  const claim: TaskClaim = {
-    task: target.task,
-    ...owner,
-    started,
-    heartbeat: started,
-    ttl_minutes: ttl,
-    ...(paths === undefined ? {} : { paths }),
-    ...(input.note === undefined ? {} : { note: input.note }),
-  };
-  return mutateClaim(nb, target, deps, Boolean(input.steal), (current) => {
-    if (current === undefined) {
-      if (input.steal) throw new AimemError("NOT_FOUND", "There is no live claim to take over.");
-      return { result: claim, change: { claim, message: "aimem: claim task" } };
-    }
-    const now = deps.clock.now().getTime();
-    const expires = expiry(current);
-    if (now < expires) {
-      if (ownsClaim(current, owner)) return { result: current };
-      throw claimConflict(current, `${target.task} is claimed by ${current.holder}.`);
-    }
-    if (!input.steal) {
-      throw claimConflict(
-        current,
-        `${target.task} has an expired claim. Use --steal to take it over when eligible.`,
-      );
-    }
-    if (now < expires + TAKEOVER_GRACE_MS) {
-      throw claimConflict(current, `${target.task} is still within the five-minute clock-skew allowance.`);
-    }
-    return {
-      result: claim,
-      change: { claim, message: `aimem: take over task claim\n\nAimem-Previous-Holder: ${current.holder}` },
-    };
-  });
+  return (await acquireClaim(nb, ref, input, deps)).claim as TaskClaim;
 }

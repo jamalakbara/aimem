@@ -1,8 +1,21 @@
 export * from "./ask/ask.js";
 export * from "./ask/rerank.js";
-export { acquireTaskClaim, type TaskClaimInput } from "./claims/acquire.js";
-export { heartbeatTaskClaim, listLiveClaims, releaseTaskClaim } from "./claims/lifecycle.js";
-export type { TaskClaim } from "./claims/model.js";
+export {
+  acquireClaim,
+  acquireTaskClaim,
+  type ClaimOverlap,
+  type ClaimResult,
+  type TaskClaimInput,
+} from "./claims/acquire.js";
+export {
+  heartbeatTaskClaim,
+  type LiveClaimView,
+  listLiveClaims,
+  readLiveClaims,
+  releaseTaskClaim,
+} from "./claims/lifecycle.js";
+export type { LiveClaim, PathClaim, TaskClaim } from "./claims/model.js";
+export { normalizeClaimPaths, pathsOverlap, staticPrefix } from "./claims/paths.js";
 export * from "./context/briefing.js";
 export * from "./context/score.js";
 export * from "./embed/cache.js";

@@ -2,6 +2,7 @@ import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:f
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
+  acquireClaim,
   acquireTaskClaim,
   cryptoRandom,
   ensureLiveBranch,
@@ -11,9 +12,10 @@ import {
   listLiveClaims,
   loadProject,
   nodeFs,
+  readLiveClaims,
   releaseTaskClaim,
 } from "@aimem/core";
-import { afterEach, beforeEach, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { FIXTURES } from "./helpers.js";
 
 const git = execaGit({
@@ -189,7 +191,10 @@ it("preserves a corrupt existing task entry", async () => {
   const tip = await sh(remote, "rev-parse", live);
   await expect(claim(first, task, "one")).rejects.toMatchObject({ code: "SYNC_FAILED" });
   const nb = await loadProject(nodeFs, first);
-  await expect(listLiveClaims(nb, false, deps)).rejects.toMatchObject({ code: "SYNC_FAILED" });
+  expect(await readLiveClaims(nb, false, deps)).toEqual({
+    claims: [],
+    warnings: [`Skipped invalid live claim entry claims/${task}.json.`],
+  });
   expect(await sh(remote, "rev-parse", live)).toBe(tip);
 });
 
@@ -374,7 +379,153 @@ it.skipIf(process.env.AIMEM_CLAIM_STRESS !== "1")(
       winners.set(winner.task, winner.session);
     }
     const claims = await listLiveClaims(await loadProject(nodeFs, first), false, at(0));
-    expect(new Map(claims.map((claim) => [claim.task, claim.session]))).toEqual(winners);
+    expect(new Map(claims.map((claim) => ["task" in claim ? claim.task : claim.id, claim.session]))).toEqual(
+      winners,
+    );
     expect(await sh(remote, "rev-list", "--count", live)).toBe("6");
   },
 );
+
+describe("path-only claims and overlap warnings", () => {
+  const pathOwner = { holder: "agent:test", session: "paths" };
+  const peer = { holder: "human:fixture", session: "peer" };
+
+  it("claims, lists, extends and releases a path-only claim", async () => {
+    const a = await loadProject(nodeFs, first);
+    const b = await loadProject(nodeFs, second);
+    await acquireTaskClaim(a, task, owner, at(0));
+    const created = await acquireClaim(
+      a,
+      undefined,
+      { ...pathOwner, paths: ["src/api/**"], note: "Ad hoc." },
+      at(0),
+    );
+    expect(created.claim).toMatchObject({
+      holder: "agent:test",
+      session: "paths",
+      paths: ["src/api/**"],
+      note: "Ad hoc.",
+    });
+    const id = (created.claim as { id: string }).id;
+    expect(id).toMatch(/^clm-[0-9a-hjkmnp-tv-z]{8}$/);
+    expect(created.claim).not.toHaveProperty("task");
+    expect(await sh(remote, "log", "-1", "--format=%s", live)).toBe("aimem: claim paths");
+    const listed = await listLiveClaims(b, false, at(1));
+    expect(listed.map((claim) => ("task" in claim ? claim.task : claim.id))).toEqual([
+      `acme-ledger:${task}`,
+      id,
+    ]);
+    expect(await heartbeatTaskClaim(b, id, pathOwner, at(1))).toMatchObject({
+      id,
+      heartbeat: at(1).clock.now().toISOString(),
+    });
+    expect(await acquireClaim(b, id, pathOwner, at(1))).toMatchObject({ claim: { id } });
+    await expect(releaseTaskClaim(b, id, peer, at(1))).rejects.toMatchObject({ code: "CLAIM_CONFLICT" });
+    expect(await releaseTaskClaim(b, id, pathOwner, at(1))).toBe(true);
+    expect(await listLiveClaims(b, false, at(1))).toHaveLength(1);
+  });
+
+  it("rejects missing input and unknown path-only IDs", async () => {
+    const nb = await loadProject(nodeFs, first);
+    await expect(acquireClaim(nb, undefined, pathOwner, deps)).rejects.toMatchObject({ code: "USAGE" });
+    await expect(acquireClaim(nb, undefined, { ...pathOwner, paths: ["../x"] }, deps)).rejects.toMatchObject({
+      code: "USAGE",
+    });
+    await expect(
+      acquireClaim(nb, undefined, { ...pathOwner, paths: ["src"], steal: true }, deps),
+    ).rejects.toMatchObject({
+      code: "USAGE",
+    });
+    await expect(acquireClaim(nb, "clm-00000000", pathOwner, deps)).rejects.toMatchObject({
+      code: "NOT_FOUND",
+    });
+  });
+
+  it("keeps abandoned paths when a path-only claim is taken over", async () => {
+    const nb = await loadProject(nodeFs, first);
+    const { claim } = await acquireClaim(
+      nb,
+      undefined,
+      { ...pathOwner, paths: ["db/**"], ttlMinutes: 1 },
+      at(0),
+    );
+    const id = (claim as { id: string }).id;
+    const taken = await acquireClaim(nb, id, { ...peer, steal: true }, at(6));
+    expect(taken.claim).toMatchObject({ id, holder: peer.holder, paths: ["db/**"] });
+    expect(await sh(remote, "log", "-1", "--format=%B", live)).toContain("Aimem-Previous-Holder: agent:test");
+  });
+
+  it("warns about overlapping active claims by other holders without blocking", async () => {
+    const a = await loadProject(nodeFs, first);
+    const b = await loadProject(nodeFs, second);
+    const held = await acquireClaim(a, undefined, { ...pathOwner, paths: ["src/api/**"] }, at(0));
+    const heldId = (held.claim as { id: string }).id;
+    const expiring = await acquireClaim(
+      a,
+      undefined,
+      { ...pathOwner, session: "short", paths: ["docs/**"], ttlMinutes: 1 },
+      at(0),
+    );
+    expect(expiring.overlaps).toEqual([]);
+
+    const overlapping = await acquireClaim(
+      b,
+      task,
+      { ...peer, paths: ["src/api/routes.ts", "src/web/**"] },
+      at(2),
+    );
+    expect(overlapping.overlaps).toEqual([{ ref: heldId, holder: "agent:test", paths: ["src/api/**"] }]);
+    expect(overlapping.warnings).toEqual([`Paths overlap ${heldId} held by agent:test (src/api/**).`]);
+    expect(overlapping.claim).toMatchObject({ task: `acme-ledger:${task}`, holder: peer.holder });
+
+    const disjoint = await acquireClaim(
+      b,
+      other,
+      { ...peer, session: "v2", paths: ["src/api-v2/**", "docs/guide.md"] },
+      at(2),
+    );
+    expect(disjoint.overlaps).toEqual([]);
+    const sameHolder = await acquireClaim(
+      a,
+      undefined,
+      { ...pathOwner, session: "again", paths: ["src/api/**"] },
+      at(2),
+    );
+    expect(sameHolder.overlaps).toEqual([expect.objectContaining({ ref: `acme-ledger:${task}` })]);
+    expect(sameHolder.overlaps.map((overlap) => overlap.holder)).not.toContain("agent:test");
+  });
+
+  it("warns when the task is done or cancelled in this checkout", async () => {
+    const file = join(first, ".aimem/tasks/tsk-4d5e6f7g-write-rounding-tests-for-fee-splits.md");
+    writeFileSync(file, readFileSync(file, "utf8").replace("status: open", "status: done"));
+    const result = await acquireClaim(await loadProject(nodeFs, first), other, owner, deps);
+    expect(result.warnings).toEqual([`acme-ledger:${other} is done in this checkout.`]);
+  });
+});
+
+describe("Git requirements for claims", () => {
+  it("requires Git 2.31 before any remote work", async () => {
+    const calls: string[][] = [];
+    const old: Git = {
+      async run(args, cwd, options) {
+        calls.push(args);
+        if (args[0] === "--version") return { code: 0, stdout: "git version 2.30.9\n", stderr: "" };
+        return git.run(args, cwd, options);
+      },
+    };
+    await expect(claim(first, task, "one", old)).rejects.toMatchObject({
+      code: "SYNC_FAILED",
+      message: "Git claims require Git 2.31 or newer. Found 2.30.",
+    });
+    expect(calls.some((args) => args.includes("fetch") || args.includes("push"))).toBe(false);
+  });
+
+  it("requires exactly one origin push URL", async () => {
+    await sh(first, "remote", "set-url", "--add", "--push", "origin", remote);
+    await sh(first, "remote", "set-url", "--add", "--push", "origin", join(root, "mirror.git"));
+    await expect(claim(first, task, "one")).rejects.toMatchObject({
+      code: "SYNC_FAILED",
+      message: "Git claims require an origin remote with one push URL.",
+    });
+  });
+});

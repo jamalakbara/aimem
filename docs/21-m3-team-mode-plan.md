@@ -1,6 +1,6 @@
 # 21 — M3 Team Mode Plan
 
-Slices 3.1 through 3.3 were approved. Later slices are proposals.
+Slices 3.1 through 3.4 were approved. Later slices are proposals.
 
 ## Slice order
 
@@ -148,7 +148,7 @@ On a rejected or uncertain push, refetch and look for the attempted commit in th
 
 ## 3.4 — Path-only and shared claims, overlap warnings and offline reconciliation
 
-Status: proposal, awaiting approval. This slice closes 12 §4 scenario 5 and the remaining 07 §2.1 and §2.4 claim rules. Split it into three PRs. Each PR is usable alone and keeps the M3.3 contract for existing exclusive task claims.
+Status: approved with the recommended defaults below. 3.4a is implemented; 3.4b and 3.4c follow. This slice closes 12 §4 scenario 5 and the remaining 07 §2.1 and §2.4 claim rules. Split it into three PRs. Each PR is usable alone and keeps the M3.3 contract for existing exclusive task claims.
 
 | PR | Scope | Acceptance evidence |
 |---|---|---|
