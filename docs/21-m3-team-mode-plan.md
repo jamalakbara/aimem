@@ -1,6 +1,6 @@
 # 21 — M3 Team Mode Plan
 
-Draft for approval. This plan requests approval for slice 3.1 only.
+Slice 3.1 was approved. Later slices are proposals.
 
 ## Slice order
 
@@ -52,7 +52,7 @@ Validate local setup inputs before creating the remote branch. For online initia
 | Area | Files |
 |---|---|
 | Core | `packages/core/src/git/live.ts` (new), `packages/core/src/index.ts`, `packages/core/test/git-live.test.ts` (new) |
-| CLI | `packages/cli/src/index.ts`, `packages/cli/src/commands/init.ts`, `packages/cli/test/init.test.ts` |
+| CLI | `packages/cli/src/run.ts`, `packages/cli/src/commands/init.ts`, `packages/cli/test/init.test.ts` |
 | Docs | `docs/04-cli-reference.md`, `docs/07-sync-and-concurrency.md`, `docs/08-init-and-adopt.md` |
 
 Use OQ-5's default of a separate live branch with direct pushes even on repositories with protected main branches. The proposed `origin` convention follows 07 §2.2. Confirm later slices against OQ-3 (one notebook at the repository root), OQ-7 (aimem-native tasks), and OQ-11 (tool-provided session ID where available). The first claim slice must specify ownership across separate CLI invocations and reconcile 07 §2.1's expired-claim takeover with 04 §5's human override before exposing `--steal`.

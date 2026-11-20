@@ -25,10 +25,15 @@ Author resolution: `--author` flag → `AIMEM_AUTHOR` → git `user.name` as `hu
 Create `.aimem/` in the current repo.
 ```
 aimem init [--solo | --team] [--project <slug>] [--repo <name>]
-           [--hub <git-url>] [--sync none|git|server] [--roles dev,pm,qa,...]
-           [--adapters agents,claude,cursor,copilot] [--no-intake] [--upgrade]
+           [--sync none|git] [--roles dev,pm,qa,...]
+           [--adapters agents,claude,cursor,copilot] [--no-intake] [--force] [--offline]
+aimem init --upgrade --sync git [--offline]
 ```
-`--upgrade` re-runs setup on an existing notebook after a mode/sync/hub change (adds missing files, members, live branch) without touching records.
+
+- Solo init uses local sync (`none`). Team init defaults to Git sync when `origin` is configured and local sync otherwise. Pass `--sync none` for local team setup or `--team --sync git` to require Git sync.
+- Online Git setup checks or creates `origin/aimem-live` before writing notebook files. A missing required `origin` or failed setup reports `SYNC_FAILED` (exit 4). With `--offline`, Git setup records the configuration and warns that online setup is pending.
+- `--upgrade --sync git` enables Git sync for an existing team notebook using `none` or `git` sync, including notebooks created by earlier versions. It updates the sync setting and generated index as needed and preserves records and other config keys. Repeat online after offline init. It reports `project`, `mode` and `files` in the usual JSON envelope.
+- Hub setup and server sync are planned for later slices.
 - Writes `project.yaml`, empty type dirs, `.gitignore` entry for `.aimem/.cache/`, `INDEX.md`.
 - Generates adapter blocks (see 06) in the selected files: `--adapters <list|none>`, default AGENTS.md plus CLAUDE.md if present without an `@AGENTS.md` import.
 - Unless `--no-intake`, runs the intake (08 §1) interactively, or prints intake questions in `--json` mode so an agent can ask the human. *(v0.1: the questions are printed in both modes; the interactive intake comes later.)*

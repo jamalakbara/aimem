@@ -13,10 +13,10 @@ Two entry paths produce the same structure. They differ in where the first recor
 
 Steps:
 1. Detect repo, existing `.aimem/` (refuse unless `--force`), git remote, project slug candidates.
-2. Choose mode: solo / team (+ optional hub, sync).
-3. Create files: `.aimem/project.yaml`, type directories (each with `.gitkeep`), `.gitignore` (+`.aimem/.cache/`), `.gitattributes` (INDEX merge rule), `INDEX.md`.
-4. Generate adapter blocks (06 §4).
-5. If `sync: git` and a remote exists: create/push the `aimem-live` branch.
+2. Choose mode and sync. Team mode uses Git sync when `origin` is configured, otherwise it uses local sync. An explicit `--team --sync git` requires `origin`.
+3. For online Git sync, verify or create the `aimem-live` branch on `origin` before writing notebook files (07 §2.2). If notebook creation fails afterward, a retry can reuse the branch. With `--offline`, run `aimem init --upgrade --sync git` later to finish setup.
+4. Create files: `.aimem/project.yaml`, type directories (each with `.gitkeep`), `.gitignore` (+`.aimem/.cache/`), `.gitattributes` (INDEX merge rule), `INDEX.md`.
+5. Generate adapter blocks (06 §4).
 6. Install optional git hooks (`post-merge` → `aimem index`, `pre-commit` → `aimem validate`).
 7. **Intake** (skippable): the following questions create the first records. In `--json` mode the questions are emitted so an agent can ask the human and then call `aimem add`.
 

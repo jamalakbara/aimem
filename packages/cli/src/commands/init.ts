@@ -2,8 +2,10 @@ import { basename, join } from "node:path";
 import { defaultTargets, syncAdapters, TARGET_NAMES, type TargetName } from "@aimem/adapters";
 import {
   AimemError,
+  ensureLiveBranch,
   loadIndex,
   loadProject,
+  type Notebook,
   setProjectValue,
   slugify,
   writeFileAtomic,
@@ -52,12 +54,58 @@ async function readOrNull(deps: CliDeps, path: string): Promise<string | null> {
   return deps.fs.readFile(path).catch(() => null);
 }
 
+const UPGRADE = "aimem init --upgrade --sync git";
+
+async function hasOrigin(deps: CliDeps, root: string): Promise<boolean> {
+  const remotes = await deps.git.run(["remote"], root);
+  return remotes.code === 0 && remotes.stdout.split(/\r?\n/).includes("origin");
+}
+
+async function setupGitSync(deps: CliDeps, root: string, offline?: boolean): Promise<string[]> {
+  if (offline) return [`aimem-live setup is pending. Run ${UPGRADE} online.`];
+  await ensureLiveBranch(deps.git, root);
+  return [];
+}
+
+function missingOrigin(): AimemError {
+  return new AimemError("SYNC_FAILED", "Git sync requires an origin remote. Configure origin and retry.");
+}
+
+async function refreshIndex(deps: CliDeps, nb: Notebook, files: string[]): Promise<void> {
+  if (await writeIndexMd(deps.fs, nb, await loadIndex(nb, { fs: deps.fs }), deps.random))
+    files.push(".aimem/INDEX.md");
+}
+
+async function upgradeGitSync(deps: CliDeps, start: string, offline?: boolean): Promise<CommandResult> {
+  let nb = await loadProject(deps.fs, start);
+  if (nb.config.mode !== "team" || nb.config.sync === "server") {
+    throw new AimemError("USAGE", "--upgrade --sync git requires a team notebook with none or git sync");
+  }
+  if (!(await hasOrigin(deps, nb.root))) throw missingOrigin();
+  const warnings = await setupGitSync(deps, nb.root, offline);
+  const files: string[] = [];
+  if (nb.config.sync !== "git") {
+    await setProjectValue(deps.fs, nb, ["sync"], "git", deps.random);
+    files.push(".aimem/project.yaml");
+    nb = await loadProject(deps.fs, nb.root);
+  }
+  await refreshIndex(deps, nb, files);
+  return {
+    data: { project: nb.config.project, mode: nb.config.mode, files: files.sort() },
+    text: `Configured Git sync for '${nb.config.project}' in ${nb.root}\n`,
+    warnings,
+  };
+}
+
 export async function init(
   deps: CliDeps,
   g: GlobalOptions,
   o: {
     solo?: boolean;
     team?: boolean;
+    sync?: "none" | "git";
+    offline?: boolean;
+    upgrade?: boolean;
     project?: string;
     repo?: string;
     roles?: string;
@@ -69,6 +117,14 @@ export async function init(
   const root = g.dir;
   const aimem = join(root, ".aimem");
   if (o.solo && o.team) throw new AimemError("USAGE", "choose either --solo or --team");
+  if (o.upgrade) {
+    const otherSetupOptions = [o.project, o.repo, o.roles, o.adapters].some((value) => value !== undefined);
+    if (o.sync !== "git" || o.solo || o.team || o.force || otherSetupOptions) {
+      throw new AimemError("USAGE", "--upgrade requires --sync git and cannot change other setup options");
+    }
+    return upgradeGitSync(deps, root, o.offline);
+  }
+  if (o.sync === "git" && !o.team) throw new AimemError("USAGE", "--sync git requires --team");
   if (!o.force && (await readOrNull(deps, join(aimem, "project.yaml"))) !== null) {
     throw new AimemError(
       "USAGE",
@@ -85,10 +141,35 @@ export async function init(
         .filter(Boolean)
     : [...PROJECT_DEFAULTS.roles];
   if (!roles.length) throw new AimemError("USAGE", "--roles needs at least one role");
+  let targets: TargetName[] | undefined;
+  if (o.adapters !== undefined) {
+    const names =
+      o.adapters === "none"
+        ? []
+        : o.adapters
+            .split(",")
+            .map((t) => t.trim())
+            .filter(Boolean);
+    for (const n of names) {
+      if (!(TARGET_NAMES as string[]).includes(n))
+        throw new AimemError("USAGE", `unknown adapter target '${n}' (known: ${TARGET_NAMES.join(", ")})`);
+    }
+    targets = names as TargetName[];
+  }
+
   const team = Boolean(o.team);
-  const warnings: string[] = team
-    ? ["team mode: the aimem-live branch and claims arrive in M3; sync is set to git"]
-    : [];
+  let sync: "none" | "git" = "none";
+  let warnings: string[] = [];
+  if (team && o.sync !== "none") {
+    if (await hasOrigin(deps, root)) {
+      sync = "git";
+      warnings = await setupGitSync(deps, root, o.offline);
+    } else if (o.sync === "git") {
+      throw missingOrigin();
+    } else {
+      warnings.push(`No origin remote configured. To enable Git sync, configure origin and run ${UPGRADE}.`);
+    }
+  }
 
   const files: string[] = [];
   const write = async (rel: string, data: string) => {
@@ -100,7 +181,7 @@ export async function init(
     `project: ${project}`,
     `name: ${yamlScalar(basename(root))}`,
     `mode: ${team ? "team" : "solo"}`,
-    `sync: ${team ? "git" : "none"}`,
+    `sync: ${sync}`,
     ...(o.repo ? [`repo: ${yamlScalar(o.repo)}`] : []),
     `roles: [${roles.map(yamlScalar).join(", ")}]`,
   ].join("\n");
@@ -120,30 +201,14 @@ export async function init(
   }
   let nb = await loadProject(deps.fs, root);
   // Adapters (08 §1 step 4): default AGENTS.md, plus CLAUDE.md when it exists without importing AGENTS.md.
-  let targets: TargetName[];
-  if (o.adapters === undefined) targets = await defaultTargets(nb, deps.fs);
-  else {
-    const names =
-      o.adapters === "none"
-        ? []
-        : o.adapters
-            .split(",")
-            .map((t) => t.trim())
-            .filter(Boolean);
-    for (const n of names) {
-      if (!(TARGET_NAMES as string[]).includes(n))
-        throw new AimemError("USAGE", `unknown adapter target '${n}' (known: ${TARGET_NAMES.join(", ")})`);
-    }
-    targets = names as TargetName[];
-  }
+  targets ??= await defaultTargets(nb, deps.fs);
   await setProjectValue(deps.fs, nb, ["adapters", "targets"], targets, deps.random);
   nb = await loadProject(deps.fs, root);
   for (const r of await syncAdapters(nb, { fs: deps.fs, random: deps.random }, { targets })) {
     if (r.action === "created" || r.action === "updated") files.push(r.file);
     if (r.action === "broken") warnings.push(`${r.file}: ${r.note}; not changed`);
   }
-  if (await writeIndexMd(deps.fs, nb, await loadIndex(nb, { fs: deps.fs }), deps.random))
-    files.push(".aimem/INDEX.md");
+  await refreshIndex(deps, nb, files);
   files.sort();
 
   const text = [

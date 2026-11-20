@@ -47,8 +47,8 @@ Rules:
 - Heartbeat: sent by `context`, `task heartbeat`, and `handoff`; default every 20 min of activity. Not sent by idle sessions.
 
 ### 2.2 `sync: git` — claims on the `aimem-live` branch
-- Orphan branch `aimem-live` (created by `aimem init --sync git`), containing only `claims/<id>.json`.
-- The CLI keeps a separate clone/worktree at `~/.cache/aimem/<project>/<repo>/live` so the user's working tree and branch are never disturbed.
+- `aimem init --team --sync git` and `aimem init --upgrade --sync git` ensure `refs/heads/aimem-live` on `origin`. Setup queries that ref before writing notebook files. If the remote reports it missing, aimem creates a parentless commit with an empty tree and pushes only the live ref. After a rejected push, it checks the ref again to detect concurrent creation. An unreachable remote or missing required `origin` returns `SYNC_FAILED`. Offline setup defers the remote step.
+- Setup uses the repository's object database and preserves the current branch, index and working files. Subsequent claim operations use a separate clone/worktree at `~/.cache/aimem/<project>/<repo>/live`. The live branch tree contains only `claims/<id>.json` entries.
 - **Claim algorithm (CAS via git):**
   1. `git fetch origin aimem-live`.
   2. If `claims/<task>.json` exists, is unexpired, and holder ≠ me → `CLAIM_CONFLICT` (exit 3).
