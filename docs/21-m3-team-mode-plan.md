@@ -227,3 +227,103 @@ Status: approved with the recommended defaults below. 3.4a, 3.4b and 3.4c are im
 | Docs | `docs/03-spec-file-format.md` (claim JSON fields), `docs/04-cli-reference.md` §5, `docs/07-sync-and-concurrency.md` §2.1 and §2.4, `docs/14-decisions-and-open-questions.md` |
 
 After approval, implement 3.4a first on its own branch. Run lint, typecheck and the full suite, require green CI and the claim stress workflow, then continue with 3.4b and 3.4c.
+
+## 3.5 — Live claims in context, status, handoff and MCP
+
+Status: approved with the recommended defaults, including the team input below. Today `context` prints "live claims: off", `status` returns a placeholder string for `claims`, `handoff --release-claims` reports `claimsReleased: 0`, and MCP lists no claim tools. 06 §2.2 steps 7 and 11, 04 §3 and §4, 05 §2 and 06 §3 describe the target. Split the work into three PRs.
+
+| PR | Scope | Acceptance evidence |
+|---|---|---|
+| 3.5a | Live section and overlap warnings in `context`, throttled session heartbeat, claim summary in `status` | Real-remote briefing tests for live, overlap, offline and failure cases. Heartbeat throttle tests with a fake clock. |
+| 3.5b | `handoff` releases this session's claims; MCP claim tools and session identity | CLI and MCP contract tests for release counts, shared-claim leave, failure warnings and MCP session ownership |
+| 3.5c | Protocol block v2 restores the claim step (06 §3) | Adapter tests for the v1 → v2 upgrade and `adapters sync` reporting `outdated` |
+
+### Decisions to confirm before coding
+
+1. **Network in `context` and `status`.** In an online Git team notebook, both fetch `aimem-live` once by default. `--no-live` skips the fetch. A fetch failure never fails the command: the briefing header and a warning say live state is unavailable, and `status` returns `claims: null`. Recommended, because the briefing is the moment duplicate work is cheapest to avoid. The cost is one fetch per call.
+2. **Automatic heartbeat is throttled.** `context` (and the MCP `aimem_context` tool) heartbeats only this session's active claims, and only when the stored heartbeat is at least 20 minutes old (07 §2.1). It never revives an expired claim. Without a session ID, nothing is heartbeated. This keeps `aimem-live` history from growing with every briefing.
+3. **`status` JSON `claims` becomes an object.** `{ active, expired, unsynced, mine }` replaces the placeholder string, or `null` when live state is skipped or unavailable. This is a deliberate contract change.
+4. **Handoff release never blocks the handoff.** `handoff` releases this session's claims by default, as 04 §4 says. `--no-release-claims` keeps them. Without a session ID, or when the remote fails, the handoff record is still written and a warning explains what was not released. `claimsReleased` counts released claims, and leaving a shared claim counts as one.
+5. **MCP session identity (OQ-11).** Claim tools take an optional `session`. Otherwise the server uses `AIMEM_SESSION`, or one random ID per server process, so one MCP connection behaves as one session.
+6. **Protocol block v2 changes instruction files.** After upgrading, `aimem adapters sync` rewrites the managed block in every repository's AGENTS.md and CLAUDE.md to add the claim step. `doctor` already reports an outdated block.
+
+7. **Task claims carry the task's paths.** When `task claim <ref>` gets no `--paths`, copy the task record's `paths` into the claim, so overlap warnings work for task claims too. This changes 07 §2.1 and 04 §5. An explicit `--paths` still wins.
+
+### Team input folded in
+
+| From | Input | Where |
+|---|---|---|
+| Chairil (frontend) | Default claim paths from the task record | Decision 7, 3.5a |
+| Chairil | `live` shows the task title, relative age and "(you)"; status is a word, not only colour; ISO times stay in JSON | 3.5a |
+| Chairil | Clearer messages for a missing session, the same holder in another session, and `--share` against an exclusive claim; codes and exit codes unchanged | 3.5a |
+| Nanda (PM), Gilang (UI/UX) | `handoff` shows a timestamped summary of claims related to the work, and tells the receiver to recheck `aimem live` | 3.5b |
+| Opan (QA), Gilang | `context`, `status`, `handoff` and MCP agree on the same data; expired claims never show as active; unsynced claims are marked; a connection failure differs from an empty result | Acceptance criteria for all three PRs |
+| Chairil | Offline "last fetch" cache, and a stable default session across terminals | Deferred: needs its own decision |
+
+### 3.5a — `context` and `status`
+
+- Add one core helper that reads live claims plus unsynced local claims for a notebook, with a typed "unavailable" result instead of an exception for `SYNC_FAILED`.
+- **Briefing.**
+  - The Live section (cap ~200 tokens) lists active claims as `ref — holders — paths — age`. Expired claims are marked "possibly abandoned", and shared claims show all participants.
+  - The Warnings section adds one line per active claim by another holder whose paths overlap the request's `--paths`. It reuses the 3.4a static-prefix overlap. It also warns when the requested `--ref` task is claimed by someone else.
+  - The header line replaces "live claims: off" with `live claims: N active`, `skipped (--no-live)` or `unavailable (<reason>)`.
+  - JSON `--format json` adds `live: { status, claims[] }`.
+- **Heartbeat side effect.** After rendering, heartbeat this session's active claims older than 20 minutes through the existing lifecycle code. Report failures as warnings.
+- **`status`.** Fetch once and fill `claims`. Human output prints counts and the caller's own claims.
+- **`live` display.** Add the task title, age since `started`, expiry as a relative time, a "(you)" marker for the current author, and the words `shared`, `unsynced` or `possibly abandoned`.
+- **Messages.** Clarify the three messages from the team input above.
+- **Default paths.** Apply decision 7 in `acquireClaim`.
+- **`--no-live`** keeps its meaning on `context`, is added to `status`, and drops the "(claims arrive in M3)" note.
+
+### 3.5b — `handoff` and MCP
+
+- **`handoff`.**
+  - Release every live claim owned by this holder and session, including path-only claims, and leave shared claims. Unsynced local claims for the session are deleted.
+  - Return `claimsReleased` and per-claim warnings for conflicts.
+  - Add `--no-release-claims`. The existing `--release-claims` stays accepted as the default.
+- **MCP.**
+  - List `aimem_task_claim` (`ref?`, `paths?`, `note?`, `ttl_minutes?`, `share?`, `steal?`, `session?`), `aimem_task_heartbeat`, `aimem_task_release` and `aimem_live`.
+  - Each tool calls the same core function as the CLI and returns the same JSON data. Conflicts return `CLAIM_CONFLICT` with `holder` and `since`.
+  - `aimem_handoff` releases claims like the CLI.
+  - `aimem_context` gains the live section and heartbeat.
+  - Tools stay unlisted for solo or non-Git notebooks (05 §2).
+
+### 3.5c — Protocol block v2
+
+- Bump the managed block to `v2` and add step 3 from 06 §3: claim the task before working on it, and stop if someone else holds it.
+- `adapters sync` replaces v1 blocks. Files with user edits outside the block are untouched, as today.
+
+### Tests to write first
+
+1. **Briefing.** Against a bare remote, cover:
+   - an active claim by another holder;
+   - an overlapping path claim;
+   - a shared claim;
+   - an expired claim;
+   - `--no-live` with zero Git calls;
+   - an unreachable remote that still renders the briefing with a warning.
+   Check the JSON `live` shape and section caps.
+2. **Heartbeat throttle.** With a fake clock, there is no push before 20 minutes, one push after, none for other sessions' or expired claims, and none without a session ID.
+3. **`status`.** Cover the counts, `mine`, unsynced claims, `claims: null` on failure and with `--no-live`, and update the JSON contract snapshot deliberately.
+4. **`handoff`.**
+   - Releases exclusive, path-only and shared claims for the session.
+   - Leaves other sessions' claims.
+   - Writes the record when the remote is down and warns.
+   - Honors `--no-release-claims`.
+5. **MCP.**
+   - Tool listing by notebook mode.
+   - Claim, conflict, heartbeat, release and live through the stdio server.
+   - Default session per server process, with a `session` override.
+6. **Adapters.** A v1 → v2 upgrade, idempotent sync, and the doctor message.
+
+### Expected files
+
+| Area | Files |
+|---|---|
+| Core | `packages/core/src/context/briefing.ts`, `packages/core/src/status/status.ts`, new `packages/core/src/claims/session.ts`, `packages/core/src/index.ts`, tests under `packages/core/test/` |
+| CLI | `packages/cli/src/commands/session.ts`, `packages/cli/src/commands/context.ts`, `packages/cli/src/run.ts`, tests and contract snapshots |
+| MCP | `packages/mcp/src/server.ts`, `packages/mcp/test/` |
+| Adapters | `packages/adapters/src/block.ts`, adapter tests |
+| Docs | `docs/04-cli-reference.md` §3–§4, `docs/05-mcp-server.md`, `docs/06-agent-integration.md`, `docs/07-sync-and-concurrency.md`, `docs/14-decisions-and-open-questions.md` (OQ-11) |
+
+After approval, implement 3.5a first. Each PR needs lint, typecheck, the full suite, green CI and the claim stress workflow.
