@@ -14,9 +14,12 @@ import {
   expiry,
   type LiveClaim,
   ownsClaim,
+  participantExpiry,
+  participantOf,
   readClaim,
   requireOnlineGitClaims,
   validTtl,
+  withParticipants,
 } from "./model.js";
 
 const PUSH_ATTEMPTS = 3;
@@ -125,13 +128,21 @@ export async function heartbeatTaskClaim(
     if (current === undefined) throw new AimemError("NOT_FOUND", "There is no live claim to heartbeat.");
     if (!ownsClaim(current, owner)) throw claimConflict(current, `${label} is claimed by another session.`);
     const now = deps.clock.now();
-    if (now.getTime() >= expiry(current))
+    // In a shared claim each participant extends only its own entry.
+    const me = participantOf(current, owner);
+    if (now.getTime() >= (me ? participantExpiry(current, me) : expiry(current)))
       throw claimConflict(current, `${label} has expired. Use --steal when eligible.`);
-    if (now.getTime() <= Date.parse(current.heartbeat)) return { result: current };
+    if (now.getTime() <= Date.parse(me?.heartbeat ?? current.heartbeat)) return { result: current };
     const heartbeat = now.toISOString();
     if (!validTtl(current.ttl_minutes, heartbeat))
       throw new AimemError("USAGE", "Claim heartbeat would produce an invalid expiry.");
-    const claim = { ...current, heartbeat };
+    const claim = me
+      ? withParticipants(
+          current,
+          (current.participants ?? []).map((p) => (p === me ? { ...p, heartbeat } : p)),
+        )
+      : { ...current, heartbeat };
+    if (!claim) throw new AimemError("SYNC_FAILED", "Could not update the shared claim.");
     return { result: claim, change: { claim, message: "aimem: heartbeat task claim" } };
   });
 }
@@ -147,8 +158,19 @@ export async function releaseTaskClaim(
   const owner = claimOwner(input.holder, input.session);
   return mutateClaim<boolean>(nb, target, deps, true, (current) => {
     if (current === undefined) return { result: false };
+    // A session that already left a shared claim has nothing to release.
+    if (current.shared && !participantOf(current, owner)) return { result: false };
     if (!ownsClaim(current, owner))
       throw claimConflict(current, `${target.task ?? target.id} is claimed by another session.`);
+    if (current.shared) {
+      // Leaving a shared claim removes only this participant; the last one deletes the entry.
+      const remaining = (current.participants ?? []).filter((p) => p !== participantOf(current, owner));
+      const claim = withParticipants(current, remaining);
+      return {
+        result: true,
+        change: { claim, message: claim ? "aimem: leave shared task claim" : "aimem: release task claim" },
+      };
+    }
     return { result: true, change: { claim: null, message: "aimem: release task claim" } };
   });
 }

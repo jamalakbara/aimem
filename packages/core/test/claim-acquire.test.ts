@@ -529,3 +529,133 @@ describe("Git requirements for claims", () => {
     });
   });
 });
+
+describe("shared claims", () => {
+  const ana = { holder: "agent:ana", session: "ana" };
+  const ben = { holder: "human:ben", session: "ben" };
+  const share = (who: typeof ana) => ({ ...who, share: true });
+  const stored = async () => JSON.parse(await sh(remote, "show", `${live}:claims/${task}.json`));
+
+  it("creates, joins, extends per participant and leaves a shared claim", async () => {
+    const a = await loadProject(nodeFs, first);
+    const b = await loadProject(nodeFs, second);
+    const created = await acquireClaim(a, task, { ...share(ana), ttlMinutes: 10 }, at(0));
+    expect(created.claim).toMatchObject({
+      holder: ana.holder,
+      session: ana.session,
+      shared: true,
+      participants: [
+        { ...ana, joined: at(0).clock.now().toISOString(), heartbeat: at(0).clock.now().toISOString() },
+      ],
+    });
+    const joined = await acquireClaim(b, task, share(ben), at(1));
+    expect(joined.session).toBe("ben");
+    expect(joined.claim.participants?.map((p) => p.holder)).toEqual([ana.holder, ben.holder]);
+    expect(joined.claim).toMatchObject({ holder: ana.holder, heartbeat: at(1).clock.now().toISOString() });
+    expect(await sh(remote, "log", "-1", "--format=%s", live)).toBe("aimem: join shared task claim");
+    const tip = await sh(remote, "rev-parse", live);
+    expect((await acquireClaim(b, task, share(ben), at(2))).claim).toEqual(joined.claim);
+    expect(await sh(remote, "rev-parse", live)).toBe(tip);
+
+    const beat = await heartbeatTaskClaim(a, task, ana, at(3));
+    expect(beat.participants).toEqual([
+      expect.objectContaining({ ...ana, heartbeat: at(3).clock.now().toISOString() }),
+      expect.objectContaining({ ...ben, heartbeat: at(1).clock.now().toISOString() }),
+    ]);
+    expect(beat.heartbeat).toBe(at(3).clock.now().toISOString());
+
+    expect(await releaseTaskClaim(a, task, ana, at(4))).toBe(true);
+    expect(await stored()).toMatchObject({ holder: ben.holder, session: "ben", participants: [ben] });
+    expect(await sh(remote, "log", "-1", "--format=%s", live)).toBe("aimem: leave shared task claim");
+    expect(await releaseTaskClaim(a, task, ana, at(4))).toBe(false);
+  });
+
+  it("rejects mixing shared and exclusive claims and enforces the participant limit", async () => {
+    const nb = await loadProject(nodeFs, first);
+    await acquireTaskClaim(nb, other, ana, deps);
+    await expect(acquireClaim(nb, other, share(ben), deps)).rejects.toMatchObject({ code: "CLAIM_CONFLICT" });
+    await acquireClaim(nb, task, share(ana), deps);
+    await expect(acquireClaim(nb, task, ben, deps)).rejects.toMatchObject({
+      code: "CLAIM_CONFLICT",
+      message: expect.stringContaining("Use --share to join"),
+    });
+    for (let i = 1; i < 8; i++)
+      await acquireClaim(nb, task, share({ holder: "agent:ana", session: `s${i}` }), deps);
+    expect((await stored()).participants).toHaveLength(8);
+    await expect(acquireClaim(nb, task, share(ben), deps)).rejects.toMatchObject({
+      code: "CLAIM_CONFLICT",
+      message: expect.stringContaining("8 participants"),
+    });
+    await expect(acquireClaim(nb, undefined, { ...share(ana), paths: ["src"] }, deps)).rejects.toMatchObject({
+      code: "USAGE",
+    });
+  });
+
+  it("stays active while any participant is active and records every holder on takeover", async () => {
+    const a = await loadProject(nodeFs, first);
+    const b = await loadProject(nodeFs, second);
+    await acquireClaim(a, task, { ...share(ana), ttlMinutes: 10 }, at(0));
+    await acquireClaim(b, task, share(ben), at(5));
+    await expect(heartbeatTaskClaim(a, task, ana, at(10))).rejects.toMatchObject({ code: "CLAIM_CONFLICT" });
+    const outsider = { holder: "agent:carol", session: "carol" };
+    expect((await listLiveClaims(b, false, at(12)))[0]).toMatchObject({ expired: false });
+    await expect(acquireClaim(b, task, { ...outsider, steal: true }, at(12))).rejects.toMatchObject({
+      code: "CLAIM_CONFLICT",
+    });
+    // A late joiner replaces the expired participant instead of counting it.
+    const rejoined = await acquireClaim(b, task, share(outsider), at(12));
+    expect(rejoined.claim.participants?.map((p) => p.holder)).toEqual([ben.holder, outsider.holder]);
+    expect(rejoined.claim.holder).toBe(ben.holder);
+    await expect(acquireClaim(b, task, { ...ana, steal: true }, at(26.99))).rejects.toMatchObject({
+      code: "CLAIM_CONFLICT",
+    });
+    const taken = await acquireClaim(b, task, { ...ana, steal: true }, at(27));
+    expect(taken.claim).not.toHaveProperty("shared");
+    const message = await sh(remote, "log", "-1", "--format=%B", live);
+    expect(message).toContain("Aimem-Previous-Holder: human:ben");
+    expect(message).toContain("Aimem-Previous-Holder: agent:carol");
+  });
+
+  it("keeps both outcomes when a join races a release", async () => {
+    const a = await loadProject(nodeFs, first);
+    const b = await loadProject(nodeFs, second);
+    await acquireClaim(a, task, share(ana), deps);
+    await acquireClaim(a, task, share({ holder: "agent:dan", session: "dan" }), deps);
+    const runner = racePushes();
+    const [joined, released] = await Promise.allSettled([
+      acquireClaim(b, task, share(ben), { ...deps, git: runner }),
+      releaseTaskClaim(a, task, ana, { ...deps, git: runner }),
+    ]);
+    expect(joined.status).toBe("fulfilled");
+    expect(released).toMatchObject({ status: "fulfilled", value: true });
+    expect((await stored()).participants.map((p: { holder: string }) => p.holder).sort()).toEqual([
+      "agent:dan",
+      "human:ben",
+    ]);
+  });
+
+  it("rejects a shared entry whose holder does not match its first participant", async () => {
+    await sh(second, "checkout", "-q", "--detach", "origin/aimem-live");
+    await nodeFs.mkdir(join(second, "claims"));
+    const time = clock.now().toISOString();
+    const bad = {
+      task: `acme-ledger:${task}`,
+      holder: "agent:other",
+      session: "x",
+      started: time,
+      heartbeat: time,
+      ttl_minutes: 60,
+      shared: true,
+      participants: [{ ...ana, joined: time, heartbeat: time }],
+    };
+    writeFileSync(join(second, `claims/${task}.json`), JSON.stringify(bad));
+    await sh(second, "add", "claims");
+    await sh(second, "commit", "-qm", "bad shared fixture");
+    await sh(second, "push", "-q", "origin", `HEAD:${live}`);
+    await expect(
+      acquireClaim(await loadProject(nodeFs, first), task, share(ben), deps),
+    ).rejects.toMatchObject({
+      code: "SYNC_FAILED",
+    });
+  });
+});
