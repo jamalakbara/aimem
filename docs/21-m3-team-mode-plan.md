@@ -230,7 +230,7 @@ After approval, implement 3.4a first on its own branch. Run lint, typecheck and 
 
 ## 3.5 — Live claims in context, status, handoff and MCP
 
-Status: proposal, awaiting approval. Today `context` prints "live claims: off", `status` returns a placeholder string for `claims`, `handoff --release-claims` reports `claimsReleased: 0`, and MCP lists no claim tools. 06 §2.2 steps 7 and 11, 04 §3 and §4, 05 §2 and 06 §3 describe the target. Split the work into three PRs.
+Status: approved with the recommended defaults, including the team input below. Today `context` prints "live claims: off", `status` returns a placeholder string for `claims`, `handoff --release-claims` reports `claimsReleased: 0`, and MCP lists no claim tools. 06 §2.2 steps 7 and 11, 04 §3 and §4, 05 §2 and 06 §3 describe the target. Split the work into three PRs.
 
 | PR | Scope | Acceptance evidence |
 |---|---|---|
@@ -247,6 +247,19 @@ Status: proposal, awaiting approval. Today `context` prints "live claims: off", 
 5. **MCP session identity (OQ-11).** Claim tools take an optional `session`. Otherwise the server uses `AIMEM_SESSION`, or one random ID per server process, so one MCP connection behaves as one session.
 6. **Protocol block v2 changes instruction files.** After upgrading, `aimem adapters sync` rewrites the managed block in every repository's AGENTS.md and CLAUDE.md to add the claim step. `doctor` already reports an outdated block.
 
+7. **Task claims carry the task's paths.** When `task claim <ref>` gets no `--paths`, copy the task record's `paths` into the claim, so overlap warnings work for task claims too. This changes 07 §2.1 and 04 §5. An explicit `--paths` still wins.
+
+### Team input folded in
+
+| From | Input | Where |
+|---|---|---|
+| Chairil (frontend) | Default claim paths from the task record | Decision 7, 3.5a |
+| Chairil | `live` shows the task title, relative age and "(you)"; status is a word, not only colour; ISO times stay in JSON | 3.5a |
+| Chairil | Clearer messages for a missing session, the same holder in another session, and `--share` against an exclusive claim; codes and exit codes unchanged | 3.5a |
+| Nanda (PM), Gilang (UI/UX) | `handoff` shows a timestamped summary of claims related to the work, and tells the receiver to recheck `aimem live` | 3.5b |
+| Opan (QA), Gilang | `context`, `status`, `handoff` and MCP agree on the same data; expired claims never show as active; unsynced claims are marked; a connection failure differs from an empty result | Acceptance criteria for all three PRs |
+| Chairil | Offline "last fetch" cache, and a stable default session across terminals | Deferred: needs its own decision |
+
 ### 3.5a — `context` and `status`
 
 - Add one core helper that reads live claims plus unsynced local claims for a notebook, with a typed "unavailable" result instead of an exception for `SYNC_FAILED`.
@@ -257,6 +270,9 @@ Status: proposal, awaiting approval. Today `context` prints "live claims: off", 
   - JSON `--format json` adds `live: { status, claims[] }`.
 - **Heartbeat side effect.** After rendering, heartbeat this session's active claims older than 20 minutes through the existing lifecycle code. Report failures as warnings.
 - **`status`.** Fetch once and fill `claims`. Human output prints counts and the caller's own claims.
+- **`live` display.** Add the task title, age since `started`, expiry as a relative time, a "(you)" marker for the current author, and the words `shared`, `unsynced` or `possibly abandoned`.
+- **Messages.** Clarify the three messages from the team input above.
+- **Default paths.** Apply decision 7 in `acquireClaim`.
 - **`--no-live`** keeps its meaning on `context`, is added to `status`, and drops the "(claims arrive in M3)" note.
 
 ### 3.5b — `handoff` and MCP
