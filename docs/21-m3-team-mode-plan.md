@@ -1,6 +1,6 @@
 # 21 — M3 Team Mode Plan
 
-Slices 3.1 through 3.4 were approved. Later slices are proposals.
+Slices 3.1 through 3.6 were approved. Later slices are proposals.
 
 ## Slice order
 
@@ -342,3 +342,51 @@ After approval, implement 3.5a first. Each PR needs lint, typecheck, the full su
 | Claim notes | Control characters stripped, 500-character limit on write, foreign notes cleaned and cut on read (hardening PR) |
 | Adapter v1 → v2 | `block.test.ts` upgrade test; text outside the markers is unchanged |
 | Manual run | Global CLI at `4daadfe` with two clones: overlap warning, task-held warning in `context`, `status` counts, handoff release with related claims |
+
+## 3.6 — Global refs across local, hub and sibling notebooks
+
+Status: approved with the recommended defaults below. 03 §7, 02 §7 and 06 §2.2 step 1 describe multi-repo projects: one `project:` slug shared by several repos, an optional hub repo for cross-repo records, and lookup in the order local → hub → siblings. The schema already accepts `repos:` and `hub:`, but nothing reads them. The M3 acceptance in 13 is: "briefing in repo A shows hub + sibling records and warns on missing ones."
+
+| PR | Scope | Acceptance evidence |
+|---|---|---|
+| 3.6a | Source resolution and a read-only merged index; global refs in `show`, `search`, `context`, `status` and `links` | `multirepo` fixture: repo A's briefing contains hub and sibling records with source labels, and warns about a missing sibling |
+| 3.6b | `aimem hub init`, `validate --project` across sources, and the repo and hub list in `INDEX.md` | Duplicate IDs across sources are reported; hub setup prints the snippet for member repos |
+| 3.6c | `aimem move <ref> --to hub\|<repo>` (OQ-29) | Move keeps the ID and leaves a pointer stub; the moved record resolves from the other repo |
+
+### Decisions to confirm before coding
+
+1. **No network in 3.6.** Sources are read only from existing checkouts: `../<name>` beside the repo, then `~/.cache/aimem/<project>/<name>` (`AIMEM_HOME` respected). The hub name comes from its URL (`acme/project-hub.git` → `project-hub`). Cloning or fetching sources is a later, explicit command, because a briefing must stay fast and offline-safe. Missing sources are warnings, never errors (03 §7 rule 5).
+2. **A source must belong to the same project.** A checkout whose `project:` differs, or a hub without `scope: hub`, is skipped with a warning. Nothing outside the source's `.aimem/` is read.
+3. **Other sources are read-only.** Writes, claims and handoffs stay local. Claims remain per repo, on that repo's own `aimem-live`.
+4. **Local wins on duplicate IDs.** If the same ID exists in two sources, the local record is used and the briefing and `validate --project` warn.
+5. **Lexical only for other sources.** Their records join lexical and path scoring. The local vector cache is not extended to them in 3.6, so hybrid scores may favour local records. This is stated in the header and is a follow-up if needed.
+6. **Labels.** Records from other sources show `[hub]` or `[repo:<name>]` next to the trust label in markdown. JSON adds `source` to search hits and briefing items. These are additive contract changes.
+
+### 3.6a — Resolution and read path
+
+- New `project/sources.ts` resolves `{ name, kind: local|hub|repo, dir?, status: ok|missing|mismatch }` for every configured source. It never fails.
+- `loadIndex` gains a multi-source variant that tags each record with `source`. Single-repo projects have exactly one source, so their output is unchanged.
+- `show <project>:<id>` and `links` resolve through sources in order. `search` and `context` rank across all reachable sources.
+- The briefing header adds `sources: local, hub, frontend · missing: infra`. The Warnings section explains how to make a missing source available.
+- `status` adds a `sources` summary.
+
+### Tests to write first
+
+1. **Fixture.** `fixtures/projects/multirepo`: a hub and three repos (`frontend`, `backend`, `infra`), with cross-repo refs and one duplicate ID. Tests copy only two of the repos, so `infra` is missing.
+2. **Resolution.** Sibling beside the repo, cache directory, missing source, project mismatch, hub without `scope: hub`, and no network calls.
+3. **Read path.** `show` with global refs, `search` hits with `source`, briefing labels and the missing-source warning, and local winning on a duplicate ID.
+4. **Unchanged output.** Single-repo golden and contract snapshots stay unchanged.
+5. **Safety.** A source record containing hostile text is framed like local records (09 §3).
+
+### Expected files
+
+| Area | Files |
+|---|---|
+| Core | new `packages/core/src/project/sources.ts`, `packages/core/src/index/build.ts`, `search`, `context/briefing.ts`, `status/status.ts`, `records` ref resolution |
+| CLI and MCP | `show`, `search`, `context`, `status` output; MCP `aimem_get` and `aimem_search` |
+| Fixtures | `fixtures/projects/multirepo/` |
+| Docs | `docs/02-architecture.md` §7, `docs/03-spec-file-format.md` §7, `docs/04-cli-reference.md`, `docs/06-agent-integration.md`, `docs/14-decisions-and-open-questions.md` |
+
+### Out of scope for M3.6
+
+Fetching or cloning sources, semantic vectors for other sources, cross-repo claims, and writes into the hub except `move` in 3.6c.
