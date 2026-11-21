@@ -178,5 +178,5 @@ key; skipping that setup does not prevent local evaluation (12 §3.1).
 | OQ-26 | Incident `started` / `resolved_at`: datetime or free text? | UTC ISO-8601 datetime like `created`; schema keeps them as strings until decided | M1 (slice 1.2) |
 | OQ-27 | When an agent edits a `verified` record (`aimem update`), should trust drop to `agent`? | Yes for body or summary changes; keep `verified` for status-only changes (e.g. task progress). Current v0.1 behaviour: trust unchanged | M2 |
 | OQ-28 | Interactive `init` intake (08 §1): ask the 7 questions one by one and create records? | Yes, behind a TTY check; v0.1 prints the questions (and returns them in `--json`) | M2 (with adapters) |
-| OQ-29 | `aimem link`, `discard`, `move`, `review` (04 §4) are not in M1 | Build `link` and `discard` with adopt (M4), `review` with adopt/web, `move` with the hub (M3) | M3–M4 |
+| OQ-29 | `aimem link`, `discard`, `move`, `review` (04 §4) are not in M1 | Build `link` and `discard` with adopt (M4), `review` with adopt/web, `move` with the hub (M3; built in M3.6c) | M3–M4 |
 | OQ-30 | What should `aimem context --deep` do? (listed in 04 without a definition) | Include full bodies for more records within a larger default budget (e.g. 2×), and follow links two hops for bodies | M2 |

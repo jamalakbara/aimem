@@ -117,3 +117,45 @@ describe("multi-repo read commands (03 §7, M3.6a)", () => {
     });
   });
 });
+
+describe("aimem move (04 §4, M3.6c)", () => {
+  const MEM = "mem-qmrpmxdn";
+  const DEC = "dec-n7wmym39";
+
+  it("moves a record to the hub, leaves a pointer stub and reads the moved copy", async () => {
+    const r = await run(["move", DEC, "--to", "hub", "--json"]);
+    expect(r.code).toBe(0);
+    expect(r.json.data).toMatchObject({
+      ref: DEC,
+      to: "hub",
+      target: { changed: expect.arrayContaining([expect.stringContaining(`${DEC}-`)]) },
+    });
+    const stub = await run(["show", DEC, "--json"]);
+    expect(stub.json.data).toMatchObject({ ref: DEC, notebook: "hub" });
+    expect(stub.json.data.frontmatter).not.toHaveProperty("moved_to");
+    const raw = await cli(["list", "decision", "--json", "--dir", join(root, "shop-hub")], { env });
+    expect(raw.json.data.records.map((x: { ref: string }) => x.ref)).toContain(DEC);
+    const local = await cli(["validate", "--strict", "--json", "--dir", backend], { env });
+    expect(local.code).toBe(0);
+    const project = await cli(["validate", "--project", "--json", "--dir", backend], { env });
+    expect(project.json.error.details.issues.map((i: { ref: string }) => i.ref)).toEqual([MEM]);
+    const again = await run(["move", DEC, "--to", "hub", "--json"]);
+    expect(again.json.error).toMatchObject({ code: "USAGE", message: `${DEC} was already moved to hub` });
+  });
+
+  it("refuses unknown, missing and occupied targets", async () => {
+    expect((await run(["move", DEC, "--to", "mobile", "--json"])).json.error.message).toBe(
+      "unknown move target 'mobile' (configured: hub, frontend, infra)",
+    );
+    expect((await run(["move", DEC, "--to", "infra", "--json"])).json.error.message).toContain(
+      "repo:infra is not available",
+    );
+    expect((await run(["move", MEM, "--to", "frontend", "--json"])).json.error).toMatchObject({
+      code: "INVALID_RECORD",
+      message: `repo:frontend already has a record ${MEM}`,
+    });
+    expect((await run(["move", "dec-t1a73qsk", "--to", "frontend", "--json"])).json.error.code).toBe(
+      "NOT_FOUND",
+    );
+  });
+});

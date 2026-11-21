@@ -55,6 +55,7 @@ export * from "./llm/provider.js";
 export * from "./log/calls.js";
 export * from "./log/usage.js";
 export * from "./ops/handoff.js";
+export { type MoveResult, moveRecord } from "./ops/move.js";
 export * from "./ops/policy.js";
 export * from "./ops/write.js";
 export * from "./ports.js";

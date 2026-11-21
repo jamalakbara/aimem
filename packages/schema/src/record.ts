@@ -51,6 +51,11 @@ const commonShape = {
   links: z.array(ref).optional(),
   supersedes: ref.optional(),
   superseded_by: ref.optional(),
+  /** Set on the pointer stub left by `aimem move` (03 §7): `hub` or `repo:<name>`. */
+  moved_to: z
+    .string()
+    .regex(/^(hub|repo:[^\s:]+)$/)
+    .optional(),
   expires: isoDate.optional(),
   external: z.array(externalLinkSchema).optional(),
   managed_by: z.enum(["notebook", "external"]).optional(),
