@@ -196,8 +196,43 @@ describe("applyWritePolicy with real git", () => {
     expect(await sh("rev-list", "--count", "HEAD")).toBe("1");
   });
 
-  it("pr behaves like stage and says so", async () => {
+  it("pr commits only the written files to a new branch and leaves the checkout alone", async () => {
     const nb = await makeRepo();
+    nb.config.write_policy = { agent_commits: "pr" };
+    writeFileSync(join(root, "unrelated.txt"), "staged by the user\n");
+    await sh("add", "unrelated.txt");
+    const r = await addRecord(nb, memory("Exports use semicolons"), deps);
+    const p = await applyWritePolicy({
+      git,
+      nb,
+      author: "agent:claude-code",
+      files: r.changed,
+      message: `aimem: add ${r.ref} Exports`,
+    });
+    expect(p.action).toBe("branched");
+    expect(p.warnings[0]).toBe(
+      `committed to branch aimem/${r.ref}; push it and open a pull request (git push origin aimem/${r.ref})`,
+    );
+    expect(await sh("rev-parse", "--abbrev-ref", "HEAD")).toBe("main");
+    expect(await sh("rev-list", "--count", "HEAD")).toBe("1");
+    expect(await sh("diff", "--cached", "--name-only")).toBe("unrelated.txt");
+    const files = (await sh("diff", "--name-only", "main", `aimem/${r.ref}`)).split("\n").sort();
+    expect(files).toEqual([...r.changed].sort());
+    expect(await sh("log", "-1", "--format=%B", `aimem/${r.ref}`)).toContain(
+      "Aimem-Author: agent:claude-code",
+    );
+    const again = await applyWritePolicy({
+      git,
+      nb,
+      author: "agent:claude-code",
+      files: r.changed,
+      message: `aimem: add ${r.ref} Exports`,
+    });
+    expect(again.warnings[0]).toContain(`aimem/${r.ref}-2`);
+  });
+
+  it("pr stages and explains when there is no commit to branch from", async () => {
+    const nb = await makeRepo("tiny", false);
     nb.config.write_policy = { agent_commits: "pr" };
     const r = await addRecord(nb, memory("Exports use semicolons"), deps);
     const p = await applyWritePolicy({
@@ -207,8 +242,10 @@ describe("applyWritePolicy with real git", () => {
       files: r.changed,
       message: "m",
     });
-    expect(p.action).toBe("staged");
-    expect(p.warnings.join(" ")).toMatch(/pr/);
+    expect(p).toEqual({
+      action: "staged",
+      warnings: ["write_policy pr needs at least one commit; changes were staged instead"],
+    });
   });
 
   it("none and human authors leave git untouched", async () => {

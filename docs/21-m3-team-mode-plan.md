@@ -401,5 +401,7 @@ Status: approved by the owner's "develop until the end" instruction; reviewed at
 | 3.7b | Team write policies: `agent_commits: pr` and `durable_requires_review` (03 §6) | `pr` commits only the written files to a new branch without touching the checkout or the index; durable records written in team mode need a second person's `aimem verify` |
 | 3.7c | Duplicate checks across the hub and sibling notebooks on write | `DUPLICATE_LIKELY` names a similar record in another notebook; `--force` still writes |
 
+Decisions in 3.7b: `pr` creates a local branch only; pushing and opening the pull request stay with the person, because aimem never sends notebook content over the network on its own. Under `durable_requires_review`, a human-written durable record starts as `trust: agent`, since the schema has no separate "unreviewed" value, and self-verification is refused.
+
 Finding from 3.7a: `merge=ours` alone does nothing, because Git has no built-in `ours` driver. `aimem init` wrote the attribute since M1, but INDEX.md still conflicted. `aimem hooks install` sets the driver per clone.
 
