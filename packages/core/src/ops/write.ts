@@ -299,9 +299,10 @@ export async function addRecord(
         : undefined);
     if (dup) {
       const where = dup.notebook ? ` in ${dup.notebook}` : "";
+      const ref = dup.notebook ? `${nb.config.project}:${dup.id}` : dup.id;
       throw new AimemError(
         "DUPLICATE_LIKELY",
-        `a similar ${dup.type} exists${where}: ${dup.id} "${dup.title}". Update or supersede it, or pass --force.`,
+        `a similar ${dup.type} exists${where}: ${dup.id} "${dup.title}". Open it with aimem show ${ref}, then update or supersede it${dup.notebook ? " there" : ""}, or pass --force to add this one anyway.`,
         {
           ref: dup.id,
           title: dup.title,
@@ -474,7 +475,10 @@ export async function verifyRecords(
 ): Promise<{ refs: string[]; changed: string[]; warnings: string[] }> {
   if (!AUTHOR_RE.test(author)) throw new AimemError("USAGE", `invalid author '${author}'`);
   if (!author.startsWith("human:"))
-    throw new AimemError("PERMISSION_DENIED", "only a human author can verify records");
+    throw new AimemError(
+      "PERMISSION_DENIED",
+      "only a human author can verify records; a person runs aimem verify with AIMEM_AUTHOR=human:<handle> or git config user.name",
+    );
   if (!refs.length) throw new AimemError("USAGE", "give at least one record to verify");
   const index = await loadIndex(nb, { fs: deps.fs });
   const recs = refs.map((r) => find(nb, index, r));
@@ -482,7 +486,7 @@ export async function verifyRecords(
     if (requiresReview(nb.config, rec.type) && rec.author === author)
       throw new AimemError(
         "PERMISSION_DENIED",
-        `${rec.id} needs review by someone other than its author (write_policy.durable_requires_review)`,
+        `${rec.id} needs review by someone other than its author (write_policy.durable_requires_review); ask a teammate to run aimem verify ${rec.id}`,
       );
   }
   const now = deps.clock.now();

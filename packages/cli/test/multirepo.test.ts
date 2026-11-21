@@ -162,6 +162,20 @@ describe("aimem move (04 §4, M3.6c)", () => {
     expect(again.json.error).toMatchObject({ code: "USAGE", message: `${DEC} was already moved to hub` });
   });
 
+  it("writes a stub that says how to open the moved record, without promising a removal date", async () => {
+    await run(["move", DEC, "--to", "hub"]);
+    const raw = (await run(["show", DEC, "--raw"])).stdout;
+    // show resolves to the hub copy; read the stub file itself.
+    expect(raw).not.toContain("moved_to");
+    const { readdirSync, readFileSync } = await import("node:fs");
+    const dir = join(backend, ".aimem", "decisions");
+    const stub = readFileSync(join(dir, readdirSync(dir).find((f) => f.startsWith(DEC)) ?? ""), "utf8");
+    expect(stub).toContain(
+      `Moved to hub. Open it with \`aimem show acme-shop:${DEC}\`. If this machine has no copy of hub, check it out next to this repo or in the aimem cache.`,
+    );
+    expect(stub).not.toContain("next release");
+  });
+
   it("refuses unknown, missing and occupied targets", async () => {
     expect((await run(["move", DEC, "--to", "mobile", "--json"])).json.error.message).toBe(
       "unknown move target 'mobile' (configured: hub, frontend, infra)",
@@ -197,7 +211,9 @@ describe("team duplicate checks across notebooks (M3.7c)", () => {
       code: "DUPLICATE_LIKELY",
       details: { ref: "mem-6y3pjvja", notebook: "repo:frontend" },
     });
-    expect(dup.json.error.message).toContain("in repo:frontend");
+    expect(dup.json.error.message).toBe(
+      'a similar memory exists in repo:frontend: mem-6y3pjvja "Cart page shows cents divided by 100". Open it with aimem show acme-shop:mem-6y3pjvja, then update or supersede it there, or pass --force to add this one anyway.',
+    );
     expect((await run([...args, "--force"])).code).toBe(0);
   });
 });

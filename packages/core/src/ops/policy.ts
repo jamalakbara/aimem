@@ -159,7 +159,15 @@ async function commitToBranch(
     await step(["update-ref", `refs/heads/${branch}`, commit, ""]);
     return { ok: true, branch };
   } catch (e) {
-    return { ok: false, reason: `write_policy pr failed (${e instanceof Error ? e.message : String(e)})` };
+    const why = e instanceof Error ? e.message : String(e);
+    // Git's own text ("Author identity unknown") does not say what to do inside aimem.
+    if (/author identity unknown|empty ident|unable to auto-detect email/i.test(why))
+      return {
+        ok: false,
+        reason:
+          "write_policy pr could not commit because Git has no author identity here (set git config user.name and user.email, then write again)",
+      };
+    return { ok: false, reason: `write_policy pr failed (${why})` };
   }
 }
 

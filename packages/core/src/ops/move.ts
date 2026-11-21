@@ -61,7 +61,7 @@ export async function moveRecord(
   if (await writeIndexMd(deps.fs, target.nb, await loadIndex(target.nb, deps), deps.random))
     targetChanged.push(".aimem/INDEX.md");
 
-  // 2. The local file becomes a pointer stub until the next release.
+  // 2. The local file becomes a pointer stub; reads resolve to the moved record (03 §7).
   const parsed = parseRecordText(rec.text);
   if (!parsed.ok) throw new AimemError("INVALID_RECORD", `${rec.file}: ${parsed.message}`);
   const stub = parsed.record;
@@ -69,7 +69,7 @@ export async function moveRecord(
   setField(stub, "updated", `${deps.clock.now().toISOString().slice(0, 19)}Z`);
   setBody(
     stub,
-    `Moved to ${label}: \`${nb.config.project}:${id}\`. This pointer stays until the next release.`,
+    `Moved to ${label}. Open it with \`aimem show ${nb.config.project}:${id}\`. If this machine has no copy of ${label}, check it out next to this repo or in the aimem cache.`,
   );
   await writeRecordFile(deps.fs, join(nb.root, rec.file), stub, deps.random);
   const changed = [rec.file];
