@@ -211,7 +211,7 @@ describe("applyWritePolicy with real git", () => {
     });
     expect(p.action).toBe("branched");
     expect(p.warnings[0]).toBe(
-      `committed to branch aimem/${r.ref}; push it and open a pull request (git push origin aimem/${r.ref})`,
+      `Saved to local branch aimem/${r.ref}. Push it and open a pull request: git push origin aimem/${r.ref}`,
     );
     expect(await sh("rev-parse", "--abbrev-ref", "HEAD")).toBe("main");
     expect(await sh("rev-list", "--count", "HEAD")).toBe("1");

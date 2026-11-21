@@ -84,7 +84,7 @@ export async function applyWritePolicy(input: {
       return {
         action: "branched",
         warnings: [
-          `committed to branch ${branched.branch}; push it and open a pull request (git push origin ${branched.branch})`,
+          `Saved to local branch ${branched.branch}. Push it and open a pull request: git push origin ${branched.branch}`,
         ],
       };
     }
