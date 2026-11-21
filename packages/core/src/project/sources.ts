@@ -146,6 +146,15 @@ export async function loadProjectIndex(nb: Notebook, deps: SourceDeps): Promise<
     const other = await loadIndex(source.nb, deps);
     for (const r of other.records) {
       const kept = owner.get(r.id);
+      // A pointer stub left by `aimem move` yields to the moved record and is never a duplicate.
+      if (kept && typeof r.fm.moved_to === "string") continue;
+      const stub = kept ? records.findIndex((x) => x.id === r.id && typeof x.fm.moved_to === "string") : -1;
+      if (stub >= 0) {
+        records.splice(stub, 1);
+        owner.set(r.id, source.label ?? source.name);
+        records.push({ ...r, notebook: source.label ?? source.name });
+        continue;
+      }
       if (kept) {
         duplicates.push({ id: r.id, kept, skipped: source.label ?? source.name, file: r.file });
         continue;
