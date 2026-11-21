@@ -2,7 +2,6 @@ import {
   AimemError,
   freshnessOf,
   type IndexedRecord,
-  loadIndex,
   loadProject,
   RETIRED_STATUSES,
   searchWithRewrites,
@@ -12,6 +11,7 @@ import type { CliDeps, CommandResult, GlobalOptions } from "../deps.js";
 import { table } from "../output.js";
 import { retrievalDeps } from "./retrieval.js";
 import { retrievalMode, semanticFor } from "./semantic.js";
+import { notebookTag, readIndexes } from "./sources.js";
 
 const csv = (v: string | undefined) =>
   v
@@ -24,9 +24,10 @@ function localId(ref: string, project: string): string {
   return i >= 0 && ref.slice(0, i) === project ? ref.slice(i + 1) : ref;
 }
 
+/** Read commands see the merged index of local, hub and sibling notebooks (03 §7). */
 async function open(deps: CliDeps, g: GlobalOptions) {
   const nb = await loadProject(deps.fs, g.dir);
-  return { nb, index: await loadIndex(nb, { fs: deps.fs }) };
+  return { nb, ...(await readIndexes(deps, nb)) };
 }
 
 const meta = (r: IndexedRecord) => ({
@@ -38,6 +39,7 @@ const meta = (r: IndexedRecord) => ({
   summary: r.summary,
   file: r.file,
   updated: r.updated,
+  ...(r.notebook ? { notebook: r.notebook } : {}),
 });
 
 export async function show(
@@ -49,18 +51,33 @@ export async function show(
   const { nb, index } = await open(deps, g);
   const id = localId(ref, nb.config.project);
   const rec = index.records.find((r) => r.id === id);
-  if (!rec) throw new AimemError("NOT_FOUND", `record ${ref} not found`);
-  if (o.raw) return { data: { ref: rec.id, file: rec.file, raw: rec.text }, text: rec.text };
+  if (!rec) {
+    const missing = index.sources.filter((src) => src.status !== "ok").map((src) => src.label ?? src.name);
+    throw new AimemError(
+      "NOT_FOUND",
+      `record ${ref} not found${missing.length ? ` (not checked: ${missing.join(", ")})` : ""}`,
+    );
+  }
+  const nbTag = rec.notebook ? { notebook: rec.notebook } : {};
+  if (o.raw) return { data: { ref: rec.id, file: rec.file, ...nbTag, raw: rec.text }, text: rec.text };
   const links = o.links
     ? rec.links.map((l) => {
         const t = index.records.find((r) => r.id === localId(l, nb.config.project));
         return t
-          ? { ref: l, type: t.type, status: t.status, trust: t.trust, title: t.title, summary: t.summary }
+          ? {
+              ref: l,
+              type: t.type,
+              status: t.status,
+              trust: t.trust,
+              title: t.title,
+              summary: t.summary,
+              ...(t.notebook ? { notebook: t.notebook } : {}),
+            }
           : { ref: l, missing: true };
       })
     : undefined;
   const lines = [
-    `${rec.id} [${rec.trust}] ${rec.title}`,
+    `${rec.id} [${rec.trust}]${notebookTag(rec)} ${rec.title}`,
     `${rec.type} · ${rec.status} · ${rec.file}`,
     rec.summary,
     "",
@@ -74,7 +91,14 @@ export async function show(
       );
   }
   return {
-    data: { ref: rec.id, file: rec.file, frontmatter: rec.fm, body: rec.body, ...(links ? { links } : {}) },
+    data: {
+      ref: rec.id,
+      file: rec.file,
+      ...nbTag,
+      frontmatter: rec.fm,
+      body: rec.body,
+      ...(links ? { links } : {}),
+    },
     text: `${lines.join("\n")}\n`,
   };
 }
@@ -125,9 +149,10 @@ export async function searchCmd(
     mode?: string;
   },
 ): Promise<CommandResult> {
-  const { nb, index } = await open(deps, g);
+  const { nb, index, local } = await open(deps, g);
   const mode = retrievalMode(nb, o.mode);
-  const sem = await semanticFor(deps, nb, index, query, mode, o.mode !== undefined);
+  // Vectors cover local records only (3.6 decision 5); other notebooks are scored lexically.
+  const sem = await semanticFor(deps, nb, local, query, mode, o.mode !== undefined);
   const warnings = sem.warnings;
   const types = csv(o.type);
   const statuses = csv(o.status);
@@ -149,7 +174,7 @@ export async function searchCmd(
       ...(o.includeSuperseded ? { includeSuperseded: true } : {}),
     },
     {
-      ...(await retrievalDeps(deps, nb, index, mode)),
+      ...(await retrievalDeps(deps, nb, local, mode)),
       ...(sem.semantic
         ? {
             semantic: {
@@ -171,7 +196,7 @@ export async function searchCmd(
     hits: hits.map((h) => ({ score: Math.round(h.score * 10000) / 10000, ...meta(h.record) })),
   };
   const text = hits.length
-    ? `${hits.map((h) => `${h.score.toFixed(2)}  ${h.record.id} [${h.record.trust}] ${h.record.title} — ${h.record.summary}`).join("\n")}\n`
+    ? `${hits.map((h) => `${h.score.toFixed(2)}  ${h.record.id} [${h.record.trust}]${notebookTag(h.record)} ${h.record.title} — ${h.record.summary}`).join("\n")}\n`
     : "No matches.\n";
   return { data, text, warnings };
 }
