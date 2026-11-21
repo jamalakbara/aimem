@@ -61,6 +61,16 @@ export * from "./ports.js";
 export * from "./process/run.js";
 export * from "./project/edit.js";
 export * from "./project/load.js";
+export {
+  isMultiRepo,
+  loadProjectIndex,
+  type NotebookSource,
+  type ProjectIndex,
+  repoNameFromUrl,
+  resolveSources,
+  type SourceDeps,
+  sourceWarnings,
+} from "./project/sources.js";
 export * from "./records/ids.js";
 export * from "./records/store.js";
 export {

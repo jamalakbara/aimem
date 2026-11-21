@@ -13,6 +13,7 @@ import { AimemError } from "../errors.js";
 import { type IndexedRecord, loadIndex, type NotebookIndex } from "../index/build.js";
 import type { Clock, Fs, Random } from "../ports.js";
 import type { Notebook } from "../project/load.js";
+import { isMultiRepo, loadProjectIndex, type ProjectIndex } from "../project/sources.js";
 import { newUniqueId, recordFileName } from "../records/ids.js";
 import { readRecordFile, writeFileAtomic, writeRecordFile } from "../records/store.js";
 import {
@@ -87,11 +88,21 @@ function find(nb: Notebook, index: NotebookIndex, ref: string): IndexedRecord {
   return rec;
 }
 
-function checkLinks(nb: Notebook, index: NotebookIndex, refs: string[]): void {
+/**
+ * Link targets must exist. In a multi-repo project a project-qualified ref may name a record in the
+ * hub or a sibling (03 §7); it is accepted when found there, or when a source could not be read.
+ */
+async function checkLinks(nb: Notebook, index: NotebookIndex, refs: string[], fs: Fs): Promise<void> {
+  let project: ProjectIndex | undefined;
   for (const ref of refs) {
     const id = localId(ref, nb.config.project);
-    if (id !== undefined && !index.records.some((r) => r.id === id))
-      throw new AimemError("INVALID_RECORD", `link target ${ref} not found`);
+    if (id === undefined || index.records.some((r) => r.id === id)) continue;
+    if (ref.includes(":") && isMultiRepo(nb)) {
+      project ??= await loadProjectIndex(nb, { fs });
+      if (project.records.some((r) => r.id === id)) continue;
+      if (project.sources.some((s) => s.status !== "ok")) continue;
+    }
+    throw new AimemError("INVALID_RECORD", `link target ${ref} not found`);
   }
 }
 
@@ -224,7 +235,7 @@ export async function addRecord(
   }
 
   const index = await loadIndex(nb, { fs: deps.fs });
-  checkLinks(nb, index, input.links ?? []);
+  await checkLinks(nb, index, input.links ?? [], deps.fs);
   let old: IndexedRecord | undefined;
   if (input.supersedes) {
     old = find(nb, index, input.supersedes);
@@ -376,7 +387,7 @@ export async function updateRecord(
           .map((s) => s.trim())
           .filter(Boolean)
       : raw;
-    if (REF_FIELDS.has(key)) checkLinks(nb, index, value as string[]);
+    if (REF_FIELDS.has(key)) await checkLinks(nb, index, value as string[], deps.fs);
     setField(text, key, value);
   }
   if (input.body !== undefined) {

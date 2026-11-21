@@ -7,7 +7,6 @@ import {
   gitChangedFiles,
   gitDiagnostics,
   heartbeatSessionClaims,
-  loadIndex,
   loadProject,
   readLiveState,
 } from "@aimem/core";
@@ -16,6 +15,7 @@ import { table } from "../output.js";
 import { retrievalDeps } from "./retrieval.js";
 import { retrievalMode, semanticFor } from "./semantic.js";
 import { currentAuthor } from "./session.js";
+import { readIndexes } from "./sources.js";
 
 export interface ContextOptions {
   task?: string;
@@ -40,7 +40,8 @@ export async function context(deps: CliDeps, g: GlobalOptions, o: ContextOptions
   if (o.deep) warnings.push("--deep is not defined yet (see docs/14 OQ-30); ignored");
 
   const nb = await loadProject(deps.fs, g.dir);
-  const index = await loadIndex(nb, { fs: deps.fs });
+  // Read the merged project index (03 §7); vectors and vocabulary stay local (3.6 decision 5).
+  const { index, local } = await readIndexes(deps, nb);
   const paths = (o.paths ?? [])
     .flatMap((p) => p.split(","))
     .map((p) => p.trim())
@@ -63,7 +64,7 @@ export async function context(deps: CliDeps, g: GlobalOptions, o: ContextOptions
   input.live = live;
   if (holder) input.liveHolder = holder;
   const mode = retrievalMode(nb, o.mode);
-  const sem = await semanticFor(deps, nb, index, buildQuery(nb, index, input), mode, o.mode !== undefined);
+  const sem = await semanticFor(deps, nb, local, buildQuery(nb, index, input), mode, o.mode !== undefined);
   warnings.push(...sem.warnings);
   const retrievalInput = {
     ...input,
@@ -74,7 +75,7 @@ export async function context(deps: CliDeps, g: GlobalOptions, o: ContextOptions
     index,
     retrievalInput,
     deps.clock.now(),
-    await retrievalDeps(deps, nb, index, mode),
+    await retrievalDeps(deps, nb, local, mode),
   );
   warnings.push(...retrieved.warnings);
   const b = buildBriefing(nb, index, retrievalInput, deps.clock.now(), retrieved.scored);

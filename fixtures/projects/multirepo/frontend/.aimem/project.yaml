@@ -1,0 +1,15 @@
+aimem: 1
+project: acme-shop
+name: frontend
+mode: solo
+sync: none
+roles: [dev, pm, qa, db, devops, analyst]
+adapters:
+  targets: []
+repo: frontend
+repos:
+  - name: frontend
+  - name: backend
+  - name: infra
+hub:
+  url: git@example.invalid:acme/shop-hub.git
