@@ -48,6 +48,13 @@ export * from "./eval/ask.js";
 export * from "./eval/rerank.js";
 export * from "./eval/run.js";
 export * from "./git/git.js";
+export {
+  type HookState,
+  hookState,
+  INDEX_HOOKS,
+  installIndexHooks,
+  uninstallIndexHooks,
+} from "./git/hooks.js";
 export { ensureLiveBranch } from "./git/live.js";
 export * from "./index/build.js";
 export * from "./llm/claude-cli.js";

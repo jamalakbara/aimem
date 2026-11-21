@@ -12,7 +12,7 @@ Slices 3.1 through 3.6 were approved. Later slices are proposals.
 | 3.4 | Add path-only and shared claims, overlap warnings, and offline reconciliation | Remote outage and recovery tests (scenario 5). Specify how pairing and takeover history fit the claim model before coding. |
 | 3.5 | Wire live claims into context, status, handoff and MCP | CLI and MCP contract tests cover session ownership, offline mode and release. |
 | 3.6 | Resolve global refs across local, hub and sibling notebooks | A repo A briefing includes hub and sibling records and warns about missing sources. |
-| 3.7 | Complete team write policies, duplicate checks and generated-index handling | Merge and conflict tests (scenarios 6–7), strict validation recipe, and team policy tests. Split into smaller PRs at planning time. |
+| 3.7 | Complete team write policies, duplicate checks and generated-index handling | Merge and conflict tests (scenarios 6–7), strict validation recipe, and team policy tests. Split into smaller PRs at planning time (see §3.7). |
 
 ## 3.1 — Bootstrap `aimem-live`
 
@@ -390,3 +390,16 @@ Status: approved with the recommended defaults below; 3.6a, 3.6b and 3.6c are im
 ### Out of scope for M3.6
 
 Fetching or cloning sources, semantic vectors for other sources, cross-repo claims, and writes into the hub except `move` in 3.6c.
+
+## 3.7 — Team write policies, duplicate checks and generated-index handling
+
+Status: approved by the owner's "develop until the end" instruction; reviewed at the end. Split into three PRs.
+
+| PR | Scope | Acceptance evidence |
+|---|---|---|
+| 3.7a | INDEX.md handling: `aimem hooks install`, the `merge.ours` driver, a `doctor` check and a CI recipe | Real-Git tests for 12 §4 scenario 6 (two branches add records; INDEX.md conflicts without the driver and merges cleanly with it; `aimem index` regenerates it) and scenario 7 (a concurrent edit conflicts; `validate --fix` restores the dropped `superseded_by`) |
+| 3.7b | Team write policies: `agent_commits: pr` and `durable_requires_review` (03 §6) | `pr` commits only the written files to a new branch without touching the checkout or the index; durable records written in team mode need a second person's `aimem verify` |
+| 3.7c | Duplicate checks across the hub and sibling notebooks on write | `DUPLICATE_LIKELY` names a similar record in another notebook; `--force` still writes |
+
+Finding from 3.7a: `merge=ours` alone does nothing, because Git has no built-in `ours` driver. `aimem init` wrote the attribute since M1, but INDEX.md still conflicted. `aimem hooks install` sets the driver per clone.
+

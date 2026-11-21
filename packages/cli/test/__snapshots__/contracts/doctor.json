@@ -29,6 +29,11 @@
         "detail": "remotes: origin"
       },
       {
+        "name": "index merge",
+        "status": "warn",
+        "detail": "INDEX.md is not merge-safe (no .gitattributes entry, hooks missing); run aimem hooks install"
+      },
+      {
         "name": "spec",
         "status": "ok",
         "detail": "project.yaml spec v1 (this tool supports v1)"
