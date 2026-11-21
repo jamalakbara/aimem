@@ -127,3 +127,32 @@ describe("merged read-only index", () => {
     expect(issues.filter((i) => i.code === "V006")).toEqual([]);
   });
 });
+
+describe("project-unique IDs on write (03 §7 rule 6)", () => {
+  it("does not reuse an ID that exists in another notebook", async () => {
+    const { addRecord } = await import("@aimem/core");
+    const frontend = join(root, "frontend/.aimem/memory");
+    const taken = readFileSync(
+      join(frontend, "mem-6y3pjvja-cart-page-shows-cents-divided-by-100.md"),
+      "utf8",
+    );
+    writeFileSync(
+      join(frontend, "mem-00000000-zero.md"),
+      taken.replace("id: mem-6y3pjvja", "id: mem-00000000").replace(/^title: .*$/m, 'title: "Zero"'),
+    );
+    let call = 0;
+    const random = { bytes: (k: number) => new Uint8Array(k).fill(call++ === 0 ? 0 : 1) };
+    const r = await addRecord(
+      await loadProject(nodeFs, backend),
+      {
+        type: "memory",
+        title: "Ledger exports are nightly",
+        summary: "Exports run every night at two.",
+        body: "x",
+        author: "human:dana",
+      },
+      { fs: nodeFs, clock: { now: () => NOW }, random },
+    );
+    expect(r.ref).toBe("mem-11111111");
+  });
+});

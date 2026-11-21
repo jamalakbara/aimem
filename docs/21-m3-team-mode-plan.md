@@ -393,7 +393,7 @@ Fetching or cloning sources, semantic vectors for other sources, cross-repo clai
 
 ## 3.7 — Team write policies, duplicate checks and generated-index handling
 
-Status: approved by the owner's "develop until the end" instruction; reviewed at the end. Split into three PRs.
+Status: approved by the owner's "develop until the end" instruction; reviewed at the end. 3.7a, 3.7b and 3.7c are implemented, which completes M3.
 
 | PR | Scope | Acceptance evidence |
 |---|---|---|
