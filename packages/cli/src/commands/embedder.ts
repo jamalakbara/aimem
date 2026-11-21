@@ -37,8 +37,24 @@ export async function writeEmbedder(deps: CliDeps, nb: Notebook): Promise<Embedd
   return status.available ? status.provider : undefined;
 }
 
-/** Deps for core write ops, with the embedder when there is a vector cache to keep current. */
+/**
+ * Deps for core write ops, with the embedder when there is a vector cache to keep current.
+ * T1: when the model would have to be loaded from disk, the refresh runs in a background
+ * `aimem index --embeddings --background` instead, so the write returns without that load.
+ * `AIMEM_EMBED_SYNC=1` keeps the refresh inside the write.
+ */
 export async function writeDeps(deps: CliDeps, nb: Notebook) {
+  const base = { fs: deps.fs, clock: deps.clock, random: deps.random };
+  if (
+    !deps.embedder &&
+    deps.scheduleVectorRefresh &&
+    deps.env.AIMEM_EMBED_SYNC !== "1" &&
+    nb.config.retrieval?.embeddings?.provider !== "none" &&
+    (await vectorCacheProvider(deps.fs, nb))
+  ) {
+    deps.scheduleVectorRefresh(nb.root);
+    return base;
+  }
   const embedder = await writeEmbedder(deps, nb);
   return { fs: deps.fs, clock: deps.clock, random: deps.random, ...(embedder ? { embedder } : {}) };
 }

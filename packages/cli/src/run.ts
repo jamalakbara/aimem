@@ -24,9 +24,14 @@ function positiveInt(v: string): number {
 }
 
 /** Run the CLI in-process. Returns the exit code; never calls process.exit. */
-export async function run(argv: string[], deps: CliDeps): Promise<number> {
+export async function run(argv: string[], outer: CliDeps): Promise<number> {
   const jsonMode = argv.includes("--json");
   let exitCode = 0;
+  // T1: writes queue a vector refresh here; it starts in the background after the command.
+  const refresh = new Set<string>();
+  const deps: CliDeps = outer.spawnBackground
+    ? { ...outer, scheduleVectorRefresh: (root) => refresh.add(root) }
+    : outer;
 
   const fail = (code: string, message: string, details?: Record<string, unknown>) => {
     if (jsonMode) deps.stdout(failureEnvelope(code, message, details));
@@ -306,6 +311,9 @@ export async function run(argv: string[], deps: CliDeps): Promise<number> {
     .option("--reranker", "explicitly download/cache the optional local cross-encoder")
     .option("--embeddings", "build or update the vector cache for semantic search")
     .option("--rebuild", "discard the vector cache and rebuild it")
+    .addOption(
+      new Option("--background", "refresh after a write: never download, one run at a time").hideHelp(),
+    )
     .action(action("index", (g, _a, o) => indexCmd(deps, g, o)));
 
   try {
@@ -324,5 +332,8 @@ export async function run(argv: string[], deps: CliDeps): Promise<number> {
       exitCode = 2;
     }
   }
+  if (exitCode <= 1)
+    for (const root of refresh)
+      outer.spawnBackground?.(["index", "--embeddings", "--background", "--quiet", "--dir", root], root);
   return exitCode;
 }

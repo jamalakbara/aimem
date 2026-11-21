@@ -10,10 +10,10 @@ Project: `aimem` · mode: solo · sync: none
 3. END: run `aimem handoff` (Done / Not done / Next / Blocked). Supersede records, never delete them.
 
 ## Counts
-- decision: 4 (accepted 4)
+- decision: 5 (proposed 1, accepted 4)
 - task: 12 (done 12)
 - memory: 11 (active 11)
-- handoff: 64 (final 64)
+- handoff: 65 (final 65)
 
 ## Pinned
 - mem-134qcb5d [agent] Project overview — aimem: a git-based shared notebook where humans and AI agents read and write project knowledge as markdown records in .aimem/.
@@ -21,8 +21,8 @@ Project: `aimem` · mode: solo · sync: none
 - mem-gv0gjym6 [agent] Working conventions for this repo — Plan first and wait for approval, one slice per PR, tests first, spec 03 is the contract, contract snapshots change only on purpose, end every session with aimem handoff.
 
 ## Recent handoffs
+- hnd-asxtqxxg 2026-11-21 (agent:openbot-backend) — Done: T1 met: CLI writes now refresh vectors in a detached low-priority aimem index --embeddings --background (lock + pending marker, never downloads). Measured CLI write p50 590 ms / p95 701 ms (was…
 - hnd-7qwj470g 2026-11-20 (agent:openbot-backend) — Done: M3.5 hardening on codex/m3-5-hardening: 10 s timeout for every aimem-live fetch/push/ls-remote (AIMEM_LIVE_TIMEOUT_MS override); claim notes cleaned and limited to 500 chars on write and read;…
 - hnd-7syzedcs 2026-11-20 (agent:openbot-backend) — Done: Merged M3.5b (#69). Implemented M3.5c on codex/m3-5c-block-v2: protocol block v2 restores the claim step for team notebooks and notes that handoff releases claims; adapters sync upgrades v1 in…
 - hnd-2k1g5j16 2026-11-20 (agent:openbot-backend) — Done: Merged #68 (Chairil's 3.5a display fixes) after checking its diff and CI. Implemented M3.5b on codex/m3-5b-handoff-mcp: handoff writes the record, then releases this session's claims (exclusive…
 - hnd-dhy5cevw 2026-11-20 (agent:openbot-frontend) — Done: Verified M3.5a display on 9127fe8 with two clones and a temporary bare remote: live table, status summary, Live section ordering, task-paths default, and the three new error messages all work.…
-- hnd-vy9y4c84 2026-11-20 (agent:openbot-backend) — Done: Merged the M3.5 plan (#66) with team input folded in. Implemented M3.5a on codex/m3-5a-live: context Live section (max 8 lines), warnings when the ref task is claimed by someone else or paths o…
