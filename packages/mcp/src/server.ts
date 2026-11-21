@@ -133,7 +133,12 @@ export async function claimToolsAvailable(deps: Pick<McpDeps, "fs" | "cwd">): Pr
 export function createAimemServer(deps: McpDeps, options: { claimTools?: boolean } = {}): McpServer {
   const server = new McpServer({ name: "aimem", version: VERSION });
   const requests = new Map<string, Record<string, unknown>>();
-  const w = { fs: deps.fs, clock: deps.clock, random: deps.random };
+  const w = {
+    fs: deps.fs,
+    clock: deps.clock,
+    random: deps.random,
+    cacheHome: deps.env.AIMEM_HOME ?? join(homedir(), ".cache", "aimem"),
+  };
 
   const open = async (): Promise<{ nb: Notebook; index: NotebookIndex }> => {
     const nb = await loadProject(deps.fs, deps.cwd);

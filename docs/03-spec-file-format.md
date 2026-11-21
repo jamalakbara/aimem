@@ -281,7 +281,7 @@ Rules:
    - Other notebooks are read-only. Read commands (`show`, `list`, `search`, `context`, `status` and the MCP read tools) see their records, labelled `[hub]` or `[repo:<name>]` and with `notebook` in JSON. Writes, claims and handoffs stay in this repo.
    - When an ID exists in two notebooks, the first in resolution order wins and a warning names both. A pointer stub (`moved_to`) always yields to the moved record and is never reported as a duplicate.
    - A project-qualified link (`<project>:<id>`) to another notebook is valid. Writes accept it when the record is found, or when a source could not be read. `validate` checks it only with `--project`.
-6. IDs are unique per **project**, not per repo; `validate --project` checks across reachable sources (V005 for an ID in two notebooks, V006 for a qualified ref found nowhere) and lists unreadable ones as `unchecked`.
+6. IDs are unique per **project**, not per repo; new IDs avoid those in reachable notebooks, and the write-time duplicate check covers them too; `validate --project` checks across reachable sources (V005 for an ID in two notebooks, V006 for a qualified ref found nowhere) and lists unreadable ones as `unchecked`.
 
 ## 8. `INDEX.md` (generated)
 
