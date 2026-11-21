@@ -5,6 +5,7 @@ import { Command, CommanderError, InvalidArgumentError, Option } from "commander
 import { adapters } from "./commands/adapters.js";
 import { ask } from "./commands/ask.js";
 import { type ContextOptions, context } from "./commands/context.js";
+import { hubInit } from "./commands/hub.js";
 import { init } from "./commands/init.js";
 import { indexCmd, validateCmd } from "./commands/maintain.js";
 import { list, searchCmd, show } from "./commands/read.js";
@@ -107,6 +108,14 @@ export async function run(argv: string[], deps: CliDeps): Promise<number> {
       "agents, claude, cursor, copilot, gemini, or none (default: AGENTS.md, plus CLAUDE.md if present)",
     )
     .action(action("init", (g, _a, o) => init(deps, g, o as Parameters<typeof init>[2])));
+
+  const hub = program.command("hub").description("multi-repo hub (03 §7)").exitOverride();
+  cmd("init", "turn this repo into the project's hub notebook (scope: hub)", hub)
+    .option("--project <slug>", "project slug shared by all repos (default: folder name)")
+    .option("--repos <list>", "comma-separated member repo names")
+    .option("--adapters <list>", "agent instruction files to manage, or none")
+    .option("--force", "re-create project.yaml (records are never touched)")
+    .action(action("hub init", (g, _a, o) => hubInit(deps, g, o as Parameters<typeof hubInit>[2])));
 
   const task = program.command("task").description("manage task claims").exitOverride();
   const claimCmd = (name: string, description: string, ref = "<ref>") =>
@@ -295,6 +304,7 @@ export async function run(argv: string[], deps: CliDeps): Promise<number> {
   cmd("validate", "check records against rules V001–V018")
     .option("--strict", "exit 1 on warnings")
     .option("--fix", "repair safe issues first (file names, one-sided supersede links, updated)")
+    .option("--project", "also check refs and IDs across the hub and sibling notebooks")
     .action(action("validate", (g, _a, o) => validateCmd(deps, g, o)));
 
   cmd("usage <operation>", "record explicit cited-ref usage locally; never changes ranking")

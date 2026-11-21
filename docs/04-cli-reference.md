@@ -59,6 +59,12 @@ aimem adapters remove [--targets ...]
 
 ### `aimem hub init`
 Turn the current repo into a hub (multi-repo projects): creates `.aimem/` with `scope: hub` and prints the `hub:` snippet to add to each member repo's `project.yaml`.
+```
+aimem hub init [--project <slug>] [--repos a,b] [--adapters <list>|none] [--force]
+```
+- Runs the normal `init`, then sets `scope: hub` and, with `--repos`, the `repos:` list. `INDEX.md` shows `scope: hub`.
+- The snippet uses the `origin` URL (`data.snippet`); without `origin` it holds a placeholder and warns. Member repos need the same project slug.
+- JSON adds `scope`, `repos` and `snippet` to the `init` data.
 
 ## 2b. Import and connector commands
 
@@ -264,7 +270,7 @@ aimem task status <ref> <status>
 
 | Command | Purpose |
 |---------|---------|
-| `aimem validate [--strict] [--fix] [--project]` | Run rules V001–V018 (03 §9). `--fix` first repairs safe issues — renames files that do not start with `<id>-` (V015; never overwrites), adds the missing half of a one-sided supersede link (V007), raises `updated` that is earlier than `created`, rewrites `\` to `/` in `project.yaml` `adapters.files` (03 §10; reported with code `paths`) — and reports them in `data.fixed` / `data.skipped`; it never deletes or resolves conflicts |
+| `aimem validate [--strict] [--fix] [--project]` | Run rules V001–V018 (03 §9). `--fix` first repairs safe issues — renames files that do not start with `<id>-` (V015; never overwrites), adds the missing half of a one-sided supersede link (V007), raises `updated` that is earlier than `created`, rewrites `\` to `/` in `project.yaml` `adapters.files` (03 §10; reported with code `paths`) — and reports them in `data.fixed` / `data.skipped`; it never deletes or resolves conflicts. `--project` also checks project-qualified refs against the hub and sibling notebooks (V006) and reports IDs that exist in more than one notebook (V005); notebooks that could not be read are listed in `unchecked` and refs only they could resolve are not reported |
 | `aimem index [--embeddings] [--rebuild]` | Regenerate `INDEX.md`; rebuild the lexical index and (re)compute embeddings; `--rebuild` discards the cache first. The only command that downloads the local model (prints name and size first, to `$AIMEM_HOME/models`). For `openai-compatible`, the key comes from `AIMEM_EMBEDDINGS_KEY`. `data.embeddings` reports `{available: false, reason}` (exit 0, warning) or `{available: true, provider, chunks, built, reused, removed, rebuilt, reason?, excluded[]}` |
 | `aimem stale [--mark]` | List stale records; `--mark` sets memory status to `stale` |
 | `aimem doctor` | Diagnose environment: git, remote access, server reachability, adapter presence, schema version, embedding provider/model status, and exactly what content would leave the machine. Read-only, no network; each check is `ok`/`warn`/`info` in `data.checks`; always exits 0 (use `validate --strict` as the CI gate) |
@@ -301,7 +307,7 @@ Error codes (stable) and their exit codes:
 | `SPEC_TOO_NEW` | 2 | `SYNC_FAILED`, `SOURCE_UNREACHABLE` | 4 |
 | | | `LLM_FAILED` (LLM provider missing, not logged in, timed out or failed; ADR-017) | 4 |
 
-`aimem validate`: with errors it fails with `INVALID_RECORD` and `error.details = {errors, warnings, issues}` (exit 2); otherwise `ok: true` with the same `data`, exit 1 under `--strict` if there are warnings, else 0.
+`aimem validate`: with errors it fails with `INVALID_RECORD` and `error.details = {errors, warnings, issues, unchecked?}` (exit 2); otherwise `ok: true` with the same `data`, exit 1 under `--strict` if there are warnings, else 0.
 
 ### Development-build freshness
 
