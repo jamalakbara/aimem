@@ -1,6 +1,6 @@
 # 21 — M3 Team Mode Plan
 
-Slices 3.1 through 3.5 were approved. Later slices are proposals.
+Slices 3.1 through 3.6 were approved. Later slices are proposals.
 
 ## Slice order
 
@@ -345,7 +345,7 @@ After approval, implement 3.5a first. Each PR needs lint, typecheck, the full su
 
 ## 3.6 — Global refs across local, hub and sibling notebooks
 
-Status: proposal, awaiting approval. 03 §7, 02 §7 and 06 §2.2 step 1 describe multi-repo projects: one `project:` slug shared by several repos, an optional hub repo for cross-repo records, and lookup in the order local → hub → siblings. The schema already accepts `repos:` and `hub:`, but nothing reads them. The M3 acceptance in 13 is: "briefing in repo A shows hub + sibling records and warns on missing ones."
+Status: approved with the recommended defaults below. 03 §7, 02 §7 and 06 §2.2 step 1 describe multi-repo projects: one `project:` slug shared by several repos, an optional hub repo for cross-repo records, and lookup in the order local → hub → siblings. The schema already accepts `repos:` and `hub:`, but nothing reads them. The M3 acceptance in 13 is: "briefing in repo A shows hub + sibling records and warns on missing ones."
 
 | PR | Scope | Acceptance evidence |
 |---|---|---|
