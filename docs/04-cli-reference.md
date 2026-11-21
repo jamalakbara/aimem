@@ -57,6 +57,14 @@ aimem adapters remove [--targets ...]
 - Targets: `agents` (AGENTS.md), `claude` (CLAUDE.md), `cursor` (.cursor/rules/aimem.mdc), `copilot` (.github/copilot-instructions.md), `gemini` (GEMINI.md). Default: `adapters.targets` in `project.yaml`, else AGENTS.md plus CLAUDE.md when it exists and does not import `@AGENTS.md`. `--targets` and `add --file` are saved to `project.yaml`.
 - `sync` writes only between the markers; a second `sync` changes nothing. `remove` restores files byte for byte and deletes files that held only the aimem block. A broken block (missing marker, two blocks) is reported (`USAGE`, exit 2) and left untouched; other files are still processed. `data.results[] {target, file, action, note?}`; `list` → `data.adapters[] {target, file, state}`.
 
+### `aimem hooks install|uninstall|status`
+Keep the generated `INDEX.md` merge-safe (07 §1 rule 5).
+- `install` adds an aimem block to the `post-merge`, `post-checkout` and `post-rewrite` hooks. The block runs `aimem index --quiet` when `aimem` is on `PATH`. Other hook content is kept, and the hooks directory comes from `git rev-parse --git-path hooks`, so `core.hooksPath` and worktrees work.
+- It also sets `git config merge.ours.driver true`; without it Git ignores `merge=ours`. It adds `.aimem/INDEX.md merge=ours` to `.gitattributes` if missing. Running it again changes nothing.
+- `uninstall` removes only the aimem block and deletes hooks that held nothing else.
+- `status` reports the installed hooks, the driver and the attribute. `data = { changed?, installed[], mergeDriver, attribute }`.
+- `aimem doctor` reports `index merge` as `warn` until all three are in place.
+
 ### `aimem hub init`
 Turn the current repo into a hub (multi-repo projects): creates `.aimem/` with `scope: hub` and prints the `hub:` snippet to add to each member repo's `project.yaml`.
 ```

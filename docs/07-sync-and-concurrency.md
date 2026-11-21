@@ -17,8 +17,8 @@ Two kinds of data, two mechanisms (ADR-002):
 3. **No deletes.** Supersede instead; a delete/modify conflict cannot occur on normal workflows.
 4. **Append-only where possible.** Notes are added as new records or linked records rather than editing shared ones.
 5. **Generated files are not hand-merged.** `INDEX.md` is a generated file and a conflict magnet. Handling:
-   - `.gitattributes`: `.aimem/INDEX.md merge=ours` (written by `aimem init`; `aimem doctor` checks it).
-   - Git hook `post-merge`/`post-checkout` and CI step run `aimem index` to regenerate.
+   - `.gitattributes`: `.aimem/INDEX.md merge=ours` (written by `aimem init`). Git has no built-in `ours` driver, so each clone also needs `git config merge.ours.driver true`; without it the attribute is ignored and INDEX.md conflicts when two branches add records.
+   - `aimem hooks install` sets the driver and adds `post-merge`/`post-checkout`/`post-rewrite` hooks that run `aimem index`. A CI step also runs `aimem index` and checks for a diff (12 §7). `aimem doctor` reports what is missing.
    - If a conflict still appears: `git checkout --theirs .aimem/INDEX.md && aimem index`.
 6. **Same record edited concurrently** (rare): normal git conflict in frontmatter/body. `aimem validate --fix` restores derived fields (`updated`, back-links). Humans resolve content.
 
