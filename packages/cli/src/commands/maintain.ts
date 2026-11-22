@@ -12,6 +12,7 @@ import {
 } from "@aimem/core";
 import type { CliDeps, CommandResult, GlobalOptions } from "../deps.js";
 import { embeddingStatus } from "./embedder.js";
+import { LOCK_STALE_MS, lockOwnerAlive } from "./refresh-state.js";
 import { sourceDeps } from "./sources.js";
 
 export async function validateCmd(
@@ -132,20 +133,6 @@ export async function indexCmd(
   };
 }
 
-/** A lock older than this belongs to a crashed refresh and is ignored. */
-const LOCK_STALE_MS = 10 * 60_000;
-
-/** False only when the lock names a process that is known to be gone (same machine: `.cache` is local). */
-function lockOwnerAlive(content: string): boolean {
-  const pid = Number.parseInt(content, 10);
-  if (!Number.isInteger(pid) || pid <= 0) return true; // no pid: fall back to the lock's age
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch (e) {
-    return (e as NodeJS.ErrnoException).code !== "ESRCH";
-  }
-}
 const MAX_PASSES = 10;
 
 /**

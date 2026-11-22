@@ -1,3 +1,4 @@
+export * from "./adopt/index.js";
 export * from "./ask/ask.js";
 export * from "./ask/rerank.js";
 export {

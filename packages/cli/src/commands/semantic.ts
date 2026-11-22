@@ -7,6 +7,7 @@ import {
 } from "@aimem/core";
 import type { CliDeps } from "../deps.js";
 import { embeddingStatus } from "./embedder.js";
+import { coverageWarning } from "./refresh-state.js";
 
 export type Mode = "lexical" | "hybrid";
 
@@ -35,7 +36,10 @@ export async function semanticFor(
   const result = status.available
     ? await semanticForQuery(nb, index, status.provider, query, { fs: deps.fs })
     : { reason: status.reason };
-  if ("scores" in result) return { semantic: result, warnings: [] };
+  if ("scores" in result) {
+    const warning = await coverageWarning(deps, nb, result.coverage);
+    return { semantic: result, warnings: warning ? [warning] : [] };
+  }
   return {
     off: result.reason,
     warnings: explicit ? [`hybrid retrieval unavailable (${result.reason}); using lexical`] : [],

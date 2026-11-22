@@ -3,6 +3,7 @@ import { AimemError } from "@aimem/core";
 import { RECORD_TYPES, type RecordType } from "@aimem/schema";
 import { Command, CommanderError, InvalidArgumentError, Option } from "commander";
 import { adapters } from "./commands/adapters.js";
+import { adopt } from "./commands/adopt.js";
 import { ask } from "./commands/ask.js";
 import { type ContextOptions, context } from "./commands/context.js";
 import { hooks } from "./commands/hooks.js";
@@ -318,6 +319,11 @@ export async function run(argv: string[], outer: CliDeps): Promise<number> {
         return { data: null, text: "" };
       }),
     );
+
+  cmd("adopt", "draft records from an existing project (08 §2); --dry-run lists them")
+    .option("--dry-run", "list the candidates with their evidence; write nothing")
+    .option("--sources <list>", "comma-separated: readme,docs,adr,agents (git,prs,schema,ci arrive later)")
+    .action(action("adopt", (g, _a, o) => adopt(deps, g, o)));
 
   cmd("validate", "check records against rules V001–V018")
     .option("--strict", "exit 1 on warnings")

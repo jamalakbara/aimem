@@ -1,0 +1,6 @@
+aimem: 1
+project: parcel-hub
+name: Parcel Hub
+mode: solo
+sync: none
+roles: [dev, pm, qa, devops]
