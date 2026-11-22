@@ -1,4 +1,4 @@
-import { join } from "node:path";
+import { isAbsolute, join, relative } from "node:path";
 import type { Fs } from "../ports.js";
 import { slugify } from "../records/ids.js";
 import { scanSecrets } from "../secrets/scan.js";
@@ -41,24 +41,44 @@ export interface ScanOptions {
   secretIgnore?: ReadonlySet<string>;
 }
 
-/** Every file under `root` (relative, `/`-separated, sorted), skipping build output and VCS dirs. */
-async function walk(fs: Fs, root: string): Promise<string[]> {
-  if (!fs.stat) throw new Error("adopt needs a filesystem with stat");
-  const stat = fs.stat.bind(fs);
-  const out: string[] = [];
+/**
+ * Every regular file under `root` (relative, `/`-separated, sorted), skipping build output and VCS
+ * dirs. Symlinks are never followed: a clone can carry links to files outside the repo, and adopted
+ * text ends up committed in `.aimem/`. Each link is reported in `skipped`.
+ */
+async function walk(fs: Fs, root: string): Promise<{ files: string[]; skipped: AdoptSkip[] }> {
+  if (!fs.lstat || !fs.realpath) throw new Error("adopt needs a filesystem with lstat and realpath");
+  const lstat = fs.lstat.bind(fs);
+  const realpath = fs.realpath.bind(fs);
+  const realRoot = await realpath(root);
+  const inside = (p: string) => {
+    const rel = relative(realRoot, p);
+    return rel === "" || (!rel.startsWith("..") && !isAbsolute(rel));
+  };
+  const files: string[] = [];
+  const skipped: AdoptSkip[] = [];
   const visit = async (rel: string) => {
     const names = (await fs.readdir(rel ? join(root, rel) : root)).sort();
     for (const name of names) {
       const path = rel ? `${rel}/${name}` : name;
-      const s = await stat(join(root, path)).catch(() => undefined);
+      const s = await lstat(join(root, path)).catch(() => undefined);
       if (!s) continue;
-      if (s.isDirectory) {
+      if (s.isSymbolicLink) {
+        const target = await realpath(join(root, path)).catch(() => undefined);
+        skipped.push({
+          evidence: path,
+          reason:
+            target && inside(target)
+              ? "symlink (not followed)"
+              : "symlink to a path outside the project (not followed)",
+        });
+      } else if (s.isDirectory) {
         if (!SKIP_DIRS.has(name)) await visit(path);
-      } else out.push(path);
+      } else files.push(path);
     }
   };
   await visit("");
-  return out.sort();
+  return { files: files.sort(), skipped };
 }
 
 const anchor = (path: string, heading: string) => `${path}#${slugify(heading)}`;
@@ -212,9 +232,10 @@ function docCandidates(
  */
 export async function scanProject(fs: Fs, root: string, opts: ScanOptions = {}): Promise<ScanResult> {
   const wanted = new Set(opts.sources ?? IMPLEMENTED_SOURCES);
-  const files = await walk(fs, root);
+  const walked = await walk(fs, root);
+  const files = walked.files;
   const candidates: AdoptCandidate[] = [];
-  const skipped: AdoptSkip[] = [];
+  const skipped: AdoptSkip[] = [...walked.skipped];
 
   const classify = (path: string): AdoptSource | undefined => {
     if (AGENT_FILES.test(path)) return "agents";

@@ -2,9 +2,11 @@ import { randomBytes } from "node:crypto";
 import {
   appendFile,
   chmod,
+  lstat,
   mkdir,
   readdir,
   readFile,
+  realpath,
   rename,
   stat,
   unlink,
@@ -15,6 +17,10 @@ import {
 export interface Fs {
   /** Optional development-build diagnostic metadata; no file contents. */
   stat?(path: string): Promise<{ mtimeMs: number; isDirectory: boolean }>;
+  /** Like `stat`, but describes a symlink itself instead of its target (adopt never follows links). */
+  lstat?(path: string): Promise<{ isDirectory: boolean; isSymbolicLink: boolean }>;
+  /** Absolute path with every symlink resolved. */
+  realpath?(path: string): Promise<string>;
   /** Optional for older injected filesystems; metadata logging is best effort. */
   appendFile?(path: string, data: string): Promise<void>;
   readFile(path: string): Promise<string>;
@@ -44,6 +50,11 @@ export const nodeFs: Fs = {
     const s = await stat(path);
     return { mtimeMs: s.mtimeMs, isDirectory: s.isDirectory() };
   },
+  lstat: async (path) => {
+    const s = await lstat(path);
+    return { isDirectory: s.isDirectory(), isSymbolicLink: s.isSymbolicLink() };
+  },
+  realpath: (p) => realpath(p),
   appendFile: (p, d) => appendFile(p, d, "utf8"),
   readFile: (p) => readFile(p, "utf8"),
   writeFile: (p, d) => (typeof d === "string" ? writeFile(p, d, "utf8") : writeFile(p, d)),

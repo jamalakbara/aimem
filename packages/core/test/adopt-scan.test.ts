@@ -1,4 +1,4 @@
-import { cpSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -98,4 +98,30 @@ describe("adopt scan (M4.1)", () => {
     expect(build?.body).toBe("```sh\n## not a heading\nmake\n```");
     expect(r.candidates.some((c) => c.evidence[0]?.startsWith(".aimem"))).toBe(false);
   });
+
+  // Creating symlinks needs extra rights on Windows; the walk is the same code on every OS.
+  it.skipIf(process.platform === "win32")(
+    "never follows symlinks, and says which ones it skipped",
+    async () => {
+      const d = copy();
+      const outside = mkdtempSync(join(tmpdir(), "aimem-outside-"));
+      tmp.push(outside);
+      writeFileSync(join(outside, "secret.md"), "# Secret\n\n## Setup\n\nOutside content.\n");
+      mkdirSync(join(outside, "more"));
+      writeFileSync(join(outside, "more/guide.md"), "# Guide\n\n## Deploy\n\nOutside dir.\n");
+      symlinkSync(join(outside, "secret.md"), join(d, "docs/leak.md"));
+      symlinkSync(join(outside, "more"), join(d, "docs/linked"));
+      symlinkSync(join(d, "docs/architecture.md"), join(d, "docs/again.md"));
+      symlinkSync(d, join(d, "docs/loop"));
+      const r = await scanProject(nodeFs, d, { sources: ["docs"] });
+      expect(JSON.stringify(r.candidates)).not.toMatch(/Outside/);
+      expect(r.candidates.map((c) => c.evidence[0])).toEqual(["docs/architecture.md#local-development"]);
+      expect(r.skipped).toEqual([
+        { evidence: "docs/again.md", reason: "symlink (not followed)" },
+        { evidence: "docs/leak.md", reason: "symlink to a path outside the project (not followed)" },
+        { evidence: "docs/linked", reason: "symlink to a path outside the project (not followed)" },
+        { evidence: "docs/loop", reason: "symlink (not followed)" },
+      ]);
+    },
+  );
 });
