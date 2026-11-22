@@ -27,6 +27,7 @@ import { RECORD_TYPES, SPEC_VERSION, STATUSES } from "@aimem/schema";
 import type { CliDeps, CommandResult, GlobalOptions } from "../deps.js";
 import { developmentBuildCheck } from "./development-build.js";
 import { embeddingStatus, writeDeps } from "./embedder.js";
+import { vectorRefreshRunning } from "./refresh-state.js";
 import { sourceDeps } from "./sources.js";
 
 export interface HandoffOptions extends HandoffSections {
@@ -359,10 +360,15 @@ export async function doctor(deps: CliDeps, g: GlobalOptions): Promise<CommandRe
       fs: deps.fs,
     });
     const pct = "coverage" in sem ? Math.floor(sem.coverage * 100) : 0;
+    const ready = `semantic search ready: ${embStatus.provider.id}, ${vc.cache.meta.chunks.length} chunks cached`;
+    // T1: right after a CLI write the background refresh closes the gap; only a stuck gap needs a command.
+    const refreshing = pct < 100 && (await vectorRefreshRunning(deps, nb));
     checks.push({
       name: "search",
-      status: pct === 100 ? "ok" : "warn",
-      detail: `semantic search ready: ${embStatus.provider.id}, ${vc.cache.meta.chunks.length} chunks cached, coverage ${pct}%${pct === 100 ? "" : "; run aimem index --embeddings"}`,
+      status: pct === 100 ? "ok" : refreshing ? "info" : "warn",
+      detail: refreshing
+        ? `${ready}; semantic index updating in the background (coverage ${pct}%); it should reach 100% in a few seconds`
+        : `${ready}, coverage ${pct}%${pct === 100 ? "" : "; run aimem index --embeddings"}`,
     });
   } else {
     checks.push({
