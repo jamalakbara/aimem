@@ -61,6 +61,8 @@ export interface AddOptions extends BodyOptions {
   assignee?: string;
   force?: boolean;
   author?: string;
+  /** Drafted from these sources (`adopt --agent-plan`): trust inferred, tag adopted. */
+  evidence?: string;
 }
 
 export async function add(
@@ -77,9 +79,12 @@ export async function add(
   const roles = csv(o.roles);
   const tags = csv(o.tags);
   const paths = csv(o.paths);
-  const fields = Object.fromEntries(
+  const evidence = csv(o.evidence);
+  const fields: Record<string, unknown> = Object.fromEntries(
     (["kind", "priority", "assignee"] as const).flatMap((k) => (o[k] !== undefined ? [[k, o[k]]] : [])),
   );
+  if (evidence?.length) fields.evidence = evidence;
+  const allTags = evidence?.length ? [...new Set([...(tags ?? []), "adopted"])] : tags;
   const r = await addRecord(
     nb,
     {
@@ -90,12 +95,13 @@ export async function add(
       ...(body !== undefined ? { body } : {}),
       ...(o.status ? { status: o.status } : {}),
       ...(roles ? { roles } : {}),
-      ...(tags ? { tags } : {}),
+      ...(allTags ? { tags: allTags } : {}),
       ...(paths ? { paths } : {}),
       ...(o.link?.length ? { links: o.link } : {}),
       ...(o.supersedes ? { supersedes: o.supersedes } : {}),
       ...(Object.keys(fields).length ? { fields } : {}),
       ...(o.force ? { force: true } : {}),
+      ...(evidence?.length ? { inferred: true } : {}),
     },
     await writeDeps(deps, nb),
   );

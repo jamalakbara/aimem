@@ -166,3 +166,24 @@ export async function writeAdoptDrafts(
   result.changed = [...changed].sort();
   return result;
 }
+
+/** Candidates whose evidence is not on any record yet (the ones `--agent-plan` hands to an agent). */
+export function pendingCandidates(
+  records: readonly { fm: Record<string, unknown> }[],
+  candidates: readonly AdoptCandidate[],
+  discarded: ReadonlySet<string> = new Set(),
+): { pending: AdoptCandidate[]; alreadyAdopted: number; discarded: number } {
+  const taken = new Set(
+    records
+      .map((r) => r.fm.evidence)
+      .filter((ev): ev is unknown[] => Array.isArray(ev) && ev.length > 0)
+      .map((ev) => evidenceKey(ev.map(String))),
+  );
+  const fresh = candidates.filter((c) => !taken.has(evidenceKey(c.evidence)));
+  const pending = fresh.filter((c) => !discarded.has(discardedKey(c.evidence)));
+  return {
+    pending,
+    alreadyAdopted: candidates.length - fresh.length,
+    discarded: fresh.length - pending.length,
+  };
+}

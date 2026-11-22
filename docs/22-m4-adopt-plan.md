@@ -1,6 +1,6 @@
 # 22 — M4 Adopt Plan
 
-Status: **approved by the owner (2026-11-22) with the recommended defaults below.** Slices land one PR at a time; this section records which are implemented: **4.1** (scan and `--dry-run`), **4.2** (writing drafts from the 4.1 sources; manifests, migrations and CI extractors move to a follow-up), **4.5** (`aimem review`, `aimem discard`, review debt in `status`, the inferred-supersede rule). M3 is complete (21 §3.7). This plan turns 08 §2 and the M4 entry in 13 into PRs. 04 §`aimem adopt` and §`aimem review` describe the commands; 03 already has `trust: inferred`, `evidence` and the reserved tag `adopted`.
+Status: **approved by the owner (2026-11-22) with the recommended defaults below.** Slices land one PR at a time; this section records which are implemented: **4.1** (scan and `--dry-run`), **4.2** (writing drafts from the 4.1 sources; manifests, migrations and CI extractors move to a follow-up), **4.4** (`--agent-plan`, `aimem add --evidence`), **4.5** (`aimem review`, `aimem discard`, review debt in `status`, the inferred-supersede rule). M3 is complete (21 §3.7). This plan turns 08 §2 and the M4 entry in 13 into PRs. 04 §`aimem adopt` and §`aimem review` describe the commands; 03 already has `trust: inferred`, `evidence` and the reserved tag `adopted`.
 
 M4 acceptance (13): the `adopt-me` fixture yields at most 40 records, all `inferred`, each with evidence, and a second run adds nothing. The author adopts one real running project and verifies or discards the drafts in under an hour.
 
