@@ -215,3 +215,28 @@ may be unavailable at runtime import, before a model-cache lookup. Injected test
 cover both unavailable-runtime and missing-model fallback, and the real offline
 loader smoke check accepts only those two actionable errors. No download or
 provider-success requirement is removed.
+
+## 7. CI recipe for projects that use aimem
+
+Run this on every change under `.aimem/` (M3 deliverable). It fails on invalid records, warnings and a stale `INDEX.md`.
+
+```yaml
+# .github/workflows/aimem.yml
+name: aimem
+on:
+  pull_request:
+    paths: [".aimem/**"]
+jobs:
+  notebook:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24 }
+      - run: npm install -g aimem
+      - run: aimem validate --strict
+      - run: aimem index && git diff --exit-code -- .aimem/INDEX.md
+```
+
+Add `aimem validate --project --strict` when the hub and sibling repos are checked out beside the repo (03 §7). Locally, `aimem hooks install` keeps INDEX.md regenerated after merges.
+

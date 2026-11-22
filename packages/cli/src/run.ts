@@ -5,6 +5,7 @@ import { Command, CommanderError, InvalidArgumentError, Option } from "commander
 import { adapters } from "./commands/adapters.js";
 import { ask } from "./commands/ask.js";
 import { type ContextOptions, context } from "./commands/context.js";
+import { hooks } from "./commands/hooks.js";
 import { hubInit } from "./commands/hub.js";
 import { init } from "./commands/init.js";
 import { indexCmd, validateCmd } from "./commands/maintain.js";
@@ -116,6 +117,10 @@ export async function run(argv: string[], deps: CliDeps): Promise<number> {
     .action(
       action("move", (g, [ref], o) => move(deps, g, ref as string, o as { to?: string; author?: string })),
     );
+
+  cmd("hooks", "git hooks and merge driver that keep INDEX.md merge-safe (07 §1)")
+    .argument("<action>", "install | uninstall | status")
+    .action(action("hooks", (g, [act]) => hooks(deps, g, act as string)));
 
   const hub = program.command("hub").description("multi-repo hub (03 §7)").exitOverride();
   cmd("init", "turn this repo into the project's hub notebook (scope: hub)", hub)

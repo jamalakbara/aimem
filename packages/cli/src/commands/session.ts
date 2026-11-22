@@ -6,6 +6,8 @@ import {
   applyWritePolicy,
   gitDiagnostics,
   type HandoffSections,
+  hookState,
+  INDEX_HOOKS,
   isMultiRepo,
   loadIndex,
   loadProject,
@@ -285,6 +287,24 @@ export async function doctor(deps: CliDeps, g: GlobalOptions): Promise<CommandRe
     status: "info",
     detail: d.remotes.length ? `remotes: ${d.remotes.join(", ")}` : "no git remote (fine for solo use)",
   });
+  if (d.repo) {
+    // 07 §1 rule 5: without the driver, `merge=ours` is ignored and INDEX.md conflicts on merges.
+    const h = await hookState(deps.git, deps.fs, nb.root);
+    const ok = h.attribute && h.mergeDriver && h.installed.length === INDEX_HOOKS.length;
+    checks.push({
+      name: "index merge",
+      status: ok ? "ok" : "warn",
+      detail: ok
+        ? "INDEX.md merge=ours with merge.ours.driver, and hooks regenerate it after merges"
+        : `INDEX.md is not merge-safe (${[
+            h.attribute ? "" : "no .gitattributes entry",
+            h.mergeDriver ? "" : "merge.ours.driver not set",
+            h.installed.length === INDEX_HOOKS.length ? "" : "hooks missing",
+          ]
+            .filter(Boolean)
+            .join(", ")}); run aimem hooks install`,
+    });
+  }
   checks.push({
     name: "spec",
     status: "ok",
