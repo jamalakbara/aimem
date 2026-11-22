@@ -8,6 +8,7 @@ import { type ContextOptions, context } from "./commands/context.js";
 import { hubInit } from "./commands/hub.js";
 import { init } from "./commands/init.js";
 import { indexCmd, validateCmd } from "./commands/maintain.js";
+import { move } from "./commands/move.js";
 import { list, searchCmd, show } from "./commands/read.js";
 import { doctor, type HandoffOptions, handoff, status } from "./commands/session.js";
 import { liveClaims, taskClaim, taskHeartbeat, taskRelease } from "./commands/task.js";
@@ -108,6 +109,13 @@ export async function run(argv: string[], deps: CliDeps): Promise<number> {
       "agents, claude, cursor, copilot, gemini, or none (default: AGENTS.md, plus CLAUDE.md if present)",
     )
     .action(action("init", (g, _a, o) => init(deps, g, o as Parameters<typeof init>[2])));
+
+  cmd("move <ref>", "move a record to the hub or a sibling repo, leaving a pointer stub")
+    .requiredOption("--to <target>", "hub or a repo name from project.yaml repos")
+    .option("--author <who>", "human:<handle> or agent:<tool>[:<model>]")
+    .action(
+      action("move", (g, [ref], o) => move(deps, g, ref as string, o as { to?: string; author?: string })),
+    );
 
   const hub = program.command("hub").description("multi-repo hub (03 §7)").exitOverride();
   cmd("init", "turn this repo into the project's hub notebook (scope: hub)", hub)

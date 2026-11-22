@@ -415,6 +415,10 @@ exports[`JSON Schema export (03 §10) > export is stable (contract snapshot) 1`]
             ],
             "type": "string",
           },
+          "moved_to": {
+            "pattern": "^(hub|repo:[^\\s:]+)$",
+            "type": "string",
+          },
           "paths": {
             "items": {
               "type": "string",
@@ -645,6 +649,10 @@ exports[`JSON Schema export (03 §10) > export is stable (contract snapshot) 1`]
               "notebook",
               "external",
             ],
+            "type": "string",
+          },
+          "moved_to": {
+            "pattern": "^(hub|repo:[^\\s:]+)$",
             "type": "string",
           },
           "paths": {
@@ -885,6 +893,10 @@ exports[`JSON Schema export (03 §10) > export is stable (contract snapshot) 1`]
             ],
             "type": "string",
           },
+          "moved_to": {
+            "pattern": "^(hub|repo:[^\\s:]+)$",
+            "type": "string",
+          },
           "paths": {
             "items": {
               "type": "string",
@@ -1102,6 +1114,10 @@ exports[`JSON Schema export (03 §10) > export is stable (contract snapshot) 1`]
               "notebook",
               "external",
             ],
+            "type": "string",
+          },
+          "moved_to": {
+            "pattern": "^(hub|repo:[^\\s:]+)$",
             "type": "string",
           },
           "paths": {
@@ -1323,6 +1339,10 @@ exports[`JSON Schema export (03 §10) > export is stable (contract snapshot) 1`]
               "notebook",
               "external",
             ],
+            "type": "string",
+          },
+          "moved_to": {
+            "pattern": "^(hub|repo:[^\\s:]+)$",
             "type": "string",
           },
           "paths": {
@@ -1570,6 +1590,10 @@ exports[`JSON Schema export (03 §10) > export is stable (contract snapshot) 1`]
             ],
             "type": "string",
           },
+          "moved_to": {
+            "pattern": "^(hub|repo:[^\\s:]+)$",
+            "type": "string",
+          },
           "owner": {
             "type": "string",
           },
@@ -1789,6 +1813,10 @@ exports[`JSON Schema export (03 §10) > export is stable (contract snapshot) 1`]
               "notebook",
               "external",
             ],
+            "type": "string",
+          },
+          "moved_to": {
+            "pattern": "^(hub|repo:[^\\s:]+)$",
             "type": "string",
           },
           "objects": {
@@ -2021,6 +2049,10 @@ exports[`JSON Schema export (03 §10) > export is stable (contract snapshot) 1`]
               "notebook",
               "external",
             ],
+            "type": "string",
+          },
+          "moved_to": {
+            "pattern": "^(hub|repo:[^\\s:]+)$",
             "type": "string",
           },
           "paths": {

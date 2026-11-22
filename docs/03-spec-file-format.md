@@ -95,6 +95,7 @@ supersedes: dec-2a4b6c8d
 | `links` | ref[] | no | Related records (local or global refs) |
 | `supersedes` | ref | no | Record this replaces |
 | `superseded_by` | ref | no | Set by `aimem supersede` on the old record |
+| `moved_to` | `hub` \| `repo:<name>` | no | Set by `aimem move` on the pointer stub left in the old notebook (§7) |
 | `expires` | date | no | After this date the record is treated as stale |
 | `external` | object[] | no | Links to outside systems: `{system: jira, id: ABC-12, url: ...}` |
 | `managed_by` | enum | no | `notebook` (default) or `external`. External records are owned by their source and updated one-way from it (16 §2) |
@@ -278,7 +279,7 @@ Rules:
 4. The record's `repo:` field says where it applies (`all` for cross-repo).
 5. Resolution order: local → hub → sibling checkouts (`../<name>` or cache dir `~/.cache/aimem/<project>/<repo>`, `AIMEM_HOME` respected). The hub's folder name comes from `hub.url` (`acme/project-hub.git` → `project-hub`), or `hub.name` when set. Resolution reads existing checkouts only and never uses the network. Missing sources produce a warning, not an error. A checkout with another `project:`, or a hub without `scope: hub`, is skipped with a warning.
    - Other notebooks are read-only. Read commands (`show`, `list`, `search`, `context`, `status` and the MCP read tools) see their records, labelled `[hub]` or `[repo:<name>]` and with `notebook` in JSON. Writes, claims and handoffs stay in this repo.
-   - When an ID exists in two notebooks, the first in resolution order wins and a warning names both.
+   - When an ID exists in two notebooks, the first in resolution order wins and a warning names both. A pointer stub (`moved_to`) always yields to the moved record and is never reported as a duplicate.
    - A project-qualified link (`<project>:<id>`) to another notebook is valid. Writes accept it when the record is found, or when a source could not be read. `validate` checks it only with `--project`.
 6. IDs are unique per **project**, not per repo; `validate --project` checks across reachable sources (V005 for an ID in two notebooks, V006 for a qualified ref found nowhere) and lists unreadable ones as `unchecked`.
 
