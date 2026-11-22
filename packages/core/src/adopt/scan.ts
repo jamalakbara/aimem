@@ -2,6 +2,7 @@ import { isAbsolute, join, relative } from "node:path";
 import type { Fs } from "../ports.js";
 import { slugify } from "../records/ids.js";
 import { scanSecrets } from "../secrets/scan.js";
+import { ciCandidate, type ReadText, schemaCandidate, stackCandidate } from "./extract.js";
 import { firstSentence, parseMarkdown, type Section } from "./markdown.js";
 import type { AdoptCandidate, AdoptSkip, AdoptSource, ScanResult } from "./types.js";
 import { IMPLEMENTED_SOURCES } from "./types.js";
@@ -264,37 +265,63 @@ export async function scanProject(fs: Fs, root: string, opts: ScanOptions = {}):
     if (source && wanted.has(source)) bySource.set(source, [...(bySource.get(source) ?? []), path]);
   }
 
-  // Order follows the cap priority of 22 decision 4.
+  // Reads a file once, enforcing the size and binary limits; reasons go to `skipped`.
+  const reported = new Set<string>();
+  const cache = new Map<string, string | undefined>();
+  const read: ReadText = async (path) => {
+    if (cache.has(path)) return cache.get(path);
+    const bytes = await fs.readBytes(join(root, path));
+    let text: string | undefined;
+    const skip = (reason: string) => {
+      if (!reported.has(path)) skipped.push({ evidence: path, reason });
+      reported.add(path);
+    };
+    if (bytes.byteLength > ADOPT_MAX_FILE_BYTES) skip("file larger than 200 KB");
+    else if (bytes.includes(0)) skip("binary file");
+    else text = new TextDecoder().decode(bytes);
+    cache.set(path, text);
+    return text;
+  };
+  const keep = (found: { candidate: AdoptCandidate; line: number }[], path: string) => {
+    for (const { candidate, line } of found) {
+      const hit = scanSecrets(candidate.body, opts.secretIgnore)[0];
+      if (hit) {
+        skipped.push({
+          evidence: candidate.evidence[0] ?? path,
+          reason: `possible secret (${hit.kind}, line ${line + hit.line - 1})`,
+        });
+        continue;
+      }
+      candidates.push(candidate);
+    }
+  };
+  // Many-file extractors (manifests, migrations, CI). Secret lines are reported per record.
+  const aggregate = async (
+    make: (files: readonly string[], r: ReadText) => Promise<AdoptCandidate | undefined>,
+  ) => {
+    const c = await make(files, read);
+    if (c) keep([{ candidate: c, line: 1 }], c.evidence[0] ?? "");
+  };
+
+  // Order follows the cap priority of 22 decision 4: ADRs, agent files, overview and stack, build
+  // runbook, schema, then how-to sections from docs.
   for (const source of IMPLEMENTED_SOURCES) {
+    if (!wanted.has(source)) continue;
     for (const path of bySource.get(source) ?? []) {
-      const bytes = await fs.readBytes(join(root, path));
-      if (bytes.byteLength > ADOPT_MAX_FILE_BYTES) {
-        skipped.push({ evidence: path, reason: "file larger than 200 KB" });
-        continue;
-      }
-      if (bytes.includes(0)) {
-        skipped.push({ evidence: path, reason: "binary file" });
-        continue;
-      }
-      const text = new TextDecoder().decode(bytes);
-      const found =
+      const text = await read(path);
+      if (text === undefined) continue;
+      keep(
         source === "adr"
           ? [{ candidate: adrCandidate(path, text), line: 1 }]
           : source === "agents"
             ? agentCandidates(path, text)
-            : docCandidates(source as "readme" | "docs", path, text);
-      for (const { candidate, line } of found) {
-        const hit = scanSecrets(candidate.body, opts.secretIgnore)[0];
-        if (hit) {
-          skipped.push({
-            evidence: candidate.evidence[0] ?? path,
-            reason: `possible secret (${hit.kind}, line ${line + hit.line - 1})`,
-          });
-          continue;
-        }
-        candidates.push(candidate);
-      }
+            : docCandidates(source as "readme" | "docs", path, text),
+        path,
+      );
     }
+    if (source === "readme") await aggregate(stackCandidate);
+    if (source === "ci") await aggregate(ciCandidate);
+    if (source === "schema") await aggregate(schemaCandidate);
   }
   return { candidates, skipped };
 }

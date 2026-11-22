@@ -5,7 +5,14 @@ export const ADOPT_SOURCES = ["readme", "docs", "adr", "agents", "git", "prs", "
 export type AdoptSource = (typeof ADOPT_SOURCES)[number];
 
 /** Sources with an extractor in this version; the others arrive in later M4 slices (22). */
-export const IMPLEMENTED_SOURCES: readonly AdoptSource[] = ["adr", "agents", "readme", "docs"];
+export const IMPLEMENTED_SOURCES: readonly AdoptSource[] = [
+  "adr",
+  "agents",
+  "readme",
+  "ci",
+  "schema",
+  "docs",
+];
 
 /** A draft record found by a scan. Nothing is written until the draft phase (22 §4.2). */
 export interface AdoptCandidate {

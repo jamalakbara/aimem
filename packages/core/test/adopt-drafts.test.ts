@@ -38,10 +38,10 @@ const adopt = async (opts: { author?: string; maxRecords?: number } = {}) =>
 describe("adopt drafts (M4.2)", () => {
   it("writes every candidate as an inferred, adopted record with evidence; the notebook validates", async () => {
     const r = await adopt();
-    expect(r.written).toHaveLength(13);
+    expect(r.written).toHaveLength(16);
     expect(r.cut).toBe(0);
     const index = await loadIndex(nb, { fs: nodeFs });
-    expect(index.records).toHaveLength(13);
+    expect(index.records).toHaveLength(16);
     for (const rec of index.records) {
       expect(rec.trust).toBe("inferred");
       expect(rec.tags).toContain("adopted");
@@ -61,7 +61,7 @@ describe("adopt drafts (M4.2)", () => {
     await adopt();
     const again = await adopt();
     expect(again.written).toEqual([]);
-    expect(again.alreadyAdopted).toBe(13);
+    expect(again.alreadyAdopted).toBe(16);
     expect(again.sourceChanged).toEqual([]);
   });
 
@@ -75,7 +75,7 @@ describe("adopt drafts (M4.2)", () => {
   it("caps the run in priority order and reports what was cut", async () => {
     const r = await adopt({ maxRecords: 5 });
     expect(r.written.map((w) => w.source)).toEqual(["adr", "adr", "adr", "agents", "agents"]);
-    expect(r.cut).toBe(8);
+    expect(r.cut).toBe(11);
   });
 
   it("does not write a second pinned overview", async () => {
@@ -120,7 +120,7 @@ describe("adopt drafts (M4.2)", () => {
       title: "Use Postgres for parcel state",
       reason: `likely duplicate of ${existing.ref} "Use Postgres for parcel state"`,
     });
-    expect(r.written).toHaveLength(12);
+    expect(r.written).toHaveLength(15);
   });
 
   it("reports adopted records whose source changed, without rewriting them", async () => {
