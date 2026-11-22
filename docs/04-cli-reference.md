@@ -184,9 +184,9 @@ Requires `retrieval.llm` to be configured; otherwise fails with `LLM_FAILED` (ex
 `--json` data (contract): `question`, `answer`, `found` (false when nothing matched or the model said not found; exit 0 either way), `sources[] {ref, type, title, trust, verified?}` (cited records only, in citation order), `confidence {verified, agent, inferred, note}`, `retrieval {mode, semanticModel+semanticCoverage | semanticReason, considered, excluded[] {ref, reason}}`, `provider`. Citations of records that were not retrieved are dropped and reported in `warnings`.
 
 ### `aimem show <ref>`
-Print one record (`--raw` for file text, `--links` to expand linked summaries). In a multi-repo project, a ref resolves through the hub and sibling notebooks too (03 §7); JSON adds `notebook` for records from them, and `NOT_FOUND` names any source that could not be read.
+Print one record (`--raw` for file text, `--links` to expand linked summaries). In a multi-repo project, a ref resolves through the hub and sibling notebooks too (03 §7); JSON adds `notebook` for records from them, the human header names that notebook before the file path (`hub: .aimem/…`), and `NOT_FOUND` names any source that could not be read.
 ### `aimem list [type]`
-Table of records with filters (`--status`, `--stale`, `--trust inferred`, `--mine`).
+Table of records with filters (`--status`, `--stale`, `--trust inferred`, `--mine`). When hub or sibling records are listed, the human table adds a `SOURCE` column (`local`, `hub`, `repo:<name>`); JSON records carry `notebook` as in `show`.
 ### `aimem status`
 Project overview: counts, open p0/p1 tasks, live claims, stale items, unreviewed agent records. `--json` data: `project, mode, sync, total, counts, urgentTasks, stale, unreviewed {agent, inferred}, problems, lastHandoff, claims`. In a team notebook with Git sync, `claims` is `{ status, reason?, active, expired, unsynced, mine[] }`, where `status` is `on`, `skipped` (`--no-live`) or `unavailable` (the fetch failed, with a warning); otherwise it is `null`. In a multi-repo project, `sources` lists each notebook as `{ name, kind, status, records | reason }` and missing sources and duplicate IDs are warnings.
 ### `aimem log [--since 7d]`

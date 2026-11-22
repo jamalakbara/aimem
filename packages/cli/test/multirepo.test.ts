@@ -29,6 +29,25 @@ describe("multi-repo read commands (03 §7, M3.6a)", () => {
     );
   });
 
+  it("says which notebook a shown file lives in", async () => {
+    const out = (await run(["show", HUB_DECISION])).stdout.split("\n");
+    expect(out[1]).toMatch(/^decision · proposed · hub: \.aimem\/decisions\/dec-t1a73qsk-/);
+    // Local records keep the plain path.
+    const local = (await run(["show", "dec-n7wmym39"])).stdout.split("\n");
+    expect(local[1]).toMatch(/^decision · proposed · \.aimem\/decisions\/dec-n7wmym39-/);
+  });
+
+  it("adds a SOURCE column to list only when other notebooks contribute records", async () => {
+    const lines = (await run(["list"])).stdout.trimEnd().split("\n");
+    expect(lines[0]).toMatch(/^ID\s+TYPE\s+STATUS\s+TRUST\s+SOURCE\s+TITLE$/);
+    expect(lines.find((l) => l.startsWith(HUB_DECISION))).toMatch(/\bhub\s+Store money/);
+    expect(lines.find((l) => l.startsWith("dec-n7wmym39"))).toMatch(/\blocal\s+Orders live/);
+    expect(lines.find((l) => l.startsWith("mem-6y3pjvja"))).toMatch(/\brepo:frontend\s+Cart page/);
+    // A single-notebook project keeps the old columns.
+    const tiny = await cli(["list", "--dir", join(FIXTURES, "tiny")], { env });
+    expect(tiny.stdout.split("\n")[0]).toMatch(/^ID\s+TYPE\s+STATUS\s+TRUST\s+TITLE$/);
+  });
+
   it("names unchecked sources when a ref is not found", async () => {
     const r = await run(["show", "acme-shop:dec-00000000", "--json"]);
     expect(r.code).toBe(1);

@@ -78,7 +78,8 @@ export async function show(
     : undefined;
   const lines = [
     `${rec.id} [${rec.trust}]${notebookTag(rec)} ${rec.title}`,
-    `${rec.type} · ${rec.status} · ${rec.file}`,
+    // A hub or sibling file path is relative to that notebook, so name it.
+    `${rec.type} · ${rec.status} · ${rec.notebook ? `${rec.notebook}: ` : ""}${rec.file}`,
     rec.summary,
     "",
     rec.body,
@@ -126,10 +127,19 @@ export async function list(
         (freshnessOf({ ...r.fm, type: r.type, created: r.created }, nb.config, now) !== "fresh" &&
           !RETIRED_STATUSES.has(r.status))),
   );
-  const rows = recs.map((r) => [r.id, r.type, r.status, r.trust, r.title]);
+  // SOURCE appears only when hub or sibling records are listed; single-notebook output is unchanged.
+  const multi = recs.some((r) => r.notebook);
+  const rows = recs.map((r) =>
+    multi
+      ? [r.id, r.type, r.status, r.trust, r.notebook ?? "local", r.title]
+      : [r.id, r.type, r.status, r.trust, r.title],
+  );
+  const head = multi
+    ? ["ID", "TYPE", "STATUS", "TRUST", "SOURCE", "TITLE"]
+    : ["ID", "TYPE", "STATUS", "TRUST", "TITLE"];
   return {
     data: { count: recs.length, records: recs.map(meta) },
-    text: recs.length ? table(["ID", "TYPE", "STATUS", "TRUST", "TITLE"], rows) : "No records match.\n",
+    text: recs.length ? table(head, rows) : "No records match.\n",
   };
 }
 
