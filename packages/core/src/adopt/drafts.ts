@@ -171,13 +171,19 @@ export async function writeAdoptDrafts(
 export function pendingCandidates(
   records: readonly { fm: Record<string, unknown> }[],
   candidates: readonly AdoptCandidate[],
-): { pending: AdoptCandidate[]; alreadyAdopted: number } {
+  discarded: ReadonlySet<string> = new Set(),
+): { pending: AdoptCandidate[]; alreadyAdopted: number; discarded: number } {
   const taken = new Set(
     records
       .map((r) => r.fm.evidence)
       .filter((ev): ev is unknown[] => Array.isArray(ev) && ev.length > 0)
       .map((ev) => evidenceKey(ev.map(String))),
   );
-  const pending = candidates.filter((c) => !taken.has(evidenceKey(c.evidence)));
-  return { pending, alreadyAdopted: candidates.length - pending.length };
+  const fresh = candidates.filter((c) => !taken.has(evidenceKey(c.evidence)));
+  const pending = fresh.filter((c) => !discarded.has(discardedKey(c.evidence)));
+  return {
+    pending,
+    alreadyAdopted: candidates.length - fresh.length,
+    discarded: fresh.length - pending.length,
+  };
 }

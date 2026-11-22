@@ -6,6 +6,7 @@ import {
   AimemError,
   applyWritePolicy,
   IMPLEMENTED_SOURCES,
+  loadDiscarded,
   loadIndex,
   loadProject,
   loadSecretIgnore,
@@ -187,7 +188,11 @@ async function agentPlan(
   warnings: string[],
 ): Promise<CommandResult> {
   const index = await loadIndex(nb, { fs: deps.fs });
-  const { pending, alreadyAdopted } = pendingCandidates(index.records, scan.candidates);
+  const { pending, alreadyAdopted, discarded } = pendingCandidates(
+    index.records,
+    scan.candidates,
+    await loadDiscarded(deps.fs, nb.dir),
+  );
   for (const s of scan.skipped) warnings.push(`skipped ${s.evidence}: ${s.reason}`);
   await deps.fs.mkdir(join(nb.dir, ".cache"));
   await deps.fs.writeFile(
@@ -213,7 +218,7 @@ async function agentPlan(
     ? `${pending.length} candidate${pending.length === 1 ? "" : "s"} written to ${ADOPT_PLAN_FILE}${alreadyAdopted ? ` (${alreadyAdopted} already adopted)` : ""}.\n\nGive your agent this prompt:\n\n${prompt}\n`
     : `Nothing left to plan; ${alreadyAdopted} candidate${alreadyAdopted === 1 ? " is" : "s are"} already adopted.\n`;
   return {
-    data: { plan: ADOPT_PLAN_FILE, candidates: pending.length, alreadyAdopted, prompt },
+    data: { plan: ADOPT_PLAN_FILE, candidates: pending.length, alreadyAdopted, discarded, prompt },
     text,
     warnings,
   };

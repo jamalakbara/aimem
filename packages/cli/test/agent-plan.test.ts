@@ -60,6 +60,20 @@ describe("aimem adopt --agent-plan (M4.4)", () => {
     expect(plan().candidates).toHaveLength(8);
   });
 
+  it("leaves out drafts a person discarded", async () => {
+    const human = { AIMEM_AUTHOR: "human:dana" };
+    const w = await cli(["adopt", "--sources", "adr", "--json", "--dir", dir], { env, random });
+    const pg = w.json.data.written.find(
+      (x: { title: string }) => x.title === "Use Postgres for parcel state",
+    );
+    expect((await cli(["discard", pg.ref, "--dir", dir], { env: human, random })).code).toBe(0);
+    const r = await cli(["adopt", "--agent-plan", "--sources", "adr", "--json", "--dir", dir], {
+      env,
+      random,
+    });
+    expect(r.json.data).toMatchObject({ candidates: 0, alreadyAdopted: 2, discarded: 1 });
+  });
+
   it("cannot be combined with --dry-run", async () => {
     const r = await cli(["adopt", "--agent-plan", "--dry-run", "--json", "--dir", dir], { env, random });
     expect(r.code).toBe(2);
