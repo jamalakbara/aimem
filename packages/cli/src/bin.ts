@@ -10,6 +10,7 @@ import {
   cryptoRandom,
   DEFAULT_LOCAL_MODEL,
   type EmbeddingStatus,
+  execaGh,
   execaGit,
   execaRunner,
   LOCAL_MODELS,
@@ -105,6 +106,7 @@ process.exitCode = await run(process.argv.slice(2), {
       }
     : {}),
   git,
+  gh: execaGh(),
   loadEmbedder,
   loadRanker,
   spawnBackground: (args, cwd) =>

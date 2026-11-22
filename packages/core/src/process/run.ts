@@ -91,3 +91,17 @@ export function spawnDetached(command: string, args: string[], cwd: string): voi
     // A refresh that cannot start is caught up by the next write or `aimem index --embeddings`.
   }
 }
+
+/** Runs the GitHub CLI in a directory (\`aimem adopt --sources prs\`); a missing \`gh\` is a failed result. */
+export function execaGh(timeoutMs = 60_000) {
+  return async (args: string[], cwd: string): Promise<{ code: number; stdout: string; stderr: string }> => {
+    const r = await execa("gh", args, { cwd, reject: false, timeout: timeoutMs, windowsHide: true });
+    if ((r as { code?: string }).code === "ENOENT")
+      return { code: 127, stdout: "", stderr: "gh is not installed (https://cli.github.com)" };
+    return {
+      code: typeof r.exitCode === "number" ? r.exitCode : 1,
+      stdout: String(r.stdout ?? ""),
+      stderr: String(r.stderr || r.shortMessage || ""),
+    };
+  };
+}

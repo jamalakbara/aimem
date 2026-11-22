@@ -1,11 +1,13 @@
 import { isAbsolute, join, relative } from "node:path";
+import type { Git } from "../git/git.js";
 import type { Fs } from "../ports.js";
 import { slugify } from "../records/ids.js";
 import { scanSecrets } from "../secrets/scan.js";
 import { ciCandidate, type ReadText, schemaCandidate, stackCandidate } from "./extract.js";
+import { type GhRunner, gitCandidates, prCandidates } from "./history.js";
 import { firstSentence, parseMarkdown, type Section } from "./markdown.js";
 import type { AdoptCandidate, AdoptSkip, AdoptSource, ScanResult } from "./types.js";
-import { IMPLEMENTED_SOURCES } from "./types.js";
+import { DEFAULT_SOURCES, IMPLEMENTED_SOURCES } from "./types.js";
 
 /** 08 §4: files over this size are skipped. */
 export const ADOPT_MAX_FILE_BYTES = 200 * 1024;
@@ -40,6 +42,13 @@ export interface ScanOptions {
   sources?: readonly AdoptSource[];
   /** Fingerprints from `.aimem/secretignore`. */
   secretIgnore?: ReadonlySet<string>;
+  /** For the `git` source; without it the source is skipped. */
+  git?: Git;
+  /** For the `prs` source (opt-in); without it the source reports that gh is missing. */
+  gh?: GhRunner;
+  /** `git log --since` value; default one year before `now`. */
+  since?: string;
+  now?: Date;
 }
 
 /**
@@ -245,7 +254,8 @@ function docCandidates(
  * Deterministic and offline; writes nothing.
  */
 export async function scanProject(fs: Fs, root: string, opts: ScanOptions = {}): Promise<ScanResult> {
-  const wanted = new Set(opts.sources ?? IMPLEMENTED_SOURCES);
+  const wanted = new Set(opts.sources ?? DEFAULT_SOURCES);
+  const explicit = new Set(opts.sources ?? []);
   const walked = await walk(fs, root);
   const files = walked.files;
   const candidates: AdoptCandidate[] = [];
@@ -322,6 +332,20 @@ export async function scanProject(fs: Fs, root: string, opts: ScanOptions = {}):
     if (source === "readme") await aggregate(stackCandidate);
     if (source === "ci") await aggregate(ciCandidate);
     if (source === "schema") await aggregate(schemaCandidate);
+    if (source === "git" || source === "prs") {
+      const since =
+        opts.since ??
+        new Date((opts.now ?? new Date()).getTime() - 365 * 86_400_000).toISOString().slice(0, 10);
+      const r =
+        source === "git"
+          ? opts.git
+            ? await gitCandidates(opts.git, root, since)
+            : { candidates: [], skip: { evidence: "git", reason: "git is not available" } }
+          : await prCandidates(opts.gh, root);
+      // A missing tool or repository only matters when the person asked for this source.
+      if (r.skip && explicit.has(source)) skipped.push(r.skip);
+      for (const c of r.candidates) keep([{ candidate: c, line: 1 }], c.evidence[0] ?? source);
+    }
   }
   return { candidates, skipped };
 }

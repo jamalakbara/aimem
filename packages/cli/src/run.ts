@@ -328,9 +328,13 @@ export async function run(argv: string[], outer: CliDeps): Promise<number> {
   cmd("adopt", "draft records from an existing project (08 §2); --dry-run lists them")
     .option("--dry-run", "list the candidates with their evidence; write nothing")
     .option("--agent-plan", "write the remaining candidates to .aimem/.cache/adopt-plan.json for your agent")
+    .option("--since <date>", "git history to read for the git source (default: one year)")
     .option("--max-records <n>", "most new records in one run (default 40)", positiveInt)
     .option("--author <who>", "human:<handle> or agent:<tool>; drafts stay trust: inferred")
-    .option("--sources <list>", "comma-separated: readme,docs,adr,agents,ci,schema (git,prs arrive later)")
+    .option(
+      "--sources <list>",
+      "comma-separated: readme,docs,adr,agents,ci,schema,git,prs (prs is opt-in and uses gh)",
+    )
     .action(action("adopt", (g, _a, o) => adopt(deps, g, o)));
 
   cmd("review", "walk the records that need a person: inferred, unreviewed agent, stale")

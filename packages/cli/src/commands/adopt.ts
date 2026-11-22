@@ -5,6 +5,7 @@ import {
   type AdoptSource,
   AimemError,
   applyWritePolicy,
+  DEFAULT_SOURCES,
   IMPLEMENTED_SOURCES,
   loadDiscarded,
   loadIndex,
@@ -38,7 +39,14 @@ const summary = (c: AdoptCandidate) => ({
 export async function adopt(
   deps: CliDeps,
   g: GlobalOptions,
-  o: { dryRun?: boolean; agentPlan?: boolean; sources?: string; maxRecords?: number; author?: string },
+  o: {
+    dryRun?: boolean;
+    agentPlan?: boolean;
+    sources?: string;
+    since?: string;
+    maxRecords?: number;
+    author?: string;
+  },
 ): Promise<CommandResult> {
   const requested = o.sources
     ?.split(",")
@@ -53,10 +61,14 @@ export async function adopt(
   const warnings = (requested ?? [])
     .filter((s) => !IMPLEMENTED_SOURCES.includes(s as AdoptSource))
     .map((s) => `source ${s} is not implemented yet (later M4 slices); skipped`);
-  const sources = IMPLEMENTED_SOURCES.filter((s) => !requested || requested.includes(s));
+  const sources = requested ? IMPLEMENTED_SOURCES.filter((s) => requested.includes(s)) : [...DEFAULT_SOURCES];
   const result = await scanProject(deps.fs, nb.root, {
-    sources,
+    ...(requested ? { sources } : {}),
     secretIgnore: await loadSecretIgnore(deps.fs, nb.dir),
+    git: deps.git,
+    ...(deps.gh ? { gh: deps.gh } : {}),
+    ...(o.since ? { since: o.since } : {}),
+    now: deps.clock.now(),
   });
   if (o.agentPlan) return agentPlan(deps, nb, result, warnings);
   if (!o.dryRun) return write(deps, g, o, nb, result, sources, warnings);
