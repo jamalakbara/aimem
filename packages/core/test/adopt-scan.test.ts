@@ -34,6 +34,9 @@ describe("adopt scan (M4.1)", () => {
       ["readme", "memory", "Getting started", "README.md#getting-started"],
       ["readme", "memory", "Running tests", "README.md#running-tests"],
       ["readme", "memory", "Deployment", "README.md#deployment"],
+      ["readme", "memory", "Tech stack", "Dockerfile,package.json"],
+      ["ci", "runbook", "Build and deploy", ".github/workflows/ci.yml,Makefile,package.json"],
+      ["schema", "schema", "Database schema", "migrations/001_parcels.sql,migrations/002_scan_events.sql"],
       ["docs", "memory", "Local development", "docs/architecture.md#local-development"],
     ]);
     expect(r.candidates.every((c) => c.evidence.length > 0 && c.tags.includes("adopted"))).toBe(true);

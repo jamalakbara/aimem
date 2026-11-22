@@ -33,7 +33,7 @@ describe("aimem adopt --agent-plan (M4.4)", () => {
     const p = plan();
     expect(p.version).toBe(1);
     expect(p.project).toBe("parcel-hub");
-    expect(p.candidates).toHaveLength(13);
+    expect(p.candidates).toHaveLength(16);
     expect(p.candidates[0]).toMatchObject({
       source: "adr",
       type: "decision",
@@ -41,7 +41,7 @@ describe("aimem adopt --agent-plan (M4.4)", () => {
       evidence: ["docs/adr/0001-use-postgres.md"],
       body: expect.stringMatching(/^## Context/),
     });
-    expect(r.stdout).toMatch(/13 candidates written to \.aimem\/\.cache\/adopt-plan\.json/);
+    expect(r.stdout).toMatch(/16 candidates written to \.aimem\/\.cache\/adopt-plan\.json/);
     expect(r.stdout).toMatch(/For each candidate, read the evidence/);
     expect(r.stdout).toMatch(/keep it under 300 words/i);
     expect(r.stdout).toMatch(/state uncertainty/);
@@ -54,10 +54,10 @@ describe("aimem adopt --agent-plan (M4.4)", () => {
     expect(r.code).toBe(0);
     expect(r.json.data).toMatchObject({
       plan: ".aimem/.cache/adopt-plan.json",
-      candidates: 8,
+      candidates: 11,
       alreadyAdopted: 5,
     });
-    expect(plan().candidates).toHaveLength(8);
+    expect(plan().candidates).toHaveLength(11);
   });
 
   it("leaves out drafts a person discarded", async () => {
