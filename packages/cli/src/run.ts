@@ -5,8 +5,11 @@ import { Command, CommanderError, InvalidArgumentError, Option } from "commander
 import { adapters } from "./commands/adapters.js";
 import { ask } from "./commands/ask.js";
 import { type ContextOptions, context } from "./commands/context.js";
+import { hooks } from "./commands/hooks.js";
+import { hubInit } from "./commands/hub.js";
 import { init } from "./commands/init.js";
 import { indexCmd, validateCmd } from "./commands/maintain.js";
+import { move } from "./commands/move.js";
 import { list, searchCmd, show } from "./commands/read.js";
 import { doctor, type HandoffOptions, handoff, status } from "./commands/session.js";
 import { liveClaims, taskClaim, taskHeartbeat, taskRelease } from "./commands/task.js";
@@ -112,6 +115,25 @@ export async function run(argv: string[], outer: CliDeps): Promise<number> {
       "agents, claude, cursor, copilot, gemini, or none (default: AGENTS.md, plus CLAUDE.md if present)",
     )
     .action(action("init", (g, _a, o) => init(deps, g, o as Parameters<typeof init>[2])));
+
+  cmd("move <ref>", "move a record to the hub or a sibling repo, leaving a pointer stub")
+    .requiredOption("--to <target>", "hub or a repo name from project.yaml repos")
+    .option("--author <who>", "human:<handle> or agent:<tool>[:<model>]")
+    .action(
+      action("move", (g, [ref], o) => move(deps, g, ref as string, o as { to?: string; author?: string })),
+    );
+
+  cmd("hooks", "git hooks and merge driver that keep INDEX.md merge-safe (07 §1)")
+    .argument("<action>", "install | uninstall | status")
+    .action(action("hooks", (g, [act]) => hooks(deps, g, act as string)));
+
+  const hub = program.command("hub").description("multi-repo hub (03 §7)").exitOverride();
+  cmd("init", "turn this repo into the project's hub notebook (scope: hub)", hub)
+    .option("--project <slug>", "project slug shared by all repos (default: folder name)")
+    .option("--repos <list>", "comma-separated member repo names")
+    .option("--adapters <list>", "agent instruction files to manage, or none")
+    .option("--force", "re-create project.yaml (records are never touched)")
+    .action(action("hub init", (g, _a, o) => hubInit(deps, g, o as Parameters<typeof hubInit>[2])));
 
   const task = program.command("task").description("manage task claims").exitOverride();
   const claimCmd = (name: string, description: string, ref = "<ref>") =>
@@ -300,6 +322,7 @@ export async function run(argv: string[], outer: CliDeps): Promise<number> {
   cmd("validate", "check records against rules V001–V018")
     .option("--strict", "exit 1 on warnings")
     .option("--fix", "repair safe issues first (file names, one-sided supersede links, updated)")
+    .option("--project", "also check refs and IDs across the hub and sibling notebooks")
     .action(action("validate", (g, _a, o) => validateCmd(deps, g, o)));
 
   cmd("usage <operation>", "record explicit cited-ref usage locally; never changes ranking")

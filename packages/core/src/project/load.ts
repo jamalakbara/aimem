@@ -73,8 +73,27 @@ export async function loadProject(fs: Fs, start: string): Promise<Notebook> {
   }
   const parsed = projectSchema.safeParse(raw);
   if (!parsed.success) {
-    const why = parsed.error.issues.map((i) => `${i.path.join(".") || "(root)"}: ${i.message}`).join("; ");
+    const why = parsed.error.issues.map(describeIssue).join("; ");
     throw new AimemError("INVALID_RECORD", `project.yaml: ${why}`);
   }
   return { root, dir, config: resolveProject(parsed.data) };
+}
+
+/** Sections such as write_policy are maps; a single value there gets an example instead of Zod's text. */
+const SECTION_EXAMPLES: Record<string, string> = {
+  write_policy: "agent_commits: pr",
+  briefing: "budget_tokens: 4000",
+  freshness_days: "memory: 90",
+};
+function describeIssue(i: {
+  path: PropertyKey[];
+  message: string;
+  code?: string;
+  expected?: unknown;
+}): string {
+  const key = i.path.map(String).join(".");
+  const example = SECTION_EXAMPLES[key];
+  if (example && i.code === "invalid_type" && i.expected === "object")
+    return `${key} must be a section with nested keys, for example:\n  ${key}:\n    ${example}`;
+  return `${key || "(root)"}: ${i.message}`;
 }

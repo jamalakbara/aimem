@@ -48,6 +48,13 @@ export * from "./eval/ask.js";
 export * from "./eval/rerank.js";
 export * from "./eval/run.js";
 export * from "./git/git.js";
+export {
+  type HookState,
+  hookState,
+  INDEX_HOOKS,
+  installIndexHooks,
+  uninstallIndexHooks,
+} from "./git/hooks.js";
 export { ensureLiveBranch } from "./git/live.js";
 export * from "./index/build.js";
 export * from "./llm/claude-cli.js";
@@ -55,12 +62,23 @@ export * from "./llm/provider.js";
 export * from "./log/calls.js";
 export * from "./log/usage.js";
 export * from "./ops/handoff.js";
+export { type MoveResult, moveRecord } from "./ops/move.js";
 export * from "./ops/policy.js";
 export * from "./ops/write.js";
 export * from "./ports.js";
 export * from "./process/run.js";
 export * from "./project/edit.js";
 export * from "./project/load.js";
+export {
+  isMultiRepo,
+  loadProjectIndex,
+  type NotebookSource,
+  type ProjectIndex,
+  repoNameFromUrl,
+  resolveSources,
+  type SourceDeps,
+  sourceWarnings,
+} from "./project/sources.js";
 export * from "./records/ids.js";
 export * from "./records/store.js";
 export {

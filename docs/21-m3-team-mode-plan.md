@@ -12,7 +12,7 @@ Slices 3.1 through 3.6 were approved. Later slices are proposals.
 | 3.4 | Add path-only and shared claims, overlap warnings, and offline reconciliation | Remote outage and recovery tests (scenario 5). Specify how pairing and takeover history fit the claim model before coding. |
 | 3.5 | Wire live claims into context, status, handoff and MCP | CLI and MCP contract tests cover session ownership, offline mode and release. |
 | 3.6 | Resolve global refs across local, hub and sibling notebooks | A repo A briefing includes hub and sibling records and warns about missing sources. |
-| 3.7 | Complete team write policies, duplicate checks and generated-index handling | Merge and conflict tests (scenarios 6–7), strict validation recipe, and team policy tests. Split into smaller PRs at planning time. |
+| 3.7 | Complete team write policies, duplicate checks and generated-index handling | Merge and conflict tests (scenarios 6–7), strict validation recipe, and team policy tests. Split into smaller PRs at planning time (see §3.7). |
 
 ## 3.1 — Bootstrap `aimem-live`
 
@@ -345,7 +345,7 @@ After approval, implement 3.5a first. Each PR needs lint, typecheck, the full su
 
 ## 3.6 — Global refs across local, hub and sibling notebooks
 
-Status: approved with the recommended defaults below. 03 §7, 02 §7 and 06 §2.2 step 1 describe multi-repo projects: one `project:` slug shared by several repos, an optional hub repo for cross-repo records, and lookup in the order local → hub → siblings. The schema already accepts `repos:` and `hub:`, but nothing reads them. The M3 acceptance in 13 is: "briefing in repo A shows hub + sibling records and warns on missing ones."
+Status: approved with the recommended defaults below; 3.6a, 3.6b and 3.6c are implemented. `move` marks its pointer stub with a new optional field, `moved_to` (added to the 03 field table), so reads and `validate --project` can tell a stub from a duplicate. The label field is named `notebook` because `source` already marks externally-owned records in briefings. 03 §7, 02 §7 and 06 §2.2 step 1 describe multi-repo projects: one `project:` slug shared by several repos, an optional hub repo for cross-repo records, and lookup in the order local → hub → siblings. The schema already accepts `repos:` and `hub:`, but nothing reads them. The M3 acceptance in 13 is: "briefing in repo A shows hub + sibling records and warns on missing ones."
 
 | PR | Scope | Acceptance evidence |
 |---|---|---|
@@ -390,3 +390,18 @@ Status: approved with the recommended defaults below. 03 §7, 02 §7 and 06 §2.
 ### Out of scope for M3.6
 
 Fetching or cloning sources, semantic vectors for other sources, cross-repo claims, and writes into the hub except `move` in 3.6c.
+
+## 3.7 — Team write policies, duplicate checks and generated-index handling
+
+Status: approved by the owner's "develop until the end" instruction; reviewed at the end. 3.7a, 3.7b and 3.7c are implemented, which completes M3.
+
+| PR | Scope | Acceptance evidence |
+|---|---|---|
+| 3.7a | INDEX.md handling: `aimem hooks install`, the `merge.ours` driver, a `doctor` check and a CI recipe | Real-Git tests for 12 §4 scenario 6 (two branches add records; INDEX.md conflicts without the driver and merges cleanly with it; `aimem index` regenerates it) and scenario 7 (a concurrent edit conflicts; `validate --fix` restores the dropped `superseded_by`) |
+| 3.7b | Team write policies: `agent_commits: pr` and `durable_requires_review` (03 §6) | `pr` commits only the written files to a new branch without touching the checkout or the index; durable records written in team mode need a second person's `aimem verify` |
+| 3.7c | Duplicate checks across the hub and sibling notebooks on write | `DUPLICATE_LIKELY` names a similar record in another notebook; `--force` still writes |
+
+Decisions in 3.7b: `pr` creates a local branch only; pushing and opening the pull request stay with the person, because aimem never sends notebook content over the network on its own. Under `durable_requires_review`, a human-written durable record starts as `trust: agent`, since the schema has no separate "unreviewed" value, and self-verification is refused.
+
+Finding from 3.7a: `merge=ours` alone does nothing, because Git has no built-in `ours` driver. `aimem init` wrote the attribute since M1, but INDEX.md still conflicted. `aimem hooks install` sets the driver per clone.
+

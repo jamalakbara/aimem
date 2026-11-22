@@ -95,6 +95,7 @@ supersedes: dec-2a4b6c8d
 | `links` | ref[] | no | Related records (local or global refs) |
 | `supersedes` | ref | no | Record this replaces |
 | `superseded_by` | ref | no | Set by `aimem supersede` on the old record |
+| `moved_to` | `hub` \| `repo:<name>` | no | Set by `aimem move` on the pointer stub left in the old notebook (§7) |
 | `expires` | date | no | After this date the record is treated as stale |
 | `external` | object[] | no | Links to outside systems: `{system: jira, id: ABC-12, url: ...}` |
 | `managed_by` | enum | no | `notebook` (default) or `external`. External records are owned by their source and updated one-way from it (16 §2) |
@@ -203,6 +204,7 @@ repos:                            # optional; the project's repos (for multi-rep
     url: git@github.com:acme/backend.git
   - name: infra
     url: git@github.com:acme/infra.git
+scope: repo                       # optional; `hub` in the hub notebook (set by `aimem hub init`)
 hub:                              # optional; central repo for cross-repo knowledge
   url: git@github.com:acme/project-hub.git
   path: .aimem                    # default
@@ -216,8 +218,8 @@ members:                          # used by web app / server for role views and 
     roles: [dev]
 
 write_policy:
-  agent_commits: stage            # none | stage | commit | pr
-  durable_requires_review: true   # decisions/runbooks/schema need review before trust=verified
+  agent_commits: stage            # none | stage | commit | pr (pr = commit to branch aimem/<ref>)
+  durable_requires_review: true   # decisions/runbooks/schema start trust=agent and need another person's aimem verify
   live_push: auto                 # auto | manual
 
 freshness_days:                   # per-type staleness windows
@@ -275,8 +277,11 @@ Rules:
 2. **Several repos, no hub:** each repo has `.aimem/` with the same `project:` slug and the `repos:` list. A record lives in exactly one repo; others refer to it by global ref.
 3. **Several repos + hub:** the hub repo contains the cross-repo records. Each repo sets `hub.url`. Rule of thumb: *affects one repo → that repo; affects several → hub.*
 4. The record's `repo:` field says where it applies (`all` for cross-repo).
-5. Resolution order: local → hub → sibling checkouts (`../<name>` or cache dir `~/.cache/aimem/<project>/<repo>`). Missing sources produce a warning, not an error.
-6. IDs are unique per **project**, not per repo; `validate --project` checks across reachable sources.
+5. Resolution order: local → hub → sibling checkouts (`../<name>` or cache dir `~/.cache/aimem/<project>/<repo>`, `AIMEM_HOME` respected). The hub's folder name comes from `hub.url` (`acme/project-hub.git` → `project-hub`), or `hub.name` when set. Resolution reads existing checkouts only and never uses the network. Missing sources produce a warning, not an error. A checkout with another `project:`, or a hub without `scope: hub`, is skipped with a warning.
+   - Other notebooks are read-only. Read commands (`show`, `list`, `search`, `context`, `status` and the MCP read tools) see their records, labelled `[hub]` or `[repo:<name>]` and with `notebook` in JSON. Writes, claims and handoffs stay in this repo.
+   - When an ID exists in two notebooks, the first in resolution order wins and a warning names both. A pointer stub (`moved_to`) always yields to the moved record and is never reported as a duplicate.
+   - A project-qualified link (`<project>:<id>`) to another notebook is valid. Writes accept it when the record is found, or when a source could not be read. `validate` checks it only with `--project`.
+6. IDs are unique per **project**, not per repo; new IDs avoid those in reachable notebooks, and the write-time duplicate check covers them too; `validate --project` checks across reachable sources (V005 for an ID in two notebooks, V006 for a qualified ref found nowhere) and lists unreadable ones as `unchecked`.
 
 ## 8. `INDEX.md` (generated)
 

@@ -1,3 +1,4 @@
+import { homedir } from "node:os";
 import { join } from "node:path";
 import {
   AimemError,
@@ -25,11 +26,13 @@ import {
   listClaimsWithLocal,
   loadIndex,
   loadProject,
+  loadProjectIndex,
   loggedEmbeddingProvider,
   loggedLlmProvider,
   NOTICE,
   type Notebook,
   type NotebookIndex,
+  type ProjectIndex,
   type QueryDeps,
   type Random,
   type ResolvedProject,
@@ -130,11 +133,25 @@ export async function claimToolsAvailable(deps: Pick<McpDeps, "fs" | "cwd">): Pr
 export function createAimemServer(deps: McpDeps, options: { claimTools?: boolean } = {}): McpServer {
   const server = new McpServer({ name: "aimem", version: VERSION });
   const requests = new Map<string, Record<string, unknown>>();
-  const w = { fs: deps.fs, clock: deps.clock, random: deps.random };
+  const w = {
+    fs: deps.fs,
+    clock: deps.clock,
+    random: deps.random,
+    cacheHome: deps.env.AIMEM_HOME ?? join(homedir(), ".cache", "aimem"),
+  };
 
   const open = async (): Promise<{ nb: Notebook; index: NotebookIndex }> => {
     const nb = await loadProject(deps.fs, deps.cwd);
     return { nb, index: await loadIndex(nb, { fs: deps.fs }) };
+  };
+  /** Read tools see local, hub and sibling notebooks (03 §7); vectors stay local (3.6 decision 5). */
+  const openRead = async (): Promise<{ nb: Notebook; index: ProjectIndex; local: NotebookIndex }> => {
+    const nb = await loadProject(deps.fs, deps.cwd);
+    const index = await loadProjectIndex(nb, {
+      fs: deps.fs,
+      cacheHome: deps.env.AIMEM_HOME ?? join(homedir(), ".cache", "aimem"),
+    });
+    return { nb, index, local: index.sources.length > 1 ? await loadIndex(nb, { fs: deps.fs }) : index };
   };
   /** 05 §5: `agent:<client>` unless AIMEM_AUTHOR is set. */
   const author = () =>
@@ -235,7 +252,7 @@ export function createAimemServer(deps: McpDeps, options: { claimTools?: boolean
     },
     (a) =>
       guarded(async () => {
-        const { nb, index } = await open();
+        const { nb, index, local } = await openRead();
         const live = await readLiveState(nb, deps);
         const input = {
           ...(a.task ? { task: a.task } : {}),
@@ -246,7 +263,7 @@ export function createAimemServer(deps: McpDeps, options: { claimTools?: boolean
           live,
           liveHolder: author(),
         };
-        const sem = await semantic(nb, index, buildQuery(nb, index, input));
+        const sem = await semantic(nb, local, buildQuery(nb, index, input));
         const retrievalInput = {
           ...input,
           ...(sem.semantic ? { semantic: sem.semantic } : { semanticOff: sem.off }),
@@ -256,7 +273,7 @@ export function createAimemServer(deps: McpDeps, options: { claimTools?: boolean
           index,
           retrievalInput,
           deps.clock.now(),
-          await retrieval(nb, index),
+          await retrieval(nb, local),
         );
         const b = buildBriefing(nb, index, retrievalInput, deps.clock.now(), retrieved.scored);
         // 06 §2.2 step 11: extend this session's claims, at most every 20 minutes.
@@ -312,8 +329,8 @@ export function createAimemServer(deps: McpDeps, options: { claimTools?: boolean
         const mode = a.mode ?? "hybrid";
         if (mode !== "lexical" && mode !== "hybrid")
           throw new AimemError("USAGE", `mode must be lexical or hybrid (got '${mode}')`);
-        const { nb, index } = await open();
-        const sem = mode === "hybrid" ? await semantic(nb, index, a.query) : { off: "lexical mode" };
+        const { nb, index, local } = await openRead();
+        const sem = mode === "hybrid" ? await semantic(nb, local, a.query) : { off: "lexical mode" };
         const retrieved = await searchWithRewrites(
           nb,
           index,
@@ -325,7 +342,7 @@ export function createAimemServer(deps: McpDeps, options: { claimTools?: boolean
             ...(strs(a.tags) ? { tags: a.tags } : {}),
           },
           {
-            ...(await retrieval(nb, index, mode)),
+            ...(await retrieval(nb, local, mode)),
             ...(sem.semantic ? { semantic: { scores: sem.semantic.scores } } : {}),
           },
         );
@@ -340,12 +357,16 @@ export function createAimemServer(deps: McpDeps, options: { claimTools?: boolean
             type: h.record.type,
             status: h.record.status,
             trust: h.record.trust,
+            ...(h.record.notebook ? { notebook: h.record.notebook } : {}),
             score: Math.round(h.score * 10000) / 10000,
           })),
         };
         const text = hits.length
           ? hits
-              .map((h) => `- ${h.record.id} [${h.record.trust}] ${h.record.title} — ${h.record.summary}`)
+              .map(
+                (h) =>
+                  `- ${h.record.id} [${h.record.trust}]${h.record.notebook ? ` [${h.record.notebook}]` : ""} ${h.record.title} — ${h.record.summary}`,
+              )
               .join("\n")
           : "No matches.";
         return ok(
@@ -369,7 +390,7 @@ export function createAimemServer(deps: McpDeps, options: { claimTools?: boolean
     },
     (a) =>
       guarded(async () => {
-        const { nb, index } = await open();
+        const { nb, index } = await openRead();
         const r = find(nb, index, a.ref);
         const links = a.expand_links
           ? r.links.map((l) => {
@@ -379,7 +400,7 @@ export function createAimemServer(deps: McpDeps, options: { claimTools?: boolean
                 : { ref: l, missing: true };
             })
           : undefined;
-        const text = `${NOTICE}\n\n${r.id} [${r.trust}] ${r.title} — ${r.type}, ${r.status}\n${r.summary}\n\n${frameRecord(r, r.body)}`;
+        const text = `${NOTICE}\n\n${r.id} [${r.trust}]${r.notebook ? ` [${r.notebook}]` : ""} ${r.title} — ${r.type}, ${r.status}\n${r.summary}\n\n${frameRecord(r, r.body)}`;
         return ok(
           {
             ref: r.id,
@@ -389,6 +410,7 @@ export function createAimemServer(deps: McpDeps, options: { claimTools?: boolean
             title: r.title,
             summary: r.summary,
             file: r.file,
+            ...(r.notebook ? { notebook: r.notebook } : {}),
             frontmatter: r.fm,
             body: r.body,
             ...(links ? { links } : {}),

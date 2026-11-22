@@ -13,6 +13,7 @@ import { AimemError } from "../errors.js";
 import { type IndexedRecord, loadIndex, type NotebookIndex } from "../index/build.js";
 import type { Clock, Fs, Random } from "../ports.js";
 import type { Notebook } from "../project/load.js";
+import { isMultiRepo, loadProjectIndex, type ProjectIndex } from "../project/sources.js";
 import { newUniqueId, recordFileName } from "../records/ids.js";
 import { readRecordFile, writeFileAtomic, writeRecordFile } from "../records/store.js";
 import {
@@ -28,6 +29,7 @@ import { tokenize } from "../search/bm25.js";
 import { HIDDEN_STATUSES } from "../search/search.js";
 import { scanSecrets } from "../secrets/scan.js";
 import { RETIRED_STATUSES } from "../validate/validate.js";
+import { requiresReview } from "./policy.js";
 
 export interface WriteDeps {
   fs: Fs;
@@ -35,6 +37,8 @@ export interface WriteDeps {
   random: Random;
   /** When set, new or changed chunks are embedded after the write (15 §13). */
   embedder?: EmbeddingProvider;
+  /** Where cached sibling checkouts live (03 §7); used for cross-notebook checks. */
+  cacheHome?: string;
 }
 
 export interface WriteResult {
@@ -87,11 +91,21 @@ function find(nb: Notebook, index: NotebookIndex, ref: string): IndexedRecord {
   return rec;
 }
 
-function checkLinks(nb: Notebook, index: NotebookIndex, refs: string[]): void {
+/**
+ * Link targets must exist. In a multi-repo project a project-qualified ref may name a record in the
+ * hub or a sibling (03 §7); it is accepted when found there, or when a source could not be read.
+ */
+async function checkLinks(nb: Notebook, index: NotebookIndex, refs: string[], fs: Fs): Promise<void> {
+  let project: ProjectIndex | undefined;
   for (const ref of refs) {
     const id = localId(ref, nb.config.project);
-    if (id !== undefined && !index.records.some((r) => r.id === id))
-      throw new AimemError("INVALID_RECORD", `link target ${ref} not found`);
+    if (id === undefined || index.records.some((r) => r.id === id)) continue;
+    if (ref.includes(":") && isMultiRepo(nb)) {
+      project ??= await loadProjectIndex(nb, { fs });
+      if (project.records.some((r) => r.id === id)) continue;
+      if (project.sources.some((s) => s.status !== "ok")) continue;
+    }
+    throw new AimemError("INVALID_RECORD", `link target ${ref} not found`);
   }
 }
 
@@ -224,7 +238,7 @@ export async function addRecord(
   }
 
   const index = await loadIndex(nb, { fs: deps.fs });
-  checkLinks(nb, index, input.links ?? []);
+  await checkLinks(nb, index, input.links ?? [], deps.fs);
   let old: IndexedRecord | undefined;
   if (input.supersedes) {
     old = find(nb, index, input.supersedes);
@@ -234,8 +248,19 @@ export async function addRecord(
       throw new AimemError("INVALID_RECORD", `${old.type} records cannot be superseded`);
   }
 
-  const trust = input.author.startsWith("human:") ? "verified" : "agent";
-  const id = newUniqueId(input.type, deps.random, new Set(index.records.map((r) => r.id)));
+  // 03 §6 durable_requires_review: in team mode a human's decision/runbook/schema waits for a second
+  // person's `aimem verify`, so it starts unreviewed like an agent record.
+  const review = requiresReview(nb.config, input.type);
+  const trust = input.author.startsWith("human:") && !review ? "verified" : "agent";
+  // 03 §7 rule 6: IDs are unique per project, so other notebooks' IDs are taken too.
+  const project = isMultiRepo(nb)
+    ? await loadProjectIndex(nb, { fs: deps.fs, ...(deps.cacheHome ? { cacheHome: deps.cacheHome } : {}) })
+    : undefined;
+  const id = newUniqueId(
+    input.type,
+    deps.random,
+    new Set([...index.records, ...(project?.records ?? [])].map((r) => r.id)),
+  );
   const fields: Record<string, unknown> = {
     aimem: 1,
     id,
@@ -260,21 +285,39 @@ export async function addRecord(
   const rec = createRecord(fields, body);
   checkSecrets(serializeRecord(rec));
   if (!input.force && input.type !== "handoff") {
-    const dup = findLikelyDuplicate(index, input.type, title, summary, old?.id);
+    // Team duplicate check (M3.7c): this notebook first, then the hub and sibling notebooks.
+    const dup =
+      findLikelyDuplicate(index, input.type, title, summary, old?.id) ??
+      (project
+        ? findLikelyDuplicate(
+            { records: project.records.filter((r) => r.notebook), problems: [] },
+            input.type,
+            title,
+            summary,
+            old?.id,
+          )
+        : undefined);
     if (dup) {
+      const where = dup.notebook ? ` in ${dup.notebook}` : "";
+      const ref = dup.notebook ? `${nb.config.project}:${dup.id}` : dup.id;
       throw new AimemError(
         "DUPLICATE_LIKELY",
-        `a similar ${dup.type} exists: ${dup.id} "${dup.title}". Update or supersede it, or pass --force.`,
+        `a similar ${dup.type} exists${where}: ${dup.id} "${dup.title}". Open it with aimem show ${ref}, then update or supersede it${dup.notebook ? " there" : ""}, or pass --force to add this one anyway.`,
         {
           ref: dup.id,
           title: dup.title,
           file: dup.file,
+          ...(dup.notebook ? { notebook: dup.notebook } : {}),
         },
       );
     }
   }
   const unknownRoles = (fields.roles as string[]).filter((r) => r !== "all" && !nb.config.roles.includes(r));
   if (unknownRoles.length) warnings.push(`unknown roles: ${unknownRoles.join(", ")} (V014)`);
+  if (review && input.author.startsWith("human:"))
+    warnings.push(
+      `Awaiting verification by another teammate: ${input.type} records need a second person's review here; ask them to run aimem verify ${id}`,
+    );
   if (/\bTODO\b/.test(body)) warnings.push("body still contains TODO markers");
   if (summary.toLowerCase() === title.toLowerCase()) warnings.push("summary equals the title (V009)");
 
@@ -376,7 +419,7 @@ export async function updateRecord(
           .map((s) => s.trim())
           .filter(Boolean)
       : raw;
-    if (REF_FIELDS.has(key)) checkLinks(nb, index, value as string[]);
+    if (REF_FIELDS.has(key)) await checkLinks(nb, index, value as string[], deps.fs);
     setField(text, key, value);
   }
   if (input.body !== undefined) {
@@ -432,10 +475,20 @@ export async function verifyRecords(
 ): Promise<{ refs: string[]; changed: string[]; warnings: string[] }> {
   if (!AUTHOR_RE.test(author)) throw new AimemError("USAGE", `invalid author '${author}'`);
   if (!author.startsWith("human:"))
-    throw new AimemError("PERMISSION_DENIED", "only a human author can verify records");
+    throw new AimemError(
+      "PERMISSION_DENIED",
+      `only a human can verify records; ask a person on the team to run aimem verify ${refs.length ? refs.join(" ") : "<ref>"}`,
+    );
   if (!refs.length) throw new AimemError("USAGE", "give at least one record to verify");
   const index = await loadIndex(nb, { fs: deps.fs });
   const recs = refs.map((r) => find(nb, index, r));
+  for (const rec of recs) {
+    if (requiresReview(nb.config, rec.type) && rec.author === author)
+      throw new AimemError(
+        "PERMISSION_DENIED",
+        `${rec.id} needs review by someone other than its author (write_policy.durable_requires_review); ask a teammate to run aimem verify ${rec.id}`,
+      );
+  }
   const now = deps.clock.now();
   const changed: string[] = [];
   for (const rec of recs) {

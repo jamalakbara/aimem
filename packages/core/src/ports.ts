@@ -1,5 +1,15 @@
 import { randomBytes } from "node:crypto";
-import { appendFile, mkdir, readdir, readFile, rename, stat, unlink, writeFile } from "node:fs/promises";
+import {
+  appendFile,
+  chmod,
+  mkdir,
+  readdir,
+  readFile,
+  rename,
+  stat,
+  unlink,
+  writeFile,
+} from "node:fs/promises";
 
 /** File system operations core needs. Injected so tests can simulate failures (docs/11 §3). */
 export interface Fs {
@@ -17,6 +27,8 @@ export interface Fs {
   /** Creates the directory and any missing parents. */
   mkdir(path: string): Promise<void>;
   readdir(path: string): Promise<string[]>;
+  /** Optional; used to make installed git hooks executable. */
+  chmod?(path: string, mode: number): Promise<void>;
 }
 
 export interface Clock {
@@ -43,6 +55,7 @@ export const nodeFs: Fs = {
     await mkdir(p, { recursive: true });
   },
   readdir: (p) => readdir(p),
+  chmod: (p, m) => chmod(p, m),
 };
 
 export const systemClock: Clock = { now: () => new Date() };

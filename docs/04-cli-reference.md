@@ -57,8 +57,22 @@ aimem adapters remove [--targets ...]
 - Targets: `agents` (AGENTS.md), `claude` (CLAUDE.md), `cursor` (.cursor/rules/aimem.mdc), `copilot` (.github/copilot-instructions.md), `gemini` (GEMINI.md). Default: `adapters.targets` in `project.yaml`, else AGENTS.md plus CLAUDE.md when it exists and does not import `@AGENTS.md`. `--targets` and `add --file` are saved to `project.yaml`.
 - `sync` writes only between the markers; a second `sync` changes nothing. `remove` restores files byte for byte and deletes files that held only the aimem block. A broken block (missing marker, two blocks) is reported (`USAGE`, exit 2) and left untouched; other files are still processed. `data.results[] {target, file, action, note?}`; `list` → `data.adapters[] {target, file, state}`.
 
+### `aimem hooks install|uninstall|status`
+Keep the generated `INDEX.md` merge-safe (07 §1 rule 5).
+- `install` adds an aimem block to the `post-merge`, `post-checkout` and `post-rewrite` hooks. The block runs `aimem index --quiet` when `aimem` is on `PATH`. Other hook content is kept, and the hooks directory comes from `git rev-parse --git-path hooks`, so `core.hooksPath` and worktrees work.
+- It also sets `git config merge.ours.driver true`; without it Git ignores `merge=ours`. It adds `.aimem/INDEX.md merge=ours` to `.gitattributes` if missing. Running it again changes nothing.
+- `uninstall` removes only the aimem block and deletes hooks that held nothing else.
+- `status` reports the installed hooks, the driver and the attribute. `data = { changed?, installed[], mergeDriver, attribute }`.
+- `aimem doctor` reports `index merge` as `warn` until all three are in place.
+
 ### `aimem hub init`
 Turn the current repo into a hub (multi-repo projects): creates `.aimem/` with `scope: hub` and prints the `hub:` snippet to add to each member repo's `project.yaml`.
+```
+aimem hub init [--project <slug>] [--repos a,b] [--adapters <list>|none] [--force]
+```
+- Runs the normal `init`, then sets `scope: hub` and, with `--repos`, the `repos:` list. `INDEX.md` shows `scope: hub`.
+- The snippet uses the `origin` URL (`data.snippet`); without `origin` it holds a placeholder and warns. Member repos need the same project slug.
+- JSON adds `scope`, `repos` and `snippet` to the `init` data.
 
 ## 2b. Import and connector commands
 
@@ -170,11 +184,11 @@ Requires `retrieval.llm` to be configured; otherwise fails with `LLM_FAILED` (ex
 `--json` data (contract): `question`, `answer`, `found` (false when nothing matched or the model said not found; exit 0 either way), `sources[] {ref, type, title, trust, verified?}` (cited records only, in citation order), `confidence {verified, agent, inferred, note}`, `retrieval {mode, semanticModel+semanticCoverage | semanticReason, considered, excluded[] {ref, reason}}`, `provider`. Citations of records that were not retrieved are dropped and reported in `warnings`.
 
 ### `aimem show <ref>`
-Print one record (`--raw` for file text, `--links` to expand linked summaries).
+Print one record (`--raw` for file text, `--links` to expand linked summaries). In a multi-repo project, a ref resolves through the hub and sibling notebooks too (03 §7); JSON adds `notebook` for records from them, the human header names that notebook before the file path (`hub: .aimem/…`), and `NOT_FOUND` names any source that could not be read.
 ### `aimem list [type]`
-Table of records with filters (`--status`, `--stale`, `--trust inferred`, `--mine`).
+Table of records with filters (`--status`, `--stale`, `--trust inferred`, `--mine`). When hub or sibling records are listed, the human table adds a `SOURCE` column (`local`, `hub`, `repo:<name>`); JSON records carry `notebook` as in `show`.
 ### `aimem status`
-Project overview: counts, open p0/p1 tasks, live claims, stale items, unreviewed agent records. `--json` data: `project, mode, sync, total, counts, urgentTasks, stale, unreviewed {agent, inferred}, problems, lastHandoff, claims`. In a team notebook with Git sync, `claims` is `{ status, reason?, active, expired, unsynced, mine[] }`, where `status` is `on`, `skipped` (`--no-live`) or `unavailable` (the fetch failed, with a warning); otherwise it is `null`.
+Project overview: counts, open p0/p1 tasks, live claims, stale items, unreviewed agent records. `--json` data: `project, mode, sync, total, counts, urgentTasks, stale, unreviewed {agent, inferred}, problems, lastHandoff, claims`. In a team notebook with Git sync, `claims` is `{ status, reason?, active, expired, unsynced, mine[] }`, where `status` is `on`, `skipped` (`--no-live`) or `unavailable` (the fetch failed, with a warning); otherwise it is `null`. In a multi-repo project, `sources` lists each notebook as `{ name, kind, status, records | reason }` and missing sources and duplicate IDs are warnings.
 ### `aimem log [--since 7d]`
 Recent record activity (from git history of `.aimem/`).
 
@@ -189,9 +203,9 @@ aimem add decision --title "..." --summary "..." [--status accepted] [--roles de
 - `--body -` reads stdin. Without a body, **nothing is written**: the type template with `TODO` markers is printed (in `--json`: `error.details.template`, code `INVALID_RECORD`) and the command exits 2, so agents never commit empty records. `--body` and `--body-file` are mutually exclusive.
 - Type-specific flags: `--kind` (memory), `--priority`, `--assignee` (task).
 - Refuses (nothing written): invalid status/fields or a multi-line/over-long summary (`INVALID_RECORD`), unknown `--link`/`--supersedes` targets (`INVALID_RECORD`/`NOT_FOUND`), possible secrets (`SECRET_DETECTED`).
-- Runs a **dedupe check**: a current record of the same type whose title is very similar (word overlap ≥ 70%) or whose title + summary overlap ≥ 50% is a likely duplicate; it is named in `error.details` and the command exits 3 unless `--force` (agents should then `aimem show` it and update/supersede instead).
-- Sets `trust: agent` for `agent:*` authors, `verified` for `human:*`.
-- Applies `write_policy.agent_commits` (`none|stage|commit|pr`; default `commit` in solo mode, `stage` otherwise) to **agent** writes only; human writes are left for the human to commit. Only the files the command wrote are staged/committed (`git commit --only`), so other staged work is never included. Commit message `aimem: <verb> <ref> <title>` plus a trailer `Aimem-Author: <author>`. `pr` currently stages and warns. Outside a git repo, without git, or when git refuses (e.g. a failing hook) the records stay written, a warning is added, and the exit code is 0. Write commands report `data.git`: `none | staged | committed | skipped | failed`.
+- Runs a **dedupe check**: a current record of the same type whose title is very similar (word overlap ≥ 70%) or whose title + summary overlap ≥ 50% is a likely duplicate; it is named in `error.details` and the command exits 3 unless `--force`. In a multi-repo project the hub and sibling notebooks are checked too (03 §7); a match there adds `details.notebook` and says where it is. New IDs are also kept unique against those notebooks (agents should then `aimem show` it and update/supersede instead).
+- Sets `trust: agent` for `agent:*` authors, `verified` for `human:*`. When `write_policy.durable_requires_review` applies (default in team mode), a human's `decision`, `runbook` or `schema` also starts as `trust: agent` with a warning, and `aimem verify` by its own author returns `PERMISSION_DENIED`; another human verifies it. Authors are self-declared (`--author`, `AIMEM_AUTHOR`, git `user.name`), so this is a workflow guard, not access control: a process that claims another `human:` name passes it (09 §5). Use branch protection and review for hard guarantees.
+- Applies `write_policy.agent_commits` (`none|stage|commit|pr`; default `commit` in solo mode, `stage` otherwise) to **agent** writes only; human writes are left for the human to commit. Only the files the command wrote are staged/committed (`git commit --only`), so other staged work is never included. Commit message `aimem: <verb> <ref> <title>` plus a trailer `Aimem-Author: <author>`. `pr` commits only the written files to a new branch `aimem/<ref>` (or `aimem/<ref>-2`, …) from `HEAD` through a scratch index, so the current branch and the git index are unchanged. The written record files and the regenerated `INDEX.md` still stay in the working tree (untracked/modified): check `git status` before `git add -A`, or they are committed on the current branch too; `data.git` is `branched` and a warning names the branch to push. Without any commit yet it stages and warns. The branch commit includes the regenerated `INDEX.md`, so several `aimem/*` branches touch it; with `aimem hooks install` (the `merge.ours` driver) they merge without conflicts and the hook regenerates it. Outside a git repo, without git, or when git refuses (e.g. a failing hook) the records stay written, a warning is added, and the exit code is 0. Write commands report `data.git`: `none | staged | committed | skipped | failed`.
 - A commit policy stages and warns for agents on guarded/default branches or an
   unidentifiable current branch (03 §6). This deliberately changes main-branch
   `data.git` from `committed` to `staged`; JSON field names and exit codes stay
@@ -208,7 +222,11 @@ Set `trust: verified`, `verified: today`. Human authors only.
 ### `aimem link <ref> <ref>`
 Add a bidirectional link.
 ### `aimem move <ref> --to hub|<repo>`
-Move a record between the hub and a repo, preserving its ID and leaving a pointer stub (`status` unchanged, body replaced by a link) in the old place until the next release.
+Move a record between the hub and a repo, preserving its ID and leaving a pointer stub (`status` unchanged, body replaced by an `aimem show <project>:<id>` hint) in the old place. Reads resolve to the moved record, and `validate --project` never reports the stub as a duplicate; nothing removes it automatically.
+- Run it in the notebook that holds the record. `--to` is `hub` or a name from `repos:`. The target must be checked out (03 §7); an unknown, missing or unreadable target returns `USAGE`, and a target that already has the ID returns `INVALID_RECORD`.
+- The target gets the file unchanged at the same path; the stub gets `moved_to: hub|repo:<name>` and a new `updated`. Both notebooks regenerate `INDEX.md` and follow their own `write_policy`.
+- Reads prefer the moved record over the stub. Moving a stub again returns `USAGE`. Externally-owned records return `READONLY_EXTERNAL`.
+- JSON: `data = { ref, to, changed[], git, target: { changed[], git } }`.
 ### `aimem review`
 Interactive queue over records that need human attention: `trust: inferred`, unreviewed `trust: agent`, stale, possible duplicates. Per item: verify · edit+verify · skip · discard.
 ### `aimem discard <ref>`
@@ -264,7 +282,7 @@ aimem task status <ref> <status>
 
 | Command | Purpose |
 |---------|---------|
-| `aimem validate [--strict] [--fix] [--project]` | Run rules V001–V018 (03 §9). `--fix` first repairs safe issues — renames files that do not start with `<id>-` (V015; never overwrites), adds the missing half of a one-sided supersede link (V007), raises `updated` that is earlier than `created`, rewrites `\` to `/` in `project.yaml` `adapters.files` (03 §10; reported with code `paths`) — and reports them in `data.fixed` / `data.skipped`; it never deletes or resolves conflicts |
+| `aimem validate [--strict] [--fix] [--project]` | Run rules V001–V018 (03 §9). `--fix` first repairs safe issues — renames files that do not start with `<id>-` (V015; never overwrites), adds the missing half of a one-sided supersede link (V007), raises `updated` that is earlier than `created`, rewrites `\` to `/` in `project.yaml` `adapters.files` (03 §10; reported with code `paths`) — and reports them in `data.fixed` / `data.skipped`; it never deletes or resolves conflicts. `--project` also checks project-qualified refs against the hub and sibling notebooks (V006) and reports IDs that exist in more than one notebook (V005); notebooks that could not be read are listed in `unchecked` and refs only they could resolve are not reported |
 | `aimem index [--embeddings] [--rebuild]` | Regenerate `INDEX.md`; rebuild the lexical index and (re)compute embeddings; `--rebuild` discards the cache first. The only command that downloads the local model (prints name and size first, to `$AIMEM_HOME/models`). For `openai-compatible`, the key comes from `AIMEM_EMBEDDINGS_KEY`. `data.embeddings` reports `{available: false, reason}` (exit 0, warning) or `{available: true, provider, chunks, built, reused, removed, rebuilt, reason?, excluded[]}` |
 | `aimem stale [--mark]` | List stale records; `--mark` sets memory status to `stale` |
 | `aimem doctor` | Diagnose environment: git, remote access, server reachability, adapter presence, schema version, embedding provider/model status, and exactly what content would leave the machine. Read-only, no network; each check is `ok`/`warn`/`info` in `data.checks`; always exits 0 (use `validate --strict` as the CI gate) |
@@ -301,7 +319,7 @@ Error codes (stable) and their exit codes:
 | `SPEC_TOO_NEW` | 2 | `SYNC_FAILED`, `SOURCE_UNREACHABLE` | 4 |
 | | | `LLM_FAILED` (LLM provider missing, not logged in, timed out or failed; ADR-017) | 4 |
 
-`aimem validate`: with errors it fails with `INVALID_RECORD` and `error.details = {errors, warnings, issues}` (exit 2); otherwise `ok: true` with the same `data`, exit 1 under `--strict` if there are warnings, else 0.
+`aimem validate`: with errors it fails with `INVALID_RECORD` and `error.details = {errors, warnings, issues, unchecked?}` (exit 2); otherwise `ok: true` with the same `data`, exit 1 under `--strict` if there are warnings, else 0.
 
 ### Development-build freshness
 

@@ -6,8 +6,12 @@ import {
   applyWritePolicy,
   gitDiagnostics,
   type HandoffSections,
+  hookState,
+  INDEX_HOOKS,
+  isMultiRepo,
   loadIndex,
   loadProject,
+  loadProjectIndex,
   loadVectorCache,
   parseHandoffFile,
   readLiveState,
@@ -15,6 +19,7 @@ import {
   resolveAuthorWithGit,
   semanticForQuery,
   slugify,
+  sourceWarnings,
   summarizeNotebook,
   validateNotebook,
 } from "@aimem/core";
@@ -22,6 +27,7 @@ import { RECORD_TYPES, SPEC_VERSION, STATUSES } from "@aimem/schema";
 import type { CliDeps, CommandResult, GlobalOptions } from "../deps.js";
 import { developmentBuildCheck } from "./development-build.js";
 import { embeddingStatus, writeDeps } from "./embedder.js";
+import { sourceDeps } from "./sources.js";
 
 export interface HandoffOptions extends HandoffSections {
   task?: string;
@@ -146,6 +152,17 @@ export async function status(
     state.status === "unavailable"
       ? [`Team claims could not be checked (${state.reason}). Run aimem live once the connection is back.`]
       : [];
+  // Multi-repo projects (03 §7): which notebooks were readable, and how many records each has.
+  const project = isMultiRepo(nb) ? await loadProjectIndex(nb, sourceDeps(deps)) : undefined;
+  const sources = project?.sources.map((src) => ({
+    name: src.label ?? src.name,
+    kind: src.kind,
+    status: src.status,
+    ...(src.status === "ok"
+      ? { records: project.records.filter((r) => (r.notebook ?? "local") === (src.label ?? src.name)).length }
+      : { reason: src.reason }),
+  }));
+  if (project) warnings.push(...sourceWarnings(project));
   const lines = [`aimem — ${s.project} (${s.mode}, sync: ${s.sync}) · ${s.total} records`, "", "Counts:"];
   for (const t of RECORD_TYPES) {
     const c = s.counts[t];
@@ -186,7 +203,12 @@ export async function status(
           ? `Live claims: not checked (--no-live) · ${c.unsynced} unsynced`
           : `Live claims: unavailable, team claims could not be checked · ${c.unsynced} unsynced`,
   );
-  return { data: s, text: `${lines.join("\n")}\n`, warnings };
+  if (sources) {
+    lines.push(
+      `Sources: ${sources.map((src) => ("records" in src ? `${src.name} (${src.records})` : `${src.name} ${src.status}`)).join(" · ")}`,
+    );
+  }
+  return { data: sources ? { ...s, sources } : s, text: `${lines.join("\n")}\n`, warnings };
 }
 
 type Check = { name: string; status: "ok" | "warn" | "info"; detail: string };
@@ -265,6 +287,24 @@ export async function doctor(deps: CliDeps, g: GlobalOptions): Promise<CommandRe
     status: "info",
     detail: d.remotes.length ? `remotes: ${d.remotes.join(", ")}` : "no git remote (fine for solo use)",
   });
+  if (d.repo) {
+    // 07 §1 rule 5: without the driver, `merge=ours` is ignored and INDEX.md conflicts on merges.
+    const h = await hookState(deps.git, deps.fs, nb.root);
+    const ok = h.attribute && h.mergeDriver && h.installed.length === INDEX_HOOKS.length;
+    checks.push({
+      name: "index merge",
+      status: ok ? "ok" : "warn",
+      detail: ok
+        ? "INDEX.md merge=ours with merge.ours.driver, and hooks regenerate it after merges"
+        : `INDEX.md is not merge-safe (${[
+            h.attribute ? "" : "no .gitattributes entry",
+            h.mergeDriver ? "" : "merge.ours.driver not set",
+            h.installed.length === INDEX_HOOKS.length ? "" : "hooks missing",
+          ]
+            .filter(Boolean)
+            .join(", ")}); run aimem hooks install`,
+    });
+  }
   checks.push({
     name: "spec",
     status: "ok",
