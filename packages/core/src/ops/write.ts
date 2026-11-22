@@ -198,6 +198,8 @@ export interface AddInput {
   fields?: Record<string, unknown>;
   /** Skip the duplicate check. */
   force?: boolean;
+  /** `aimem adopt` drafts (08 §2.1 Phase C): `trust: inferred` whoever the author is. */
+  inferred?: boolean;
 }
 
 /** `aimem add` (04 §4). Nothing is written unless every check passes. */
@@ -251,7 +253,11 @@ export async function addRecord(
   // 03 §6 durable_requires_review: in team mode a human's decision/runbook/schema waits for a second
   // person's `aimem verify`, so it starts unreviewed like an agent record.
   const review = requiresReview(nb.config, input.type);
-  const trust = input.author.startsWith("human:") && !review ? "verified" : "agent";
+  const trust = input.inferred
+    ? "inferred"
+    : input.author.startsWith("human:") && !review
+      ? "verified"
+      : "agent";
   // 03 §7 rule 6: IDs are unique per project, so other notebooks' IDs are taken too.
   const project = isMultiRepo(nb)
     ? await loadProjectIndex(nb, { fs: deps.fs, ...(deps.cacheHome ? { cacheHome: deps.cacheHome } : {}) })
@@ -314,7 +320,7 @@ export async function addRecord(
   }
   const unknownRoles = (fields.roles as string[]).filter((r) => r !== "all" && !nb.config.roles.includes(r));
   if (unknownRoles.length) warnings.push(`unknown roles: ${unknownRoles.join(", ")} (V014)`);
-  if (review && input.author.startsWith("human:"))
+  if (review && input.author.startsWith("human:") && !input.inferred)
     warnings.push(
       `Awaiting verification by another teammate: ${input.type} records need a second person's review here; ask them to run aimem verify ${id}`,
     );

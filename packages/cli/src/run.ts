@@ -322,6 +322,8 @@ export async function run(argv: string[], outer: CliDeps): Promise<number> {
 
   cmd("adopt", "draft records from an existing project (08 §2); --dry-run lists them")
     .option("--dry-run", "list the candidates with their evidence; write nothing")
+    .option("--max-records <n>", "most new records in one run (default 40)", positiveInt)
+    .option("--author <who>", "human:<handle> or agent:<tool>; drafts stay trust: inferred")
     .option("--sources <list>", "comma-separated: readme,docs,adr,agents (git,prs,schema,ci arrive later)")
     .action(action("adopt", (g, _a, o) => adopt(deps, g, o)));
 
