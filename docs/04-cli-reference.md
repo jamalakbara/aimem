@@ -246,8 +246,10 @@ Move a record between the hub and a repo, preserving its ID and leaving a pointe
 - JSON: `data = { ref, to, changed[], git, target: { changed[], git } }`.
 ### `aimem review`
 Interactive queue over records that need human attention: `trust: inferred`, unreviewed `trust: agent`, stale, possible duplicates. Per item: verify · edit+verify · skip · discard.
+
+Status (22 §4.5): the queue holds local `inferred` records first, then unreviewed `agent` records, then stale ones (retired records and handoffs never need review; possible duplicates are not listed yet). On a terminal, each item shows its ref, type, status, trust, title, file, evidence and summary, then asks `(v)erify (e)dit+verify (s)kip (d)iscard (q)uit`; `e` opens `$VISUAL`/`$EDITOR` and verifies after it closes. Verifying and discarding are human-only: for an agent they are refused with a message and the item counts as skipped. With `--json`, or without a terminal, it only lists the queue: `data = { queue[{ref, type, status, trust, title, summary, file, author, created, evidence?, reasons[]}], counts{inferred, unreviewed, stale} }`.
 ### `aimem discard <ref>`
-Delete a record. Allowed **only** if it was never `verified` and nothing links to it (ADR-007 exception). Everything else is superseded.
+Delete a record. Allowed **only** if it was never `verified` and nothing links to it (ADR-007 exception). Humans only (`PERMISSION_DENIED` for agents and for verified records; `INVALID_RECORD` when another record links to it or supersedes it). The file is deleted and `INDEX.md` regenerated; commit the deletion yourself. JSON: `data = { ref, file, changed[], git }`. Everything else is superseded.
 
 ### `aimem handoff`
 ```

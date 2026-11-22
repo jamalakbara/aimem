@@ -454,6 +454,12 @@ export async function supersedeRecord(
     throw new AimemError("INVALID_RECORD", `a ${next.type} cannot supersede a ${old.type}`);
   if (!(STATUSES[old.type] as readonly string[]).includes("superseded"))
     throw new AimemError("INVALID_RECORD", `${old.type} records cannot be superseded`);
+  // 08 §2.2 rule 2: an unreviewed adopted draft cannot be the basis of an accepted decision.
+  if (next.type === "decision" && next.trust === "inferred" && next.status === "accepted")
+    throw new AimemError(
+      "USAGE",
+      `${next.id} is inferred (adopted, not reviewed); verify it before it supersedes an accepted decision`,
+    );
   const now = iso(deps.clock.now());
   const oldText = await loadText(deps, nb, old);
   const nextText = await loadText(deps, nb, next);
@@ -506,4 +512,43 @@ export async function verifyRecords(
     changed.push(rec.file);
   }
   return { refs: recs.map((r) => r.id), ...(await finish(deps, nb, changed)) };
+}
+
+/**
+ * `aimem discard` (04, 08 §2.1 Phase D): delete a record that was never verified and that no record
+ * links to — the one exception to "never delete" (ADR-007). Humans only.
+ */
+export async function discardRecord(
+  nb: Notebook,
+  ref: string,
+  author: string,
+  deps: WriteDeps,
+): Promise<{ ref: string; file: string; changed: string[]; warnings: string[] }> {
+  if (!AUTHOR_RE.test(author)) throw new AimemError("USAGE", `invalid author '${author}'`);
+  if (!author.startsWith("human:"))
+    throw new AimemError(
+      "PERMISSION_DENIED",
+      `only a human can discard records; ask a person on the team to run aimem discard ${ref}`,
+    );
+  const index = await loadIndex(nb, { fs: deps.fs });
+  const rec = find(nb, index, ref);
+  if (rec.trust === "verified" || rec.fm.verified !== undefined)
+    throw new AimemError(
+      "PERMISSION_DENIED",
+      `${rec.id} was verified; only never-verified records can be discarded (supersede it instead)`,
+    );
+  const linker = index.records.find(
+    (r) =>
+      r.id !== rec.id &&
+      (r.links.some((l) => l === rec.id || l.endsWith(`:${rec.id}`)) ||
+        r.fm.supersedes === rec.id ||
+        r.fm.superseded_by === rec.id),
+  );
+  if (linker)
+    throw new AimemError(
+      "INVALID_RECORD",
+      `${rec.id} is linked from ${linker.id}; supersede it instead of discarding it`,
+    );
+  await deps.fs.unlink(join(nb.root, rec.file));
+  return { ref: rec.id, file: rec.file, ...(await finish(deps, nb, [rec.file])) };
 }

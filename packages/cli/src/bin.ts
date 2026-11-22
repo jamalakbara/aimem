@@ -1,7 +1,9 @@
 #!/usr/bin/env node
+import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
+import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
 import {
   createLocalRanker,
@@ -74,6 +76,28 @@ process.exitCode = await run(process.argv.slice(2), {
     for await (const chunk of process.stdin) data += chunk;
     return data;
   },
+  // `aimem review` walks its queue only on a real terminal; pipes and agents get the list.
+  ...(process.stdin.isTTY && process.stdout.isTTY
+    ? {
+        prompt: async (question: string) => {
+          const rl = createInterface({ input: process.stdin, output: process.stdout });
+          try {
+            return await new Promise<string | undefined>((done) => {
+              rl.once("close", () => done(undefined));
+              rl.question(question, done);
+            });
+          } finally {
+            rl.close();
+          }
+        },
+        edit: async (file: string) => {
+          const editor =
+            process.env.VISUAL || process.env.EDITOR || (process.platform === "win32" ? "notepad" : "vi");
+          const r = spawnSync(editor, [file], { stdio: "inherit", shell: process.platform === "win32" });
+          if (r.status !== 0) throw new Error(`editor ${editor} exited with ${r.status ?? r.signal}`);
+        },
+      }
+    : {}),
   git,
   loadEmbedder,
   loadRanker,

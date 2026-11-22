@@ -185,8 +185,12 @@ export async function status(
   );
   lines.push("", `Stale or expired: ${s.stale.length}${s.stale.length ? " (aimem list --stale)" : ""}`);
   lines.push(
-    `Waiting for human review: ${s.unreviewed.agent} agent, ${s.unreviewed.inferred} inferred (aimem verify <ref>)`,
+    `Waiting for human review: ${s.unreviewed.agent} agent, ${s.unreviewed.inferred} inferred (aimem review)`,
   );
+  if (s.reviewDebt.length)
+    lines.push(
+      `Review debt: ${s.reviewDebt.length} inferred record${s.reviewDebt.length === 1 ? "" : "s"} unreviewed for more than 60 days (aimem review)`,
+    );
   if (s.problems) lines.push(`Unreadable files: ${s.problems} (aimem validate)`);
   lines.push(
     s.lastHandoff

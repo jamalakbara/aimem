@@ -97,6 +97,7 @@ export * from "./render/index-md.js";
 export * from "./retrieval/local-ranker.js";
 export * from "./retrieval/query.js";
 export * from "./retrieval/rewrite.js";
+export * from "./review/queue.js";
 export * from "./search/bm25.js";
 export * from "./search/search.js";
 export * from "./secrets/scan.js";

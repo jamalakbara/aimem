@@ -148,4 +148,14 @@ describe("adopt scan (M4.1)", () => {
     );
     expect(tabs?.body).not.toMatch(/Status: accepted/);
   });
+
+  it("summaries keep identifiers intact and drop only markup", async () => {
+    const { firstSentence } = await import("../src/index.js");
+    expect(firstSentence("A worker folds events in `scanned_at` order.")).toBe(
+      "A worker folds events in scanned_at order.",
+    );
+    expect(firstSentence("Use **Postgres** and _never_ log *raw* payloads.")).toBe(
+      "Use Postgres and never log raw payloads.",
+    );
+  });
 });

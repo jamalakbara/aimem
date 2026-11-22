@@ -23,6 +23,10 @@ export interface CliDeps {
   stderr: (s: string) => void;
   /** Whole standard input, for `--body -`. */
   stdin: () => Promise<string>;
+  /** Asks one question on an interactive terminal; `undefined` at end of input. Absent without a TTY (bin only). */
+  prompt?: (question: string) => Promise<string | undefined>;
+  /** Opens a file in the person's editor and resolves when it closes (`aimem review` e; bin only). */
+  edit?: (file: string) => Promise<void>;
   git: Git;
   /** Embedding provider when one is installed (the local model arrives in slice 2.4; tests inject a stub). */
   embedder?: EmbeddingProvider;

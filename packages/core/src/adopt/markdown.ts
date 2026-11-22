@@ -91,7 +91,11 @@ export function firstSentence(text: string): string {
     .split("\n")
     .map((l) => l.replace(/^\s*(?:[-*+]|\d+[.)])\s+/, "").trim())
     .join(" ")
-    .replace(/[*_`]/g, "");
+    // Strip markup, not identifiers: `scanned_at` keeps its underscore.
+    .replace(/`([^`]*)`/g, "$1")
+    .replace(/(\*\*|__)(.+?)\1/g, "$2")
+    .replace(/(^|[^\w*])\*([^*\n]+)\*(?![\w*])/g, "$1$2")
+    .replace(/(^|[^\w_])_([^_\n]+)_(?!\w)/g, "$1$2");
   const m = /^(.+?[.!?])(?:\s|$)/.exec(flat);
   const s = (m?.[1] ?? flat).trim();
   return s.length > 200 ? `${s.slice(0, 197).trimEnd()}…` : s;
