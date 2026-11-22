@@ -38,7 +38,7 @@ describe("write_policy.durable_requires_review (03 §6)", () => {
     const r = await addRecord(nb, decision("human:dana"), deps);
     expect(r.trust).toBe("agent");
     expect(r.warnings).toContain(
-      `decision records need review by another person in this notebook; ask a teammate to run aimem verify ${r.ref}`,
+      `Awaiting verification by another teammate: decision records need a second person's review here; ask them to run aimem verify ${r.ref}`,
     );
     await expect(verifyRecords(nb, [r.ref], "human:dana", deps)).rejects.toMatchObject({
       code: "PERMISSION_DENIED",
@@ -46,8 +46,7 @@ describe("write_policy.durable_requires_review (03 §6)", () => {
     });
     await expect(verifyRecords(nb, [r.ref], "agent:claude-code", deps)).rejects.toMatchObject({
       code: "PERMISSION_DENIED",
-      message:
-        "only a human author can verify records; a person runs aimem verify with AIMEM_AUTHOR=human:<handle> or git config user.name",
+      message: `only a human can verify records; ask a person on the team to run aimem verify ${r.ref}`,
     });
     await verifyRecords(nb, [r.ref], "human:rina", deps);
     expect(readFileSync(join(root, r.file), "utf8")).toContain("trust: verified");

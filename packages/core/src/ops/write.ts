@@ -316,7 +316,7 @@ export async function addRecord(
   if (unknownRoles.length) warnings.push(`unknown roles: ${unknownRoles.join(", ")} (V014)`);
   if (review && input.author.startsWith("human:"))
     warnings.push(
-      `${input.type} records need review by another person in this notebook; ask a teammate to run aimem verify ${id}`,
+      `Awaiting verification by another teammate: ${input.type} records need a second person's review here; ask them to run aimem verify ${id}`,
     );
   if (/\bTODO\b/.test(body)) warnings.push("body still contains TODO markers");
   if (summary.toLowerCase() === title.toLowerCase()) warnings.push("summary equals the title (V009)");
@@ -477,7 +477,7 @@ export async function verifyRecords(
   if (!author.startsWith("human:"))
     throw new AimemError(
       "PERMISSION_DENIED",
-      "only a human author can verify records; a person runs aimem verify with AIMEM_AUTHOR=human:<handle> or git config user.name",
+      `only a human can verify records; ask a person on the team to run aimem verify ${refs.length ? refs.join(" ") : "<ref>"}`,
     );
   if (!refs.length) throw new AimemError("USAGE", "give at least one record to verify");
   const index = await loadIndex(nb, { fs: deps.fs });
