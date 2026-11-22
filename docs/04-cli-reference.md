@@ -47,7 +47,7 @@ aimem adopt [--dry-run] [--since <date|tag>] [--sources readme,docs,adr,git,prs,
 ```
 Creates draft records with `trust: inferred`. `--dry-run` prints what would be created.
 
-Status (22 §4.1): only `--dry-run` is implemented; without it the command returns `USAGE`. The scan reads the project root of an initialized notebook, offline and deterministically, skipping `.git`, `.aimem`, `node_modules`, build output and files over 200 KB:
+Status (22 §4.1): only `--dry-run` is implemented; without it the command returns `USAGE`. The scan reads the project root of an initialized notebook, offline and deterministically, skipping `.git`, `.aimem`, `node_modules`, build output and files over 200 KB. Symlinks are never followed (a clone can link to files outside the repo); each one is listed in `skipped`:
 - `adr`: one `decision` per file in `docs/adr/`, `adr/`, `decisions/` (MADR or Nygard); ADR status maps to 03 statuses (unknown → `proposed`); body sections Context, Decision, Consequences.
 - `agents`: `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.github/copilot-instructions.md`, `.cursor/rules/**`: one `memory` per `##` section, verbatim, tags `adopted, imported`, kind `preference` or `howto`; the aimem managed block is ignored; Cursor `globs` become `paths`.
 - `readme`: a pinned "Project overview" `memory` from the README intro, plus how-to sections (install, setup, run, test, build, deploy, release, development).
