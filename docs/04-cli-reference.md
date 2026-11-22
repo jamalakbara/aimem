@@ -222,7 +222,7 @@ Set `trust: verified`, `verified: today`. Human authors only.
 ### `aimem link <ref> <ref>`
 Add a bidirectional link.
 ### `aimem move <ref> --to hub|<repo>`
-Move a record between the hub and a repo, preserving its ID and leaving a pointer stub (`status` unchanged, body replaced by a link) in the old place until the next release.
+Move a record between the hub and a repo, preserving its ID and leaving a pointer stub (`status` unchanged, body replaced by an `aimem show <project>:<id>` hint) in the old place. Reads resolve to the moved record, and `validate --project` never reports the stub as a duplicate; nothing removes it automatically.
 - Run it in the notebook that holds the record. `--to` is `hub` or a name from `repos:`. The target must be checked out (03 §7); an unknown, missing or unreadable target returns `USAGE`, and a target that already has the ID returns `INVALID_RECORD`.
 - The target gets the file unchanged at the same path; the stub gets `moved_to: hub|repo:<name>` and a new `updated`. Both notebooks regenerate `INDEX.md` and follow their own `write_policy`.
 - Reads prefer the moved record over the stub. Moving a stub again returns `USAGE`. Externally-owned records return `READONLY_EXTERNAL`.

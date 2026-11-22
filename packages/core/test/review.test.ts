@@ -42,6 +42,12 @@ describe("write_policy.durable_requires_review (03 §6)", () => {
     );
     await expect(verifyRecords(nb, [r.ref], "human:dana", deps)).rejects.toMatchObject({
       code: "PERMISSION_DENIED",
+      message: `${r.ref} needs review by someone other than its author (write_policy.durable_requires_review); ask a teammate to run aimem verify ${r.ref}`,
+    });
+    await expect(verifyRecords(nb, [r.ref], "agent:claude-code", deps)).rejects.toMatchObject({
+      code: "PERMISSION_DENIED",
+      message:
+        "only a human author can verify records; a person runs aimem verify with AIMEM_AUTHOR=human:<handle> or git config user.name",
     });
     await verifyRecords(nb, [r.ref], "human:rina", deps);
     expect(readFileSync(join(root, r.file), "utf8")).toContain("trust: verified");
@@ -51,6 +57,15 @@ describe("write_policy.durable_requires_review (03 §6)", () => {
       deps,
     );
     expect(memo.trust).toBe("verified");
+  });
+
+  it("explains a write_policy written as a single value instead of a section", async () => {
+    setConfig("write_policy: pr\n");
+    await expect(loadProject(nodeFs, root)).rejects.toMatchObject({
+      code: "INVALID_RECORD",
+      message:
+        "project.yaml: write_policy must be a section with nested keys, for example:\n  write_policy:\n    agent_commits: pr",
+    });
   });
 
   it("is off in solo mode and when set to false", async () => {

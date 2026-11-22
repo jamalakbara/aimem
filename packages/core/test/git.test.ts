@@ -248,6 +248,36 @@ describe("applyWritePolicy with real git", () => {
     });
   });
 
+  it("pr explains a missing git identity instead of echoing git", async () => {
+    const nb = await makeRepo();
+    nb.config.write_policy = { agent_commits: "pr" };
+    const r = await addRecord(nb, memory("Exports use semicolons"), deps);
+    const noIdentity: typeof git = {
+      ...git,
+      run: (args, cwd, o) =>
+        args[0] === "commit-tree"
+          ? Promise.resolve({
+              code: 128,
+              stdout: "",
+              stderr: "Author identity unknown\n\n*** Please tell me who you are.",
+            })
+          : git.run(args, cwd, o),
+    };
+    const p = await applyWritePolicy({
+      git: noIdentity,
+      nb,
+      author: "agent:claude-code",
+      files: r.changed,
+      message: "m",
+    });
+    expect(p).toEqual({
+      action: "staged",
+      warnings: [
+        "write_policy pr could not commit because Git has no author identity here (set git config user.name and user.email, then write again); changes were staged instead",
+      ],
+    });
+  });
+
   it("none and human authors leave git untouched", async () => {
     const nb = await makeRepo();
     const r = await addRecord(nb, memory("Exports use semicolons"), deps);
