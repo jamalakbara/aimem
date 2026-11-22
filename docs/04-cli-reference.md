@@ -47,8 +47,8 @@ aimem adopt [--dry-run] [--since <date|tag>] [--sources readme,docs,adr,git,prs,
 ```
 Creates draft records with `trust: inferred`. `--dry-run` prints what would be created.
 
-Status (22 §4.1–4.2): the README, docs, ADR and agent-instruction sources are implemented. The scan reads the project root of an initialized notebook, offline and deterministically, skipping `.git`, `.aimem`, `node_modules`, build output and files over 200 KB. Symlinks are never followed (a clone can link to files outside the repo); each one is listed in `skipped`:
-- `adr`: one `decision` per file in `docs/adr/`, `adr/`, `decisions/` (MADR or Nygard); ADR status maps to 03 statuses (unknown → `proposed`); body sections Context, Decision, Consequences.
+Status (22 §4.1–4.2): the README, docs, ADR and agent-instruction sources are implemented. The scan reads the project root of an initialized notebook, offline and deterministically, skipping `.git`, `.aimem`, `node_modules`, build output, binary files (a NUL byte) and files over 200 KB. Symlinks are never followed (a clone can link to files outside the repo); each one is listed in `skipped`:
+- `adr`: one `decision` per file in `docs/adr/`, `adr/`, `decisions/` (MADR or Nygard); ADR status maps to 03 statuses (unknown → `proposed`); body sections Context, Decision, Consequences (an ADR without those headings keeps its text as the Context).
 - `agents`: `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.github/copilot-instructions.md`, `.cursor/rules/**`: one `memory` per `##` section, verbatim, tags `adopted, imported`, kind `preference` or `howto`; the aimem managed block is ignored; Cursor `globs` become `paths`.
 - `readme`: a pinned "Project overview" `memory` from the README intro, plus how-to sections (install, setup, run, test, build, deploy, release, development).
 - `docs`: how-to sections from `docs/**` (outside ADR folders).
@@ -59,7 +59,7 @@ Without `--dry-run` the candidates are written in priority order (ADRs, agent-in
 - Every record is `trust: inferred` with tag `adopted` and `evidence`, whoever the author is (`--author`, else `AIMEM_AUTHOR`, else git `user.name`); it is never `verified` until a person runs `aimem verify`.
 - **Idempotent by evidence:** a candidate whose evidence set is already on a record is not written again. If that record's body differs from the source now, it is listed under "source changed" and left as it is.
 - `--max-records` (default 40) limits new records per run; the rest are counted and can be added by running again.
-- Not written, with the reason: a pinned overview when the notebook already has one, likely duplicates of existing records, and anything that fails a write check.
+- Not written, with the reason: a pinned overview when the notebook already has one, a draft whose title closely matches a current record that a person or agent wrote (drafts are told apart by evidence, not compared with each other), and anything that fails a write check.
 - `write_policy` applies once for the whole run (one commit or `aimem/*` branch, message `aimem: adopt N records`), and embeddings refresh once in the background.
 
 JSON: `data = { dryRun: false, sources[], written[{ref, file, type, title, source, evidence[]}], alreadyAdopted, sourceChanged[{ref, evidence[]}], held[{evidence, title, reason}], cut, skipped[], git }`.

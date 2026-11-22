@@ -124,4 +124,28 @@ describe("adopt scan (M4.1)", () => {
       ]);
     },
   );
+
+  it("skips binary files (QA finding 2)", async () => {
+    const d = copy();
+    writeFileSync(join(d, "docs/adr/0004-binary.md"), "# binary\n\u0000\u0001\u0002");
+    const r = await scanProject(nodeFs, d, { sources: ["adr"] });
+    expect(r.candidates.map((c) => c.title)).not.toContain("binary");
+    expect(r.skipped).toEqual([{ evidence: "docs/adr/0004-binary.md", reason: "binary file" }]);
+  });
+
+  it("keeps the text of an ADR without MADR or Nygard headings as its context (QA finding 3)", async () => {
+    const d = copy();
+    writeFileSync(
+      join(d, "docs/adr/0004-use-tabs.md"),
+      "# 4. Use tabs\n\nStatus: accepted\n\nWe use tabs because the linter enforces them. Spaces fail CI.\n",
+    );
+    const r = await scanProject(nodeFs, d, { sources: ["adr"] });
+    const tabs = r.candidates.find((c) => c.title === "Use tabs");
+    expect(tabs?.status).toBe("accepted");
+    expect(tabs?.summary).toBe("We use tabs because the linter enforces them.");
+    expect(tabs?.body).toMatch(
+      /^## Context\n\nWe use tabs because the linter enforces them\. Spaces fail CI\.\n\n## Decision\n\n_Not stated separately in docs\/adr\/0004-use-tabs\.md; see Context\._/,
+    );
+    expect(tabs?.body).not.toMatch(/Status: accepted/);
+  });
 });
