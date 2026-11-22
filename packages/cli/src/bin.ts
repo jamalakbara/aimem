@@ -16,6 +16,7 @@ import {
   loadLlmProvider,
   nodeFs,
   type ResolvedProject,
+  spawnDetached,
   systemClock,
 } from "@aimem/core";
 import { serveStdio } from "@aimem/mcp";
@@ -76,6 +77,8 @@ process.exitCode = await run(process.argv.slice(2), {
   git,
   loadEmbedder,
   loadRanker,
+  spawnBackground: (args, cwd) =>
+    spawnDetached(process.execPath, [fileURLToPath(import.meta.url), ...args], cwd),
   loadLlm: (config) => loadLlmProvider(config, { runner: execaRunner(), env: process.env }),
   // stdout carries the MCP protocol: nothing else may be printed while serving.
   serveMcp: () =>

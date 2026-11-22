@@ -201,6 +201,8 @@ Nonlocal providers do not build this vocabulary. Version-1 caches remain readabl
 with the prior behavior; run `index --embeddings` to activate vocabulary matching.
 Older CLIs reject version 2 and fall back lexically until their index rebuilds it.
 
+**Background refresh in the CLI (T1 follow-up):** loading the local model costs about 1.9 s per CLI process, so a CLI write no longer waits for it. When the refresh would need to load a model, the write returns, and `aimem index --embeddings --background` then runs as a detached, low-priority process. That process never downloads a model and runs once per notebook at a time: the lock in `.aimem/.cache/` is created atomically, a refresh that finds it held queues one more pass instead of starting a second process, and a lock whose process has exited (or that is older than 10 minutes) is taken over. Coverage briefly drops below 100% until it finishes (seconds); `doctor` shows it. `AIMEM_EMBED_SYNC=1` restores the in-write refresh. Writes with an embedder already in memory (the MCP server, or an injected test embedder) stay synchronous.
+
 **Incremental embeddings on write (T1):** every write (`add`/`decide`/`remember`/…, `update`, `supersede`, `verify`, `handoff`, and the MCP write tools) refreshes the cache right after re-rendering `INDEX.md`, embedding only new or changed chunks; untouched chunks keep their keys and vectors. It runs only when a cache built with the current provider already exists — a write never starts a cold build or downloads a model (that stays with `aimem index --embeddings`), and the CLI loads the model only when `meta.json` exists. A refresh failure never fails the write: the record is saved, a warning says `embeddings not updated: …`, and the next write or `index --embeddings` catches up. The MCP server keeps the loaded model for the session. `aimem doctor` reports `coverage N%` (records with vectors ÷ eligible records) and warns below 100%. `--json` write output is unchanged. Concurrent writers (CLI + MCP at the same moment) can drop one record's chunks (last atomic write wins); coverage shows it and the next write repairs it.
 
 ## 6. Hybrid scoring
@@ -526,7 +528,7 @@ Keys/tokens come from env vars or keychain, never from this file.
 
 | Metric | Target |
 |--------|--------|
-| Incremental embed after a record write (local) | < 1 s per record |
+| Incremental embed after a record write (local) | < 1 s per record (measured 2026-11-21, 4 vCPU: CLI write p50 590 ms / p95 701 ms with the background refresh; MCP write p50 416 ms / p95 508 ms after a one-time 2.9 s model load) |
 | Cold full build, 500 records, local small model | < 60 s (one-time; progress shown) |
 | Vector search, 10k chunks, flat cosine | < 100 ms |
 | `context` end-to-end warm (hybrid) | < 2 s for 500 records |

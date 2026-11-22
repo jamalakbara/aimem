@@ -13,7 +13,7 @@ Binary: `aimem`. Designed for two audiences: humans (interactive) and agents (no
 | `--offline` | Do not fetch/push or contact the server |
 | `--quiet` / `--verbose` | Log level |
 
-Environment: `AIMEM_TOKEN` (server token), `AIMEM_AUTHOR` (e.g. `agent:claude-code`), `AIMEM_SESSION` (claim session), `AIMEM_NONINTERACTIVE`, `AIMEM_HOME` (cache dir), `AIMEM_LIVE_TIMEOUT_MS` (limit for each fetch, push or ls-remote of `aimem-live`, default 10000).
+Environment: `AIMEM_TOKEN` (server token), `AIMEM_AUTHOR` (e.g. `agent:claude-code`), `AIMEM_SESSION` (claim session), `AIMEM_NONINTERACTIVE`, `AIMEM_HOME` (cache dir), `AIMEM_LIVE_TIMEOUT_MS` (limit for each fetch, push or ls-remote of `aimem-live`, default 10000), `AIMEM_EMBED_SYNC=1` (refresh vectors inside each write instead of in the background, 15 §13).
 
 Exit codes: `0` ok · `1` warnings (strict mode) / not found · `2` validation or usage error · `3` conflict (e.g. claim lost, likely duplicate) · `4` network/sync failure (operation may have partially applied — see message).
 

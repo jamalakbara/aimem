@@ -33,6 +33,10 @@ export interface CliDeps {
   loadRanker?: (
     allowDownload: boolean,
   ) => Promise<{ available: true; provider: LocalRanker } | { available: false; reason: string }>;
+  /** Starts `aimem <args>` detached, so a write does not wait for the embedding model (T1; bin only). */
+  spawnBackground?: (args: string[], cwd: string) => void;
+  /** Set by `run`: ask for a background vector refresh of a notebook once the command has finished. */
+  scheduleVectorRefresh?: (root: string) => void;
   /** Runs the MCP server on this process's stdio until the client disconnects (bin only). */
   serveMcp?: () => Promise<void>;
 }

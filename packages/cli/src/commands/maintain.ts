@@ -1,9 +1,11 @@
+import { join } from "node:path";
 import {
   buildVectorCache,
   exitCodeFor,
   fixNotebook,
   loadIndex,
   loadProject,
+  type Notebook,
   validateNotebook,
   validateProject,
   writeIndexMd,
@@ -70,9 +72,16 @@ export async function validateCmd(
 export async function indexCmd(
   deps: CliDeps,
   g: GlobalOptions,
-  o: { embeddings?: boolean; rebuild?: boolean; reranker?: boolean } = {},
+  o: {
+    embeddings?: boolean;
+    rebuild?: boolean;
+    reranker?: boolean;
+    background?: boolean;
+    noDownload?: boolean;
+  } = {},
 ): Promise<CommandResult> {
   const nb = await loadProject(deps.fs, g.dir);
+  if (o.background) return backgroundRefresh(deps, g, nb);
   const index = await loadIndex(nb, { fs: deps.fs });
   const written = await writeIndexMd(deps.fs, nb, index, deps.random);
   const lines = [
@@ -90,7 +99,7 @@ export async function indexCmd(
   }
   let embeddings: Record<string, unknown> | undefined;
   if (o.embeddings || o.rebuild) {
-    const status = await embeddingStatus(deps, nb, true);
+    const status = await embeddingStatus(deps, nb, !o.noDownload);
     if (!status.available) {
       embeddings = { available: false, reason: status.reason };
       warnings.push(`semantic search is off: ${status.reason}; keyword search still works`);
@@ -120,5 +129,105 @@ export async function indexCmd(
     },
     text: `${lines.join("\n")}\n`,
     warnings,
+  };
+}
+
+/** A lock older than this belongs to a crashed refresh and is ignored. */
+const LOCK_STALE_MS = 10 * 60_000;
+
+/** False only when the lock names a process that is known to be gone (same machine: `.cache` is local). */
+function lockOwnerAlive(content: string): boolean {
+  const pid = Number.parseInt(content, 10);
+  if (!Number.isInteger(pid) || pid <= 0) return true; // no pid: fall back to the lock's age
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (e) {
+    return (e as NodeJS.ErrnoException).code !== "ESRCH";
+  }
+}
+const MAX_PASSES = 10;
+
+/**
+ * `aimem index --embeddings --background` (T1): the refresh a CLI write starts. One run at a time per
+ * notebook: a run that finds a fresh lock leaves a `pending` marker, and the running one repeats
+ * once more for it. Never downloads a model.
+ */
+async function backgroundRefresh(deps: CliDeps, g: GlobalOptions, nb: Notebook): Promise<CommandResult> {
+  const cache = join(nb.dir, ".cache");
+  const lock = join(cache, "embed-refresh.lock");
+  const pending = join(cache, "embed-refresh.pending");
+  const exists = (p: string) =>
+    deps.fs.readFile(p).then(
+      () => true,
+      () => false,
+    );
+  const now = () => deps.clock.now();
+  const stamp = () => `${process.pid} ${now().toISOString()}`;
+  const lockAge = () =>
+    deps.fs.stat
+      ? deps.fs.stat(lock).then(
+          (s) => now().getTime() - s.mtimeMs,
+          () => undefined,
+        )
+      : Promise.resolve(undefined);
+  // Take the lock atomically (`wx`), so two refreshes started at once cannot both run.
+  // A lock whose process is gone, or older than LOCK_STALE_MS, belongs to a crashed run and is taken over.
+  const acquire = async (): Promise<boolean> => {
+    const exclusive = deps.fs.createExclusive?.bind(deps.fs);
+    const create = exclusive ? () => exclusive(lock, stamp()) : () => deps.fs.writeFile(lock, stamp());
+    try {
+      await create();
+      return true;
+    } catch {
+      const age = await lockAge();
+      const owner = await deps.fs.readFile(lock).catch(() => "");
+      if (age !== undefined && age < LOCK_STALE_MS && lockOwnerAlive(owner)) return false;
+      await deps.fs.unlink(lock).catch(() => undefined);
+      return create().then(
+        () => true,
+        () => false,
+      );
+    }
+  };
+  await deps.fs.mkdir(cache);
+  if (!deps.fs.createExclusive) {
+    const age = await lockAge();
+    if (age !== undefined && age < LOCK_STALE_MS) {
+      await deps.fs.writeFile(pending, "");
+      return { data: { queued: true }, text: "A vector refresh is already running; queued another pass.\n" };
+    }
+  }
+  if (!(await acquire())) {
+    await deps.fs.writeFile(pending, "");
+    // The running refresh may have released the lock after our check but before `pending` existed,
+    // and then nobody would pick it up: try once more.
+    if (!(await acquire()))
+      return { data: { queued: true }, text: "A vector refresh is already running; queued another pass.\n" };
+  }
+  let passes = 0;
+  let last: CommandResult | undefined;
+  // A write may queue a pass just as this run finishes, so look for `pending` again after the lock
+  // is released and take the lock back if needed. At most MAX_PASSES passes per run.
+  for (let held = true; ; held = await acquire()) {
+    if (!held) break; // another refresh took the lock; it will see `pending`
+    try {
+      do {
+        // Keep the lock fresh so a long run is never mistaken for a crashed one.
+        await deps.fs.writeFile(lock, stamp());
+        await deps.fs.unlink(pending).catch(() => undefined);
+        last = await indexCmd(deps, g, { embeddings: true, noDownload: true });
+        passes++;
+      } while (passes < MAX_PASSES && (await exists(pending)));
+    } finally {
+      await deps.fs.unlink(lock).catch(() => undefined);
+    }
+    if (passes >= MAX_PASSES || !(await exists(pending))) break;
+  }
+  if (!last)
+    return { data: { queued: true }, text: "A vector refresh is already running; queued another pass.\n" };
+  return {
+    ...(last as CommandResult),
+    data: { ...((last as CommandResult).data as Record<string, unknown>), passes },
   };
 }

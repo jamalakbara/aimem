@@ -1,5 +1,5 @@
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { setPriority, tmpdir } from "node:os";
 import { join } from "node:path";
 import { execa } from "execa";
 
@@ -61,4 +61,33 @@ export function execaRunner(): ProcessRunner {
       }
     },
   };
+}
+
+/**
+ * Start a program that outlives this process (e.g. the vector refresh after a CLI write, T1).
+ * Output is discarded and failures are ignored: the caller never waits for it.
+ */
+export function spawnDetached(command: string, args: string[], cwd: string): void {
+  try {
+    const child = execa(command, args, {
+      cwd,
+      detached: true,
+      stdio: "ignore",
+      windowsHide: true,
+      reject: false,
+      cleanup: false,
+    });
+    child.unref();
+    // Background work yields the CPU to the person's next command.
+    if (child.pid !== undefined) {
+      try {
+        setPriority(child.pid, 10);
+      } catch {
+        // Not permitted on some systems; the refresh still runs.
+      }
+    }
+    child.catch(() => undefined);
+  } catch {
+    // A refresh that cannot start is caught up by the next write or `aimem index --embeddings`.
+  }
 }
