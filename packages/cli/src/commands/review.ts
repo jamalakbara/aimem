@@ -83,7 +83,13 @@ export async function review(
           done.skipped++;
           continue;
         }
-        await deps.edit(join(nb.root, item.file));
+        try {
+          await deps.edit(join(nb.root, item.file));
+        } catch (e) {
+          say(`  editor failed (${e instanceof Error ? e.message : String(e)}); not verified`);
+          done.skipped++;
+          continue;
+        }
       }
       if (await tryDo(() => verifyRecords(nb, [item.ref], author, wdeps))) {
         say(`  verified ${item.ref}`);

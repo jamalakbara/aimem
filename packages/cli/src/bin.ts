@@ -91,10 +91,16 @@ process.exitCode = await run(process.argv.slice(2), {
           }
         },
         edit: async (file: string) => {
-          const editor =
+          // `$EDITOR` may carry arguments ("code --wait"); the file is its own argument, never passed
+          // through a shell.
+          const setting =
             process.env.VISUAL || process.env.EDITOR || (process.platform === "win32" ? "notepad" : "vi");
-          const r = spawnSync(editor, [file], { stdio: "inherit", shell: process.platform === "win32" });
-          if (r.status !== 0) throw new Error(`editor ${editor} exited with ${r.status ?? r.signal}`);
+          const [cmd = "vi", ...args] = (setting.match(/"[^"]*"|'[^']*'|\S+/g) ?? []).map((t) =>
+            t.replace(/^["']|["']$/g, ""),
+          );
+          const r = spawnSync(cmd, [...args, file], { stdio: "inherit" });
+          if (r.error) throw new Error(`could not start ${cmd}: ${r.error.message}`);
+          if (r.status !== 0) throw new Error(`editor ${cmd} exited with ${r.status ?? r.signal}`);
         },
       }
     : {}),

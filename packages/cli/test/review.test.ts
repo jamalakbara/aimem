@@ -81,6 +81,22 @@ describe("aimem review (M4.5)", () => {
     expect(r.stdout).toMatch(/Reviewed 1 of 2: 1 verified, 0 discarded, 0 skipped\./);
   });
 
+  it("an editor that fails leaves the record unverified and the walk goes on (QA 15)", async () => {
+    const [fold] = (await queue()).queue;
+    const r = await cli(["review", "--dir", dir], {
+      env: human,
+      random,
+      prompt: script(["e", "s"]).prompt,
+      edit: async () => {
+        throw new Error("editor vi exited with 1");
+      },
+    });
+    expect(r.code).toBe(0);
+    expect(r.stdout).toMatch(/editor failed \(editor vi exited with 1\); not verified/);
+    expect(readFileSync(join(dir, fold.file), "utf8")).toMatch(/trust: inferred/);
+    expect(r.stdout).toMatch(/Reviewed 2 of 2: 0 verified, 0 discarded, 2 skipped\./);
+  });
+
   it("an agent may skip but not verify or discard; each refusal is shown and the walk goes on", async () => {
     const r = await cli(["review", "--dir", dir], { env: agent, random, prompt: script(["v", "d"]).prompt });
     expect(r.code).toBe(0);
@@ -106,7 +122,10 @@ describe("aimem discard (M4.5)", () => {
     expect(no.json.error.code).toBe("PERMISSION_DENIED");
     const ok = await cli(["discard", pg.ref, "--json", "--dir", dir], { env: human, random });
     expect(ok.code).toBe(0);
-    expect(ok.json.data).toMatchObject({ ref: pg.ref, changed: [pg.file, ".aimem/INDEX.md"] });
+    expect(ok.json.data).toMatchObject({
+      ref: pg.ref,
+      changed: [pg.file, ".aimem/adopt-discarded", ".aimem/INDEX.md"],
+    });
     expect(existsSync(join(dir, pg.file))).toBe(false);
   });
 });

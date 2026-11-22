@@ -1,4 +1,4 @@
-import { cpSync, existsSync, mkdtempSync, rmSync } from "node:fs";
+import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -76,7 +76,7 @@ describe("aimem discard (M4.5)", () => {
     const q = reviewQueue(nb, await index(), now);
     const target = q.find((i) => i.title === "Use Postgres for parcel state");
     const r = await discardRecord(nb, String(target?.ref), "human:dana", deps);
-    expect(r.changed).toEqual([target?.file, ".aimem/INDEX.md"]);
+    expect(r.changed).toEqual([target?.file, ".aimem/adopt-discarded", ".aimem/INDEX.md"]);
     expect(existsSync(join(dir, String(target?.file)))).toBe(false);
     expect((await index()).records.some((x) => x.id === target?.ref)).toBe(false);
   });
@@ -131,6 +131,60 @@ describe("review debt and the supersede rule (08 §2.2)", () => {
     await expect(supersedeRecord(nb, own.ref, String(inferred?.ref), deps)).rejects.toMatchObject({
       code: "USAGE",
       message: `${inferred?.ref} is inferred (adopted, not reviewed); verify it before it supersedes an accepted decision`,
+    });
+  });
+});
+
+describe("discard safety from the QA plan (M4.5)", () => {
+  it("records a discarded draft so the next adopt does not bring it back (QA 7)", async () => {
+    const pg = reviewQueue(nb, await index(), now).find((i) => i.title === "Use Postgres for parcel state");
+    const r = await discardRecord(nb, String(pg?.ref), "human:dana", deps);
+    expect(r.changed).toContain(".aimem/adopt-discarded");
+    expect(readFileSync(join(dir, ".aimem/adopt-discarded"), "utf8")).toMatch(
+      /^docs\/adr\/0001-use-postgres\.md$/m,
+    );
+    const scan = await scanProject(nodeFs, dir, { sources: ["adr"] });
+    const again = await writeAdoptDrafts(nb, scan.candidates, { author: "agent:openbot-backend" }, deps);
+    expect(again.written).toEqual([]);
+    expect(again.discarded).toBe(1);
+  });
+
+  it("refuses a move stub and an externally owned record (QA 5)", async () => {
+    const q = reviewQueue(nb, await index(), now);
+    const stub = join(dir, String(q[0]?.file));
+    writeFileSync(
+      stub,
+      readFileSync(stub, "utf8").replace("trust: inferred", "trust: inferred\nmoved_to: hub"),
+    );
+    await expect(discardRecord(nb, String(q[0]?.ref), "human:dana", deps)).rejects.toMatchObject({
+      code: "INVALID_RECORD",
+      message: `${q[0]?.ref} is a pointer to a moved record; discard it where it lives now`,
+    });
+    const ext = join(dir, String(q[1]?.file));
+    writeFileSync(
+      ext,
+      readFileSync(ext, "utf8").replace(
+        "trust: inferred",
+        [
+          "trust: inferred",
+          "managed_by: external",
+          "source:",
+          "  system: google-doc",
+          "  id: doc-1",
+          "  url: https://docs.example.com/doc-1",
+          "  version: 1",
+          `  content_sha: "${"0".repeat(64)}"`,
+          "  synced_at: 2026-11-01T09:00:00Z",
+          "  imported_by: human:dana",
+          "  state: ok",
+        ].join("\n"),
+      ),
+    );
+    await expect(discardRecord(nb, String(q[1]?.ref), "human:dana", deps)).rejects.toMatchObject({
+      code: "READONLY_EXTERNAL",
+    });
+    await expect(discardRecord(nb, "../../etc/passwd", "human:dana", deps)).rejects.toMatchObject({
+      code: "NOT_FOUND",
     });
   });
 });

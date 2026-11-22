@@ -532,6 +532,16 @@ export async function discardRecord(
     );
   const index = await loadIndex(nb, { fs: deps.fs });
   const rec = find(nb, index, ref);
+  if (rec.fm.managed_by === "external")
+    throw new AimemError(
+      "READONLY_EXTERNAL",
+      `${rec.id} is owned by an external source; remove it there, or aimem detach it first`,
+    );
+  if (rec.fm.moved_to !== undefined)
+    throw new AimemError(
+      "INVALID_RECORD",
+      `${rec.id} is a pointer to a moved record; discard it where it lives now`,
+    );
   if (rec.trust === "verified" || rec.fm.verified !== undefined)
     throw new AimemError(
       "PERMISSION_DENIED",
@@ -549,6 +559,58 @@ export async function discardRecord(
       "INVALID_RECORD",
       `${rec.id} is linked from ${linker.id}; supersede it instead of discarding it`,
     );
+  // 03 §7: hub and sibling notebooks may link to this record with a project-qualified ref.
+  if (isMultiRepo(nb)) {
+    const project = await loadProjectIndex(nb, {
+      fs: deps.fs,
+      ...(deps.cacheHome ? { cacheHome: deps.cacheHome } : {}),
+    });
+    const global = `${nb.config.project}:${rec.id}`;
+    const far = project.records.find(
+      (r) =>
+        r.notebook &&
+        (r.links.includes(global) || r.fm.supersedes === global || r.fm.superseded_by === global),
+    );
+    if (far)
+      throw new AimemError(
+        "INVALID_RECORD",
+        `${rec.id} is linked from ${far.id} in ${far.notebook}; supersede it instead of discarding it`,
+      );
+  }
+  const changed = [rec.file];
+  // A discarded adopted draft must not come back on the next \`aimem adopt\` (QA, M4.5 plan item 7).
+  const evidence = Array.isArray(rec.fm.evidence) ? rec.fm.evidence.map(String) : [];
+  if (evidence.length) {
+    const path = join(nb.dir, ADOPT_DISCARDED_FILE);
+    const old = await deps.fs.readFile(path).catch(() => "");
+    const head = old ? "" : ADOPT_DISCARDED_HEADER;
+    await writeFileAtomic(deps.fs, path, `${old}${head}${discardedKey(evidence)}\n`, deps.random);
+    changed.push(`.aimem/${ADOPT_DISCARDED_FILE}`);
+  }
   await deps.fs.unlink(join(nb.root, rec.file));
-  return { ref: rec.id, file: rec.file, ...(await finish(deps, nb, [rec.file])) };
+  const done = await finish(deps, nb, changed);
+  return {
+    ref: rec.id,
+    file: rec.file,
+    changed: [rec.file, ...done.changed.filter((f) => f !== rec.file)],
+    warnings: done.warnings,
+  };
+}
+
+/** Evidence of adopted drafts a person discarded; \`aimem adopt\` skips them (tracked, like secretignore). */
+export const ADOPT_DISCARDED_FILE = "adopt-discarded";
+const ADOPT_DISCARDED_HEADER =
+  "# Evidence of adopted drafts that were discarded. aimem adopt skips these; delete a line to adopt it again.\n";
+/** One line per discarded draft: its evidence, sorted, comma-separated. */
+export const discardedKey = (evidence: readonly string[]) => [...evidence].sort().join(", ");
+
+/** Keys from \`.aimem/adopt-discarded\` (\`#\` starts a comment). */
+export async function loadDiscarded(fs: Fs, aimemDir: string): Promise<Set<string>> {
+  const text = await fs.readFile(join(aimemDir, ADOPT_DISCARDED_FILE)).catch(() => "");
+  return new Set(
+    text
+      .split("\n")
+      .map((l) => l.replace(/#.*/, "").trim())
+      .filter(Boolean),
+  );
 }

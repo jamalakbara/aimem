@@ -131,6 +131,11 @@ async function write(
       "",
       `${r.cut} more candidate${r.cut === 1 ? " was" : "s were"} left out by --max-records ${o.maxRecords ?? 40}; run aimem adopt again to add them, or raise the limit.`,
     );
+  if (r.discarded)
+    lines.push(
+      "",
+      `${r.discarded} candidate${r.discarded === 1 ? " was" : "s were"} discarded earlier (listed in .aimem/adopt-discarded; delete a line to adopt it again).`,
+    );
   if (r.held.length) {
     lines.push("", "Not written:");
     for (const h of r.held) lines.push(`  ${h.title} (${h.evidence}): ${h.reason}`);
@@ -153,6 +158,7 @@ async function write(
       sourceChanged: r.sourceChanged,
       held: r.held,
       cut: r.cut,
+      discarded: r.discarded,
       skipped: scan.skipped,
       git: policy.action,
     },
