@@ -46,8 +46,7 @@ describe("write_policy.durable_requires_review (03 §6)", () => {
     });
     await expect(verifyRecords(nb, [r.ref], "agent:claude-code", deps)).rejects.toMatchObject({
       code: "PERMISSION_DENIED",
-      message:
-        "only a human author can verify records; a person runs aimem verify with AIMEM_AUTHOR=human:<handle> or git config user.name",
+      message: `only a human can verify records; ask a person on the team to run aimem verify ${r.ref}`,
     });
     await verifyRecords(nb, [r.ref], "human:rina", deps);
     expect(readFileSync(join(root, r.file), "utf8")).toContain("trust: verified");

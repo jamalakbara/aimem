@@ -477,7 +477,7 @@ export async function verifyRecords(
   if (!author.startsWith("human:"))
     throw new AimemError(
       "PERMISSION_DENIED",
-      "only a human author can verify records; a person runs aimem verify with AIMEM_AUTHOR=human:<handle> or git config user.name",
+      `only a human can verify records; ask a person on the team to run aimem verify ${refs.length ? refs.join(" ") : "<ref>"}`,
     );
   if (!refs.length) throw new AimemError("USAGE", "give at least one record to verify");
   const index = await loadIndex(nb, { fs: deps.fs });
