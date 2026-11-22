@@ -119,9 +119,22 @@ function adrCandidate(path: string, text: string): AdoptCandidate {
   const context = pick(/context|problem/i);
   const decision = pick(/^decision|outcome/i);
   const consequences = pick(/consequence/i);
-  const missing = `_Not stated in ${path}._`;
+  // An ADR without recognised headings still carries its text: keep it as the context (QA, #88 review).
+  const loose =
+    context || decision || consequences
+      ? ""
+      : [
+          md.intro.replace(/^\s*(?:[-*]\s*)?(?:status|date):.*$/gim, "").trim(),
+          ...md.sections
+            .filter((s) => !/^(status|date)$/i.test(s.heading))
+            .map((s) => `### ${s.heading}\n\n${s.text}`),
+        ]
+          .filter(Boolean)
+          .join("\n\n")
+          .trim();
+  const missing = loose ? `_Not stated separately in ${path}; see Context._` : `_Not stated in ${path}._`;
   const body = [
-    `## Context\n\n${context || missing}`,
+    `## Context\n\n${context || loose || missing}`,
     `## Decision\n\n${decision || missing}`,
     `## Consequences\n\n${consequences || missing}`,
   ].join("\n\n");
@@ -129,7 +142,7 @@ function adrCandidate(path: string, text: string): AdoptCandidate {
     source: "adr",
     type: "decision",
     title,
-    summary: firstSentence(decision) || firstSentence(context) || title,
+    summary: firstSentence(decision) || firstSentence(context) || firstSentence(loose) || title,
     body,
     status,
     tags: ["adopted"],
@@ -257,6 +270,10 @@ export async function scanProject(fs: Fs, root: string, opts: ScanOptions = {}):
       const bytes = await fs.readBytes(join(root, path));
       if (bytes.byteLength > ADOPT_MAX_FILE_BYTES) {
         skipped.push({ evidence: path, reason: "file larger than 200 KB" });
+        continue;
+      }
+      if (bytes.includes(0)) {
+        skipped.push({ evidence: path, reason: "binary file" });
         continue;
       }
       const text = new TextDecoder().decode(bytes);

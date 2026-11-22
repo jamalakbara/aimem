@@ -134,4 +134,33 @@ describe("adopt drafts (M4.2)", () => {
     const rec = (await loadIndex(nb, { fs: nodeFs })).records.find((x) => x.id === style?.ref);
     expect(rec?.body).toMatch(/named exports only/);
   });
+
+  it("does not treat template-alike ADRs as duplicates of each other (QA finding 1)", async () => {
+    for (const t of ["postgres", "redis", "kafka", "nginx"])
+      writeFileSync(
+        join(dir, `docs/adr/adopt-${t}.md`),
+        `# Adopt ${t}\n\n* Status: accepted\n\n## Context and Problem Statement\n\nWe need a component for this job.\n\n## Decision Outcome\n\nChosen option: ${t}, because it fits our needs best.\n`,
+      );
+    const r = await adopt();
+    expect(r.written.filter((w) => w.title.startsWith("Adopt "))).toHaveLength(4);
+    expect(r.held).toEqual([]);
+  });
+
+  it("still holds a draft whose title matches a record a person or agent wrote", async () => {
+    const own = await addRecord(
+      nb,
+      {
+        type: "decision",
+        title: "Fold scans in a worker process",
+        summary: "Hand-written.",
+        body: "## Context\n\nx\n\n## Decision\n\ny\n\n## Consequences\n\nz",
+        author: "human:dana",
+      },
+      deps,
+    );
+    const r = await adopt();
+    expect(r.held.map((h) => h.reason)).toEqual([
+      `likely duplicate of ${own.ref} "Fold scans in a worker process"`,
+    ]);
+  });
 });
