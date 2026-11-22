@@ -21,7 +21,7 @@ Hybrid lexical + semantic retrieval (details in 15). Works fully offline: with a
 `task` text · `ref` (task) · `paths` (globs/files) · `role` · `budget_tokens` · working-tree signals (current branch name, `git diff --name-only`, `git status`) · live state.
 
 ### 2.2 Steps
-1. **Resolve sources**: local `.aimem/`, then hub, then sibling checkouts (03 §7). Record which are missing.
+1. **Resolve sources**: local `.aimem/`, then hub, then sibling checkouts (03 §7). Record which are missing. The header adds `> sources: local, hub, repo:frontend · missing: repo:infra` and JSON `header.sources`; records from other notebooks carry `[hub]` / `[repo:<name>]` and `notebook`. Missing sources and duplicate IDs are warnings.
 2. **Load index**: parse frontmatter of all records (cheap). Bodies are read lazily.
 3. **Filter**: drop `superseded`/`rejected`/`cancelled`/`done`/`retired` unless `--include-superseded` or linked from a selected record. Filter by `repo` (this repo or `all`).
 4. **Build query** = task text + branch-name tokens + ref'd task title/goal + tags from touched paths; embedded as a query vector when semantic search is on (15 §7).

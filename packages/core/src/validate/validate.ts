@@ -118,6 +118,8 @@ export function validateFiles(
   config: ResolvedProject,
   now: Date,
   secretIgnore: ReadonlySet<string> = new Set(),
+  /** IDs in the project's other notebooks (`validate --project`); unset means not checked. */
+  externalIds?: ReadonlySet<string>,
 ): Issue[] {
   const issues: Issue[] = [];
   const add = (
@@ -181,6 +183,9 @@ export function validateFiles(
     if (i < 0) return ref;
     return ref.slice(0, i) === config.project ? ref.slice(i + 1) : undefined;
   };
+  const multiRepo = Boolean(
+    (config.hub && config.scope !== "hub") || config.repos?.some((r) => r.name !== config.repo),
+  );
   const target = (ref: string | undefined) => (ref ? byId.get(local(ref) ?? "")?.[0] : undefined);
 
   // Pass 2: per-record rules.
@@ -200,7 +205,11 @@ export function validateFiles(
     ];
     for (const x of refs) {
       const id = local(x);
-      if (id !== undefined && !byId.has(id)) at("V006", `reference to unknown record ${x}`);
+      if (id === undefined || byId.has(id)) continue;
+      // 03 §7: a project-qualified ref may point to the hub or a sibling repo of a multi-repo project.
+      const qualified = x.includes(":");
+      if (qualified && multiRepo && (externalIds === undefined || externalIds.has(id))) continue;
+      at("V006", `reference to unknown record ${x}`);
     }
 
     const sup = target(str(fm.supersedes));

@@ -279,6 +279,13 @@ exports[`JSON Schema export (03 §10) > export is stable (contract snapshot) 1`]
         "minItems": 1,
         "type": "array",
       },
+      "scope": {
+        "enum": [
+          "repo",
+          "hub",
+        ],
+        "type": "string",
+      },
       "server": {
         "additionalProperties": {},
         "properties": {

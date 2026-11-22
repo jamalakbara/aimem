@@ -203,6 +203,7 @@ repos:                            # optional; the project's repos (for multi-rep
     url: git@github.com:acme/backend.git
   - name: infra
     url: git@github.com:acme/infra.git
+scope: repo                       # optional; `hub` in the hub notebook (set by `aimem hub init`)
 hub:                              # optional; central repo for cross-repo knowledge
   url: git@github.com:acme/project-hub.git
   path: .aimem                    # default
@@ -275,7 +276,10 @@ Rules:
 2. **Several repos, no hub:** each repo has `.aimem/` with the same `project:` slug and the `repos:` list. A record lives in exactly one repo; others refer to it by global ref.
 3. **Several repos + hub:** the hub repo contains the cross-repo records. Each repo sets `hub.url`. Rule of thumb: *affects one repo → that repo; affects several → hub.*
 4. The record's `repo:` field says where it applies (`all` for cross-repo).
-5. Resolution order: local → hub → sibling checkouts (`../<name>` or cache dir `~/.cache/aimem/<project>/<repo>`). Missing sources produce a warning, not an error.
+5. Resolution order: local → hub → sibling checkouts (`../<name>` or cache dir `~/.cache/aimem/<project>/<repo>`, `AIMEM_HOME` respected). The hub's folder name comes from `hub.url` (`acme/project-hub.git` → `project-hub`), or `hub.name` when set. Resolution reads existing checkouts only and never uses the network. Missing sources produce a warning, not an error. A checkout with another `project:`, or a hub without `scope: hub`, is skipped with a warning.
+   - Other notebooks are read-only. Read commands (`show`, `list`, `search`, `context`, `status` and the MCP read tools) see their records, labelled `[hub]` or `[repo:<name>]` and with `notebook` in JSON. Writes, claims and handoffs stay in this repo.
+   - When an ID exists in two notebooks, the first in resolution order wins and a warning names both.
+   - A project-qualified link (`<project>:<id>`) to another notebook is valid. Writes accept it when the record is found, or when a source could not be read. `validate` checks it only with `--project`.
 6. IDs are unique per **project**, not per repo; `validate --project` checks across reachable sources.
 
 ## 8. `INDEX.md` (generated)

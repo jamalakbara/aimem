@@ -34,6 +34,8 @@ export interface IndexedRecord {
   file: string;
   /** Original file text. */
   text: string;
+  /** Set when the record comes from another notebook of the project: `hub` or `repo:<name>` (03 §7). */
+  notebook?: string;
 }
 
 export interface IndexProblem {

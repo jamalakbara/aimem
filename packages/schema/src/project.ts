@@ -41,6 +41,8 @@ export const projectSchema = z.looseObject({
   mode: z.enum(["solo", "team", "team-realtime"]).optional(),
   sync: z.enum(["none", "git", "server"]).optional(),
   repo: z.string().optional(),
+  /** `hub` for a hub notebook created by `aimem hub init` (03 §7); member repos omit it. */
+  scope: z.enum(["repo", "hub"]).optional(),
   repos: z.array(z.looseObject({ name: z.string().min(1), url: z.string().optional() })).optional(),
   hub: z.looseObject({ url: z.string().min(1), path: z.string().optional() }).optional(),
   roles: z.array(z.string().min(1)).min(1).optional(),

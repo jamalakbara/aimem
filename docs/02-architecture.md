@@ -102,7 +102,7 @@ Durable records always go through git regardless of strategy.
 
 ## 7. Multi-repo resolution
 
-Order of lookup for a ref or search: (1) current repo `.aimem/`, (2) hub (if `hub:` set and available), (3) sibling repos listed in `repos:` that are checked out beside or cloned in cache. Missing sources are reported, never fatal. Details: 03 §7.
+Order of lookup for a ref or search: (1) current repo `.aimem/`, (2) hub (if `hub:` set and available), (3) sibling repos listed in `repos:` that are checked out beside or cloned in cache. Missing sources are reported, never fatal. Other notebooks are read-only and scored lexically (their records have no vectors in this repo's cache). Details: 03 §7.
 
 ## 8. Failure modes
 

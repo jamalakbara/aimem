@@ -1,0 +1,9 @@
+aimem: 1
+project: acme-shop
+name: shop-hub
+mode: solo
+sync: none
+roles: [dev, pm, qa, db, devops, analyst]
+adapters:
+  targets: []
+scope: hub
