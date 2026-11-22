@@ -345,7 +345,7 @@ After approval, implement 3.5a first. Each PR needs lint, typecheck, the full su
 
 ## 3.6 — Global refs across local, hub and sibling notebooks
 
-Status: approved with the recommended defaults below; 3.6a is implemented. The label field is named `notebook` because `source` already marks externally-owned records in briefings. 03 §7, 02 §7 and 06 §2.2 step 1 describe multi-repo projects: one `project:` slug shared by several repos, an optional hub repo for cross-repo records, and lookup in the order local → hub → siblings. The schema already accepts `repos:` and `hub:`, but nothing reads them. The M3 acceptance in 13 is: "briefing in repo A shows hub + sibling records and warns on missing ones."
+Status: approved with the recommended defaults below; 3.6a and 3.6b are implemented. The label field is named `notebook` because `source` already marks externally-owned records in briefings. 03 §7, 02 §7 and 06 §2.2 step 1 describe multi-repo projects: one `project:` slug shared by several repos, an optional hub repo for cross-repo records, and lookup in the order local → hub → siblings. The schema already accepts `repos:` and `hub:`, but nothing reads them. The M3 acceptance in 13 is: "briefing in repo A shows hub + sibling records and warns on missing ones."
 
 | PR | Scope | Acceptance evidence |
 |---|---|---|

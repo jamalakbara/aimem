@@ -80,7 +80,14 @@ describe("merged read-only index", () => {
     const dup = index.records.filter((r) => r.id === DUPLICATE);
     expect(dup).toHaveLength(1);
     expect(dup[0]?.notebook).toBeUndefined();
-    expect(index.duplicates).toEqual([{ id: DUPLICATE, kept: "local", skipped: "repo:frontend" }]);
+    expect(index.duplicates).toEqual([
+      {
+        id: DUPLICATE,
+        kept: "local",
+        skipped: "repo:frontend",
+        file: expect.stringContaining(".aimem/memory/"),
+      },
+    ]);
     expect(index.records.some((r) => r.notebook === "repo:frontend" && r.title.startsWith("Cart page"))).toBe(
       true,
     );

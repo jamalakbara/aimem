@@ -5,24 +5,36 @@ import {
   loadIndex,
   loadProject,
   validateNotebook,
+  validateProject,
   writeIndexMd,
 } from "@aimem/core";
 import type { CliDeps, CommandResult, GlobalOptions } from "../deps.js";
 import { embeddingStatus } from "./embedder.js";
+import { sourceDeps } from "./sources.js";
 
 export async function validateCmd(
   deps: CliDeps,
   g: GlobalOptions,
-  o: { strict?: boolean; fix?: boolean },
+  o: { strict?: boolean; fix?: boolean; project?: boolean },
 ): Promise<CommandResult> {
   const nb = await loadProject(deps.fs, g.dir);
   const fix = o.fix
     ? await fixNotebook(nb, { fs: deps.fs, clock: deps.clock, random: deps.random })
     : undefined;
-  const issues = await validateNotebook(nb, { fs: deps.fs, clock: deps.clock });
+  // --project (03 §7 rule 6): check refs and IDs across the hub and sibling notebooks too.
+  const checked = o.project
+    ? await validateProject(nb, { ...sourceDeps(deps), clock: deps.clock })
+    : { issues: await validateNotebook(nb, { fs: deps.fs, clock: deps.clock }), unchecked: [] as string[] };
+  const issues = checked.issues;
   const errors = issues.filter((i) => i.level === "error").length;
   const warnings = issues.length - errors;
-  const data = { errors, warnings, issues, ...(fix ? { fixed: fix.fixed, skipped: fix.skipped } : {}) };
+  const data = {
+    errors,
+    warnings,
+    issues,
+    ...(o.project ? { unchecked: checked.unchecked } : {}),
+    ...(fix ? { fixed: fix.fixed, skipped: fix.skipped } : {}),
+  };
   const fixLines = fix
     ? [
         ...fix.fixed.map((f) => `fixed ${f.code} ${f.file} — ${f.action}`),
@@ -39,7 +51,10 @@ export async function validateCmd(
     data,
     text,
     exitCode,
-    warnings: issues.filter((i) => i.level === "warn").map((i) => `${i.code} ${i.file}: ${i.message}`),
+    warnings: [
+      ...checked.unchecked.map((u) => `not checked: ${u} could not be read`),
+      ...issues.filter((i) => i.level === "warn").map((i) => `${i.code} ${i.file}: ${i.message}`),
+    ],
     ...(errors
       ? {
           failure: {

@@ -12,6 +12,7 @@ import {
 import { readNotebookFiles } from "../index/build.js";
 import type { Clock, Fs } from "../ports.js";
 import type { Notebook, ResolvedProject } from "../project/load.js";
+import { loadProjectIndex, type SourceDeps } from "../project/sources.js";
 import { parseRecordText } from "../records/text.js";
 import { loadSecretIgnore, scanSecrets } from "../secrets/scan.js";
 import { staticPrefix } from "../util/glob.js";
@@ -281,6 +282,40 @@ export function validateFiles(
 export async function validateNotebook(nb: Notebook, deps: { fs: Fs; clock: Clock }): Promise<Issue[]> {
   const inputs = await readNotebookFiles(nb, deps.fs);
   return validateFiles(inputs, nb.config, deps.clock.now(), await loadSecretIgnore(deps.fs, nb.dir));
+}
+
+/**
+ * `validate --project` (03 §7 rule 6): also check project-qualified refs against the hub and sibling
+ * notebooks, and report IDs that exist in more than one notebook (V005). Sources that could not be
+ * read are returned in `unchecked`; refs that only they could resolve are not reported.
+ */
+export async function validateProject(
+  nb: Notebook,
+  deps: { fs: Fs; clock: Clock } & SourceDeps,
+): Promise<{ issues: Issue[]; unchecked: string[] }> {
+  const project = await loadProjectIndex(nb, deps);
+  const unchecked = project.sources.filter((s) => s.status !== "ok").map((s) => s.label ?? s.name);
+  const externalIds = unchecked.length ? undefined : new Set(project.records.map((r) => r.id));
+  const inputs = await readNotebookFiles(nb, deps.fs);
+  const issues = validateFiles(
+    inputs,
+    nb.config,
+    deps.clock.now(),
+    await loadSecretIgnore(deps.fs, nb.dir),
+    externalIds,
+  );
+  for (const d of project.duplicates) {
+    const kept = project.records.find((r) => r.id === d.id && (r.notebook ?? "local") === d.kept);
+    const file = d.kept === "local" && kept ? kept.file : `${d.skipped}:${d.file}`;
+    issues.push({
+      code: "V005",
+      level: LEVELS.V005 ?? "error",
+      file,
+      ref: d.id,
+      message: `duplicate id ${d.id} across notebooks (${d.kept} and ${d.skipped})`,
+    });
+  }
+  return { issues, unchecked };
 }
 
 /** 03 §9: 0 ok, 1 warnings only (with --strict), 2 errors. */

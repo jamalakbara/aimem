@@ -117,7 +117,7 @@ export async function resolveSources(nb: Notebook, deps: SourceDeps): Promise<No
 export interface ProjectIndex extends NotebookIndex {
   sources: NotebookSource[];
   /** IDs found in more than one source; the first source in resolution order wins. */
-  duplicates: { id: string; kept: string; skipped: string }[];
+  duplicates: { id: string; kept: string; skipped: string; file: string }[];
 }
 
 /** True when `project.yaml` names a hub or other repos, so multi-source output applies. */
@@ -147,7 +147,7 @@ export async function loadProjectIndex(nb: Notebook, deps: SourceDeps): Promise<
     for (const r of other.records) {
       const kept = owner.get(r.id);
       if (kept) {
-        duplicates.push({ id: r.id, kept, skipped: source.label ?? source.name });
+        duplicates.push({ id: r.id, kept, skipped: source.label ?? source.name, file: r.file });
         continue;
       }
       owner.set(r.id, source.label ?? source.name);
