@@ -1,0 +1,7 @@
+---
+description: API conventions
+globs: src/api/**
+---
+# API conventions
+
+Return errors as `{ error: { code, message } }` with a stable `code`.

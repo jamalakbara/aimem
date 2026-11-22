@@ -47,6 +47,14 @@ aimem adopt [--dry-run] [--since <date|tag>] [--sources readme,docs,adr,git,prs,
 ```
 Creates draft records with `trust: inferred`. `--dry-run` prints what would be created.
 
+Status (22 §4.1): only `--dry-run` is implemented; without it the command returns `USAGE`. The scan reads the project root of an initialized notebook, offline and deterministically, skipping `.git`, `.aimem`, `node_modules`, build output and files over 200 KB:
+- `adr`: one `decision` per file in `docs/adr/`, `adr/`, `decisions/` (MADR or Nygard); ADR status maps to 03 statuses (unknown → `proposed`); body sections Context, Decision, Consequences.
+- `agents`: `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.github/copilot-instructions.md`, `.cursor/rules/**`: one `memory` per `##` section, verbatim, tags `adopted, imported`, kind `preference` or `howto`; the aimem managed block is ignored; Cursor `globs` become `paths`.
+- `readme`: a pinned "Project overview" `memory` from the README intro, plus how-to sections (install, setup, run, test, build, deploy, release, development).
+- `docs`: how-to sections from `docs/**` (outside ADR folders).
+
+Candidates whose body looks like a secret are dropped with a warning that names the file and line, never the value. `git`, `prs`, `schema` and `ci` are accepted and warn that they arrive in later slices. JSON: `data = { dryRun, sources[], counts{source: n}, candidates[{source, type, title, summary, status?, kind?, tags, paths?, evidence[]}], skipped[{evidence, reason}] }`.
+
 ### `aimem adapters`
 ```
 aimem adapters list
