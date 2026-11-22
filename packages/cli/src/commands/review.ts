@@ -67,7 +67,12 @@ export async function review(
     if (item.evidence) say(`  evidence: ${item.evidence.join(", ")}`);
     say(`  ${item.summary}`);
     say(`  needs review: ${item.reasons.join(", ")}`);
-    const answer = (await deps.prompt(QUESTION))?.trim().toLowerCase();
+    let answer: string | undefined;
+    for (;;) {
+      answer = (await deps.prompt(QUESTION))?.trim().toLowerCase();
+      if (answer === undefined || ["v", "e", "s", "d", "q"].includes(answer)) break;
+      say(`  unknown answer '${answer}'; use v, e, s, d or q`);
+    }
     if (answer === undefined || answer === "q") break;
     seen++;
     const wdeps = await writeDeps(deps, nb);
@@ -83,10 +88,20 @@ export async function review(
           done.skipped++;
           continue;
         }
+        const path = join(nb.root, item.file);
+        const original = await deps.fs.readFile(path);
         try {
-          await deps.edit(join(nb.root, item.file));
+          await deps.edit(path);
         } catch (e) {
           say(`  editor failed (${e instanceof Error ? e.message : String(e)}); not verified`);
+          done.skipped++;
+          continue;
+        }
+        // An edit that breaks the front matter must not leave a corrupt file behind.
+        const after = await loadIndex(nb, { fs: deps.fs });
+        if (!after.records.some((r) => r.id === item.ref && r.file === item.file)) {
+          await deps.fs.writeFile(path, original);
+          say("  the edit left an invalid record; restored the original, not verified");
           done.skipped++;
           continue;
         }

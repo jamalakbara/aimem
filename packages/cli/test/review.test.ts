@@ -1,4 +1,12 @@
-import { appendFileSync, cpSync, existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import {
+  appendFileSync,
+  cpSync,
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { cryptoRandom } from "@aimem/core";
@@ -95,6 +103,30 @@ describe("aimem review (M4.5)", () => {
     expect(r.stdout).toMatch(/editor failed \(editor vi exited with 1\); not verified/);
     expect(readFileSync(join(dir, fold.file), "utf8")).toMatch(/trust: inferred/);
     expect(r.stdout).toMatch(/Reviewed 2 of 2: 0 verified, 0 discarded, 2 skipped\./);
+  });
+
+  it("an edit that breaks the record is undone and nothing is verified (QA #90/#91 finding 1)", async () => {
+    const [fold] = (await queue()).queue;
+    const path = join(dir, fold.file);
+    const before = readFileSync(path, "utf8");
+    const r = await cli(["review", "--dir", dir], {
+      env: human,
+      random,
+      prompt: script(["e", "q"]).prompt,
+      edit: async (file: string) => writeFileSync(file, "---\nbroken: [\n---\nbody\n"),
+    });
+    expect(r.code).toBe(0);
+    expect(r.stdout).toMatch(/the edit left an invalid record; restored the original, not verified/);
+    expect(readFileSync(path, "utf8")).toBe(before);
+    expect((await cli(["validate", "--strict", "--dir", dir], { env: human, random })).code).toBe(0);
+  });
+
+  it("an unknown key asks again (QA finding 2)", async () => {
+    const s = script(["x", "s", "q"]);
+    const r = await cli(["review", "--dir", dir], { env: human, random, prompt: s.prompt });
+    expect(s.asked).toHaveLength(3);
+    expect(r.stdout).toMatch(/unknown answer 'x'; use v, e, s, d or q/);
+    expect(r.stdout).toMatch(/Reviewed 1 of 2: 0 verified, 0 discarded, 1 skipped\./);
   });
 
   it("an agent may skip but not verify or discard; each refusal is shown and the walk goes on", async () => {

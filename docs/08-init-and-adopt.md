@@ -77,6 +77,7 @@ The web app offers the same as a review queue.
 3. Anything inferred older than 60 days and still unreviewed is listed in `aimem status` as "review debt".
 4. `adopt` is idempotent: it matches existing records by `evidence` and never duplicates.
 5. `adopt --dry-run` is the recommended first run.
+6. In team mode `durable_requires_review` applies to adopted decisions, runbooks and schemas too: the person who ran `adopt` cannot verify them alone, so plan the review with a second teammate (or turn the setting off for a solo adoption).
 
 ### 2.3 Don't backfill everything
 After adoption, knowledge grows **where work happens**. Each agent session that touches an area adds what it learned. Old history is only imported if it still affects current work.
