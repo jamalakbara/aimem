@@ -83,6 +83,26 @@ describe("adopt git source (M4.3)", () => {
     expect(c).toBeTruthy();
   });
 
+  it("says when the project is a subfolder of a bigger repository, even without --sources git (QA finding 3)", async () => {
+    const sub = join(dir, "services/api");
+    cpSync(join(ADOPT_ME, ".aimem"), join(sub, ".aimem"), { recursive: true });
+    const r = await scanProject(nodeFs, sub, { git, now: new Date() });
+    expect(r.skipped).toContainEqual({
+      evidence: "git",
+      reason: "the project is not the root of its git repository (monorepo adoption is deferred)",
+    });
+  });
+
+  it("keeps commit subjects short in gotchas (QA finding 4)", async () => {
+    const long = `fix: ${"x".repeat(300)}`;
+    await commit("src/server.js", "a\n", long);
+    await commit("src/server.js", "b\n", long);
+    const r = await scanProject(nodeFs, dir, { sources: ["git"], git, now: new Date() });
+    const g = r.candidates.find((c) => c.title === "Gotchas in src/server.js");
+    for (const line of (g?.body ?? "").split("\n").filter((l) => l.startsWith("- ")))
+      expect(line.length).toBeLessThanOrEqual(140);
+  });
+
   it("skips quietly outside a git repository and respects --since", async () => {
     rmSync(join(dir, ".git"), { recursive: true, force: true });
     const r = await scanProject(nodeFs, dir, { sources: ["git"], git, now: new Date() });
