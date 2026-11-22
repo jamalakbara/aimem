@@ -454,6 +454,12 @@ export async function supersedeRecord(
     throw new AimemError("INVALID_RECORD", `a ${next.type} cannot supersede a ${old.type}`);
   if (!(STATUSES[old.type] as readonly string[]).includes("superseded"))
     throw new AimemError("INVALID_RECORD", `${old.type} records cannot be superseded`);
+  // 08 §2.2 rule 2: an unreviewed adopted draft cannot be the basis of an accepted decision.
+  if (next.type === "decision" && next.trust === "inferred" && next.status === "accepted")
+    throw new AimemError(
+      "USAGE",
+      `${next.id} is inferred (adopted, not reviewed); verify it before it supersedes an accepted decision`,
+    );
   const now = iso(deps.clock.now());
   const oldText = await loadText(deps, nb, old);
   const nextText = await loadText(deps, nb, next);
@@ -506,4 +512,105 @@ export async function verifyRecords(
     changed.push(rec.file);
   }
   return { refs: recs.map((r) => r.id), ...(await finish(deps, nb, changed)) };
+}
+
+/**
+ * `aimem discard` (04, 08 §2.1 Phase D): delete a record that was never verified and that no record
+ * links to — the one exception to "never delete" (ADR-007). Humans only.
+ */
+export async function discardRecord(
+  nb: Notebook,
+  ref: string,
+  author: string,
+  deps: WriteDeps,
+): Promise<{ ref: string; file: string; changed: string[]; warnings: string[] }> {
+  if (!AUTHOR_RE.test(author)) throw new AimemError("USAGE", `invalid author '${author}'`);
+  if (!author.startsWith("human:"))
+    throw new AimemError(
+      "PERMISSION_DENIED",
+      `only a human can discard records; ask a person on the team to run aimem discard ${ref}`,
+    );
+  const index = await loadIndex(nb, { fs: deps.fs });
+  const rec = find(nb, index, ref);
+  if (rec.fm.managed_by === "external")
+    throw new AimemError(
+      "READONLY_EXTERNAL",
+      `${rec.id} is owned by an external source; remove it there, or aimem detach it first`,
+    );
+  if (rec.fm.moved_to !== undefined)
+    throw new AimemError(
+      "INVALID_RECORD",
+      `${rec.id} is a pointer to a moved record; discard it where it lives now`,
+    );
+  if (rec.trust === "verified" || rec.fm.verified !== undefined)
+    throw new AimemError(
+      "PERMISSION_DENIED",
+      `${rec.id} was verified; only never-verified records can be discarded (supersede it instead)`,
+    );
+  const linker = index.records.find(
+    (r) =>
+      r.id !== rec.id &&
+      (r.links.some((l) => l === rec.id || l.endsWith(`:${rec.id}`)) ||
+        r.fm.supersedes === rec.id ||
+        r.fm.superseded_by === rec.id),
+  );
+  if (linker)
+    throw new AimemError(
+      "INVALID_RECORD",
+      `${rec.id} is linked from ${linker.id}; supersede it instead of discarding it`,
+    );
+  // 03 §7: hub and sibling notebooks may link to this record with a project-qualified ref.
+  if (isMultiRepo(nb)) {
+    const project = await loadProjectIndex(nb, {
+      fs: deps.fs,
+      ...(deps.cacheHome ? { cacheHome: deps.cacheHome } : {}),
+    });
+    const global = `${nb.config.project}:${rec.id}`;
+    const far = project.records.find(
+      (r) =>
+        r.notebook &&
+        (r.links.includes(global) || r.fm.supersedes === global || r.fm.superseded_by === global),
+    );
+    if (far)
+      throw new AimemError(
+        "INVALID_RECORD",
+        `${rec.id} is linked from ${far.id} in ${far.notebook}; supersede it instead of discarding it`,
+      );
+  }
+  const changed = [rec.file];
+  // A discarded adopted draft must not come back on the next \`aimem adopt\` (QA, M4.5 plan item 7).
+  const evidence = Array.isArray(rec.fm.evidence) ? rec.fm.evidence.map(String) : [];
+  if (evidence.length) {
+    const path = join(nb.dir, ADOPT_DISCARDED_FILE);
+    const old = await deps.fs.readFile(path).catch(() => "");
+    const head = old ? "" : ADOPT_DISCARDED_HEADER;
+    await writeFileAtomic(deps.fs, path, `${old}${head}${discardedKey(evidence)}\n`, deps.random);
+    changed.push(`.aimem/${ADOPT_DISCARDED_FILE}`);
+  }
+  await deps.fs.unlink(join(nb.root, rec.file));
+  const done = await finish(deps, nb, changed);
+  return {
+    ref: rec.id,
+    file: rec.file,
+    changed: [rec.file, ...done.changed.filter((f) => f !== rec.file)],
+    warnings: done.warnings,
+  };
+}
+
+/** Evidence of adopted drafts a person discarded; \`aimem adopt\` skips them (tracked, like secretignore). */
+export const ADOPT_DISCARDED_FILE = "adopt-discarded";
+const ADOPT_DISCARDED_HEADER =
+  "# Evidence of adopted drafts that were discarded. aimem adopt skips these; delete a line to adopt it again.\n";
+/** One line per discarded draft: its evidence, sorted, comma-separated. */
+export const discardedKey = (evidence: readonly string[]) => [...evidence].sort().join(", ");
+
+/** Keys from \`.aimem/adopt-discarded\` (\`#\` starts a comment). */
+export async function loadDiscarded(fs: Fs, aimemDir: string): Promise<Set<string>> {
+  const text = await fs.readFile(join(aimemDir, ADOPT_DISCARDED_FILE)).catch(() => "");
+  return new Set(
+    text
+      .split("\n")
+      .map((l) => l.replace(/#.*/, "").trim())
+      .filter(Boolean),
+  );
 }

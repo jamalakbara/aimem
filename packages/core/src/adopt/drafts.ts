@@ -1,6 +1,6 @@
 import { AimemError } from "../errors.js";
 import { loadIndex } from "../index/build.js";
-import { addRecord, type WriteDeps } from "../ops/write.js";
+import { addRecord, discardedKey, loadDiscarded, type WriteDeps } from "../ops/write.js";
 import type { Notebook } from "../project/load.js";
 import { tokenize } from "../search/bm25.js";
 import { RETIRED_STATUSES } from "../validate/validate.js";
@@ -40,6 +40,8 @@ export interface AdoptWriteResult {
   held: AdoptHeld[];
   /** New candidates left out by `maxRecords`. */
   cut: number;
+  /** Candidates a person discarded before (listed in `.aimem/adopt-discarded`). */
+  discarded: number;
   /** Every file written, relative to the notebook root. */
   changed: string[];
   warnings: string[];
@@ -95,11 +97,17 @@ export async function writeAdoptDrafts(
     sourceChanged: [],
     held: [],
     cut: 0,
+    discarded: 0,
     changed: [],
     warnings: [],
   };
   const changed = new Set<string>();
+  const discarded = await loadDiscarded(deps.fs, nb.dir);
   for (const c of candidates) {
+    if (discarded.has(discardedKey(c.evidence))) {
+      result.discarded++;
+      continue;
+    }
     const existing = byEvidence.get(evidenceKey(c.evidence));
     if (existing) {
       result.alreadyAdopted++;

@@ -12,6 +12,7 @@ import { init } from "./commands/init.js";
 import { indexCmd, validateCmd } from "./commands/maintain.js";
 import { move } from "./commands/move.js";
 import { list, searchCmd, show } from "./commands/read.js";
+import { discard, review } from "./commands/review.js";
 import { doctor, type HandoffOptions, handoff, status } from "./commands/session.js";
 import { liveClaims, taskClaim, taskHeartbeat, taskRelease } from "./commands/task.js";
 import { usageRecord } from "./commands/usage.js";
@@ -326,6 +327,14 @@ export async function run(argv: string[], outer: CliDeps): Promise<number> {
     .option("--author <who>", "human:<handle> or agent:<tool>; drafts stay trust: inferred")
     .option("--sources <list>", "comma-separated: readme,docs,adr,agents (git,prs,schema,ci arrive later)")
     .action(action("adopt", (g, _a, o) => adopt(deps, g, o)));
+
+  cmd("review", "walk the records that need a person: inferred, unreviewed agent, stale")
+    .option("--author <who>", "human:<handle>; verifying and discarding are human-only")
+    .action(action("review", (g, _a, o) => review(deps, g, { ...o, json: jsonMode })));
+
+  cmd("discard <ref>", "delete a never-verified record that nothing links to (humans only)")
+    .option("--author <who>", "human:<handle>")
+    .action(action("discard", (g, args, o) => discard(deps, g, String(args[0]), o)));
 
   cmd("validate", "check records against rules V001–V018")
     .option("--strict", "exit 1 on warnings")

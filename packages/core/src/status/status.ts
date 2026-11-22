@@ -2,6 +2,7 @@ import { RECORD_TYPES } from "@aimem/schema";
 import { type LiveState, summarizeLiveState } from "../claims/session.js";
 import type { IndexedRecord, NotebookIndex } from "../index/build.js";
 import type { Notebook } from "../project/load.js";
+import { reviewDebt } from "../review/queue.js";
 import { HIDDEN_STATUSES } from "../search/search.js";
 import { freshnessOf, RETIRED_STATUSES } from "../validate/validate.js";
 
@@ -63,6 +64,8 @@ export function summarizeNotebook(
       agent: current.filter((r) => r.trust === "agent").length,
       inferred: current.filter((r) => r.trust === "inferred").length,
     },
+    /** Inferred records unreviewed for more than 60 days (08 §2.2 rule 3). */
+    reviewDebt: reviewDebt(recs, now).sort(byId).map(meta),
     problems: index.problems.length,
     lastHandoff: last
       ? { ref: last.id, created: last.created, author: last.author, summary: last.summary }
