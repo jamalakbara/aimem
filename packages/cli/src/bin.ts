@@ -94,8 +94,10 @@ process.exitCode = await run(process.argv.slice(2), {
         edit: async (file: string) => {
           // `$EDITOR` may carry arguments ("code --wait"); the file is its own argument, never passed
           // through a shell.
-          const setting =
-            process.env.VISUAL || process.env.EDITOR || (process.platform === "win32" ? "notepad" : "vi");
+          const fallback = process.platform === "win32" ? "notepad" : "vi";
+          if (!process.env.VISUAL && !process.env.EDITOR)
+            process.stderr.write(`aimem: $VISUAL and $EDITOR are not set; opening ${fallback}\n`);
+          const setting = process.env.VISUAL || process.env.EDITOR || fallback;
           const [cmd = "vi", ...args] = (setting.match(/"[^"]*"|'[^']*'|\S+/g) ?? []).map((t) =>
             t.replace(/^["']|["']$/g, ""),
           );
