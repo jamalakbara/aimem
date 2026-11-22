@@ -73,6 +73,8 @@ Solo level (M0–M2) is the first usable product and the fastest way to learn wh
 - `adopt-me` fixture yields ≤ 40 records, all `inferred`, with evidence; second run adds nothing.
 - Author adopts one real running project and verifies/discards the drafts in < 1 hour.
 
+**Status (2026-11-22):** every deliverable is implemented (22 §4.1–4.5) and the first acceptance item passes on `adopt-me` (16 inferred records with evidence; a second run adds nothing). The second item needs the owner: adopt one real project and time the review.
+
 ## M4b — Connectors: upload and Google (S–M)
 **Deliverables**
 - Ownership model (`managed_by`, `source`), V017/V018, `READONLY_EXTERNAL`, `detach`.

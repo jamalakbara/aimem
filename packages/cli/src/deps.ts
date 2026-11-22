@@ -28,6 +28,8 @@ export interface CliDeps {
   /** Opens a file in the person's editor and resolves when it closes (`aimem review` e; bin only). */
   edit?: (file: string) => Promise<void>;
   git: Git;
+  /** Runs the GitHub CLI in a directory, for \`adopt --sources prs\` (bin only; tests inject a fake). */
+  gh?: (args: string[], cwd: string) => Promise<{ code: number; stdout: string; stderr: string }>;
   /** Embedding provider when one is installed (the local model arrives in slice 2.4; tests inject a stub). */
   embedder?: EmbeddingProvider;
   /** Loads the configured provider (local model or remote endpoint). Only `index --embeddings` may download. */

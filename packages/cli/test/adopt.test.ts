@@ -38,7 +38,7 @@ describe("aimem adopt --dry-run (M4.1)", () => {
     expect(r.code).toBe(0);
     expect(Object.keys(r.json.data)).toEqual(["dryRun", "sources", "counts", "candidates", "skipped"]);
     expect(r.json.data.dryRun).toBe(true);
-    expect(r.json.data.sources).toEqual(["adr", "agents", "readme", "ci", "schema", "docs"]);
+    expect(r.json.data.sources).toEqual(["adr", "agents", "readme", "ci", "schema", "git", "docs"]);
     expect(r.json.data.counts).toEqual({ adr: 3, agents: 5, readme: 5, ci: 1, schema: 1, docs: 1 });
     expect(r.json.data.candidates[0]).toEqual({
       source: "adr",
@@ -54,10 +54,11 @@ describe("aimem adopt --dry-run (M4.1)", () => {
   });
 
   it("--sources limits the scan; later-slice sources warn", async () => {
-    const r = await cli(["adopt", "--dry-run", "--sources", "adr,git", "--json", "--dir", dir]);
+    const r = await cli(["adopt", "--dry-run", "--sources", "adr,prs", "--json", "--dir", dir]);
     expect(r.code).toBe(0);
     expect(r.json.data.counts).toEqual({ adr: 3 });
-    expect(r.json.warnings).toEqual(["source git is not implemented yet (later M4 slices); skipped"]);
+    expect(r.json.data.sources).toEqual(["adr", "prs"]);
+    expect(r.json.warnings).toEqual(["skipped prs: gh is not available"]);
   });
 
   it("rejects unknown sources", async () => {
