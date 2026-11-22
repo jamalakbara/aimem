@@ -218,8 +218,8 @@ members:                          # used by web app / server for role views and 
     roles: [dev]
 
 write_policy:
-  agent_commits: stage            # none | stage | commit | pr
-  durable_requires_review: true   # decisions/runbooks/schema need review before trust=verified
+  agent_commits: stage            # none | stage | commit | pr (pr = commit to branch aimem/<ref>)
+  durable_requires_review: true   # decisions/runbooks/schema start trust=agent and need another person's aimem verify
   live_push: auto                 # auto | manual
 
 freshness_days:                   # per-type staleness windows

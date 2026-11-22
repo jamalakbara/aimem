@@ -29,6 +29,7 @@ import { tokenize } from "../search/bm25.js";
 import { HIDDEN_STATUSES } from "../search/search.js";
 import { scanSecrets } from "../secrets/scan.js";
 import { RETIRED_STATUSES } from "../validate/validate.js";
+import { requiresReview } from "./policy.js";
 
 export interface WriteDeps {
   fs: Fs;
@@ -245,7 +246,10 @@ export async function addRecord(
       throw new AimemError("INVALID_RECORD", `${old.type} records cannot be superseded`);
   }
 
-  const trust = input.author.startsWith("human:") ? "verified" : "agent";
+  // 03 §6 durable_requires_review: in team mode a human's decision/runbook/schema waits for a second
+  // person's `aimem verify`, so it starts unreviewed like an agent record.
+  const review = requiresReview(nb.config, input.type);
+  const trust = input.author.startsWith("human:") && !review ? "verified" : "agent";
   const id = newUniqueId(input.type, deps.random, new Set(index.records.map((r) => r.id)));
   const fields: Record<string, unknown> = {
     aimem: 1,
@@ -286,6 +290,10 @@ export async function addRecord(
   }
   const unknownRoles = (fields.roles as string[]).filter((r) => r !== "all" && !nb.config.roles.includes(r));
   if (unknownRoles.length) warnings.push(`unknown roles: ${unknownRoles.join(", ")} (V014)`);
+  if (review && input.author.startsWith("human:"))
+    warnings.push(
+      `${input.type} records need review by another person in this notebook; ask a teammate to run aimem verify ${id}`,
+    );
   if (/\bTODO\b/.test(body)) warnings.push("body still contains TODO markers");
   if (summary.toLowerCase() === title.toLowerCase()) warnings.push("summary equals the title (V009)");
 
@@ -447,6 +455,13 @@ export async function verifyRecords(
   if (!refs.length) throw new AimemError("USAGE", "give at least one record to verify");
   const index = await loadIndex(nb, { fs: deps.fs });
   const recs = refs.map((r) => find(nb, index, r));
+  for (const rec of recs) {
+    if (requiresReview(nb.config, rec.type) && rec.author === author)
+      throw new AimemError(
+        "PERMISSION_DENIED",
+        `${rec.id} needs review by someone other than its author (write_policy.durable_requires_review)`,
+      );
+  }
   const now = deps.clock.now();
   const changed: string[] = [];
   for (const rec of recs) {
