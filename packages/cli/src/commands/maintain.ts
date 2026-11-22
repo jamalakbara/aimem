@@ -119,6 +119,18 @@ export async function indexCmd(
 
 /** A lock older than this belongs to a crashed refresh and is ignored. */
 const LOCK_STALE_MS = 10 * 60_000;
+
+/** False only when the lock names a process that is known to be gone (same machine: `.cache` is local). */
+function lockOwnerAlive(content: string): boolean {
+  const pid = Number.parseInt(content, 10);
+  if (!Number.isInteger(pid) || pid <= 0) return true; // no pid: fall back to the lock's age
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (e) {
+    return (e as NodeJS.ErrnoException).code !== "ESRCH";
+  }
+}
 const MAX_PASSES = 10;
 
 /**
@@ -135,23 +147,59 @@ async function backgroundRefresh(deps: CliDeps, g: GlobalOptions, nb: Notebook):
       () => true,
       () => false,
     );
-  const age = await deps.fs.stat?.(lock).then(
-    (s) => deps.clock.now().getTime() - s.mtimeMs,
-    () => undefined,
-  );
-  if (age !== undefined && age < LOCK_STALE_MS) {
-    await deps.fs.writeFile(pending, "");
-    return { data: { queued: true }, text: "A vector refresh is already running; queued another pass.\n" };
-  }
+  const now = () => deps.clock.now();
+  const stamp = () => `${process.pid} ${now().toISOString()}`;
+  const lockAge = () =>
+    deps.fs.stat
+      ? deps.fs.stat(lock).then(
+          (s) => now().getTime() - s.mtimeMs,
+          () => undefined,
+        )
+      : Promise.resolve(undefined);
+  // Take the lock atomically (`wx`), so two refreshes started at once cannot both run.
+  // A lock whose process is gone, or older than LOCK_STALE_MS, belongs to a crashed run and is taken over.
+  const acquire = async (): Promise<boolean> => {
+    const exclusive = deps.fs.createExclusive?.bind(deps.fs);
+    const create = exclusive ? () => exclusive(lock, stamp()) : () => deps.fs.writeFile(lock, stamp());
+    try {
+      await create();
+      return true;
+    } catch {
+      const age = await lockAge();
+      const owner = await deps.fs.readFile(lock).catch(() => "");
+      if (age !== undefined && age < LOCK_STALE_MS && lockOwnerAlive(owner)) return false;
+      await deps.fs.unlink(lock).catch(() => undefined);
+      return create().then(
+        () => true,
+        () => false,
+      );
+    }
+  };
   await deps.fs.mkdir(cache);
+  if (!deps.fs.createExclusive) {
+    const age = await lockAge();
+    if (age !== undefined && age < LOCK_STALE_MS) {
+      await deps.fs.writeFile(pending, "");
+      return { data: { queued: true }, text: "A vector refresh is already running; queued another pass.\n" };
+    }
+  }
+  if (!(await acquire())) {
+    await deps.fs.writeFile(pending, "");
+    // The running refresh may have released the lock after our check but before `pending` existed,
+    // and then nobody would pick it up: try once more.
+    if (!(await acquire()))
+      return { data: { queued: true }, text: "A vector refresh is already running; queued another pass.\n" };
+  }
   let passes = 0;
   let last: CommandResult | undefined;
   // A write may queue a pass just as this run finishes, so look for `pending` again after the lock
   // is released and take the lock back if needed. At most MAX_PASSES passes per run.
-  for (;;) {
-    await deps.fs.writeFile(lock, deps.clock.now().toISOString());
+  for (let held = true; ; held = await acquire()) {
+    if (!held) break; // another refresh took the lock; it will see `pending`
     try {
       do {
+        // Keep the lock fresh so a long run is never mistaken for a crashed one.
+        await deps.fs.writeFile(lock, stamp());
         await deps.fs.unlink(pending).catch(() => undefined);
         last = await indexCmd(deps, g, { embeddings: true, noDownload: true });
         passes++;
@@ -161,6 +209,8 @@ async function backgroundRefresh(deps: CliDeps, g: GlobalOptions, nb: Notebook):
     }
     if (passes >= MAX_PASSES || !(await exists(pending))) break;
   }
+  if (!last)
+    return { data: { queued: true }, text: "A vector refresh is already running; queued another pass.\n" };
   return {
     ...(last as CommandResult),
     data: { ...((last as CommandResult).data as Record<string, unknown>), passes },

@@ -9,6 +9,8 @@ export interface Fs {
   appendFile?(path: string, data: string): Promise<void>;
   readFile(path: string): Promise<string>;
   writeFile(path: string, data: string | Uint8Array): Promise<void>;
+  /** Creates the file only if it does not exist yet (atomic); rejects with EEXIST otherwise. */
+  createExclusive?(path: string, data: string): Promise<void>;
   readBytes(path: string): Promise<Uint8Array>;
   rename(from: string, to: string): Promise<void>;
   unlink(path: string): Promise<void>;
@@ -33,6 +35,7 @@ export const nodeFs: Fs = {
   appendFile: (p, d) => appendFile(p, d, "utf8"),
   readFile: (p) => readFile(p, "utf8"),
   writeFile: (p, d) => (typeof d === "string" ? writeFile(p, d, "utf8") : writeFile(p, d)),
+  createExclusive: (p, d) => writeFile(p, d, { encoding: "utf8", flag: "wx" }),
   readBytes: async (p) => new Uint8Array(await readFile(p)),
   rename: (a, b) => rename(a, b),
   unlink: (p) => unlink(p),
