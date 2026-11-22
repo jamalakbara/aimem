@@ -1,3 +1,4 @@
+import { join } from "node:path";
 import {
   ADOPT_SOURCES,
   type AdoptCandidate,
@@ -5,8 +6,10 @@ import {
   AimemError,
   applyWritePolicy,
   IMPLEMENTED_SOURCES,
+  loadIndex,
   loadProject,
   loadSecretIgnore,
+  pendingCandidates,
   resolveAuthorWithGit,
   scanProject,
   writeAdoptDrafts,
@@ -34,7 +37,7 @@ const summary = (c: AdoptCandidate) => ({
 export async function adopt(
   deps: CliDeps,
   g: GlobalOptions,
-  o: { dryRun?: boolean; sources?: string; maxRecords?: number; author?: string },
+  o: { dryRun?: boolean; agentPlan?: boolean; sources?: string; maxRecords?: number; author?: string },
 ): Promise<CommandResult> {
   const requested = o.sources
     ?.split(",")
@@ -43,6 +46,8 @@ export async function adopt(
   for (const s of requested ?? [])
     if (!(ADOPT_SOURCES as readonly string[]).includes(s))
       throw new AimemError("USAGE", `unknown source '${s}'; use ${ADOPT_SOURCES.join(", ")}`);
+  if (o.dryRun && o.agentPlan)
+    throw new AimemError("USAGE", "use either --dry-run or --agent-plan, not both");
   const nb = await loadProject(deps.fs, g.dir);
   const warnings = (requested ?? [])
     .filter((s) => !IMPLEMENTED_SOURCES.includes(s as AdoptSource))
@@ -52,6 +57,7 @@ export async function adopt(
     sources,
     secretIgnore: await loadSecretIgnore(deps.fs, nb.dir),
   });
+  if (o.agentPlan) return agentPlan(deps, nb, result, warnings);
   if (!o.dryRun) return write(deps, g, o, nb, result, sources, warnings);
   const counts: Record<string, number> = {};
   for (const c of result.candidates) counts[c.source] = (counts[c.source] ?? 0) + 1;
@@ -163,6 +169,52 @@ async function write(
       git: policy.action,
     },
     text: `${lines.join("\n")}\n`,
+    warnings,
+  };
+}
+
+/** Where `--agent-plan` writes the candidates, relative to the project root (08 §2.1). */
+export const ADOPT_PLAN_FILE = ".aimem/.cache/adopt-plan.json";
+
+/**
+ * `aimem adopt --agent-plan` (08 §2.1, 22 §4.4): hand the not-yet-adopted candidates, with their bodies
+ * and evidence, to the person's agent. Writes no records.
+ */
+async function agentPlan(
+  deps: CliDeps,
+  nb: Awaited<ReturnType<typeof loadProject>>,
+  scan: Awaited<ReturnType<typeof scanProject>>,
+  warnings: string[],
+): Promise<CommandResult> {
+  const index = await loadIndex(nb, { fs: deps.fs });
+  const { pending, alreadyAdopted } = pendingCandidates(index.records, scan.candidates);
+  for (const s of scan.skipped) warnings.push(`skipped ${s.evidence}: ${s.reason}`);
+  await deps.fs.mkdir(join(nb.dir, ".cache"));
+  await deps.fs.writeFile(
+    join(nb.root, ADOPT_PLAN_FILE),
+    `${JSON.stringify(
+      {
+        version: 1,
+        project: nb.config.project,
+        generated: deps.clock.now().toISOString(),
+        candidates: pending,
+      },
+      null,
+      2,
+    )}\n`,
+  );
+  const prompt = [
+    `Read ${ADOPT_PLAN_FILE}. For each candidate, read the evidence (the files it names), then write one record with`,
+    "  aimem add <type> --title … --summary … --body - --evidence <evidence, comma-separated> [--kind …] [--status …]",
+    "Keep it under 300 words, state uncertainty, and leave out anything you cannot see in the evidence.",
+    "Skip a candidate when the evidence does not support a record. Records with --evidence are trust: inferred until a person verifies them.",
+  ].join("\n");
+  const text = pending.length
+    ? `${pending.length} candidate${pending.length === 1 ? "" : "s"} written to ${ADOPT_PLAN_FILE}${alreadyAdopted ? ` (${alreadyAdopted} already adopted)` : ""}.\n\nGive your agent this prompt:\n\n${prompt}\n`
+    : `Nothing left to plan; ${alreadyAdopted} candidate${alreadyAdopted === 1 ? " is" : "s are"} already adopted.\n`;
+  return {
+    data: { plan: ADOPT_PLAN_FILE, candidates: pending.length, alreadyAdopted, prompt },
+    text,
     warnings,
   };
 }

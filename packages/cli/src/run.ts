@@ -235,6 +235,10 @@ export async function run(argv: string[], outer: CliDeps): Promise<number> {
       .option("--priority <p>", "task priority p0..p3")
       .option("--assignee <handle>", "task assignee")
       .option("--force", "skip the duplicate check")
+      .option(
+        "--evidence <list>",
+        "files or path#heading it was drafted from: makes it trust inferred, tag adopted (08 §2)",
+      )
       .option("--author <who>", "human:<handle> or agent:<tool>[:<model>]")
       .action(
         action(name, (g, a, o) =>
@@ -323,6 +327,7 @@ export async function run(argv: string[], outer: CliDeps): Promise<number> {
 
   cmd("adopt", "draft records from an existing project (08 §2); --dry-run lists them")
     .option("--dry-run", "list the candidates with their evidence; write nothing")
+    .option("--agent-plan", "write the remaining candidates to .aimem/.cache/adopt-plan.json for your agent")
     .option("--max-records <n>", "most new records in one run (default 40)", positiveInt)
     .option("--author <who>", "human:<handle> or agent:<tool>; drafts stay trust: inferred")
     .option("--sources <list>", "comma-separated: readme,docs,adr,agents (git,prs,schema,ci arrive later)")
