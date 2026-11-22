@@ -1,0 +1,7 @@
+{
+  "name": "parcel-hub",
+  "private": true,
+  "scripts": { "dev": "node src/server.js", "test": "vitest run", "worker": "node src/worker.js" },
+  "dependencies": { "fastify": "^5.0.0", "pg": "^8.11.0" },
+  "devDependencies": { "vitest": "^3.0.0" }
+}
