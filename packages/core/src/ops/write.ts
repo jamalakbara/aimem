@@ -37,6 +37,8 @@ export interface WriteDeps {
   random: Random;
   /** When set, new or changed chunks are embedded after the write (15 §13). */
   embedder?: EmbeddingProvider;
+  /** Where cached sibling checkouts live (03 §7); used for cross-notebook checks. */
+  cacheHome?: string;
 }
 
 export interface WriteResult {
@@ -250,7 +252,15 @@ export async function addRecord(
   // person's `aimem verify`, so it starts unreviewed like an agent record.
   const review = requiresReview(nb.config, input.type);
   const trust = input.author.startsWith("human:") && !review ? "verified" : "agent";
-  const id = newUniqueId(input.type, deps.random, new Set(index.records.map((r) => r.id)));
+  // 03 §7 rule 6: IDs are unique per project, so other notebooks' IDs are taken too.
+  const project = isMultiRepo(nb)
+    ? await loadProjectIndex(nb, { fs: deps.fs, ...(deps.cacheHome ? { cacheHome: deps.cacheHome } : {}) })
+    : undefined;
+  const id = newUniqueId(
+    input.type,
+    deps.random,
+    new Set([...index.records, ...(project?.records ?? [])].map((r) => r.id)),
+  );
   const fields: Record<string, unknown> = {
     aimem: 1,
     id,
@@ -275,15 +285,28 @@ export async function addRecord(
   const rec = createRecord(fields, body);
   checkSecrets(serializeRecord(rec));
   if (!input.force && input.type !== "handoff") {
-    const dup = findLikelyDuplicate(index, input.type, title, summary, old?.id);
+    // Team duplicate check (M3.7c): this notebook first, then the hub and sibling notebooks.
+    const dup =
+      findLikelyDuplicate(index, input.type, title, summary, old?.id) ??
+      (project
+        ? findLikelyDuplicate(
+            { records: project.records.filter((r) => r.notebook), problems: [] },
+            input.type,
+            title,
+            summary,
+            old?.id,
+          )
+        : undefined);
     if (dup) {
+      const where = dup.notebook ? ` in ${dup.notebook}` : "";
       throw new AimemError(
         "DUPLICATE_LIKELY",
-        `a similar ${dup.type} exists: ${dup.id} "${dup.title}". Update or supersede it, or pass --force.`,
+        `a similar ${dup.type} exists${where}: ${dup.id} "${dup.title}". Update or supersede it, or pass --force.`,
         {
           ref: dup.id,
           title: dup.title,
           file: dup.file,
+          ...(dup.notebook ? { notebook: dup.notebook } : {}),
         },
       );
     }

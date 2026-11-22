@@ -8,6 +8,7 @@ import {
   vectorCacheProvider,
 } from "@aimem/core";
 import type { CliDeps } from "../deps.js";
+import { sourceDeps } from "./sources.js";
 
 /** The embedding provider for this notebook: an injected one, else the configured loader. */
 export async function embeddingStatus(
@@ -40,5 +41,11 @@ export async function writeEmbedder(deps: CliDeps, nb: Notebook): Promise<Embedd
 /** Deps for core write ops, with the embedder when there is a vector cache to keep current. */
 export async function writeDeps(deps: CliDeps, nb: Notebook) {
   const embedder = await writeEmbedder(deps, nb);
-  return { fs: deps.fs, clock: deps.clock, random: deps.random, ...(embedder ? { embedder } : {}) };
+  return {
+    fs: deps.fs,
+    clock: deps.clock,
+    random: deps.random,
+    cacheHome: sourceDeps(deps).cacheHome,
+    ...(embedder ? { embedder } : {}),
+  };
 }

@@ -159,3 +159,26 @@ describe("aimem move (04 §4, M3.6c)", () => {
     );
   });
 });
+
+describe("team duplicate checks across notebooks (M3.7c)", () => {
+  it("finds a similar record in a sibling notebook and still writes with --force", async () => {
+    const args = [
+      "remember",
+      "--title",
+      "Cart page shows cents divided by 100",
+      "--summary",
+      "The cart formats integer cents from the API.",
+      "--body",
+      "x",
+      "--json",
+    ];
+    const dup = await run(args);
+    expect(dup.code).toBe(3);
+    expect(dup.json.error).toMatchObject({
+      code: "DUPLICATE_LIKELY",
+      details: { ref: "mem-6y3pjvja", notebook: "repo:frontend" },
+    });
+    expect(dup.json.error.message).toContain("in repo:frontend");
+    expect((await run([...args, "--force"])).code).toBe(0);
+  });
+});
