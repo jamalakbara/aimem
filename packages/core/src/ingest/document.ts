@@ -32,7 +32,13 @@ const TEMPLATE_TYPES: TemplateType[] = ["decision", "runbook", "incident", "memo
 const META = /^\s*(roles|tags)\s*:\s*(.+)$/gim;
 
 /** Terminal escapes and other control characters never reach titles, summaries or names (QA, #99). */
-const stripControl = (s: string) => s.replace(/[\u0000-\u0008\u000b-\u001f\u007f]/g, "");
+const stripControl = (s: string) =>
+  [...s]
+    .filter((c) => {
+      const code = c.charCodeAt(0);
+      return c === "\t" || c === "\n" || (code >= 32 && code !== 127);
+    })
+    .join("");
 const key = (h: string) => h.trim().toLowerCase().replace(/\s+/g, " ");
 const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1).trimEnd()}…` : s);
 

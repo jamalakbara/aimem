@@ -192,7 +192,7 @@ describe("import safety (QA #99 review)", () => {
     const r = await imp("ctl.md");
     expect(r.json.data.title).toBe("Red[31m title");
     const text = readFileSync(join(dir, r.json.data.file), "utf8");
-    expect(text).not.toMatch(/[\u0000-\u0008\u000b-\u001f]/);
+    expect([...text].some((c) => c.charCodeAt(0) < 32 && c !== "\n" && c !== "\t")).toBe(false);
     expect(text).toMatch(/roles: \[dev\]/);
     expect(text).toMatch(/tags: \[ok-tag, badtag\]/); // control characters are stripped first
     expect(r.json.warnings.join("\n")).toMatch(/ignored roles: \.\.\/\.\.\/etc/);
