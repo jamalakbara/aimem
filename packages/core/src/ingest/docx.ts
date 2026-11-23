@@ -5,6 +5,13 @@ const MAX_TEXT_CHARS = 2 * 1024 * 1024;
 
 const cellText = (s: string) => s.replace(/\|/g, "\\|").replace(/\n/g, "<br>");
 
+/** Plain text that starts like markdown structure (#, -, >, ```, |) is escaped, so it stays text (QA, #102). */
+const escapeLead = (text: string) =>
+  text
+    .split("\n")
+    .map((l) => (/^\s*(#|-|>|```|\||\+|\*|\d+[.)]\s)/.test(l) ? `\\${l.trimStart()}` : l))
+    .join("\n");
+
 /** Text of one paragraph: runs, tabs and breaks in order; deleted (tracked) text and field codes left out. */
 function paragraphText(xml: string): string {
   const live = xml
@@ -44,6 +51,10 @@ export function readDocx(data: Uint8Array): { text: string; macros: boolean } {
   const body = /<w:body\b[^>]*>([\s\S]*)<\/w:body>/.exec(xml)?.[1] ?? "";
   const blocks: string[] = [];
   let list = false;
+  // Many people style the document title as Heading 1 rather than Title: the first heading then
+  // becomes the title, so the Roles:/Tags: lines under it are read (QA, #102).
+  const hasTitle = /<w:pStyle\b[^>]*w:val="Title"/i.test(body);
+  let firstHeading = true;
   for (const m of body.matchAll(/<w:tbl\b[\s\S]*?<\/w:tbl>|<w:p\b[^>]*\/>|<w:p\b[^>]*>[\s\S]*?<\/w:p>/g)) {
     const el = m[0];
     if (el.startsWith("<w:tbl")) {
@@ -73,17 +84,19 @@ export function readDocx(data: Uint8Array): { text: string; macros: boolean } {
     const level = headingLevel(pPr);
     const num = /<w:numPr\b/.test(pPr);
     if (level) {
-      blocks.push(`${"#".repeat(Math.min(level, 6))} ${text.replace(/\s+/g, " ")}`);
+      const lvl = !hasTitle && firstHeading ? 1 : level;
+      firstHeading = false;
+      blocks.push(`${"#".repeat(Math.min(lvl, 6))} ${text.replace(/\s+/g, " ")}`);
       list = false;
     } else if (num) {
       const depth = Number(/<w:ilvl\b[^>]*w:val="(\d+)"/.exec(pPr)?.[1] ?? 0);
-      const item = `${"  ".repeat(Math.min(depth, 8))}- ${text}`;
+      const item = `${"  ".repeat(Math.min(depth, 8))}- ${escapeLead(text)}`;
       // Consecutive list items stay one block.
       if (list) blocks[blocks.length - 1] += `\n${item}`;
       else blocks.push(item);
       list = true;
     } else {
-      blocks.push(text);
+      blocks.push(escapeLead(text));
       list = false;
     }
   }

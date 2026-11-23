@@ -80,3 +80,49 @@ describe("docx reader (M4b.3a)", () => {
     expect(readDocx(docx(p("Hi"), { "word/vbaProject.bin": strToU8("m") })).macros).toBe(true);
   });
 });
+
+describe("docx follow-ups (QA #102)", () => {
+  it("reads Roles:/Tags: under a title styled Heading 1, and keeps that heading as the title", () => {
+    const body =
+      p("Keep events 90 days", "Heading1") +
+      p("Roles: dev, qa") +
+      p("Tags: one, two") +
+      p("Context", "Heading1") +
+      p("Why.") +
+      p("Decision", "Heading1") +
+      p("What.") +
+      p("Consequences", "Heading1") +
+      p("So.");
+    const rec = documentToRecord(readDocx(docx(body)).text, "d.docx");
+    expect(rec).toMatchObject({
+      type: "decision",
+      title: "Keep events 90 days",
+      roles: ["dev", "qa"],
+      tags: ["one", "two"],
+    });
+  });
+
+  it("escapes markdown markers at the start of plain paragraphs, so text cannot fake structure", () => {
+    const body =
+      p("Notes", "Title") +
+      p("# Fake heading") +
+      p("## Context") +
+      p("- not a list") +
+      p("> quote") +
+      p("```") +
+      p("| pipe");
+    const r = readDocx(docx(body));
+    expect(r.text).toBe(
+      [
+        "# Notes",
+        "\\# Fake heading",
+        "\\## Context",
+        "\\- not a list",
+        "\\> quote",
+        "\\```",
+        "\\| pipe",
+      ].join("\n\n"),
+    );
+    expect(documentToRecord(r.text, "n.docx").mode).toBe("whole-document");
+  });
+});
