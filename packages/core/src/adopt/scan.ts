@@ -305,11 +305,22 @@ export async function scanProject(fs: Fs, root: string, opts: ScanOptions = {}):
       candidates.push(candidate);
     }
   };
-  // Many-file extractors (manifests, migrations, CI). Secret lines are reported per record.
+  // Many-file extractors (manifests, migrations, CI): each source file is checked for secrets on its
+  // own, so a hit drops only that file's part and names the right file and line.
+  const readClean: ReadText = async (path) => {
+    const text = await read(path);
+    if (text === undefined) return undefined;
+    const hit = scanSecrets(text, opts.secretIgnore)[0];
+    if (!hit) return text;
+    if (!reported.has(`secret:${path}`))
+      skipped.push({ evidence: path, reason: `possible secret (${hit.kind}, line ${hit.line})` });
+    reported.add(`secret:${path}`);
+    return undefined;
+  };
   const aggregate = async (
     make: (files: readonly string[], r: ReadText) => Promise<AdoptCandidate | undefined>,
   ) => {
-    const c = await make(files, read);
+    const c = await make(files, readClean);
     if (c) keep([{ candidate: c, line: 1 }], c.evidence[0] ?? "");
   };
 
@@ -343,7 +354,9 @@ export async function scanProject(fs: Fs, root: string, opts: ScanOptions = {}):
             : { candidates: [], skip: { evidence: "git", reason: "git is not available" } }
           : await prCandidates(opts.gh, root);
       // A missing tool or repository only matters when the person asked for this source.
-      if (r.skip && explicit.has(source)) skipped.push(r.skip);
+      // A subfolder of a bigger repository is worth one line even on a default run (QA, #94).
+      if (r.skip && (explicit.has(source) || r.skip.reason.startsWith("the project is not the root")))
+        skipped.push(r.skip);
       for (const c of r.candidates) keep([{ candidate: c, line: 1 }], c.evidence[0] ?? source);
     }
   }

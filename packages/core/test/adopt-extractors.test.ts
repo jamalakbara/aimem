@@ -115,4 +115,20 @@ describe("adopt extractors: manifests, migrations, CI (M4.2 follow-up)", () => {
     );
     expect(r.candidates.find((c) => c.type === "schema")?.body).toMatch(/- `couriers`: id, name/);
   });
+
+  it("a secret in one build file names that file and line, and the rest of the runbook stays (QA #94 finding 1)", async () => {
+    const d = copy();
+    writeFileSync(
+      join(d, "Makefile"),
+      "deploy:\n\t./scripts/deploy.sh $(ENV)\n\nlogin:\n\tcurl -u admin password=Zq8vN2kLm4Pw7Rt9Xy\n",
+    );
+    const r = await scanProject(nodeFs, d, { sources: ["ci"] });
+    expect(r.skipped).toEqual([
+      { evidence: "Makefile", reason: "possible secret (assigned-secret, line 5)" },
+    ]);
+    const rb = r.candidates[0];
+    expect(rb?.evidence).toEqual([".github/workflows/ci.yml", "package.json"]);
+    expect(rb?.body).toMatch(/pnpm install/);
+    expect(rb?.body).not.toMatch(/make /);
+  });
 });

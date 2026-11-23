@@ -55,6 +55,7 @@ export async function gitCandidates(
         files: files.map((f) => f.trim()).filter((f) => f && !NOISE.test(f)),
       };
     });
+  // Commit subjects are untrusted text: gotcha lines show at most 100 characters of each (QA, #94).
   const counts = new Map<string, number>();
   const fixes = new Map<string, Commit[]>();
   for (const c of commits)
@@ -106,7 +107,7 @@ export async function gitCandidates(
       body: [
         "Commits that fixed or reverted changes here (newest first):",
         "",
-        ...list.map((c) => `- ${c.sha} ${c.subject}`),
+        ...list.map((c) => `- ${c.sha} ${c.subject.length > 100 ? `${c.subject.slice(0, 99)}…` : c.subject}`),
       ].join("\n"),
       kind: "gotcha",
       tags: ["adopted"],
