@@ -114,7 +114,7 @@ describe("M1 end-to-end with the built binary", () => {
     }
     expect(git("status", "--porcelain")).toBe("");
     expect(readFileSync(join(repo, ".aimem/INDEX.md"), "utf8")).toContain(String(hnd.json?.data.ref));
-  });
+  }, 120_000); // spawns the built CLI a dozen times; slow macOS CI runners passed 30 s (#97)
 
   it("reports errors with stable exit codes from the real process", () => {
     expect(aimem(["show", "mem-zzzzzzzz"]).code).toBe(1);

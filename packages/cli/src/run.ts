@@ -8,6 +8,7 @@ import { ask } from "./commands/ask.js";
 import { type ContextOptions, context } from "./commands/context.js";
 import { hooks } from "./commands/hooks.js";
 import { hubInit } from "./commands/hub.js";
+import { detach, importFile } from "./commands/import.js";
 import { init } from "./commands/init.js";
 import { indexCmd, validateCmd } from "./commands/maintain.js";
 import { move } from "./commands/move.js";
@@ -231,7 +232,7 @@ export async function run(argv: string[], outer: CliDeps): Promise<number> {
       .option("--supersedes <ref>", "record this one replaces")
       .option("--body <text>", "body text, or - to read stdin")
       .option("--body-file <path>", "read the body from a file")
-      .option("--kind <kind>", "memory kind: gotcha | constraint | howto | fact | preference")
+      .option("--kind <kind>", "memory kind: gotcha | constraint | howto | fact | preference | reference")
       .option("--priority <p>", "task priority p0..p3")
       .option("--assignee <handle>", "task assignee")
       .option("--force", "skip the duplicate check")
@@ -336,6 +337,15 @@ export async function run(argv: string[], outer: CliDeps): Promise<number> {
       "comma-separated: readme,docs,adr,agents,ci,schema,git,prs (prs is opt-in and uses gh)",
     )
     .action(action("adopt", (g, _a, o) => adopt(deps, g, o)));
+
+  cmd("import <file>", "import a .md or .txt document as an externally-owned record (16 §7)")
+    .option("--as <type>", "auto | decision | runbook | incident | memory (default auto: by its headings)")
+    .option("--author <who>", "human:<handle> or agent:<tool>")
+    .action(action("import", (g, args, o) => importFile(deps, g, String(args[0]), o)));
+
+  cmd("detach <ref>", "make an imported record notebook-owned; imports stop updating it")
+    .option("--author <who>", "human:<handle> or agent:<tool>")
+    .action(action("detach", (g, args, o) => detach(deps, g, String(args[0]), o)));
 
   cmd("review", "walk the records that need a person: inferred, unreviewed agent, stale")
     .option("--author <who>", "human:<handle>; verifying and discarding are human-only")

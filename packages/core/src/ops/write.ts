@@ -28,7 +28,7 @@ import { writeIndexMd } from "../render/index-md.js";
 import { tokenize } from "../search/bm25.js";
 import { HIDDEN_STATUSES } from "../search/search.js";
 import { scanSecrets } from "../secrets/scan.js";
-import { RETIRED_STATUSES } from "../validate/validate.js";
+import { contentSha, RETIRED_STATUSES } from "../validate/validate.js";
 import { requiresReview } from "./policy.js";
 
 export interface WriteDeps {
@@ -244,6 +244,7 @@ export async function addRecord(
   let old: IndexedRecord | undefined;
   if (input.supersedes) {
     old = find(nb, index, input.supersedes);
+    refuseExternal(old, "supersede");
     if (old.type !== input.type)
       throw new AimemError("INVALID_RECORD", `a ${input.type} cannot supersede a ${old.type}`);
     if (!(STATUSES[old.type] as readonly string[]).includes("superseded"))
@@ -450,6 +451,8 @@ export async function supersedeRecord(
   const old = find(nb, index, oldRef);
   const next = find(nb, index, newRef);
   if (old.id === next.id) throw new AimemError("INVALID_RECORD", "a record cannot supersede itself");
+  refuseExternal(old, "supersede");
+  refuseExternal(next, "supersede");
   if (old.type !== next.type)
     throw new AimemError("INVALID_RECORD", `a ${next.type} cannot supersede a ${old.type}`);
   if (!(STATUSES[old.type] as readonly string[]).includes("superseded"))
@@ -613,4 +616,175 @@ export async function loadDiscarded(fs: Fs, aimemDir: string): Promise<Set<strin
       .map((l) => l.replace(/#.*/, "").trim())
       .filter(Boolean),
   );
+}
+
+/** 16 §2 rule 2: an externally-owned record is edited at its source, never here. */
+function refuseExternal(rec: IndexedRecord, verb: string): void {
+  if (rec.fm.managed_by !== "external") return;
+  const system = (rec.fm.source as { system?: string } | undefined)?.system ?? "an external source";
+  throw new AimemError(
+    "READONLY_EXTERNAL",
+    `${rec.id} is owned by ${system}; edit it at the source, or run aimem detach ${rec.id} before you ${verb} it here`,
+  );
+}
+
+type ExternalSystem = "upload" | "google-doc" | "google-sheet";
+
+export interface ExternalInput {
+  type: RecordType;
+  title: string;
+  summary: string;
+  body: string;
+  author: string;
+  status?: string;
+  roles?: string[];
+  tags?: string[];
+  fields?: Record<string, unknown>;
+  source: {
+    system: ExternalSystem;
+    id: string;
+    url: string;
+    row?: number | string;
+    version: string | number;
+  };
+}
+
+export interface ExternalResult {
+  action: "created" | "updated" | "unchanged";
+  ref: string;
+  file: string;
+  trust: string;
+  changed: string[];
+  warnings: string[];
+}
+
+/**
+ * 16 §2.1 idempotency: find the record owned by \`(system, id[, row])\` and create it, rewrite it, or
+ * leave it alone when nothing changed. Never touches a notebook-owned record. Trust follows \`add\`:
+ * a human import is verified unless \`durable_requires_review\` applies; an agent import is \`agent\`.
+ */
+export async function upsertExternal(
+  nb: Notebook,
+  input: ExternalInput,
+  deps: WriteDeps,
+): Promise<ExternalResult> {
+  const index = await loadIndex(nb, { fs: deps.fs });
+  const src = input.source;
+  const existing = index.records.find((r) => {
+    const s = r.fm.source as { system?: string; id?: unknown; row?: unknown } | undefined;
+    return (
+      !r.notebook &&
+      r.fm.managed_by === "external" &&
+      s?.system === src.system &&
+      String(s.id) === src.id &&
+      (src.row === undefined ? s.row === undefined : String(s.row) === String(src.row))
+    );
+  });
+  const body = input.body.trim();
+  const sha = contentSha(body);
+  const now = deps.clock.now();
+  const sourceFields = (imported_by: string) => ({
+    system: src.system,
+    id: src.id,
+    url: src.url,
+    ...(src.row !== undefined ? { row: src.row } : {}),
+    version: src.version,
+    content_sha: sha,
+    synced_at: iso(now),
+    imported_by,
+    state: "ok",
+  });
+
+  if (!existing) {
+    const r = await addRecord(
+      nb,
+      {
+        type: input.type,
+        title: input.title,
+        summary: input.summary,
+        body,
+        author: input.author,
+        ...(input.status ? { status: input.status } : {}),
+        ...(input.roles?.length ? { roles: input.roles } : {}),
+        ...(input.tags?.length ? { tags: input.tags } : {}),
+        fields: { ...input.fields, managed_by: "external", source: sourceFields(input.author) },
+      },
+      deps,
+    );
+    return {
+      action: "created",
+      ref: r.ref,
+      file: r.file,
+      trust: r.trust,
+      changed: r.changed,
+      warnings: r.warnings,
+    };
+  }
+
+  const old = existing.fm.source as { content_sha?: string; state?: string; imported_by?: string };
+  const same =
+    old.content_sha === sha &&
+    old.state === "ok" &&
+    existing.title === input.title.trim() &&
+    existing.summary === input.summary.trim() &&
+    (input.status === undefined || existing.status === input.status);
+  if (same)
+    return {
+      action: "unchanged",
+      ref: existing.id,
+      file: existing.file,
+      trust: existing.trust,
+      changed: [],
+      warnings: [],
+    };
+
+  const text = await loadText(deps, nb, existing);
+  setField(text, "title", input.title.trim());
+  setField(text, "summary", input.summary.trim());
+  if (input.status) setField(text, "status", input.status);
+  for (const [k, v] of Object.entries(input.fields ?? {})) setField(text, k, v);
+  setField(text, "updated", iso(now));
+  setField(text, "source", sourceFields(old.imported_by ?? input.author));
+  setBody(text, body);
+  checkSchema({ ...text.data });
+  checkSecrets(serializeRecord(text));
+  // A new title gets a new file name; the ID and history stay.
+  const file = `.aimem/${TYPE_DIR[existing.type]}/${recordFileName({ id: existing.id, type: existing.type, title: input.title.trim(), created: existing.created })}`;
+  await writeRecordFile(deps.fs, join(nb.root, file), text, deps.random);
+  const changed = [file];
+  if (file !== existing.file) {
+    await deps.fs.unlink(join(nb.root, existing.file));
+    changed.push(existing.file);
+  }
+  const done = await finish(deps, nb, changed);
+  return { action: "updated", ref: existing.id, file, trust: existing.trust, ...done };
+}
+
+/**
+ * \`aimem detach\` (16 §2 rule 3): make an externally-owned record notebook-owned for good. The source
+ * fields go, a line in the body says where it came from, and later imports no longer update it.
+ */
+export async function detachRecord(
+  nb: Notebook,
+  ref: string,
+  author: string,
+  deps: WriteDeps,
+): Promise<{ ref: string; file: string; changed: string[]; warnings: string[] }> {
+  if (!AUTHOR_RE.test(author)) throw new AimemError("USAGE", `invalid author '${author}'`);
+  const index = await loadIndex(nb, { fs: deps.fs });
+  const rec = find(nb, index, ref);
+  if (rec.fm.managed_by !== "external")
+    throw new AimemError("USAGE", `${rec.id} is not owned by an external source; nothing to detach`);
+  const src = (rec.fm.source ?? {}) as { system?: string; id?: unknown; version?: unknown };
+  const now = deps.clock.now();
+  const text = await loadText(deps, nb, rec);
+  deleteField(text, "managed_by");
+  deleteField(text, "source");
+  setField(text, "updated", iso(now));
+  setBody(
+    text,
+    `${rec.body.trim()}\n\n---\n\n_Detached from ${src.system ?? "an external source"} ${String(src.id ?? "")} (version ${String(src.version ?? "?")}) on ${day(now)} by ${author}._`,
+  );
+  await writeRecordFile(deps.fs, join(nb.root, rec.file), text, deps.random);
+  return { ref: rec.id, file: rec.file, ...(await finish(deps, nb, [rec.file])) };
 }

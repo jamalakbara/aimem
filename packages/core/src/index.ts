@@ -58,6 +58,7 @@ export {
 } from "./git/hooks.js";
 export { ensureLiveBranch } from "./git/live.js";
 export * from "./index/build.js";
+export * from "./ingest/index.js";
 export * from "./llm/claude-cli.js";
 export * from "./llm/provider.js";
 export * from "./log/calls.js";

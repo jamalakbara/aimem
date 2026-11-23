@@ -876,6 +876,7 @@ exports[`JSON Schema export (03 §10) > export is stable (contract snapshot) 1`]
               "howto",
               "fact",
               "preference",
+              "reference",
             ],
             "type": "string",
           },

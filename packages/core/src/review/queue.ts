@@ -19,6 +19,8 @@ export interface ReviewItem {
   evidence?: string[];
   /** For "duplicate": the older record this one looks like. */
   duplicateOf?: string;
+  /** Owned by an external source (16 §2): edited there, not here. */
+  externalSystem?: string;
   reasons: ReviewReason[];
 }
 
@@ -67,6 +69,13 @@ export function reviewQueue(nb: Notebook, index: NotebookIndex, now: Date): Revi
       created: r.created,
       ...(evidence?.length ? { evidence } : {}),
       ...(dup ? { duplicateOf: dup.id } : {}),
+      ...(r.fm.managed_by === "external"
+        ? {
+            externalSystem: String(
+              (r.fm.source as { system?: string } | undefined)?.system ?? "an external source",
+            ),
+          }
+        : {}),
       reasons,
     });
   }

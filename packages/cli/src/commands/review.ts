@@ -89,6 +89,13 @@ export async function review(
           done.skipped++;
           continue;
         }
+        if (item.externalSystem) {
+          say(
+            `  ${item.ref} is owned by ${item.externalSystem}; edit it at the source, or aimem detach it first`,
+          );
+          done.skipped++;
+          continue;
+        }
         if (!author.startsWith("human:")) {
           say(`  only a human can verify records; ask a person on the team to run aimem verify ${item.ref}`);
           done.skipped++;
