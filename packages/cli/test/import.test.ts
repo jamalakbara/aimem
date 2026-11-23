@@ -262,6 +262,24 @@ describe("aimem import <file>.pdf (M4b.3b)", () => {
     expect(locked.code).toBe(2);
     expect(locked.json.error.message).toMatch(/locked\.pdf: the pdf is encrypted with a password/);
     const scan = await imp("scan.pdf");
-    expect(scan.json.error.message).toMatch(/scan\.pdf has no text layer \(a scan\?\); OCR is not supported/);
+    expect(scan.json.error.message).toMatch(
+      /scan\.pdf has no readable text: a scan \(OCR is not supported\), or fonts whose character maps are not available/,
+    );
   }, 30_000);
+});
+
+describe("long documents (QA #104)", () => {
+  it("says when only the first part of a document is in semantic search", async () => {
+    writeFileSync(
+      join(dir, "docs/long.txt"),
+      `Long handbook\n\n${"courier parcel depot scan ".repeat(20_000)}\n`,
+    );
+    const r = await imp("long.txt");
+    expect(r.code).toBe(0);
+    expect(r.json.warnings.join("\n")).toMatch(
+      /long document: only the first 200 of \d+ parts are in semantic search; keyword search covers all of it/,
+    );
+    const short = await imp("decision.md");
+    expect(short.json.warnings.join("\n")).not.toMatch(/long document/);
+  });
 });

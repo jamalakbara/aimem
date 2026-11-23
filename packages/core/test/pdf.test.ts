@@ -71,6 +71,15 @@ describe("pdf reader (M4b.3b)", () => {
     );
   }, 60_000);
 
+  it("accepts up to 1,024 bytes before the header, as the spec allows", async () => {
+    const pdf = makePdf({ pages: [["After a prefix"]] });
+    const prefix = new TextEncoder().encode("J".repeat(1000));
+    const data = new Uint8Array(prefix.length + pdf.length);
+    data.set(prefix, 0);
+    data.set(pdf, prefix.length);
+    expect((await readPdf(data)).text).toBe("After a prefix");
+  }, 20_000);
+
   it("refuses something that is not a pdf, and a broken xref still reads or fails cleanly", async () => {
     await expect(readPdf(new TextEncoder().encode("hello"))).rejects.toThrow(/not a pdf file/);
     const ok = makePdf({ pages: [["Recovered text"]] });

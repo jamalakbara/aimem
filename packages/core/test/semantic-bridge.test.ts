@@ -180,8 +180,22 @@ it("bounds the local vocabulary and keeps selection deterministic", async () => 
     { length: 4200 },
     (_, i) =>
       `term${String.fromCharCode(97 + Math.floor(i / 676), 97 + (Math.floor(i / 26) % 26), 97 + (i % 26))}`,
-  ).join(" ");
-  const index = { ...base, records: base.records.map((r, i) => (i === 0 ? { ...r, body: words } : r)) };
+  );
+  // One record contributes at most 500 words (QA, #104), so the total bound needs several records.
+  const first = base.records[0] as (typeof base.records)[number];
+  const index = {
+    ...base,
+    records: [
+      ...base.records,
+      ...Array.from({ length: 10 }, (_, k) => ({
+        ...first,
+        id: `mem-9000000${k}`,
+        title: "x",
+        summary: "x",
+        body: words.slice(k * 420, (k + 1) * 420).join(" "),
+      })),
+    ],
+  };
   const provider = { ...hashEmbedder(2), id: "local:test" };
   await buildVectorCache(nb, index, provider, { fs: nodeFs, random: fixedRandom(1) });
   const a = (await loadVectorCache(nodeFs, nb)).cache?.meta.chunks.filter((c) => "term" in c);

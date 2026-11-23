@@ -3,6 +3,13 @@ import type { IndexedRecord } from "../index/build.js";
 
 /** Bumped when chunking changes; any change forces a full vector rebuild (15 §4.3). */
 export const CHUNKER_VERSION = 2;
+/**
+ * Most parts of one record that are embedded (QA, #104): an imported book must not take minutes to
+ * index. Ordinary records have fewer than ten; the rest of a long text stays in keyword search.
+ */
+export const MAX_RECORD_CHUNKS = 200;
+/** Most vocabulary words one record contributes, so it cannot crowd out the words of other records. */
+export const MAX_RECORD_TERMS = 500;
 const MAX_CHARS = 300 * 4; // ~300 tokens
 const OVERLAP_CHARS = 40 * 4; // ~40 tokens
 
@@ -42,7 +49,9 @@ function split(text: string): string[] {
 }
 
 /** Head chunk plus one chunk per `##` section, long sections split with overlap (15 §3). */
-export function chunkRecord(r: IndexedRecord): Chunk[] {
+export function chunkRecord(
+  r: Pick<IndexedRecord, "id" | "title" | "summary" | "body" | "tags" | "paths"> & { type: string },
+): Chunk[] {
   const bodySha = createHash("sha256").update(r.body).digest("hex").slice(0, 16);
   const head = [
     `${r.type} | ${r.title} — ${r.summary}`,

@@ -3,9 +3,11 @@ import { basename, extname, isAbsolute, join, relative, resolve } from "node:pat
 import {
   AimemError,
   applyWritePolicy,
+  chunkRecord,
   detachRecord,
   documentToRecord,
   loadProject,
+  MAX_RECORD_CHUNKS,
   parseCsv,
   readDocx,
   readPdf,
@@ -97,7 +99,10 @@ export async function importFile(
       throw new AimemError("USAGE", `${basename(path)}: ${e instanceof Error ? e.message : String(e)}`);
     }
     if (!text.trim())
-      throw new AimemError("USAGE", `${basename(path)} has no text layer (a scan?); OCR is not supported`);
+      throw new AimemError(
+        "USAGE",
+        `${basename(path)} has no readable text: a scan (OCR is not supported), or fonts whose character maps are not available`,
+      );
   }
   // The source key must survive edits to the file, so it is the path inside the project, not a hash
   // of the content (16 §2.1 said sha256 of the upload; that would duplicate on every change).
@@ -191,6 +196,7 @@ export async function importFile(
     warnings: [
       ...(doc.warning ? [doc.warning] : []),
       ...readNotes,
+      ...longDocumentWarning(doc),
       ...(doc.notes ?? []),
       ...r.warnings,
       ...policy.warnings,
@@ -388,4 +394,14 @@ async function withImportLock<T>(deps: CliDeps, aimemDir: string, f: () => Promi
   } finally {
     await deps.fs.unlink(lock).catch(() => undefined);
   }
+}
+
+/** Semantic search covers the first parts of a very long document; say so when it is imported (QA, #104). */
+function longDocumentWarning(doc: { type: string; title: string; summary: string; body: string }): string[] {
+  const parts = chunkRecord({ id: "", tags: [], paths: [], ...doc }).length;
+  return parts > MAX_RECORD_CHUNKS
+    ? [
+        `long document: only the first ${MAX_RECORD_CHUNKS} of ${parts} parts are in semantic search; keyword search covers all of it`,
+      ]
+    : [];
 }
