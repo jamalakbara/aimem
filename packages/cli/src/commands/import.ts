@@ -7,6 +7,7 @@ import {
   documentToRecord,
   loadProject,
   parseCsv,
+  readDocx,
   readXlsx,
   resolveAuthorWithGit,
   sheetToRecords,
@@ -21,6 +22,7 @@ import { lockOwnerAlive } from "./refresh-state.js";
 /** 16 §7: default upload limit. */
 const MAX_BYTES = 10 * 1024 * 1024;
 const TEXT = new Set([".md", ".markdown", ".txt"]);
+const DOCX = ".docx";
 /** 16 §12: said once per import or sync run. */
 export const VISIBILITY_WARNING = "Imported content is visible to everyone who can read this repository";
 
@@ -53,10 +55,10 @@ export async function importFile(
   const path = resolve(deps.cwd, file);
   const ext = extname(path).toLowerCase();
   const sheet = ext === ".csv" || ext === ".xlsx";
-  if (!TEXT.has(ext) && !sheet)
+  if (!TEXT.has(ext) && !sheet && ext !== DOCX)
     throw new AimemError(
       "USAGE",
-      `${ext || "extension-less"} files arrive in a later M4b slice; this version imports .md, .txt, .csv and .xlsx`,
+      `${ext || "extension-less"} files arrive in a later M4b slice; this version imports .md, .txt, .docx, .csv and .xlsx`,
     );
   const author = await who(deps, g, o);
   const nb = await loadProject(deps.fs, g.dir);
@@ -67,8 +69,20 @@ export async function importFile(
     throw new AimemError("USAGE", `cannot read ${file}`);
   });
   if (bytes.byteLength > MAX_BYTES) throw new AimemError("USAGE", `${file} is larger than 10 MB`);
-  if (ext !== ".xlsx" && bytes.includes(0)) throw new AimemError("USAGE", `${file} looks like a binary file`);
-  const text = ext === ".xlsx" ? "" : new TextDecoder().decode(bytes);
+  if (ext !== ".xlsx" && ext !== DOCX && bytes.includes(0))
+    throw new AimemError("USAGE", `${file} looks like a binary file`);
+  let text = ext === ".xlsx" || ext === DOCX ? "" : new TextDecoder().decode(bytes);
+  const readNotes: string[] = [];
+  if (ext === DOCX) {
+    try {
+      const d = readDocx(bytes);
+      text = d.text;
+      if (d.macros) readNotes.push("the document contains macros; they were ignored, not run");
+    } catch (e) {
+      throw new AimemError("USAGE", `${basename(path)}: ${e instanceof Error ? e.message : String(e)}`);
+    }
+    if (!text.trim()) throw new AimemError("USAGE", `${basename(path)} has no text to import`);
+  }
   // The source key must survive edits to the file, so it is the path inside the project, not a hash
   // of the content (16 §2.1 said sha256 of the upload; that would duplicate on every change).
   const realRoot = (await deps.fs.realpath?.(nb.root).catch(() => undefined)) ?? nb.root;
@@ -153,6 +167,7 @@ export async function importFile(
     text: `${verb} ${r.ref} (${doc.type}, ${r.trust}) from ${id}${doc.mode === "whole-document" ? " as a whole document" : ""}.\n`,
     warnings: [
       ...(doc.warning ? [doc.warning] : []),
+      ...readNotes,
       ...(doc.notes ?? []),
       ...r.warnings,
       ...policy.warnings,
@@ -215,7 +230,8 @@ async function importSheet(
       fields: { ...record.fields, ...(record.paths ? { paths: record.paths } : {}) },
       source: {
         system: "upload" as const,
-        id: a.id,
+        // Each worksheet is its own source: rows of another sheet never take over these records (QA, #101).
+        id: a.sheetName ? `${a.id}!${a.sheetName}` : a.id,
         url: `file:${a.id}`,
         // With a key column the record follows its key; otherwise its position (QA, #100).
         row: key !== undefined ? `key:${key}` : row,
@@ -263,7 +279,7 @@ async function importSheet(
       ...counts,
       errors,
       rows,
-      source: { system: "upload", id: a.id },
+      source: { system: "upload", id: a.sheetName ? `${a.id}!${a.sheetName}` : a.id },
       git: policy.action,
     },
     text: `${sheet.type} rows from ${a.id}: ${counts.created} created, ${counts.updated} updated, ${counts.unchanged} unchanged${errors.length ? `, ${errors.length} with errors` : ""}.\n`,

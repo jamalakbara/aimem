@@ -24,11 +24,13 @@ const unsafeName = (name: string) =>
  * Inflates only the entries \`want\` accepts, counting real bytes as they arrive: a forged size in a zip
  * header cannot hide a zip bomb. Nothing is written to disk.
  */
-function unzipSome(
+export function unzipSome(
   data: Uint8Array,
   want: (name: string) => boolean,
+  /** What the file should be, for messages ("xlsx", "docx"). */
+  kind = "xlsx",
 ): { files: Map<string, Uint8Array>; names: Set<string> } {
-  if (data[0] !== 0x50 || data[1] !== 0x4b) fail("not an xlsx file");
+  if (data[0] !== 0x50 || data[1] !== 0x4b) fail(`not ${kind === "xlsx" ? "an" : "a"} ${kind} file`);
   const out = new Map<string, Uint8Array>();
   const names = new Set<string>();
   let entries = 0;
@@ -97,14 +99,14 @@ function unzipSome(
     error ??= new Error(
       /compression/i.test(why)
         ? "the archive uses a compression method other than stored or deflate; save it again from your spreadsheet app"
-        : `not an xlsx file (${why})`,
+        : `not ${kind === "xlsx" ? "an" : "a"} ${kind} file (${why})`,
     );
   }
   if (error) throw error;
   return { files: out, names };
 }
 
-const decodeXml = (s: string) =>
+export const decodeXml = (s: string) =>
   s
     .replace(/&#x([0-9a-f]+);/gi, (_, h: string) => String.fromCodePoint(Number.parseInt(h, 16)))
     .replace(/&#(\d+);/g, (_, d: string) => String.fromCodePoint(Number(d)))

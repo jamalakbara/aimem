@@ -236,11 +236,14 @@ export function sheetToRecords(
     // Spreadsheet apps leave out empty cells at the end of a row: only CSV rows are short by mistake.
     if (cells.length < cols.length && !opts.padShortRows)
       notes.push({ row, reason: `has ${cells.length} cells, the header has ${cols.length}` });
-    else if (cells.length > cols.length && cells.slice(cols.length).some((c) => c.trim()))
+    else if (cells.length > cols.length && cells.slice(cols.length).some((c) => c.trim())) {
+      const extra = cells.slice(cols.length).filter((c) => c.trim()).length;
+      // Count the filled cells only: one far-away cell (XFD2) is "1 value", not "16384 cells" (QA, #101).
       notes.push({
         row,
-        reason: `has ${cells.length} cells, the header has ${cols.length}; the extra cells were left out`,
+        reason: `has ${extra} value${extra === 1 ? "" : "s"} beyond the header's ${cols.length} columns; ${extra === 1 ? "it was" : "they were"} left out`,
       });
+    }
     const extra = extraColumns
       .map((c) => [c, cellText(cells[cols.indexOf(c)])] as const)
       .filter(([, v]) => v);
