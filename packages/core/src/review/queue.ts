@@ -1,6 +1,6 @@
 import type { IndexedRecord, NotebookIndex } from "../index/build.js";
-import { findLikelyDuplicate } from "../ops/write.js";
 import type { Notebook } from "../project/load.js";
+import { tokenize } from "../search/bm25.js";
 import { HIDDEN_STATUSES } from "../search/search.js";
 import { freshnessOf, RETIRED_STATUSES } from "../validate/validate.js";
 
@@ -33,9 +33,14 @@ const RANK: Record<ReviewReason, number> = { inferred: 0, unreviewed: 1, stale: 
  */
 export function reviewQueue(nb: Notebook, index: NotebookIndex, now: Date): ReviewItem[] {
   const items: ReviewItem[] = [];
-  const local = index.records.filter((r) => !r.notebook && r.type !== "handoff");
-  const older = (a: (typeof local)[number], b: (typeof local)[number]) =>
-    a.created < b.created || (a.created === b.created && a.id < b.id);
+  const pool = index.records.filter(
+    (r) =>
+      !r.notebook &&
+      r.type !== "handoff" &&
+      !HIDDEN_STATUSES.has(r.status) &&
+      !RETIRED_STATUSES.has(r.status),
+  );
+  const dups = likelyDuplicates(pool);
   for (const r of index.records) {
     if (r.notebook || r.type === "handoff") continue;
     if (HIDDEN_STATUSES.has(r.status) || RETIRED_STATUSES.has(r.status)) continue;
@@ -45,13 +50,8 @@ export function reviewQueue(nb: Notebook, index: NotebookIndex, now: Date): Revi
     if (freshnessOf({ ...r.fm, type: r.type, created: r.created }, nb.config, now) !== "fresh")
       reasons.push("stale");
     // A likely duplicate pair is listed once: the newer record, pointing at the older one.
-    const dup = findLikelyDuplicate(
-      { records: local.filter((x) => older(x, r)), problems: [] },
-      r.type,
-      r.title,
-      r.summary,
-      r.id,
-    );
+    const dupId = dups.get(r.id);
+    const dup = dupId ? { id: dupId } : undefined;
     if (dup) reasons.push("duplicate");
     if (!reasons.length) continue;
     const evidence = Array.isArray(r.fm.evidence) ? r.fm.evidence.map(String) : undefined;
@@ -87,4 +87,64 @@ export function reviewDebt(records: readonly IndexedRecord[], now: Date): Indexe
       !HIDDEN_STATUSES.has(r.status) &&
       Date.parse(r.created) < limit,
   );
+}
+
+export interface DuplicateInput {
+  id: string;
+  type: string;
+  title: string;
+  summary: string;
+  created: string;
+  tags: readonly string[];
+}
+
+/**
+ * Likely duplicates with the same rule as \`add\` (title overlap ≥ 0.7, or title + summary ≥ 0.5), in
+ * one pass: each record is compared only with older records of its type that share a token, through
+ * an inverted index. Returns newer id → the oldest matching id. Two adopted drafts are never paired:
+ * they are told apart by evidence, and template ADRs share most of their words (QA, #96).
+ */
+export function likelyDuplicates(records: readonly DuplicateInput[]): Map<string, string> {
+  const sorted = [...records].sort((a, b) =>
+    a.created < b.created ? -1 : a.created > b.created ? 1 : a.id < b.id ? -1 : a.id > b.id ? 1 : 0,
+  );
+  const titles: Set<string>[] = [];
+  const alls: Set<string>[] = [];
+  const byTitle = new Map<string, number[]>();
+  const byAll = new Map<string, number[]>();
+  const add = (m: Map<string, number[]>, k: string, i: number) => {
+    const list = m.get(k);
+    if (list) list.push(i);
+    else m.set(k, [i]);
+  };
+  const out = new Map<string, string>();
+  sorted.forEach((r, i) => {
+    const t = new Set(tokenize(r.title));
+    const a = new Set(tokenize(`${r.title} ${r.summary}`));
+    titles[i] = t;
+    alls[i] = a;
+    const adopted = r.tags.includes("adopted");
+    let best: number | undefined;
+    const check = (
+      index: Map<string, number[]>,
+      set: Set<string>,
+      sets: Set<string>[],
+      threshold: number,
+    ) => {
+      const shared = new Map<number, number>();
+      for (const tok of set)
+        for (const j of index.get(`${r.type}\u0000${tok}`) ?? []) shared.set(j, (shared.get(j) ?? 0) + 1);
+      for (const [j, n] of shared) {
+        if (adopted && sorted[j]?.tags.includes("adopted")) continue;
+        const other = sets[j]?.size ?? 0;
+        if (n / (set.size + other - n) >= threshold && (best === undefined || j < best)) best = j;
+      }
+    };
+    if (t.size) check(byTitle, t, titles, 0.7);
+    if (a.size) check(byAll, a, alls, 0.5);
+    if (best !== undefined) out.set(r.id, sorted[best]?.id ?? "");
+    for (const tok of t) add(byTitle, `${r.type}\u0000${tok}`, i);
+    for (const tok of a) add(byAll, `${r.type}\u0000${tok}`, i);
+  });
+  return out;
 }

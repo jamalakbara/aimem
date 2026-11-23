@@ -143,4 +143,16 @@ describe("adopt extractors: manifests, migrations, CI (M4.2 follow-up)", () => {
       /- CI `\.github\/workflows\/ci\.yml`: `pnpm install`, `pnpm build`, `pnpm test`, `pnpm lint`/,
     );
   });
+
+  it("joins folded run: > lines into one command and drops comments (QA #96 findings 3, 4)", async () => {
+    const d = copy();
+    writeFileSync(
+      join(d, ".github/workflows/ci.yml"),
+      "jobs:\n  t:\n    steps:\n      - run: |\n          # install deps first\n          pnpm install\n          pnpm build   # trailing comment\n      - run: >-\n          ./deploy.sh\n          --env prod\n",
+    );
+    const r = await scanProject(nodeFs, d, { sources: ["ci"] });
+    expect(r.candidates[0]?.body).toMatch(
+      /- CI `\.github\/workflows\/ci\.yml`: `pnpm install`, `pnpm build`, `\.\/deploy\.sh --env prod`\n/,
+    );
+  });
 });

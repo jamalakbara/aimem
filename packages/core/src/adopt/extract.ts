@@ -272,13 +272,23 @@ function runSteps(text: string): string[] {
       if (value) out.push(value.replace(/^["']|["']$/g, ""));
       continue;
     }
+    const folded = value.startsWith(">");
+    const block: string[] = [];
     for (let j = i + 1; j < lines.length; j++) {
       const l = lines[j] ?? "";
-      if (!l.trim()) continue;
-      if (l.length - l.trimStart().length <= keyIndent) break;
-      out.push(l.trim());
+      if (l.trim() && l.length - l.trimStart().length <= keyIndent) break;
+      block.push(l.trim());
       i = j;
     }
+    // Comments are not commands; a folded block (>) is one command per paragraph.
+    const cmds = block.map((l) => (l.startsWith("#") ? "" : l.replace(/\s+#.*$/, "")));
+    if (folded) {
+      const paras = cmds.join("\n").split(/\n\s*\n/);
+      for (const p of paras) {
+        const joined = p.split("\n").filter(Boolean).join(" ").trim();
+        if (joined) out.push(joined);
+      }
+    } else out.push(...cmds.filter(Boolean));
   }
   return out;
 }
