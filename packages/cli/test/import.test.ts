@@ -73,11 +73,11 @@ describe("aimem import (M4b.1)", () => {
   });
 
   it("refuses formats of later slices, and files with a likely secret", async () => {
-    writeFileSync(join(dir, "docs/spec.docx"), "PK");
-    const d = await imp("spec.docx");
+    writeFileSync(join(dir, "docs/spec.pdf"), "%PDF");
+    const d = await imp("spec.pdf");
     expect(d.code).toBe(2);
     expect(d.json.error.message).toMatch(
-      /\.docx files arrive in a later M4b slice; this version imports \.md, \.txt, \.csv and \.xlsx/,
+      /\.pdf files arrive in a later M4b slice; this version imports \.md, \.txt, \.docx, \.csv and \.xlsx/,
     );
     const key = ["AKIA", "ABCDEFGHIJKLMNOP"].join("");
     writeFileSync(join(dir, "docs/leak.md"), `# Leak\n\n## Summary\n\nKey ${key} here.\n`);

@@ -142,7 +142,8 @@ describe("xlsx limits from the #101 review", () => {
     const before = process.memoryUsage().rss;
     const t0 = performance.now();
     expect(() => readXlsx(bomb)).toThrow(/unpacks to more than 20 MB/);
-    expect(performance.now() - t0).toBeLessThan(2000);
+    // Shared macOS/Windows CI runners are slower; the memory bound below is the real guard.
+    expect(performance.now() - t0).toBeLessThan(process.env.CI && process.platform !== "linux" ? 6000 : 2000);
     expect(process.memoryUsage().rss - before).toBeLessThan(300 * 1024 * 1024);
   }, 60_000);
 

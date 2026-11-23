@@ -120,7 +120,7 @@ describe("sheet templates (16 §4.1)", () => {
     expect(r.items.map((i) => i.row)).toEqual([2, 3]);
     expect(r.notes).toEqual([
       { row: 2, reason: "has 2 cells, the header has 4" },
-      { row: 3, reason: "has 6 cells, the header has 4; the extra cells were left out" },
+      { row: 3, reason: "has 2 values beyond the header's 4 columns; they were left out" },
     ]);
     expect(r.errors).toEqual([
       { row: 4, reason: "paths must be relative to the repository, without '.' or '..' parts" },
