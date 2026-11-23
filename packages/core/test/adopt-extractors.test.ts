@@ -115,4 +115,44 @@ describe("adopt extractors: manifests, migrations, CI (M4.2 follow-up)", () => {
     );
     expect(r.candidates.find((c) => c.type === "schema")?.body).toMatch(/- `couriers`: id, name/);
   });
+
+  it("a secret in one build file names that file and line, and the rest of the runbook stays (QA #94 finding 1)", async () => {
+    const d = copy();
+    writeFileSync(
+      join(d, "Makefile"),
+      "deploy:\n\t./scripts/deploy.sh $(ENV)\n\nlogin:\n\tcurl -u admin password=Zq8vN2kLm4Pw7Rt9Xy\n",
+    );
+    const r = await scanProject(nodeFs, d, { sources: ["ci"] });
+    expect(r.skipped).toEqual([
+      { evidence: "Makefile", reason: "possible secret (assigned-secret, line 5)" },
+    ]);
+    const rb = r.candidates[0];
+    expect(rb?.evidence).toEqual([".github/workflows/ci.yml", "package.json"]);
+    expect(rb?.body).toMatch(/pnpm install/);
+    expect(rb?.body).not.toMatch(/make /);
+  });
+
+  it("reads multi-line run: | blocks in GitHub workflows (M4 gap)", async () => {
+    const d = copy();
+    writeFileSync(
+      join(d, ".github/workflows/ci.yml"),
+      "jobs:\n  test:\n    steps:\n      - run: |\n          pnpm install\n          pnpm build\n\n          pnpm test\n      - name: lint\n        run: >-\n          pnpm lint\n",
+    );
+    const r = await scanProject(nodeFs, d, { sources: ["ci"] });
+    expect(r.candidates[0]?.body).toMatch(
+      /- CI `\.github\/workflows\/ci\.yml`: `pnpm install`, `pnpm build`, `pnpm test`, `pnpm lint`/,
+    );
+  });
+
+  it("joins folded run: > lines into one command and drops comments (QA #96 findings 3, 4)", async () => {
+    const d = copy();
+    writeFileSync(
+      join(d, ".github/workflows/ci.yml"),
+      "jobs:\n  t:\n    steps:\n      - run: |\n          # install deps first\n          pnpm install\n          pnpm build   # trailing comment\n      - run: >-\n          ./deploy.sh\n          --env prod\n",
+    );
+    const r = await scanProject(nodeFs, d, { sources: ["ci"] });
+    expect(r.candidates[0]?.body).toMatch(
+      /- CI `\.github\/workflows\/ci\.yml`: `pnpm install`, `pnpm build`, `\.\/deploy\.sh --env prod`\n/,
+    );
+  });
 });

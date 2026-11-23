@@ -1,4 +1,5 @@
 import type { Git } from "../git/git.js";
+import { scanSecrets } from "../secrets/scan.js";
 import { firstSentence } from "./markdown.js";
 import type { AdoptCandidate, AdoptSkip } from "./types.js";
 
@@ -17,6 +18,9 @@ const MAX_HOTSPOTS = 10;
 interface Commit {
   sha: string;
   subject: string;
+  /** Decided from the full subject, before it may be withheld. */
+  fix: boolean;
+  revert: boolean;
   files: string[];
 }
 
@@ -49,18 +53,23 @@ export async function gitCandidates(
     .map((block) => {
       const [head = "", ...files] = block.split("\n");
       const [sha = "", ...rest] = head.split("\t");
+      const full = rest.join("\t");
       return {
         sha,
-        subject: rest.join("\t"),
+        // Scan the whole subject before it is ever cut, so a cut token cannot slip through (QA, #96).
+        subject: scanSecrets(full).length ? "[subject withheld: possible secret]" : full,
+        fix: FIX.test(full),
+        revert: /^revert\b/i.test(full),
         files: files.map((f) => f.trim()).filter((f) => f && !NOISE.test(f)),
       };
     });
+  // Commit subjects are untrusted text: gotcha lines show at most 100 characters of each (QA, #94).
   const counts = new Map<string, number>();
   const fixes = new Map<string, Commit[]>();
   for (const c of commits)
     for (const f of c.files) {
       counts.set(f, (counts.get(f) ?? 0) + 1);
-      if (FIX.test(c.subject)) fixes.set(f, [...(fixes.get(f) ?? []), c]);
+      if (c.fix) fixes.set(f, [...(fixes.get(f) ?? []), c]);
     }
   const byCount = <T>(m: Map<string, T[] | number>) =>
     [...m].sort(
@@ -89,7 +98,7 @@ export async function gitCandidates(
   const risky = byCount(fixes as Map<string, Commit[]>)
     .filter(([, cs]) => {
       const list = cs as Commit[];
-      return list.length >= 2 || list.some((c) => /^revert\b/i.test(c.subject));
+      return list.length >= 2 || list.some((c) => c.revert);
     })
     .slice(0, MAX_GOTCHAS);
   for (const [path, cs] of risky) {
@@ -106,7 +115,7 @@ export async function gitCandidates(
       body: [
         "Commits that fixed or reverted changes here (newest first):",
         "",
-        ...list.map((c) => `- ${c.sha} ${c.subject}`),
+        ...list.map((c) => `- ${c.sha} ${c.subject.length > 100 ? `${c.subject.slice(0, 99)}…` : c.subject}`),
       ].join("\n"),
       kind: "gotcha",
       tags: ["adopted"],

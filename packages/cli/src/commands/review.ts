@@ -26,25 +26,29 @@ const QUESTION = "(v)erify  (e)dit+verify  (s)kip  (d)iscard  (q)uit: ";
 export async function review(
   deps: CliDeps,
   g: GlobalOptions,
-  o: { json?: boolean; author?: string },
+  o: { json?: boolean; author?: string; limit?: number },
 ): Promise<CommandResult> {
   const nb = await loadProject(deps.fs, g.dir);
-  const queue = reviewQueue(nb, await loadIndex(nb, { fs: deps.fs }), deps.clock.now());
+  const all = reviewQueue(nb, await loadIndex(nb, { fs: deps.fs }), deps.clock.now());
+  const queue = o.limit ? all.slice(0, o.limit) : all;
   const counts = {
-    inferred: queue.filter((i) => i.reasons.includes("inferred")).length,
-    unreviewed: queue.filter((i) => i.reasons.includes("unreviewed")).length,
-    stale: queue.filter((i) => i.reasons.includes("stale")).length,
+    inferred: all.filter((i) => i.reasons.includes("inferred")).length,
+    unreviewed: all.filter((i) => i.reasons.includes("unreviewed")).length,
+    stale: all.filter((i) => i.reasons.includes("stale")).length,
+    duplicate: all.filter((i) => i.reasons.includes("duplicate")).length,
   };
   if (o.json || !deps.prompt || !queue.length) {
     const text = queue.length
       ? [
-          `${queue.length} record${queue.length === 1 ? " needs" : "s need"} review:`,
-          ...queue.map((i) => `  ${line(i)}  (${i.reasons.join(", ")})`),
+          `${all.length} record${all.length === 1 ? " needs" : "s need"} review${queue.length < all.length ? ` (showing ${queue.length}; --limit)` : ""}:`,
+          ...queue.map(
+            (i) => `  ${line(i)}  (${i.reasons.join(", ")}${i.duplicateOf ? ` of ${i.duplicateOf}` : ""})`,
+          ),
           "",
           "Review them on a terminal with aimem review, or one by one: aimem show <ref>, then aimem verify <ref> or aimem discard <ref>.",
         ].join("\n")
       : "Nothing to review.";
-    return { data: { queue, counts }, text: `${text}\n` };
+    return { data: { queue, counts, total: all.length }, text: `${text}\n` };
   }
 
   const author = await who(deps, g, o);
@@ -66,7 +70,9 @@ export async function review(
     say(`  ${item.file}`);
     if (item.evidence) say(`  evidence: ${item.evidence.join(", ")}`);
     say(`  ${item.summary}`);
-    say(`  needs review: ${item.reasons.join(", ")}`);
+    say(
+      `  needs review: ${item.reasons.join(", ")}${item.duplicateOf ? ` (looks like ${item.duplicateOf})` : ""}`,
+    );
     let answer: string | undefined;
     for (;;) {
       answer = (await deps.prompt(QUESTION))?.trim().toLowerCase();
@@ -118,7 +124,7 @@ export async function review(
     } else done.skipped++;
   }
   return {
-    data: { queue, counts, reviewed: seen, ...done },
+    data: { queue, counts, total: all.length, reviewed: seen, ...done },
     text: `\nReviewed ${seen} of ${queue.length}: ${done.verified} verified, ${done.discarded} discarded, ${done.skipped} skipped.\n`,
   };
 }

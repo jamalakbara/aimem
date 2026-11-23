@@ -57,6 +57,11 @@ export async function adopt(
       throw new AimemError("USAGE", `unknown source '${s}'; use ${ADOPT_SOURCES.join(", ")}`);
   if (o.dryRun && o.agentPlan)
     throw new AimemError("USAGE", "use either --dry-run or --agent-plan, not both");
+  if (o.since !== undefined && !validSince(o.since))
+    throw new AimemError(
+      "USAGE",
+      `--since must be a date (YYYY-MM-DD) or an age such as "6 months ago" (got '${o.since}')`,
+    );
   const nb = await loadProject(deps.fs, g.dir);
   const warnings = (requested ?? [])
     .filter((s) => !IMPLEMENTED_SOURCES.includes(s as AdoptSource))
@@ -241,4 +246,13 @@ async function agentPlan(
     text,
     warnings,
   };
+}
+
+/** `--since`: a calendar date or a plain age; anything else is refused before it reaches git. */
+function validSince(v: string): boolean {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(v)) {
+    const d = new Date(`${v}T00:00:00Z`);
+    return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === v;
+  }
+  return /^\d{1,4} (day|week|month|year)s?( ago)?$/i.test(v.trim());
 }

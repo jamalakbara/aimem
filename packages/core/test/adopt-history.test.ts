@@ -83,6 +83,37 @@ describe("adopt git source (M4.3)", () => {
     expect(c).toBeTruthy();
   });
 
+  it("says when the project is a subfolder of a bigger repository, even without --sources git (QA finding 3)", async () => {
+    const sub = join(dir, "services/api");
+    cpSync(join(ADOPT_ME, ".aimem"), join(sub, ".aimem"), { recursive: true });
+    const r = await scanProject(nodeFs, sub, { git, now: new Date() });
+    expect(r.skipped).toContainEqual({
+      evidence: "git",
+      reason: "the project is not the root of its git repository (monorepo adoption is deferred)",
+    });
+  });
+
+  it("keeps commit subjects short in gotchas (QA finding 4)", async () => {
+    const long = `fix: ${"x".repeat(300)}`;
+    await commit("src/server.js", "a\n", long);
+    await commit("src/server.js", "b\n", long);
+    const r = await scanProject(nodeFs, dir, { sources: ["git"], git, now: new Date() });
+    const g = r.candidates.find((c) => c.title === "Gotchas in src/server.js");
+    for (const line of (g?.body ?? "").split("\n").filter((l) => l.startsWith("- ")))
+      expect(line.length).toBeLessThanOrEqual(140);
+  });
+
+  it("withholds a commit subject with a secret before cutting it (QA #95 follow-up)", async () => {
+    const token = ["ghp", "_", "a".repeat(36)].join("");
+    const subject = `fix: ${"y".repeat(88)} ${token}`;
+    await commit("src/server.js", "c\n", subject);
+    await commit("src/server.js", "d\n", "fix: second fix");
+    const r = await scanProject(nodeFs, dir, { sources: ["git"], git, now: new Date() });
+    const g = r.candidates.find((c) => c.title === "Gotchas in src/server.js");
+    expect(g?.body).toMatch(/\[subject withheld: possible secret\]/);
+    expect(g?.body).not.toMatch(/ghp_/);
+  });
+
   it("skips quietly outside a git repository and respects --since", async () => {
     rmSync(join(dir, ".git"), { recursive: true, force: true });
     const r = await scanProject(nodeFs, dir, { sources: ["git"], git, now: new Date() });

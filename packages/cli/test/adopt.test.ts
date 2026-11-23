@@ -61,6 +61,18 @@ describe("aimem adopt --dry-run (M4.1)", () => {
     expect(r.json.warnings).toEqual(["skipped prs: gh is not available"]);
   });
 
+  it("rejects a --since that is not a date or a relative age (QA #94 finding 2)", async () => {
+    for (const bad of ["notadate", "--output=x", "2026-13-40"]) {
+      const r = await cli(["adopt", "--dry-run", `--since=${bad}`, "--json", "--dir", dir]);
+      expect(r.code).toBe(2);
+      expect(r.json.error.message).toMatch(
+        /--since must be a date \(YYYY-MM-DD\) or an age such as "6 months ago"/,
+      );
+    }
+    for (const ok of ["2026-01-31", "6 months ago", "2 weeks"])
+      expect((await cli(["adopt", "--dry-run", `--since=${ok}`, "--json", "--dir", dir])).code).toBe(0);
+  });
+
   it("rejects unknown sources", async () => {
     const bad = await cli(["adopt", "--dry-run", "--sources", "wiki", "--json", "--dir", dir]);
     expect(bad.code).toBe(2);

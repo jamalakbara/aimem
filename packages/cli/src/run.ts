@@ -339,6 +339,7 @@ export async function run(argv: string[], outer: CliDeps): Promise<number> {
 
   cmd("review", "walk the records that need a person: inferred, unreviewed agent, stale")
     .option("--author <who>", "human:<handle>; verifying and discarding are human-only")
+    .option("--limit <n>", "show or walk at most n records", positiveInt)
     .action(action("review", (g, _a, o) => review(deps, g, { ...o, json: jsonMode })));
 
   cmd("discard <ref>", "delete a never-verified record that nothing links to (humans only)")
