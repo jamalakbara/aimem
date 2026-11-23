@@ -1,0 +1,2 @@
+title,summary,preconditions,steps,expected,status,automation
+Scan updates state,A scan moves the parcel state.,Parcel exists,Post a scan,State is in_transit,ready,vitest

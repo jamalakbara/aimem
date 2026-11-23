@@ -16,6 +16,7 @@ import { list, searchCmd, show } from "./commands/read.js";
 import { discard, review } from "./commands/review.js";
 import { doctor, type HandoffOptions, handoff, status } from "./commands/session.js";
 import { liveClaims, taskClaim, taskHeartbeat, taskRelease } from "./commands/task.js";
+import { templates } from "./commands/templates.js";
 import { usageRecord } from "./commands/usage.js";
 import { type AddOptions, add, supersede, update, verify } from "./commands/write.js";
 import type { CliDeps, CommandResult, GlobalOptions } from "./deps.js";
@@ -338,11 +339,24 @@ export async function run(argv: string[], outer: CliDeps): Promise<number> {
     )
     .action(action("adopt", (g, _a, o) => adopt(deps, g, o)));
 
-  cmd("import <file>", "import a .md or .txt document as an externally-owned record (16 §7)")
-    .option("--as <type>", "auto | decision | runbook | incident | memory (default auto: by its headings)")
+  cmd("import <file>", "import a .md/.txt document or a .csv sheet as externally-owned records (16 §7)")
+    .option(
+      "--as <type>",
+      "auto | decision | runbook | incident | memory | tasks | testcases | incidents (default auto)",
+    )
     .option("--force", "create the record even when a likely duplicate exists (e.g. a detached copy)")
+    .option("--allow-outside", "let an agent import a file outside the project")
+    .option("--strict", "exit 1 when a sheet row failed")
     .option("--author <who>", "human:<handle> or agent:<tool>")
     .action(action("import", (g, args, o) => importFile(deps, g, String(args[0]), o)));
+
+  cmd(
+    "templates [args...]",
+    "blank sheet (csv) and document (md) templates for imports: list | export <name>",
+  )
+    .option("--format <format>", "csv for sheets, md for documents")
+    .option("--out <path>", "write to a file instead of stdout")
+    .action(action("templates", (g, args, o) => templates(deps, g, (args[0] as string[]) ?? [], o)));
 
   cmd("detach <ref>", "make an imported record notebook-owned; imports stop updating it")
     .option("--author <who>", "human:<handle> or agent:<tool>")

@@ -57,6 +57,7 @@ export const LEVELS: Record<string, Level> = {
   V016: "error",
   V017: "warn",
   V018: "warn",
+  V019: "warn",
 };
 
 /** Statuses meaning "no longer current": no staleness warning (OQ-24). */
@@ -252,6 +253,29 @@ export function validateFiles(
         at("V017", "body differs from the imported source (edited locally?)");
       if (source?.state !== "ok") at("V018", `source state is '${String(source?.state)}' at last sync`);
     }
+  }
+
+  // V019: two records owned by the same source key (e.g. after merging two clones that both imported).
+  const bySource = new Map<string, Rec[]>();
+  for (const r of recs) {
+    if (r.fm.managed_by !== "external") continue;
+    const src = r.fm.source as { system?: unknown; id?: unknown; row?: unknown } | undefined;
+    if (!src?.system || !src.id) continue;
+    const k = `${String(src.system)}\u0000${String(src.id)}\u0000${src.row === undefined ? "" : String(src.row)}`;
+    bySource.set(k, [...(bySource.get(k) ?? []), r]);
+  }
+  for (const group of bySource.values()) {
+    if (group.length < 2) continue;
+    for (const r of group)
+      add(
+        r.input,
+        "V019",
+        `same source as ${group
+          .filter((x) => x !== r)
+          .map((x) => x.fm.id)
+          .join(", ")}; keep one and discard or supersede the others`,
+        { ref: r.fm.id },
+      );
   }
 
   // V011: accepted decisions with overlapping paths and a shared tag, not linked. Reported on both (OQ-23).

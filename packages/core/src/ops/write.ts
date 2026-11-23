@@ -698,6 +698,26 @@ export async function upsertExternal(
   });
 
   if (!existing) {
+    // Rows of one sheet (or sections of one source) are told apart by their source key, so the duplicate
+    // check skips records owned by the same source and looks only at the rest (QA, #99 / 4b.2).
+    if (!input.force) {
+      const others = index.records.filter((r) => {
+        const s = r.fm.source as { system?: string; id?: unknown } | undefined;
+        return !(r.fm.managed_by === "external" && s?.system === src.system && String(s.id) === src.id);
+      });
+      const dup = findLikelyDuplicate(
+        { records: others, problems: [] },
+        input.type,
+        input.title,
+        input.summary,
+      );
+      if (dup)
+        throw new AimemError(
+          "DUPLICATE_LIKELY",
+          `a similar ${dup.type} exists: ${dup.id} "${dup.title}". Update or supersede it, or pass --force to import this one anyway.`,
+          { ref: dup.id, title: dup.title, file: dup.file },
+        );
+    }
     const r = await addRecord(
       nb,
       {
@@ -710,7 +730,7 @@ export async function upsertExternal(
         ...(input.roles?.length ? { roles: input.roles } : {}),
         ...(input.tags?.length ? { tags: input.tags } : {}),
         fields: { ...input.fields, managed_by: "external", source: sourceFields(input.author) },
-        ...(input.force ? { force: true } : {}),
+        force: true,
       },
       deps,
     );

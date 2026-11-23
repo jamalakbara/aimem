@@ -316,6 +316,7 @@ Never hand-edited; regenerated deterministically (no timestamps, so it changes o
 | V016 | error | Spec major version newer than tool supports |
 | V017 | warn | Externally-owned record body differs from `source.content_sha` (edited locally). `content_sha` = sha256 hex of the body with LF line endings and surrounding whitespace trimmed |
 | V018 | warn | Externally-owned record's source is missing or errored at last sync (`source.state != ok`) |
+| V019 | warn | Two externally-owned records have the same source key (`system`, `id`, `row`), e.g. after merging two clones that both imported; keep one |
 
 A record failing V001, V002 or V016 gets only that error; its other fields are not checked.
 
