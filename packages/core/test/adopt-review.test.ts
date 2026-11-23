@@ -188,3 +188,28 @@ describe("discard safety from the QA plan (M4.5)", () => {
     });
   });
 });
+
+describe("possible duplicates in the review queue (M4 gap)", () => {
+  it("lists the newer record of a likely-duplicate pair once, naming the older one", async () => {
+    const older = await decision("Keep the API stateless", "human:dana");
+    now = new Date("2026-11-23T10:00:00Z");
+    // Duplicates arrive through --force or merged branches; addRecord itself refuses them.
+    const newer = await addRecord(
+      nb,
+      {
+        type: "decision",
+        title: "Keep the API stateless always",
+        summary: "Keep the API stateless always.",
+        body: "## Context\n\nx\n\n## Decision\n\ny\n\n## Consequences\n\nz",
+        author: "human:rina",
+        force: true,
+      },
+      deps,
+    );
+    const q = reviewQueue(nb, await index(), now);
+    const dup = q.filter((i) => i.reasons.includes("duplicate"));
+    expect(dup).toHaveLength(1);
+    expect(dup[0]).toMatchObject({ ref: newer.ref, duplicateOf: older.ref, reasons: ["duplicate"] });
+    expect(q.at(-1)?.ref).toBe(newer.ref);
+  });
+});

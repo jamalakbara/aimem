@@ -188,7 +188,7 @@ export async function ciCandidate(
     .sort(sortPaths)) {
     const text = await read(path);
     if (text === undefined) continue;
-    const runs = [...text.matchAll(/^\s*(?:-\s*)?run:\s*(?!\|)(.+?)\s*$/gm)].map((m) => m[1] ?? "");
+    const runs = runSteps(text);
     if (path === ".gitlab-ci.yml")
       for (const block of text.matchAll(/^\s*script:\s*\n((?:\s+-\s+.*\n?)+)/gm))
         runs.push(...[...(block[1] ?? "").matchAll(/-\s+(.+?)\s*$/gm)].map((m) => m[1] ?? ""));
@@ -257,4 +257,28 @@ export async function ciCandidate(
     tags: ["adopted"],
     evidence,
   };
+}
+
+/** `run:` commands of a GitHub workflow, including `run: |` and `run: >` block scalars. */
+function runSteps(text: string): string[] {
+  const lines = text.replace(/\r\n?/g, "\n").split("\n");
+  const out: string[] = [];
+  for (let i = 0; i < lines.length; i++) {
+    const m = /^(\s*)(-\s+)?run:\s*(.*?)\s*$/.exec(lines[i] ?? "");
+    if (!m) continue;
+    const keyIndent = (m[1] ?? "").length + (m[2] ?? "").length;
+    const value = m[3] ?? "";
+    if (!/^[|>][-+]?$/.test(value)) {
+      if (value) out.push(value.replace(/^["']|["']$/g, ""));
+      continue;
+    }
+    for (let j = i + 1; j < lines.length; j++) {
+      const l = lines[j] ?? "";
+      if (!l.trim()) continue;
+      if (l.length - l.trimStart().length <= keyIndent) break;
+      out.push(l.trim());
+      i = j;
+    }
+  }
+  return out;
 }

@@ -131,4 +131,16 @@ describe("adopt extractors: manifests, migrations, CI (M4.2 follow-up)", () => {
     expect(rb?.body).toMatch(/pnpm install/);
     expect(rb?.body).not.toMatch(/make /);
   });
+
+  it("reads multi-line run: | blocks in GitHub workflows (M4 gap)", async () => {
+    const d = copy();
+    writeFileSync(
+      join(d, ".github/workflows/ci.yml"),
+      "jobs:\n  test:\n    steps:\n      - run: |\n          pnpm install\n          pnpm build\n\n          pnpm test\n      - name: lint\n        run: >-\n          pnpm lint\n",
+    );
+    const r = await scanProject(nodeFs, d, { sources: ["ci"] });
+    expect(r.candidates[0]?.body).toMatch(
+      /- CI `\.github\/workflows\/ci\.yml`: `pnpm install`, `pnpm build`, `pnpm test`, `pnpm lint`/,
+    );
+  });
 });
