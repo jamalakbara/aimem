@@ -109,6 +109,7 @@ process.exitCode = await run(process.argv.slice(2), {
     : {}),
   git,
   gh: execaGh(),
+  fetch: (url, init) => fetch(url, init),
   loadEmbedder,
   loadRanker,
   spawnBackground: (args, cwd) =>

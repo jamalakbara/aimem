@@ -355,7 +355,7 @@ const LOCK_STALE_MS = 60_000;
  * (QA, #99). A lock whose process is gone is taken over at once (as in #80); otherwise it waits up to
  * 20 s and then says how long the other import's lock still counts.
  */
-async function withImportLock<T>(deps: CliDeps, aimemDir: string, f: () => Promise<T>): Promise<T> {
+export async function withImportLock<T>(deps: CliDeps, aimemDir: string, f: () => Promise<T>): Promise<T> {
   const exclusive = deps.fs.createExclusive?.bind(deps.fs);
   if (!exclusive) return f();
   const lock = join(aimemDir, ".cache", "import.lock");

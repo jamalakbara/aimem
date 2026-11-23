@@ -9,6 +9,7 @@ export default defineConfig({
     // Bound concurrent fixture I/O on hosted Windows runners.
     maxWorkers: 4,
     globalSetup: ["./vitest.global-setup.ts"],
+    setupFiles: ["./vitest.setup.ts"],
   },
   resolve: {
     alias: {
