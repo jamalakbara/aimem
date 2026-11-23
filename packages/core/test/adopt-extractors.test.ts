@@ -155,4 +155,27 @@ describe("adopt extractors: manifests, migrations, CI (M4.2 follow-up)", () => {
       /- CI `\.github\/workflows\/ci\.yml`: `pnpm install`, `pnpm build`, `\.\/deploy\.sh --env prod`\n/,
     );
   });
+
+  it("keeps # inside quotes and strips only real comments (QA #96 follow-up)", async () => {
+    const d = copy();
+    writeFileSync(
+      join(d, ".github/workflows/ci.yml"),
+      [
+        "jobs:",
+        "  t:",
+        "    steps:",
+        '      - run: echo "build #42 done"',
+        "      - run: pnpm test # inline comment",
+        "      - run: '  pnpm lint  '",
+        "      - run: |",
+        '          echo "color #fff"',
+        "          git commit -m 'fix #12'  # note",
+        "",
+      ].join("\n"),
+    );
+    const r = await scanProject(nodeFs, d, { sources: ["ci"] });
+    expect(r.candidates[0]?.body).toMatch(
+      /- CI `\.github\/workflows\/ci\.yml`: `echo "build #42 done"`, `pnpm test`, `pnpm lint`, `echo "color #fff"`, `git commit -m 'fix #12'`\n/,
+    );
+  });
 });
