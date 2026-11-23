@@ -269,7 +269,8 @@ function runSteps(text: string): string[] {
     const keyIndent = (m[1] ?? "").length + (m[2] ?? "").length;
     const value = m[3] ?? "";
     if (!/^[|>][-+]?$/.test(value)) {
-      if (value) out.push(value.replace(/^["']|["']$/g, ""));
+      const plain = unquote(stripComment(value));
+      if (plain) out.push(plain);
       continue;
     }
     const folded = value.startsWith(">");
@@ -281,7 +282,7 @@ function runSteps(text: string): string[] {
       i = j;
     }
     // Comments are not commands; a folded block (>) is one command per paragraph.
-    const cmds = block.map((l) => (l.startsWith("#") ? "" : l.replace(/\s+#.*$/, "")));
+    const cmds = block.map((l) => (l.startsWith("#") ? "" : stripComment(l)));
     if (folded) {
       const paras = cmds.join("\n").split(/\n\s*\n/);
       for (const p of paras) {
@@ -291,4 +292,23 @@ function runSteps(text: string): string[] {
     } else out.push(...cmds.filter(Boolean));
   }
   return out;
+}
+
+/** Cuts a shell/YAML comment: a \`#\` outside quotes that starts the line or follows a space. */
+function stripComment(line: string): string {
+  let quote = "";
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (quote) {
+      if (ch === quote) quote = "";
+    } else if (ch === '"' || ch === "'") quote = ch;
+    else if (ch === "#" && (i === 0 || /\s/.test(line[i - 1] ?? ""))) return line.slice(0, i).trim();
+  }
+  return line.trim();
+}
+
+/** Removes YAML quotes only when they wrap the whole value. */
+function unquote(v: string): string {
+  const m = /^(["'])([\s\S]*)\1$/.exec(v);
+  return (m ? (m[2] ?? "") : v).trim();
 }
