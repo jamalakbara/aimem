@@ -8,6 +8,7 @@ import {
   loadProject,
   parseCsv,
   readDocx,
+  readPdf,
   readXlsx,
   resolveAuthorWithGit,
   sheetToRecords,
@@ -23,6 +24,7 @@ import { lockOwnerAlive } from "./refresh-state.js";
 const MAX_BYTES = 10 * 1024 * 1024;
 const TEXT = new Set([".md", ".markdown", ".txt"]);
 const DOCX = ".docx";
+const PDF = ".pdf";
 /** 16 §12: said once per import or sync run. */
 export const VISIBILITY_WARNING = "Imported content is visible to everyone who can read this repository";
 
@@ -55,10 +57,10 @@ export async function importFile(
   const path = resolve(deps.cwd, file);
   const ext = extname(path).toLowerCase();
   const sheet = ext === ".csv" || ext === ".xlsx";
-  if (!TEXT.has(ext) && !sheet && ext !== DOCX)
+  if (!TEXT.has(ext) && !sheet && ext !== DOCX && ext !== PDF)
     throw new AimemError(
       "USAGE",
-      `${ext || "extension-less"} files arrive in a later M4b slice; this version imports .md, .txt, .docx, .csv and .xlsx`,
+      `${ext || "extension-less"} files arrive in a later M4b slice; this version imports .md, .txt, .docx, .pdf, .csv and .xlsx`,
     );
   const author = await who(deps, g, o);
   const nb = await loadProject(deps.fs, g.dir);
@@ -69,9 +71,10 @@ export async function importFile(
     throw new AimemError("USAGE", `cannot read ${file}`);
   });
   if (bytes.byteLength > MAX_BYTES) throw new AimemError("USAGE", `${file} is larger than 10 MB`);
-  if (ext !== ".xlsx" && ext !== DOCX && bytes.includes(0))
+  if (ext !== ".xlsx" && ext !== DOCX && ext !== PDF && bytes.includes(0))
     throw new AimemError("USAGE", `${file} looks like a binary file`);
-  let text = ext === ".xlsx" || ext === DOCX ? "" : new TextDecoder().decode(bytes);
+  let text = ext === ".xlsx" || ext === DOCX || ext === PDF ? "" : new TextDecoder().decode(bytes);
+  let pdfTitle: string | undefined;
   const readNotes: string[] = [];
   if (ext === DOCX) {
     try {
@@ -82,6 +85,19 @@ export async function importFile(
       throw new AimemError("USAGE", `${basename(path)}: ${e instanceof Error ? e.message : String(e)}`);
     }
     if (!text.trim()) throw new AimemError("USAGE", `${basename(path)} has no text to import`);
+  }
+  if (ext === PDF) {
+    try {
+      const d = await readPdf(bytes);
+      // 16 §7: a pdf has no reliable structure, so it is imported whole; the Info title leads.
+      text = d.title && !d.text.startsWith(d.title) ? `${d.title}\n\n${d.text}` : d.text;
+      pdfTitle = d.title;
+      readNotes.push(...d.warnings);
+    } catch (e) {
+      throw new AimemError("USAGE", `${basename(path)}: ${e instanceof Error ? e.message : String(e)}`);
+    }
+    if (!text.trim())
+      throw new AimemError("USAGE", `${basename(path)} has no text layer (a scan?); OCR is not supported`);
   }
   // The source key must survive edits to the file, so it is the path inside the project, not a hash
   // of the content (16 §2.1 said sha256 of the upload; that would duplicate on every change).
@@ -122,7 +138,14 @@ export async function importFile(
 
   const version = createHash("sha256").update(bytes).digest("hex").slice(0, 12);
   const asDoc = o.as && !["auto", "tasks", "testcases", "incidents"].includes(o.as) ? o.as : undefined;
-  const doc = documentToRecord(text, basename(path), asDoc);
+  // PDF text is always whole-document: page text has no reliable headings (16 §7).
+  const doc =
+    ext === PDF
+      ? {
+          ...documentToRecord(text, basename(path), "whole"),
+          ...(pdfTitle ? { title: pdfTitle.slice(0, 120) } : {}),
+        }
+      : documentToRecord(text, basename(path), asDoc);
   const r = await withImportLock(deps, nb.dir, async () =>
     upsertExternal(
       nb,

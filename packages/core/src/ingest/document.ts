@@ -99,8 +99,13 @@ export function documentToRecord(text: string, fileName: string, typeHint?: stri
     );
 
   const hint = typeHint?.toLowerCase();
-  const candidates =
-    hint && (TEMPLATE_TYPES as string[]).includes(hint) ? [hint as TemplateType] : TEMPLATE_TYPES;
+  // "whole": no template matching at all (pdf text has no reliable headings, 16 §7).
+  const whole = hint === "whole";
+  const candidates = whole
+    ? []
+    : hint && (TEMPLATE_TYPES as string[]).includes(hint)
+      ? [hint as TemplateType]
+      : TEMPLATE_TYPES;
   const match = candidates.find((t) => REQUIRED[t].every((h) => sections.has(key(h))));
   // Roles and tags become frontmatter: keep only safe names, and say what was left out.
   const keepNames = (list: string[] | undefined, re: RegExp, what: string) => {
@@ -160,8 +165,12 @@ export function documentToRecord(text: string, fileName: string, typeHint?: stri
     fields: { kind: "reference" },
     ...common,
     mode: "whole-document",
-    warning: missing.length
-      ? `missing headings for ${hint}: ${missing.join(", ")}; imported as a whole document`
-      : "no template matched; imported as a whole document",
+    ...(whole
+      ? {}
+      : {
+          warning: missing.length
+            ? `missing headings for ${hint}: ${missing.join(", ")}; imported as a whole document`
+            : "no template matched; imported as a whole document",
+        }),
   };
 }
