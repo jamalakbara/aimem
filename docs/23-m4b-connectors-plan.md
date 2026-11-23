@@ -1,6 +1,6 @@
 # 23 — M4b Connectors Plan (upload and Google)
 
-Status: **proposed, awaiting owner approval.** Nothing in this plan is implemented. It turns 16 (connectors and ingestion) and the M4b entry in 13 into PRs. The Odoo connector stays deferred (16 §6, ADR-016).
+Status: **approved by the owner (2026-11-23) with the recommended defaults below.** Slices land one PR at a time; this line records which are implemented. It turns 16 (connectors and ingestion) and the M4b entry in 13 into PRs. The Odoo connector stays deferred (16 §6, ADR-016).
 
 Already in `main`: the ownership fields (`managed_by`, `source`, 03 §2.1, 16 §2.1), V017 (body differs from `source.content_sha`) and V018 (`source.state` not `ok`), and `READONLY_EXTERNAL` on `update`, `move` and `discard`. Missing: `detach`, `import`, `templates`, `sources`, the converters and the Google connector.
 
