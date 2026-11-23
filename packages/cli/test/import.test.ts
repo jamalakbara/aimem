@@ -73,11 +73,11 @@ describe("aimem import (M4b.1)", () => {
   });
 
   it("refuses formats of later slices, and files with a likely secret", async () => {
-    writeFileSync(join(dir, "docs/spec.pdf"), "%PDF");
-    const d = await imp("spec.pdf");
+    writeFileSync(join(dir, "docs/spec.pptx"), "PK");
+    const d = await imp("spec.pptx");
     expect(d.code).toBe(2);
     expect(d.json.error.message).toMatch(
-      /\.pdf files arrive in a later M4b slice; this version imports \.md, \.txt, \.docx, \.csv and \.xlsx/,
+      /\.pptx files arrive in a later M4b slice; this version imports \.md, \.txt, \.docx, \.pdf, \.csv and \.xlsx/,
     );
     const key = ["AKIA", "ABCDEFGHIJKLMNOP"].join("");
     writeFileSync(join(dir, "docs/leak.md"), `# Leak\n\n## Summary\n\nKey ${key} here.\n`);
@@ -237,4 +237,31 @@ describe("team-mode import warning (QA #102 note 3)", () => {
       /Awaiting verification by another teammate: decision records need a second person's review here; ask them to run aimem verify dec-/,
     );
   });
+});
+
+describe("aimem import <file>.pdf (M4b.3b)", () => {
+  it("imports a pdf whole, titled by its Info title, and reports it unchanged next time", async () => {
+    const a = await imp("handbook.pdf");
+    expect(a.code).toBe(0);
+    expect(a.json.data).toMatchObject({
+      action: "created",
+      type: "memory",
+      mode: "whole-document",
+      title: "Courier ops handbook",
+    });
+    const text = readFileSync(join(dir, a.json.data.file), "utf8");
+    expect(text).toMatch(/kind: reference/);
+    expect(text).toMatch(/Rotate the API key every 90 days\./);
+    expect(text).toMatch(/Escalate outages to the on-call engineer\./);
+    expect(a.json.warnings).not.toContain("no template matched; imported as a whole document");
+    expect((await imp("handbook.pdf")).json.data.action).toBe("unchanged");
+  });
+
+  it("refuses a password-protected pdf and a pdf without a text layer", async () => {
+    const locked = await imp("locked.pdf");
+    expect(locked.code).toBe(2);
+    expect(locked.json.error.message).toMatch(/locked\.pdf: the pdf is encrypted with a password/);
+    const scan = await imp("scan.pdf");
+    expect(scan.json.error.message).toMatch(/scan\.pdf has no text layer \(a scan\?\); OCR is not supported/);
+  }, 30_000);
 });
