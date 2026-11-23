@@ -1,6 +1,6 @@
-import { strToU8, zipSync } from "fflate";
+import { strToU8, Zip, ZipDeflate, zipSync } from "fflate";
 import { describe, expect, it } from "vitest";
-import { readXlsx, writeXlsx } from "../src/index.js";
+import { readXlsx, scanSecrets, writeXlsx } from "../src/index.js";
 
 const CT =
   '<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"/>';
@@ -104,5 +104,101 @@ describe("xlsx safety (QA test plan)", () => {
     expect(() => readXlsx(zipSync({ "a.txt": strToU8("x") }))).toThrow(
       /not an xlsx file \(no xl\/workbook\.xml\)/,
     );
+  });
+});
+
+describe("xlsx limits from the #101 review", () => {
+  /** A sheet of \`mb\` megabytes of spaces, built in pieces so the test never holds it in memory. */
+  const streamedBomb = (mb: number) => {
+    const parts: Uint8Array[] = [];
+    const zip = new Zip((err, chunk) => {
+      if (err) throw err;
+      parts.push(chunk);
+    });
+    for (const [name, text] of [
+      ["xl/workbook.xml", WB(["S"])],
+      ["xl/_rels/workbook.xml.rels", RELS(1)],
+    ] as const) {
+      const f = new ZipDeflate(name);
+      zip.add(f);
+      f.push(strToU8(text), true);
+    }
+    const sheet = new ZipDeflate("xl/worksheets/sheet1.xml", { level: 9 });
+    zip.add(sheet);
+    const block = new Uint8Array(1024 * 1024).fill(32);
+    for (let i = 0; i < mb; i++) sheet.push(block, i === mb - 1);
+    zip.end();
+    const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+    let at = 0;
+    for (const p of parts) {
+      out.set(p, at);
+      at += p.length;
+    }
+    return out;
+  };
+
+  it("stops inflating as soon as an entry passes the limit, without unpacking the rest (finding 1)", () => {
+    const bomb = streamedBomb(400);
+    const before = process.memoryUsage().rss;
+    const t0 = performance.now();
+    expect(() => readXlsx(bomb)).toThrow(/unpacks to more than 20 MB/);
+    expect(performance.now() - t0).toBeLessThan(2000);
+    expect(process.memoryUsage().rss - before).toBeLessThan(300 * 1024 * 1024);
+  }, 60_000);
+
+  it("turns absurd cell references and huge cells into row errors without big allocations (findings 2, 3)", () => {
+    const liar = book({
+      S:
+        '<row r="1"><c r="A1" t="inlineStr"><is><t>title</t></is></c></row>' +
+        '<row r="2"><c r="ZZZZZZ2" t="inlineStr"><is><t>far</t></is></c></row>' +
+        '<row r="3"><c r="A0" t="inlineStr"><is><t>zero</t></is></c></row>' +
+        '<row r="99999999999"><c r="A99999999999" t="inlineStr"><is><t>deep</t></is></c></row>' +
+        `<row r="5"><c r="A5" t="inlineStr"><is><t>${"x".repeat(1_100_000)}</t></is></c></row>` +
+        '<row r="6"><c r="A6" t="inlineStr"><is><t>fine</t></is></c></row>',
+    });
+    const r = readXlsx(liar);
+    expect(r.rows.map((x) => (x as string[] & { error?: string }).error ?? x.join("|"))).toEqual([
+      "title",
+      "cell ZZZZZZ2 is outside the sheet (at most 16384 columns and 1048576 rows)",
+      "cell A0 is outside the sheet (at most 16384 columns and 1048576 rows)",
+      "row 99999999999 is outside the sheet (at most 1048576 rows)",
+      "a cell is longer than 1 MB",
+      "fine",
+    ]);
+  });
+
+  it("scans a 15 MB single-token text for secrets without overflowing the stack (finding 3)", () => {
+    expect(() => scanSecrets("a".repeat(15 * 1024 * 1024))).not.toThrow();
+    const key = ["AKIA", "ABCDEFGHIJKLMNOP"].join("");
+    expect(scanSecrets(`${"b".repeat(200_000)} ${key}`).map((f) => f.kind)).toContain("aws-access-key");
+  });
+
+  it("skips hidden sheets by default, reads date1904, flags macros, refuses duplicate entry names (findings 5, 6, 9)", () => {
+    const wb = (attrs: string) =>
+      strToU8(
+        `<?xml version="1.0"?><workbook xmlns:r="r"><workbookPr date1904="1"/><sheets><sheet name="Secret" sheetId="1" r:id="rId1" ${attrs}/><sheet name="Visible" sheetId="2" r:id="rId2"/></sheets></workbook>`,
+      );
+    const files = {
+      "xl/workbook.xml": wb('state="hidden"'),
+      "xl/_rels/workbook.xml.rels": strToU8(RELS(2)),
+      "xl/worksheets/sheet1.xml": strToU8(
+        '<worksheet><sheetData><row r="1"><c r="A1" t="inlineStr"><is><t>secret</t></is></c></row></sheetData></worksheet>',
+      ),
+      "xl/worksheets/sheet2.xml": strToU8(
+        '<worksheet><sheetData><row r="1"><c r="A1" t="inlineStr"><is><t>visible</t></is></c></row></sheetData></worksheet>',
+      ),
+      "xl/vbaProject.bin": strToU8("macro"),
+    };
+    const r = readXlsx(zipSync(files));
+    expect(r).toMatchObject({ sheet: "Visible", hidden: false, date1904: true, macros: true });
+    expect(r.sheets).toEqual([
+      { name: "Secret", hidden: true },
+      { name: "Visible", hidden: false },
+    ]);
+    expect(readXlsx(zipSync(files), "Secret")).toMatchObject({
+      sheet: "Secret",
+      hidden: true,
+      rows: [["secret"]],
+    });
   });
 });

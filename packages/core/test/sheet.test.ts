@@ -145,4 +145,18 @@ describe("sheet templates (16 §4.1)", () => {
     ]);
     expect(r.extraColumns).toEqual([]);
   });
+
+  it("pads short workbook rows, and reads 1904-based date serials (QA #101 findings 4, 6)", () => {
+    const rows = [
+      ["title", "summary", "status", "due"],
+      ["Ship", "Now.", "open"],
+      ["Mac", "Old.", "open", "45000"],
+    ];
+    const r = sheetToRecords(rows, "b.xlsx", "tasks", { padShortRows: true, date1904: true });
+    expect(r.notes).toEqual([]);
+    expect(r.items[1]?.record.fields).toMatchObject({ due: "2027-03-16" });
+    expect(sheetToRecords(rows, "b.xlsx", "tasks").items[1]?.record.fields).toMatchObject({
+      due: "2023-03-15",
+    });
+  });
 });

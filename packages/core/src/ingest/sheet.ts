@@ -118,11 +118,13 @@ const cellText = (v: string | undefined) => control(v ?? "").trim();
 const mdCell = (v: string) => v.replace(/\|/g, "\\|").replace(/\n/g, "<br>");
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 /** Spreadsheets store dates as day numbers since 1899-12-30; turn one into an ISO date or time. */
-const fromSerial = (v: string, withTime: boolean) => {
+const fromSerial = (v: string, withTime: boolean, date1904 = false) => {
   if (!/^\d+(\.\d+)?$/.test(v)) return v;
   const n = Number(v);
   if (n < 1 || n > 2958465) return v;
-  const iso = new Date(Date.UTC(1899, 11, 30) + Math.round(n * 86_400_000)).toISOString();
+  // 1904-based workbooks (old Mac Excel) count from 1904-01-01, 1462 days later (QA, #101).
+  const base = Date.UTC(1899, 11, 30) + (date1904 ? 1462 * 86_400_000 : 0);
+  const iso = new Date(base + Math.round(n * 86_400_000)).toISOString();
   return withTime && n % 1 !== 0 ? `${iso.slice(0, 19)}Z` : iso.slice(0, 10);
 };
 const DATETIME = /^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2})?(?:Z|[+-]\d{2}:?\d{2})?)?$/;
@@ -133,7 +135,12 @@ const NAME = /^[a-z0-9][a-z0-9_-]*$/i;
  * unknown columns go into the body as a small table. A bad row is reported with its sheet row number
  * (the header is row 1) and the other rows still import. Cells are text: nothing is evaluated.
  */
-export function sheetToRecords(rows: string[][], fileName: string, typeHint?: string): SheetResult {
+export function sheetToRecords(
+  rows: string[][],
+  fileName: string,
+  typeHint?: string,
+  opts: { padShortRows?: boolean; date1904?: boolean } = {},
+): SheetResult {
   const [header = [], ...data] = rows;
   const cols = header.map(normal);
   const hint = typeHint?.toLowerCase();
@@ -168,9 +175,9 @@ export function sheetToRecords(rows: string[][], fileName: string, typeHint?: st
       const at = cols.indexOf(c);
       const v = at < 0 ? "" : cellText(cells[at]);
       return c === "due"
-        ? fromSerial(v, false)
+        ? fromSerial(v, false, opts.date1904)
         : c === "started" || c === "resolved_at"
-          ? fromSerial(v, true)
+          ? fromSerial(v, true, opts.date1904)
           : v;
     };
     const fail = (reason: string): false => {
@@ -226,7 +233,8 @@ export function sheetToRecords(rows: string[][], fileName: string, typeHint?: st
       paths.some((p) => /^([a-z]:|[\\/])/i.test(p) || p.split(/[\\/]/).some((x) => x === "." || x === ".."))
     )
       return fail("paths must be relative to the repository, without '.' or '..' parts");
-    if (cells.length < cols.length)
+    // Spreadsheet apps leave out empty cells at the end of a row: only CSV rows are short by mistake.
+    if (cells.length < cols.length && !opts.padShortRows)
       notes.push({ row, reason: `has ${cells.length} cells, the header has ${cols.length}` });
     else if (cells.length > cols.length && cells.slice(cols.length).some((c) => c.trim()))
       notes.push({

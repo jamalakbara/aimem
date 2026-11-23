@@ -90,9 +90,10 @@ export async function importFile(
   if (sheet) {
     let rows: string[][];
     let sheetName: string | undefined;
+    let book: ReturnType<typeof readXlsx> | undefined;
     try {
       if (ext === ".xlsx") {
-        const book = readXlsx(bytes, o.sheet);
+        book = readXlsx(bytes, o.sheet);
         rows = book.rows;
         sheetName = book.sheet;
       } else {
@@ -102,7 +103,7 @@ export async function importFile(
     } catch (e) {
       throw new AimemError("USAGE", `${basename(path)}: ${e instanceof Error ? e.message : String(e)}`);
     }
-    return importSheet(deps, nb, { rows, sheetName, file, id, author, o, wdeps });
+    return importSheet(deps, nb, { rows, sheetName, book, file, id, author, o, wdeps });
   }
 
   const version = createHash("sha256").update(bytes).digest("hex").slice(0, 12);
@@ -167,6 +168,7 @@ async function importSheet(
   a: {
     rows: string[][];
     sheetName: string | undefined;
+    book?: ReturnType<typeof readXlsx> | undefined;
     file: string;
     id: string;
     author: string;
@@ -177,13 +179,27 @@ async function importSheet(
   let sheet: ReturnType<typeof sheetToRecords>;
   try {
     const hint = a.o.as && ["tasks", "testcases", "incidents"].includes(a.o.as) ? a.o.as : undefined;
-    sheet = sheetToRecords(a.rows, basename(a.file), hint);
+    sheet = sheetToRecords(a.rows, basename(a.file), hint, {
+      padShortRows: Boolean(a.book),
+      date1904: a.book?.date1904 ?? false,
+    });
   } catch (e) {
-    throw new AimemError("USAGE", e instanceof Error ? e.message : String(e));
+    const why = e instanceof Error ? e.message : String(e);
+    // A workbook may have the data on another sheet (QA, #101).
+    throw new AimemError(
+      "USAGE",
+      a.book && a.book.sheets.length > 1
+        ? `${why} (read sheet '${a.book.sheet}'; sheets: ${a.book.sheets.map((x) => x.name).join(", ")}; pick one with --sheet)`
+        : why,
+    );
   }
   const counts = { created: 0, updated: 0, unchanged: 0 };
   const errors = [...sheet.errors];
-  const warnings: string[] = sheet.notes.map((n) => `row ${n.row}: ${n.reason}`);
+  const warnings: string[] = [
+    ...(a.book?.hidden ? [`sheet '${a.book.sheet}' is hidden in the workbook`] : []),
+    ...(a.book?.macros ? ["the workbook contains macros; they were ignored, not run"] : []),
+    ...sheet.notes.map((n) => `row ${n.row}: ${n.reason}`),
+  ];
   const rows: { row: number; ref: string; action: string }[] = [];
   const items = sheet.items.map(({ row, key, record }) => ({
     row,
