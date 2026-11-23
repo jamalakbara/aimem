@@ -819,7 +819,14 @@ export async function upsertExternalMany(
         file,
         text: serializeRecord(rec),
       });
-      return { action: "created", ref: id, file, trust, warnings: [] };
+      // Same reminder as add (M3.7): a human's durable record waits for a second teammate (QA, #102).
+      const warnings =
+        trust === "agent" && input.author.startsWith("human:")
+          ? [
+              `Awaiting verification by another teammate: ${input.type} records need a second person's review here; ask them to run aimem verify ${id}`,
+            ]
+          : [];
+      return { action: "created", ref: id, file, trust, warnings };
     }
 
     const old = existing.fm.source as { content_sha?: string; state?: string; imported_by?: string };

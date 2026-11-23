@@ -226,3 +226,15 @@ describe("import safety (QA #99 review)", () => {
     expect(fm.json.warnings).toContain("front matter at the top of the document was left out");
   });
 });
+
+describe("team-mode import warning (QA #102 note 3)", () => {
+  it("says a second teammate must verify an imported decision", async () => {
+    const y = join(dir, ".aimem/project.yaml");
+    writeFileSync(y, readFileSync(y, "utf8").replace("mode: solo", "mode: team"));
+    const r = await imp("decision.md");
+    expect(r.json.data.trust).toBe("agent");
+    expect(r.json.warnings.join("\n")).toMatch(
+      /Awaiting verification by another teammate: decision records need a second person's review here; ask them to run aimem verify dec-/,
+    );
+  });
+});
