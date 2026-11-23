@@ -12,10 +12,13 @@
     "build": "tsc -b"
   },
   "dependencies": {
-    "@aimem/core": "workspace:*",
-    "@aimem/schema": "workspace:*",
-    "commander": "^14.0.3",
     "@aimem/adapters": "workspace:*",
-    "@aimem/mcp": "workspace:*"
+    "@aimem/core": "workspace:*",
+    "@aimem/mcp": "workspace:*",
+    "@aimem/schema": "workspace:*",
+    "commander": "^14.0.3"
+  },
+  "devDependencies": {
+    "fflate": "0.8.2"
   }
 }

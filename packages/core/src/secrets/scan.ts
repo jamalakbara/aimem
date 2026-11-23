@@ -47,12 +47,24 @@ function looksRandom(t: string): boolean {
 const fingerprint = (match: string) =>
   `sha256:${createHash("sha256").update(match).digest("hex").slice(0, 16)}`;
 
+const WINDOW = 64 * 1024;
+const OVERLAP = 1024;
+function windows(line: string): string[] {
+  if (line.length <= WINDOW) return [line];
+  const out: string[] = [];
+  for (let at = 0; at < line.length; at += WINDOW - OVERLAP) {
+    out.push(line.slice(at, at + WINDOW));
+    if (at + WINDOW >= line.length) break;
+  }
+  return out;
+}
+
 /** Scan text for likely secrets, skipping fingerprints in `ignore`. */
 export function scanSecrets(text: string, ignore: ReadonlySet<string> = new Set()): SecretFinding[] {
   const out: SecretFinding[] = [];
   const seen = new Set<string>();
   const lines = text.split("\n");
-  lines.forEach((lineText, i) => {
+  lines.forEach((wholeLine, i) => {
     const add = (kind: string, match: string) => {
       const fp = fingerprint(match);
       const key = `${i}:${kind}:${fp}`;
@@ -60,17 +72,21 @@ export function scanSecrets(text: string, ignore: ReadonlySet<string> = new Set(
       seen.add(key);
       out.push({ kind, line: i + 1, fingerprint: fp });
     };
-    const matched: string[] = [];
-    for (const [kind, re, accept] of PATTERNS) {
-      for (const m of lineText.matchAll(re)) {
-        if (accept && !accept(m as RegExpExecArray)) continue;
-        add(kind, m[0]);
-        matched.push(m[0]);
+    // A very long line (one 15 MB token) overflows the regex engine's stack: scan it in overlapping
+    // windows instead; a match on a window edge is found in the next window (QA, #101).
+    for (const lineText of windows(wholeLine)) {
+      const matched: string[] = [];
+      for (const [kind, re, accept] of PATTERNS) {
+        for (const m of lineText.matchAll(re)) {
+          if (accept && !accept(m as RegExpExecArray)) continue;
+          add(kind, m[0]);
+          matched.push(m[0]);
+        }
       }
-    }
-    for (const m of lineText.matchAll(TOKEN)) {
-      if (looksRandom(m[0]) && !matched.some((x) => x.includes(m[0]) || m[0].includes(x)))
-        add("high-entropy", m[0]);
+      for (const m of lineText.matchAll(TOKEN)) {
+        if (looksRandom(m[0]) && !matched.some((x) => x.includes(m[0]) || m[0].includes(x)))
+          add("high-entropy", m[0]);
+      }
     }
   });
   return out;

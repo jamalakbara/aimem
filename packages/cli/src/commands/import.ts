@@ -7,6 +7,7 @@ import {
   documentToRecord,
   loadProject,
   parseCsv,
+  readXlsx,
   resolveAuthorWithGit,
   sheetToRecords,
   upsertExternal,
@@ -38,17 +39,24 @@ export async function importFile(
   deps: CliDeps,
   g: GlobalOptions,
   file: string,
-  o: { as?: string; author?: string; force?: boolean; allowOutside?: boolean; strict?: boolean },
+  o: {
+    as?: string;
+    author?: string;
+    force?: boolean;
+    allowOutside?: boolean;
+    strict?: boolean;
+    sheet?: string;
+  },
 ): Promise<CommandResult> {
   if (o.as !== undefined && !AS_VALUES.includes(o.as))
     throw new AimemError("USAGE", `--as must be ${AS_VALUES.slice(0, -1).join(", ")} or ${AS_VALUES.at(-1)}`);
   const path = resolve(deps.cwd, file);
   const ext = extname(path).toLowerCase();
-  const sheet = ext === ".csv";
+  const sheet = ext === ".csv" || ext === ".xlsx";
   if (!TEXT.has(ext) && !sheet)
     throw new AimemError(
       "USAGE",
-      `${ext || "extension-less"} files arrive in a later M4b slice; this version imports .md, .txt and .csv`,
+      `${ext || "extension-less"} files arrive in a later M4b slice; this version imports .md, .txt, .csv and .xlsx`,
     );
   const author = await who(deps, g, o);
   const nb = await loadProject(deps.fs, g.dir);
@@ -59,8 +67,8 @@ export async function importFile(
     throw new AimemError("USAGE", `cannot read ${file}`);
   });
   if (bytes.byteLength > MAX_BYTES) throw new AimemError("USAGE", `${file} is larger than 10 MB`);
-  if (bytes.includes(0)) throw new AimemError("USAGE", `${file} looks like a binary file`);
-  const text = new TextDecoder().decode(bytes);
+  if (ext !== ".xlsx" && bytes.includes(0)) throw new AimemError("USAGE", `${file} looks like a binary file`);
+  const text = ext === ".xlsx" ? "" : new TextDecoder().decode(bytes);
   // The source key must survive edits to the file, so it is the path inside the project, not a hash
   // of the content (16 §2.1 said sha256 of the upload; that would duplicate on every change).
   const realRoot = (await deps.fs.realpath?.(nb.root).catch(() => undefined)) ?? nb.root;
@@ -79,7 +87,24 @@ export async function importFile(
     ? rel
     : `name:${basename(path)}#${createHash("sha256").update(realPath).digest("hex").slice(0, 12)}`;
   const wdeps = await writeDeps(deps, nb);
-  if (sheet) return importSheet(deps, nb, { text, file, id, author, o, wdeps });
+  if (sheet) {
+    let rows: string[][];
+    let sheetName: string | undefined;
+    let book: ReturnType<typeof readXlsx> | undefined;
+    try {
+      if (ext === ".xlsx") {
+        book = readXlsx(bytes, o.sheet);
+        rows = book.rows;
+        sheetName = book.sheet;
+      } else {
+        if (o.sheet) throw new Error("--sheet applies to .xlsx files only");
+        rows = parseCsv(text);
+      }
+    } catch (e) {
+      throw new AimemError("USAGE", `${basename(path)}: ${e instanceof Error ? e.message : String(e)}`);
+    }
+    return importSheet(deps, nb, { rows, sheetName, book, file, id, author, o, wdeps });
+  }
 
   const version = createHash("sha256").update(bytes).digest("hex").slice(0, 12);
   const asDoc = o.as && !["auto", "tasks", "testcases", "incidents"].includes(o.as) ? o.as : undefined;
@@ -141,7 +166,9 @@ async function importSheet(
   deps: CliDeps,
   nb: Awaited<ReturnType<typeof loadProject>>,
   a: {
-    text: string;
+    rows: string[][];
+    sheetName: string | undefined;
+    book?: ReturnType<typeof readXlsx> | undefined;
     file: string;
     id: string;
     author: string;
@@ -152,13 +179,27 @@ async function importSheet(
   let sheet: ReturnType<typeof sheetToRecords>;
   try {
     const hint = a.o.as && ["tasks", "testcases", "incidents"].includes(a.o.as) ? a.o.as : undefined;
-    sheet = sheetToRecords(parseCsv(a.text), basename(a.file), hint);
+    sheet = sheetToRecords(a.rows, basename(a.file), hint, {
+      padShortRows: Boolean(a.book),
+      date1904: a.book?.date1904 ?? false,
+    });
   } catch (e) {
-    throw new AimemError("USAGE", e instanceof Error ? e.message : String(e));
+    const why = e instanceof Error ? e.message : String(e);
+    // A workbook may have the data on another sheet (QA, #101).
+    throw new AimemError(
+      "USAGE",
+      a.book && a.book.sheets.length > 1
+        ? `${why} (read sheet '${a.book.sheet}'; sheets: ${a.book.sheets.map((x) => x.name).join(", ")}; pick one with --sheet)`
+        : why,
+    );
   }
   const counts = { created: 0, updated: 0, unchanged: 0 };
   const errors = [...sheet.errors];
-  const warnings: string[] = sheet.notes.map((n) => `row ${n.row}: ${n.reason}`);
+  const warnings: string[] = [
+    ...(a.book?.hidden ? [`sheet '${a.book.sheet}' is hidden in the workbook`] : []),
+    ...(a.book?.macros ? ["the workbook contains macros; they were ignored, not run"] : []),
+    ...sheet.notes.map((n) => `row ${n.row}: ${n.reason}`),
+  ];
   const rows: { row: number; ref: string; action: string }[] = [];
   const items = sheet.items.map(({ row, key, record }) => ({
     row,
@@ -218,6 +259,7 @@ async function importSheet(
   return {
     data: {
       type: sheet.type,
+      ...(a.sheetName ? { sheet: a.sheetName } : {}),
       ...counts,
       errors,
       rows,
@@ -296,7 +338,7 @@ async function withImportLock<T>(deps: CliDeps, aimemDir: string, f: () => Promi
         throw new AimemError(
           "USAGE",
           hasPid
-            ? `another aimem import (pid ${pid}) is still running in this notebook; try again when it has finished`
+            ? `another aimem import (pid ${pid}) is still running in this notebook; try again when it has finished. The lock is .aimem/.cache/import.lock; if no import is running, delete that file`
             : `another aimem import is still running in this notebook (its lock expires in ${Math.max(1, Math.ceil((LOCK_STALE_MS - age) / 1000))} s)`,
         );
       else await new Promise((done) => setTimeout(done, 50));

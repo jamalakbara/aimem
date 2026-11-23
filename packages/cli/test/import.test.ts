@@ -77,7 +77,7 @@ describe("aimem import (M4b.1)", () => {
     const d = await imp("spec.docx");
     expect(d.code).toBe(2);
     expect(d.json.error.message).toMatch(
-      /\.docx files arrive in a later M4b slice; this version imports \.md, \.txt and \.csv/,
+      /\.docx files arrive in a later M4b slice; this version imports \.md, \.txt, \.csv and \.xlsx/,
     );
     const key = ["AKIA", "ABCDEFGHIJKLMNOP"].join("");
     writeFileSync(join(dir, "docs/leak.md"), `# Leak\n\n## Summary\n\nKey ${key} here.\n`);
