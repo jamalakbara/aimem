@@ -13,5 +13,5 @@
       "@aimem/mcp": ["./packages/mcp/src/index.ts"]
     }
   },
-  "include": ["packages/*/test/**/*.ts", "vitest.config.ts", "vitest.global-setup.ts"]
+  "include": ["packages/*/test/**/*.ts", "vitest.config.ts", "vitest.global-setup.ts", "vitest.setup.ts"]
 }

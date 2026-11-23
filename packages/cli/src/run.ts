@@ -5,6 +5,7 @@ import { Command, CommanderError, InvalidArgumentError, Option } from "commander
 import { adapters } from "./commands/adapters.js";
 import { adopt } from "./commands/adopt.js";
 import { ask } from "./commands/ask.js";
+import { type SourcesOptions, sources } from "./commands/connectors.js";
 import { type ContextOptions, context } from "./commands/context.js";
 import { hooks } from "./commands/hooks.js";
 import { hubInit } from "./commands/hub.js";
@@ -361,6 +362,21 @@ export async function run(argv: string[], outer: CliDeps): Promise<number> {
     .option("--allow-outside", "let an agent write --out outside the project")
     .option("--author <who>", "human:<handle> or agent:<tool>")
     .action(action("templates", (g, args, o) => templates(deps, g, (args[0] as string[]) ?? [], o)));
+
+  cmd(
+    "sources [args...]",
+    "Google documents synced into the notebook: list | add google | remove google | sync",
+  )
+    .option("--folder <id>", "Drive inbox folder: id or link (add)")
+    .option("--file <id>", "a single Doc or Sheet: id or link (add)")
+    .option("--dry-run", "read the sources and report, write nothing (sync)")
+    .option("--strict", "exit 1 when a file or row failed (sync)")
+    .option("--force", "import documents that look like an existing record (sync)")
+    .option("--offline", "disable network access")
+    .option("--author <who>", "human:<handle> or agent:<tool>; adding and removing are human-only")
+    .action(
+      action("sources", (g, args, o) => sources(deps, g, (args[0] as string[]) ?? [], o as SourcesOptions)),
+    );
 
   cmd("detach <ref>", "make an imported record notebook-owned; imports stop updating it")
     .option("--author <who>", "human:<handle> or agent:<tool>")

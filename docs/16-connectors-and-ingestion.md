@@ -213,6 +213,7 @@ Secrets come from env or the server secret store (e.g. the Google credentials fi
 - **Visibility mismatch:** Google (and, later, Odoo) permissions are finer-grained than git. Once ingested, content is visible to everyone who can read the repo. Therefore: explicit selection and allow-lists only; a warning at import time; sensitive sources go to a private hub (09 T13).
 - **Client/customer data:** imported documents (and, later, task systems) may contain personal or client data. Select sources deliberately; use field filters.
 - **Credentials:** least privilege, secret store, rotation (09 T12).
+- **Trust of synced documents:** a sync by a person makes memories `verified`, like `aimem add`, although everyone who can edit the Doc or Sheet can change the text. A changed document gets the trust of the sync that brings the change. Share the inbox folder for editing only with people you trust. The author comes from `--author`/`AIMEM_AUTHOR`/git and is not authenticated.
 - **Imported text is untrusted:** wrapped and labelled like any record when shown to agents (09 §3).
 - **Audit:** every sync run is recorded (`source_runs`, 07 §4.3).
 

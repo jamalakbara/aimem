@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { join } from "node:path";
 import {
   BODY_SECTIONS,
@@ -705,8 +706,12 @@ export async function upsertExternalMany(
   // Records of the sources being imported are told apart by their keys, so the duplicate check looks
   // only at the rest of the notebook (QA, #99 / 4b.2).
   const sources = new Set(inputs.map((i) => `${i.source.system}\u0000${i.source.id}`));
+  // Google documents are told apart by their Drive id: a folder of "Weekly report …" is not a set of
+  // duplicates, and a resumed sync must not be held up by its own first half (QA, #106).
+  const fromGoogle = inputs.some((i) => i.source.system.startsWith("google-"));
   const others = index.records.filter((r) => {
     const s = r.fm.source as { system?: string; id?: unknown } | undefined;
+    if (fromGoogle && r.fm.managed_by === "external" && s?.system?.startsWith("google-")) return false;
     return !(r.fm.managed_by === "external" && s?.system && sources.has(`${s.system}\u0000${String(s.id)}`));
   });
   const findDup = duplicateFinder(others);
@@ -727,6 +732,10 @@ export async function upsertExternalMany(
   }
   const done = await finish(deps, nb, [...changed]);
   return { results, changed: [...new Set(done.changed)].sort(), warnings: done.warnings };
+
+  function importTrust(author: string, type: RecordType): "verified" | "agent" {
+    return author.startsWith("human:") && !requiresReview(nb.config, type) ? "verified" : "agent";
+  }
 
   async function upsertOne(input: ExternalInput): Promise<ExternalItemResult> {
     const src = input.source;
@@ -771,9 +780,9 @@ export async function upsertExternalMany(
             { ref: dup.id, title: dup.title, file: dup.file },
           );
       }
-      const trust =
-        input.author.startsWith("human:") && !requiresReview(nb.config, input.type) ? "verified" : "agent";
-      const id = newUniqueId(input.type, deps.random, taken);
+      const trust = importTrust(input.author, input.type);
+      // Derived from the source key, so two clones that import one source agree on the id (QA plan 19).
+      const id = newUniqueId(input.type, seededRandom(`${input.type}\u0000${key}`), taken);
       taken.add(id);
       const fields: Record<string, unknown> = {
         aimem: 1,
@@ -833,7 +842,14 @@ export async function upsertExternalMany(
     const fieldsSame = Object.entries(input.fields ?? {}).every(
       ([k, v]) => JSON.stringify(existing.fm[k]) === JSON.stringify(v),
     );
+    const roles = input.roles?.length ? input.roles : ["all"];
+    const tags = input.tags ?? [];
+    // Imported records cannot be edited here, so roles and tags follow the source as well.
+    const metaSame =
+      JSON.stringify(existing.roles) === JSON.stringify(roles) &&
+      JSON.stringify(existing.tags) === JSON.stringify(tags);
     const same =
+      metaSame &&
       old.content_sha === sha &&
       old.state === "ok" &&
       existing.title === title &&
@@ -850,6 +866,26 @@ export async function upsertExternalMany(
       };
 
     const text = await loadText(deps, nb, existing);
+    // New content was not reviewed: an earlier verification does not carry over to it. A source that only
+    // came back (same content) keeps its trust.
+    const contentChanged =
+      !metaSame ||
+      old.content_sha !== sha ||
+      existing.title !== title ||
+      existing.summary !== summary ||
+      !fieldsSame ||
+      (input.status !== undefined && existing.status !== input.status);
+    const trust = contentChanged ? importTrust(input.author, input.type) : existing.trust;
+    if (contentChanged) {
+      setField(text, "trust", trust);
+      if (trust === "verified") setField(text, "verified", day(now));
+      else deleteField(text, "verified");
+    }
+    if (!metaSame) {
+      setField(text, "roles", roles);
+      if (tags.length) setField(text, "tags", tags);
+      else deleteField(text, "tags");
+    }
     setField(text, "title", title);
     setField(text, "summary", summary);
     if (input.status) setField(text, "status", input.status);
@@ -867,16 +903,55 @@ export async function upsertExternalMany(
       await deps.fs.unlink(join(nb.root, existing.file));
       changed.add(existing.file);
     }
-    owned.set(key, { ...existing, title, summary, file, body });
+    owned.set(key, { ...existing, title, summary, file, body, trust, roles, tags });
     return {
       action: "updated",
       ref: existing.id,
       file,
-      trust: existing.trust,
-      warnings: [],
+      trust,
+      warnings:
+        existing.trust === "verified" && trust !== "verified"
+          ? [
+              `${existing.id} was verified, but its source changed; it needs review again (aimem verify ${existing.id})`,
+            ]
+          : [],
       ...(existing.title !== title ? { previousTitle: existing.title } : {}),
     };
   }
+}
+
+/** Bytes from a hash chain of \`seed\`: the same seed always gives the same ids, in the same order. */
+function seededRandom(seed: string): Random {
+  let state = createHash("sha256").update(seed).digest();
+  return {
+    bytes: (n) => {
+      const out = new Uint8Array(state.subarray(0, n));
+      state = createHash("sha256").update(state).digest();
+      return out;
+    },
+  };
+}
+
+/** 16 §11: the source of these records is gone or no longer shared; content is kept (V018). */
+export async function markSourcesMissing(
+  nb: Notebook,
+  refs: readonly string[],
+  deps: WriteDeps,
+): Promise<{ changed: string[]; warnings: string[] }> {
+  const index = await loadIndex(nb, { fs: deps.fs });
+  const changed: string[] = [];
+  for (const ref of refs) {
+    const rec = find(nb, index, ref);
+    const src = rec.fm.source as Record<string, unknown> | undefined;
+    if (rec.fm.managed_by !== "external" || !src || src.state === "missing") continue;
+    const text = await loadText(deps, nb, rec);
+    setField(text, "source", { ...src, state: "missing" });
+    setField(text, "updated", iso(deps.clock.now()));
+    await writeRecordFile(deps.fs, join(nb.root, rec.file), text, deps.random);
+    changed.push(rec.file);
+  }
+  // Always: a sync killed after its last record left INDEX.md behind, and this run changes nothing else.
+  return finish(deps, nb, changed);
 }
 
 /**

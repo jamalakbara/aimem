@@ -65,7 +65,15 @@ export const projectSchema = z.looseObject({
     .optional(),
   retrieval: retrievalSchema.optional(),
   connectors: z
-    .looseObject({ google: z.looseObject({ inbox_folder_id: nullableString.optional() }).optional() })
+    .looseObject({
+      google: z
+        .looseObject({
+          inbox_folder_id: nullableString.optional(),
+          /** Single files synced besides the inbox folder (16 §5). */
+          files: z.array(z.string()).optional(),
+        })
+        .optional(),
+    })
     .optional(),
   /** Agent instruction files that carry the aimem block (06 §4). */
   adapters: z

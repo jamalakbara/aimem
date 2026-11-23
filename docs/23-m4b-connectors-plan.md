@@ -1,6 +1,6 @@
 # 23 — M4b Connectors Plan (upload and Google)
 
-Status: **approved by the owner (2026-11-23) with the recommended defaults below.** Slices land one PR at a time; this line records which are implemented: **4b.1** (upsert by source, `detach`, `import` of `.md`/`.txt`, `kind: reference`; `verify` stays allowed on imported records because it is how a second person reviews them; upload `source.id` is the file path, not a content hash, so edits update instead of duplicating), **4b.2a** (CSV sheets, `templates list|export` for csv/md, `--allow-outside` for agents, a PID-aware import lock, V019 for duplicate source keys), **4b.2b** (xlsx import and templates through `fflate` 0.8.2 and a minimal XML reader instead of `exceljs`: limits are checked while inflating, DTDs are refused, nothing touches disk), **4b.3a** (docx through the same bounded unzip, no new dependency; pdf follows as 4b.3b), **4b.3b** (pdf through `unpdf` 1.4.0 instead of 2.x, which needs Node 24, in a worker with time, heap and resident-memory limits). It turns 16 (connectors and ingestion) and the M4b entry in 13 into PRs. The Odoo connector stays deferred (16 §6, ADR-016).
+Status: **approved by the owner (2026-11-23) with the recommended defaults below.** Slices land one PR at a time; this line records which are implemented: **4b.1** (upsert by source, `detach`, `import` of `.md`/`.txt`, `kind: reference`; `verify` stays allowed on imported records because it is how a second person reviews them; upload `source.id` is the file path, not a content hash, so edits update instead of duplicating), **4b.2a** (CSV sheets, `templates list|export` for csv/md, `--allow-outside` for agents, a PID-aware import lock, V019 for duplicate source keys), **4b.2b** (xlsx import and templates through `fflate` 0.8.2 and a minimal XML reader instead of `exceljs`: limits are checked while inflating, DTDs are refused, nothing touches disk), **4b.3a** (docx through the same bounded unzip, no new dependency; pdf follows as 4b.3b), **4b.3b** (pdf through `unpdf` 1.4.0 instead of 2.x, which needs Node 24, in a worker with time, heap and resident-memory limits), **4b.4** (Google connector against a simulated Google written from the API documentation; `add`/`remove` are human-only, and a run against a real account is still to be done). It turns 16 (connectors and ingestion) and the M4b entry in 13 into PRs. The Odoo connector stays deferred (16 §6, ADR-016).
 
 Already in `main`: the ownership fields (`managed_by`, `source`, 03 §2.1, 16 §2.1), V017 (body differs from `source.content_sha`) and V018 (`source.state` not `ok`), and `READONLY_EXTERNAL` on `update`, `move` and `discard`. Missing: `detach`, `import`, `templates`, `sources`, the converters and the Google connector.
 
@@ -54,12 +54,12 @@ Each slice is one PR. 4b.1 alone already helps (import a markdown decision doc);
 
 ## 4b.4 — Google connector
 
-- A sync that stops halfway (crash, network) leaves nothing half-written: each record is written atomically and a re-run reaches the same end state.
+- A sync that stops halfway (crash, network) leaves no half-written record: each one is written atomically, and a re-run ends with the same ids and content. Google documents are never duplicates of each other (QA, #106: recurring names were held back for good).
 
 - Config `connectors.google.inbox_folder_id` and `poll_minutes` (only used by M6) in `project.yaml`; credentials from env.
 - `sources sync`: list the folder (`files.list` with `q='<id>' in parents and trashed=false`), Docs via `files.export` (`text/markdown`), Sheets via `spreadsheets.values.get` per tab; `version` = Drive `version`/`modifiedTime`; unchanged versions are skipped; files no longer listed → `state: missing` (V018), content kept.
 - Errors: 401/403 → `SOURCE_AUTH`, nothing written; network/5xx → `SOURCE_UNREACHABLE` with the last good records kept; per-file errors are reported and the run continues.
-- CI uses recorded responses (fixtures under `fixtures/google/`), never the network.
+- CI uses simulated responses (`packages/core/test/support/google.ts`). `vitest.setup.ts` refuses TCP, UDP and `dns.resolve` to other hosts in the test process; worker threads and child processes are not covered.
 - Credentials never reach `.aimem/`, `calls.jsonl`, logs or error messages; tests assert that the key file contents and access tokens do not appear in any output.
 
 ## Expected files

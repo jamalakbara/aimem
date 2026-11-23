@@ -1,5 +1,6 @@
 import { STATUSES } from "@aimem/schema";
 import { firstSentence } from "../adopt/markdown.js";
+import { cleanText } from "../util/clean.js";
 import type { DocumentRecord } from "./document.js";
 
 /** A parsed CSV row; \`error\` is set when the row could not be read (its cells are empty). */
@@ -107,13 +108,7 @@ const list = (v: string | undefined) =>
     .map((x) => x.trim())
     .filter(Boolean);
 const normal = (h: string) => h.trim().toLowerCase().replace(/\s+/g, "_");
-const control = (s: string) =>
-  [...s]
-    .filter((c) => {
-      const code = c.charCodeAt(0);
-      return c === "\t" || c === "\n" || (code >= 32 && code !== 127);
-    })
-    .join("");
+const control = cleanText;
 const cellText = (v: string | undefined) => control(v ?? "").trim();
 const mdCell = (v: string) => v.replace(/\|/g, "\\|").replace(/\n/g, "<br>");
 const DATE = /^\d{4}-\d{2}-\d{2}$/;

@@ -36,6 +36,7 @@ export {
   releaseSessionClaims,
   summarizeLiveState,
 } from "./claims/session.js";
+export * from "./connectors/google.js";
 export * from "./context/briefing.js";
 export * from "./context/score.js";
 export * from "./embed/cache.js";
