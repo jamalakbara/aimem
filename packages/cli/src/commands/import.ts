@@ -69,6 +69,10 @@ export async function importFile(
   // A link can point anywhere (QA, #99; adopt skips links since #87): import the target itself.
   if ((await deps.fs.lstat?.(path).catch(() => undefined))?.isSymbolicLink)
     throw new AimemError("USAGE", `${file} is a symlink; import the file it points to instead`);
+  // Size and kind before reading: a huge or endless file must not be loaded first (QA, #106).
+  const info = await deps.fs.stat?.(path).catch(() => undefined);
+  if (info?.isFile === false) throw new AimemError("USAGE", `cannot read ${file}`);
+  if ((info?.size ?? 0) > MAX_BYTES) throw new AimemError("USAGE", `${file} is larger than 10 MB`);
   const bytes = await deps.fs.readBytes(path).catch(() => {
     throw new AimemError("USAGE", `cannot read ${file}`);
   });
@@ -284,6 +288,7 @@ async function importSheet(
     }
     counts[r.action]++;
     rows.push({ row, ref: r.ref, action: r.action });
+    warnings.push(...r.warnings.map((w) => `row ${row}: ${w}`));
     if (r.previousTitle !== undefined && !sheet.items[n]?.key)
       warnings.push(
         `row ${row} changed its title from "${r.previousTitle}" to "${items[n]?.input.title}"; row positions shift when rows are inserted or deleted, add a key column to keep them stable`,

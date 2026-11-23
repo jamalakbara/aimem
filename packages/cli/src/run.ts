@@ -371,6 +371,7 @@ export async function run(argv: string[], outer: CliDeps): Promise<number> {
     .option("--file <id>", "a single Doc or Sheet: id or link (add)")
     .option("--dry-run", "read the sources and report, write nothing (sync)")
     .option("--strict", "exit 1 when a file or row failed (sync)")
+    .option("--force", "import documents that look like an existing record (sync)")
     .option("--offline", "disable network access")
     .option("--author <who>", "human:<handle> or agent:<tool>; adding and removing are human-only")
     .action(

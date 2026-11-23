@@ -1,5 +1,7 @@
 import type { RecordType } from "@aimem/schema";
 import { firstSentence, parseMarkdown, type Section } from "../adopt/markdown.js";
+import { cleanText } from "../util/clean.js";
+import { splitFrontMatter } from "./front-matter.js";
 
 /** A document turned into one record (16 §4.2), before it is written. */
 export interface DocumentRecord {
@@ -32,13 +34,7 @@ const TEMPLATE_TYPES: TemplateType[] = ["decision", "runbook", "incident", "memo
 const META = /^\s*(roles|tags)\s*:\s*(.+)$/gim;
 
 /** Terminal escapes and other control characters never reach titles, summaries or names (QA, #99). */
-const stripControl = (s: string) =>
-  [...s]
-    .filter((c) => {
-      const code = c.charCodeAt(0);
-      return c === "\t" || c === "\n" || (code >= 32 && code !== 127);
-    })
-    .join("");
+const stripControl = cleanText;
 const key = (h: string) => h.trim().toLowerCase().replace(/\s+/g, " ");
 const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1).trimEnd()}…` : s);
 
@@ -62,9 +58,9 @@ export function documentToRecord(text: string, fileName: string, typeHint?: stri
     .replace(/\r\n?/g, "\n")
     .trim();
   // Front matter at the top is metadata of the source document, not content (and never ours).
-  const fm = /^---\n[\s\S]*?\n---(?:\n|$)/.exec(clean);
-  if (fm) {
-    clean = clean.slice(fm[0].length).trim();
+  const fm = splitFrontMatter(clean);
+  if (fm.found) {
+    clean = fm.text;
     notes.push("front matter at the top of the document was left out");
   }
   const md = parseMarkdown(clean);

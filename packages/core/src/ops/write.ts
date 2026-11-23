@@ -706,8 +706,12 @@ export async function upsertExternalMany(
   // Records of the sources being imported are told apart by their keys, so the duplicate check looks
   // only at the rest of the notebook (QA, #99 / 4b.2).
   const sources = new Set(inputs.map((i) => `${i.source.system}\u0000${i.source.id}`));
+  // Google documents are told apart by their Drive id: a folder of "Weekly report …" is not a set of
+  // duplicates, and a resumed sync must not be held up by its own first half (QA, #106).
+  const fromGoogle = inputs.some((i) => i.source.system.startsWith("google-"));
   const others = index.records.filter((r) => {
     const s = r.fm.source as { system?: string; id?: unknown } | undefined;
+    if (fromGoogle && r.fm.managed_by === "external" && s?.system?.startsWith("google-")) return false;
     return !(r.fm.managed_by === "external" && s?.system && sources.has(`${s.system}\u0000${String(s.id)}`));
   });
   const findDup = duplicateFinder(others);
@@ -838,7 +842,14 @@ export async function upsertExternalMany(
     const fieldsSame = Object.entries(input.fields ?? {}).every(
       ([k, v]) => JSON.stringify(existing.fm[k]) === JSON.stringify(v),
     );
+    const roles = input.roles?.length ? input.roles : ["all"];
+    const tags = input.tags ?? [];
+    // Imported records cannot be edited here, so roles and tags follow the source as well.
+    const metaSame =
+      JSON.stringify(existing.roles) === JSON.stringify(roles) &&
+      JSON.stringify(existing.tags) === JSON.stringify(tags);
     const same =
+      metaSame &&
       old.content_sha === sha &&
       old.state === "ok" &&
       existing.title === title &&
@@ -858,6 +869,7 @@ export async function upsertExternalMany(
     // New content was not reviewed: an earlier verification does not carry over to it. A source that only
     // came back (same content) keeps its trust.
     const contentChanged =
+      !metaSame ||
       old.content_sha !== sha ||
       existing.title !== title ||
       existing.summary !== summary ||
@@ -868,6 +880,11 @@ export async function upsertExternalMany(
       setField(text, "trust", trust);
       if (trust === "verified") setField(text, "verified", day(now));
       else deleteField(text, "verified");
+    }
+    if (!metaSame) {
+      setField(text, "roles", roles);
+      if (tags.length) setField(text, "tags", tags);
+      else deleteField(text, "tags");
     }
     setField(text, "title", title);
     setField(text, "summary", summary);
@@ -886,7 +903,7 @@ export async function upsertExternalMany(
       await deps.fs.unlink(join(nb.root, existing.file));
       changed.add(existing.file);
     }
-    owned.set(key, { ...existing, title, summary, file, body, trust });
+    owned.set(key, { ...existing, title, summary, file, body, trust, roles, tags });
     return {
       action: "updated",
       ref: existing.id,
@@ -933,7 +950,8 @@ export async function markSourcesMissing(
     await writeRecordFile(deps.fs, join(nb.root, rec.file), text, deps.random);
     changed.push(rec.file);
   }
-  return changed.length ? finish(deps, nb, changed) : { changed, warnings: [] };
+  // Always: a sync killed after its last record left INDEX.md behind, and this run changes nothing else.
+  return finish(deps, nb, changed);
 }
 
 /**

@@ -396,3 +396,117 @@ describe("aimem sources add / list / remove", () => {
     });
   });
 });
+
+describe("QA #106 review", () => {
+  const note = (name: string, n: number) =>
+    decisionDoc({
+      id: `1DocSeries${String(n).padStart(4, "0")}HHHHHHHHHHHH`,
+      name,
+      markdown: `Notes for ${name}.`,
+    });
+
+  it("a new Doc with a name like earlier ones is imported (recurring notes and reports)", async () => {
+    const days = ["Monday", "Tuesday", "Wednesday"].map((d, i) => note(`Meeting notes ${d}`, i));
+    const g = fakeGoogle(days);
+    expect((await sync(g)).json.data).toMatchObject({ created: 3, errors: [] });
+    g.state.files = [...days, note("Meeting notes Thursday", 3)];
+    expect((await sync(g)).json.data).toMatchObject({ created: 1, unchanged: 3, errors: [] });
+  });
+
+  it("a killed sync of look-alike Docs ends like an uninterrupted one", async () => {
+    const files = () => Array.from({ length: 60 }, (_, i) => note(`Doc number ${i}`, i));
+    let writes = 0;
+    const dying = {
+      ...nodeFs,
+      rename: async (a: string, b: string) => {
+        if (++writes > 10) throw new Error("killed");
+        return nodeFs.rename(a, b);
+      },
+    };
+    await sync(fakeGoogle(files()), [], { fs: dying });
+    expect(owned().length).toBeLessThan(60);
+    expect((await sync(fakeGoogle(files()))).json.data.errors).toEqual([]);
+    const resumed = owned().sort();
+    const keep = dir;
+    dir = mkdtempSync(join(tmpdir(), "aimem-google-clean-"));
+    cpSync(join(FIXTURES, "tiny"), dir, { recursive: true });
+    await run(["sources", "add", "google", "--folder", FOLDER]);
+    await sync(fakeGoogle(files()));
+    const clean = owned().sort();
+    rmSync(dir, { recursive: true, force: true });
+    dir = keep;
+    expect(resumed).toEqual(clean);
+    expect(resumed).toHaveLength(60);
+  });
+
+  it("still holds a Doc that looks like a hand-written record, until --force", async () => {
+    await run(["remember", "--title", "Meeting notes Monday", "--summary", "By hand.", "--body", "Mine."]);
+    const g = fakeGoogle([note("Meeting notes Monday", 1)]);
+    const r = await sync(g);
+    expect(r.json.data.created).toBe(0);
+    expect(r.json.data.errors[0].reason).toMatch(/DUPLICATE_LIKELY/);
+    expect((await sync(g, ["--force"])).json.data.created).toBe(1);
+  });
+
+  it("reads only a small regular file as the key", async () => {
+    const g = fakeGoogle([decisionDoc()]);
+    writeFileSync(key, "x".repeat(70 * 1024));
+    expect((await sync(g)).json.error).toMatchObject({
+      code: "SOURCE_AUTH",
+      message: expect.stringMatching(/not a small regular file/),
+    });
+    if (process.platform !== "win32")
+      expect(
+        (await sync(g, [], { env: { GOOGLE_APPLICATION_CREDENTIALS: "/dev/zero" } })).json.error.message,
+      ).toMatch(/not a small regular file/);
+  });
+
+  it("removes bidi overrides and invisible tag characters from names, and front matter from the body", async () => {
+    const g = fakeGoogle([note("Invoice \u202Efdp.exe\u{E0041}", 1)]);
+    (g.state.files[0] as { markdown: string }).markdown = "---\nid: dec-evilforge\n---\n\nReal text.";
+    const r = await sync(g);
+    expect(r.json.data.created).toBe(1);
+    expect(owned()[0]).toMatch(/title: Invoice fdp\.exe\n/);
+    expect(owned()[0]).not.toMatch(/dec-evilforge/);
+    expect(r.stdout).not.toMatch(/[\u202A-\u202E\u2066-\u2069]/u);
+  });
+
+  it("a sync killed just before INDEX.md is repaired by the next sync", async () => {
+    const files = [note("First", 1), note("Second", 2)];
+    const dying = {
+      ...nodeFs,
+      rename: async (a: string, b: string) => {
+        if (b.endsWith("INDEX.md")) throw new Error("killed");
+        return nodeFs.rename(a, b);
+      },
+    };
+    await sync(fakeGoogle(files), [], { fs: dying });
+    expect(owned()).toHaveLength(2);
+    const index = join(dir, ".aimem/INDEX.md");
+    expect(existsSync(index)).toBe(false);
+    expect((await sync(fakeGoogle(files))).json.data).toMatchObject({ created: 0, unchanged: 2 });
+    expect(existsSync(index)).toBe(true);
+  });
+
+  it("keeps text between two horizontal rules: that is not front matter", async () => {
+    const g = fakeGoogle([note("Ruled", 1)]);
+    (g.state.files[0] as { markdown: string }).markdown =
+      "---\n\nAgreed with legal: keep logs.\n\n---\n\nSecond part.";
+    const r = await sync(g);
+    expect(owned()[0]).toMatch(/keep logs/);
+    expect(owned()[0]).toMatch(/Second part/);
+    expect(r.json.warnings.join()).not.toMatch(/front matter/);
+  });
+
+  it("says that subfolders are not read", async () => {
+    const g = fakeGoogle([
+      {
+        id: "1SubFolderIIIIIIIIIIIIIIIIII",
+        name: "Archive",
+        mimeType: "application/vnd.google-apps.folder",
+        modifiedTime: "2026-11-20T00:00:00Z",
+      },
+    ]);
+    expect((await sync(g)).json.warnings).toContain("Archive: subfolders are not synced");
+  });
+});

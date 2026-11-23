@@ -54,12 +54,12 @@ Each slice is one PR. 4b.1 alone already helps (import a markdown decision doc);
 
 ## 4b.4 — Google connector
 
-- A sync that stops halfway (crash, network) leaves nothing half-written: each record is written atomically and a re-run reaches the same end state.
+- A sync that stops halfway (crash, network) leaves no half-written record: each one is written atomically, and a re-run ends with the same ids and content. Google documents are never duplicates of each other (QA, #106: recurring names were held back for good).
 
 - Config `connectors.google.inbox_folder_id` and `poll_minutes` (only used by M6) in `project.yaml`; credentials from env.
 - `sources sync`: list the folder (`files.list` with `q='<id>' in parents and trashed=false`), Docs via `files.export` (`text/markdown`), Sheets via `spreadsheets.values.get` per tab; `version` = Drive `version`/`modifiedTime`; unchanged versions are skipped; files no longer listed → `state: missing` (V018), content kept.
 - Errors: 401/403 → `SOURCE_AUTH`, nothing written; network/5xx → `SOURCE_UNREACHABLE` with the last good records kept; per-file errors are reported and the run continues.
-- CI uses recorded responses (fixtures under `fixtures/google/`), never the network.
+- CI uses simulated responses (`packages/core/test/support/google.ts`). `vitest.setup.ts` refuses TCP, UDP and `dns.resolve` to other hosts in the test process; worker threads and child processes are not covered.
 - Credentials never reach `.aimem/`, `calls.jsonl`, logs or error messages; tests assert that the key file contents and access tokens do not appear in any output.
 
 ## Expected files

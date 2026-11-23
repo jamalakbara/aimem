@@ -24,6 +24,7 @@ export interface SourcesOptions {
   author?: string;
   dryRun?: boolean;
   strict?: boolean;
+  force?: boolean;
   offline?: boolean;
 }
 
@@ -125,6 +126,10 @@ async function googleKey(deps: CliDeps, nb: Notebook) {
         );
     }
   }
+  // A key file is a few KB: check before reading, so a device or a huge file cannot fill the memory.
+  const info = await deps.fs.stat?.(given).catch(() => undefined);
+  if (info && (info.isFile === false || (info.size ?? 0) > 64 * 1024))
+    throw new AimemError("SOURCE_AUTH", "the Google key file is not a small regular file");
   const text = await deps.fs.readFile(given).catch(() => {
     throw new AimemError("SOURCE_AUTH", "the Google key file cannot be read");
   });
@@ -183,7 +188,7 @@ async function sync(
     const done = got.inputs.length
       ? await upsertExternalMany(
           nb,
-          got.inputs.map((i) => i.input),
+          got.inputs.map((i) => ({ ...i.input, ...(o.force ? { force: true } : {}) })),
           wdeps,
         )
       : { results: [], changed: [], warnings: [] };

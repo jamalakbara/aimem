@@ -16,7 +16,7 @@ import {
 /** File system operations core needs. Injected so tests can simulate failures (docs/11 §3). */
 export interface Fs {
   /** Optional development-build diagnostic metadata; no file contents. */
-  stat?(path: string): Promise<{ mtimeMs: number; isDirectory: boolean }>;
+  stat?(path: string): Promise<{ mtimeMs: number; isDirectory: boolean; isFile?: boolean; size?: number }>;
   /** Like `stat`, but describes a symlink itself instead of its target (adopt never follows links). */
   lstat?(path: string): Promise<{ isDirectory: boolean; isSymbolicLink: boolean }>;
   /** Absolute path with every symlink resolved. */
@@ -48,7 +48,7 @@ export interface Random {
 export const nodeFs: Fs = {
   stat: async (path) => {
     const s = await stat(path);
-    return { mtimeMs: s.mtimeMs, isDirectory: s.isDirectory() };
+    return { mtimeMs: s.mtimeMs, isDirectory: s.isDirectory(), isFile: s.isFile(), size: s.size };
   },
   lstat: async (path) => {
     const s = await lstat(path);

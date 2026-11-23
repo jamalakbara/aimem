@@ -102,4 +102,13 @@ describe("trust of imported records follows the content", () => {
       rmSync(other, { recursive: true, force: true });
     }
   });
+
+  it("roles and tags follow the source too", async () => {
+    const a = await upsertExternal(nb, { ...input("Ninety days."), roles: ["dev"], tags: ["one"] }, deps);
+    const b = await upsertExternal(nb, { ...input("Ninety days."), roles: ["qa"], tags: ["two"] }, deps);
+    expect(b.action).toBe("updated");
+    expect(await rec(a.ref)).toMatchObject({ roles: ["qa"], tags: ["two"] });
+    await upsertExternal(nb, input("Ninety days."), deps);
+    expect(await rec(a.ref)).toMatchObject({ roles: ["all"], tags: [] });
+  });
 });

@@ -263,3 +263,46 @@ describe("QA #100 review", () => {
     );
   });
 });
+
+describe("sheet imports report dropped verification (QA #106)", () => {
+  it("warns per row when an agent changes a verified row", async () => {
+    await imp("incidents.csv");
+    const path = join(dir, "docs/incidents.csv");
+    writeFileSync(path, readFileSync(path, "utf8").replace("No backoff", "No retry limit"));
+    const r = await imp("incidents.csv", agent);
+    expect(r.json.warnings.join("\n")).toMatch(/row 2: inc-\w+ was verified, but its source changed/);
+  });
+
+  it("refuses an oversized file before reading it", async () => {
+    writeFileSync(join(dir, "docs/huge.txt"), "");
+    const { truncateSync } = await import("node:fs");
+    truncateSync(join(dir, "docs/huge.txt"), 3 * 1024 ** 3);
+    const before = process.memoryUsage().rss;
+    const r = await imp("huge.txt");
+    expect(r.json.error.message).toMatch(/larger than 10 MB/);
+    expect(process.memoryUsage().rss - before).toBeLessThan(500 * 1024 * 1024);
+  });
+});
+
+describe("import edge cases found while fixing #106", () => {
+  it("repeated and number-like tags and roles stay unchanged on re-import", async () => {
+    writeFileSync(
+      join(dir, "docs/odd.csv"),
+      'title,summary,status,priority,roles,tags\nOdd tags,One.,open,p2,"dev, qa, dev","2024, true, api, api"\n',
+    );
+    expect((await imp("odd.csv")).json.data).toMatchObject({ created: 1, errors: [] });
+    expect((await imp("odd.csv")).json.data).toMatchObject({ created: 0, updated: 0, unchanged: 1 });
+  });
+
+  it("a .md that starts with a horizontal rule keeps its text; real front matter still goes", async () => {
+    const path = join(dir, "docs/ruled.md");
+    writeFileSync(path, "---\n\nAgreed with legal: keep logs.\n\n---\n\nSecond part.\n");
+    const a = await imp("ruled.md");
+    expect(a.json.warnings.join()).not.toMatch(/front matter/);
+    expect(readFileSync(join(dir, a.json.data.file), "utf8")).toMatch(/keep logs/);
+    writeFileSync(path, "---\ntitle: X\ntags:\n  - a\n- b\n---\n\nSecond part only.\n");
+    const b = await imp("ruled.md");
+    expect(b.json.warnings.join()).toMatch(/front matter/);
+    expect(readFileSync(join(dir, b.json.data.file), "utf8")).not.toMatch(/title: X/);
+  });
+});

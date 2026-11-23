@@ -3,9 +3,11 @@ import type { FetchLike } from "../embed/remote.js";
 import { AimemError } from "../errors.js";
 import type { IndexedRecord } from "../index/build.js";
 import { documentToRecord } from "../ingest/document.js";
+import { splitFrontMatter } from "../ingest/front-matter.js";
 import { sheetToRecords } from "../ingest/sheet.js";
 import type { ExternalInput } from "../ops/write.js";
 import type { Clock } from "../ports.js";
+import { cleanText } from "../util/clean.js";
 
 /** Read-only, and nothing else (16 §5, 23 decision 4). */
 export const GOOGLE_SCOPES = [
@@ -82,9 +84,8 @@ interface DriveFile {
 }
 
 const plain = (s: unknown) =>
-  [...String(s ?? "")]
-    .filter((c) => c.charCodeAt(0) >= 32 && c.charCodeAt(0) !== 127)
-    .join("")
+  cleanText(String(s ?? ""))
+    .replace(/[\t\n]+/g, " ")
     .trim();
 
 export class GoogleClient {
@@ -357,7 +358,11 @@ export async function collectGoogle(
           out.unchanged.push(rec.r.id);
           continue;
         }
-        const text = cleanGoogleMarkdown(await client.exportDoc(f.id));
+        const raw = cleanText(cleanGoogleMarkdown(await client.exportDoc(f.id)));
+        // Front matter belongs to the source document, not to the record (as in aimem import).
+        const fm = splitFrontMatter(raw.trim());
+        const text = fm.text;
+        if (fm.found) out.warnings.push(`${name}: front matter at the top of the document was left out`);
         if (!text) throw new FileError("has no text");
         // The Doc's name is the title (16 §4.2), so every heading of the text is a section.
         const doc = documentToRecord(`# ${name}\n\n${text}`, name);
@@ -385,7 +390,8 @@ export async function collectGoogle(
           },
         });
       } else if (f.mimeType === SHEET) await collectSheet(client, f, name, known, author, out);
-      else if (f.mimeType !== FOLDER)
+      else if (f.mimeType === FOLDER) out.warnings.push(`${name}: subfolders are not synced`);
+      else
         out.warnings.push(
           `${name}: ${plain(f.mimeType).slice(0, 80)} files are not synced; download it and use aimem import`,
         );
