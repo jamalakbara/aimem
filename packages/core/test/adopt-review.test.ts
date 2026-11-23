@@ -7,6 +7,7 @@ import {
   addRecord,
   cryptoRandom,
   discardRecord,
+  likelyDuplicates,
   loadIndex,
   loadProject,
   type Notebook,
@@ -186,5 +187,72 @@ describe("discard safety from the QA plan (M4.5)", () => {
     await expect(discardRecord(nb, "../../etc/passwd", "human:dana", deps)).rejects.toMatchObject({
       code: "NOT_FOUND",
     });
+  });
+});
+
+describe("possible duplicates in the review queue (M4 gap)", () => {
+  it("lists the newer record of a likely-duplicate pair once, naming the older one", async () => {
+    const older = await decision("Keep the API stateless", "human:dana");
+    now = new Date("2026-11-23T10:00:00Z");
+    // Duplicates arrive through --force or merged branches; addRecord itself refuses them.
+    const newer = await addRecord(
+      nb,
+      {
+        type: "decision",
+        title: "Keep the API stateless always",
+        summary: "Keep the API stateless always.",
+        body: "## Context\n\nx\n\n## Decision\n\ny\n\n## Consequences\n\nz",
+        author: "human:rina",
+        force: true,
+      },
+      deps,
+    );
+    const q = reviewQueue(nb, await index(), now);
+    const dup = q.filter((i) => i.reasons.includes("duplicate"));
+    expect(dup).toHaveLength(1);
+    expect(dup[0]).toMatchObject({ ref: newer.ref, duplicateOf: older.ref, reasons: ["duplicate"] });
+    expect(q.at(-1)?.ref).toBe(newer.ref);
+  });
+});
+
+describe("duplicate detection at scale and for template drafts (QA #96)", () => {
+  it("does not mark adopted drafts from one ADR template as duplicates of each other", async () => {
+    for (const t of ["alpha", "bravo", "charlie", "delta"])
+      writeFileSync(
+        join(dir, `docs/adr/adopt-${t}.md`),
+        `# Adopt ${t}\n\n* Status: accepted\n\n## Context and Problem Statement\n\nWe need a component for this job.\n\n## Decision Outcome\n\nChosen option: ${t}, because it fits our needs best.\n`,
+      );
+    const scan = await scanProject(nodeFs, dir, { sources: ["adr"] });
+    await writeAdoptDrafts(nb, scan.candidates, { author: "agent:openbot-backend" }, deps);
+    const q = reviewQueue(nb, await index(), now);
+    expect(q.filter((i) => i.reasons.includes("duplicate"))).toEqual([]);
+  });
+
+  it("finds likely duplicates among 5,000 records quickly (was quadratic)", () => {
+    const words = Array.from({ length: 3000 }, (_, i) => `w${i.toString(36)}x`);
+    const rand = (seed: number) => () => {
+      seed = (seed * 1103515245 + 12345) % 2147483648;
+      return seed / 2147483648;
+    };
+    const r = rand(7);
+    const pick = () => words[Math.floor(r() * words.length)];
+    const records = Array.from({ length: 5000 }, (_, i) => ({
+      id: `mem-${i.toString().padStart(8, "0")}`,
+      type: "memory" as const,
+      title: `${pick()} ${pick()} ${pick()} ${pick()}`,
+      summary: `${pick()} ${pick()} ${pick()} ${pick()} ${pick()}`,
+      created: new Date(Date.UTC(2026, 0, 1) + i * 1000).toISOString(),
+      tags: [] as string[],
+    }));
+    records.push({
+      ...records[10],
+      id: "mem-zzzzzzzz",
+      created: "2026-12-01T00:00:00Z",
+    } as (typeof records)[number]);
+    const t0 = performance.now();
+    const dups = likelyDuplicates(records);
+    const ms = performance.now() - t0;
+    expect(dups.get("mem-zzzzzzzz")).toBe(records[10]?.id);
+    expect(ms).toBeLessThan(3000);
   });
 });

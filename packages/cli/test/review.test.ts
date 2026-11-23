@@ -42,7 +42,7 @@ const queue = async () => (await cli(["review", "--json", "--dir", dir], { env: 
 describe("aimem review (M4.5)", () => {
   it("--json lists the queue and changes nothing, for agents too", async () => {
     const q = await queue();
-    expect(q.counts).toEqual({ inferred: 2, unreviewed: 0, stale: 0 });
+    expect(q.counts).toEqual({ inferred: 2, unreviewed: 0, stale: 0, duplicate: 0 });
     expect(q.queue.map((i: { title: string }) => i.title)).toEqual([
       "Fold scans in a worker",
       "Use Postgres for parcel state",
@@ -52,6 +52,14 @@ describe("aimem review (M4.5)", () => {
       reasons: ["inferred"],
       evidence: [expect.any(String)],
     });
+  });
+
+  it("--limit shows the first N items and the total (M4 gap)", async () => {
+    const r = await cli(["review", "--limit", "1", "--json", "--dir", dir], { env: agent, random });
+    expect(r.json.data.queue).toHaveLength(1);
+    expect(r.json.data.total).toBe(2);
+    const t = await cli(["review", "--limit", "1", "--dir", dir], { env: human, random });
+    expect(t.stdout).toMatch(/^2 records need review \(showing 1; --limit\):/);
   });
 
   it("walks the queue: verify, discard, and a summary at the end", async () => {

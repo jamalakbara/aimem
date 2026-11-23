@@ -103,6 +103,17 @@ describe("adopt git source (M4.3)", () => {
       expect(line.length).toBeLessThanOrEqual(140);
   });
 
+  it("withholds a commit subject with a secret before cutting it (QA #95 follow-up)", async () => {
+    const token = ["ghp", "_", "a".repeat(36)].join("");
+    const subject = `fix: ${"y".repeat(88)} ${token}`;
+    await commit("src/server.js", "c\n", subject);
+    await commit("src/server.js", "d\n", "fix: second fix");
+    const r = await scanProject(nodeFs, dir, { sources: ["git"], git, now: new Date() });
+    const g = r.candidates.find((c) => c.title === "Gotchas in src/server.js");
+    expect(g?.body).toMatch(/\[subject withheld: possible secret\]/);
+    expect(g?.body).not.toMatch(/ghp_/);
+  });
+
   it("skips quietly outside a git repository and respects --since", async () => {
     rmSync(join(dir, ".git"), { recursive: true, force: true });
     const r = await scanProject(nodeFs, dir, { sources: ["git"], git, now: new Date() });
