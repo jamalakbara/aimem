@@ -5,11 +5,33 @@ const MAX_TEXT_CHARS = 2 * 1024 * 1024;
 
 const cellText = (s: string) => s.replace(/\|/g, "\\|").replace(/\n/g, "<br>");
 
+/** Headings of the document templates (16 §4.2): never taken as the document title. */
+const SECTION_NAMES = new Set([
+  "summary",
+  "status",
+  "context",
+  "decision",
+  "consequences",
+  "alternatives",
+  "when to use",
+  "steps",
+  "rollback",
+  "verify",
+  "severity",
+  "impact",
+  "timeline",
+  "root cause",
+  "fix",
+  "prevention",
+]);
+
 /** Plain text that starts like markdown structure (#, -, >, ```, |) is escaped, so it stays text (QA, #102). */
 const escapeLead = (text: string) =>
   text
     .split("\n")
-    .map((l) => (/^\s*(#|-|>|```|\||\+|\*|\d+[.)]\s)/.test(l) ? `\\${l.trimStart()}` : l))
+    .map((l) =>
+      /^\s*(#{1,6}(\s|$)|[-*+](\s|$)|>|```|~~~|\||\d+[.)](\s|$))/.test(l) ? `\\${l.trimStart()}` : l,
+    )
     .join("\n");
 
 /** Text of one paragraph: runs, tabs and breaks in order; deleted (tracked) text and field codes left out. */
@@ -84,7 +106,12 @@ export function readDocx(data: Uint8Array): { text: string; macros: boolean } {
     const level = headingLevel(pPr);
     const num = /<w:numPr\b/.test(pPr);
     if (level) {
-      const lvl = !hasTitle && firstHeading ? 1 : level;
+      // Only a heading that opens the document, and is not a template section name, can be the title;
+      // a plain first paragraph stays the title as before (QA, #103).
+      const lvl =
+        !hasTitle && firstHeading && blocks.length === 0 && !SECTION_NAMES.has(text.trim().toLowerCase())
+          ? 1
+          : level;
       firstHeading = false;
       blocks.push(`${"#".repeat(Math.min(lvl, 6))} ${text.replace(/\s+/g, " ")}`);
       list = false;

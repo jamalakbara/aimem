@@ -126,3 +126,54 @@ describe("docx follow-ups (QA #102)", () => {
     expect(documentToRecord(r.text, "n.docx").mode).toBe("whole-document");
   });
 });
+
+describe("title rules (QA #103 regression)", () => {
+  it("a plain first paragraph stays the title, with Roles:/Tags: and the template type", () => {
+    const dec =
+      ["Use Redis for caching", "Roles: dev, qa", "Tags: one, two"].map((t) => p(t)).join("") +
+      ["Summary", "sum.", "Status", "Accepted", "Context", "c.", "Decision", "d.", "Consequences", "q."]
+        .map((t, i) => p(t, i % 2 ? undefined : "Heading1"))
+        .join("");
+    expect(documentToRecord(readDocx(docx(dec)).text, "d.docx")).toMatchObject({
+      type: "decision",
+      title: "Use Redis for caching",
+      summary: "sum.",
+      roles: ["dev", "qa"],
+      tags: ["one", "two"],
+    });
+    const rb =
+      p("Rotate the API key") +
+      p("Roles: devops") +
+      ["When to use", "w.", "Steps", "s.", "Rollback", "r.", "Verify", "v."]
+        .map((t, i) => p(t, i % 2 ? undefined : "Heading1"))
+        .join("");
+    expect(documentToRecord(readDocx(docx(rb)).text, "r.docx")).toMatchObject({
+      type: "runbook",
+      title: "Rotate the API key",
+      roles: ["devops"],
+    });
+  });
+
+  it("a template section heading is never the title", () => {
+    const body = ["Summary", "Short.", "Context", "c.", "Decision", "d.", "Consequences", "q."]
+      .map((t, i) => p(t, i % 2 ? undefined : "Heading1"))
+      .join("");
+    const r = readDocx(docx(body));
+    expect(r.text.startsWith("## Summary")).toBe(true);
+  });
+
+  it("escapes only real markdown structure, and summaries drop the escape", () => {
+    const r = readDocx(
+      docx(p("Notes", "Title") + p("-5 degrees today") + p("#hashtag") + p("***bold***") + p("- dash start")),
+    );
+    expect(r.text).toBe(
+      ["# Notes", "-5 degrees today", "#hashtag", "***bold***", "\\- dash start"].join("\n\n"),
+    );
+    const lead = documentToRecord(
+      readDocx(docx(p("- dash title") + p("- dash start first."))).text,
+      "x.docx",
+    );
+    expect(lead.title).toBe("- dash title");
+    expect(lead.summary).toBe("- dash start first.");
+  });
+});

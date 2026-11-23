@@ -83,12 +83,20 @@ export function documentToRecord(text: string, fileName: string, typeHint?: stri
     ?.replace(/^#+\s*/, "")
     .trim();
   const title = clip(
-    stripControl((md.title ?? firstLine ?? fallbackTitle).replace(/[*_`]/g, "")).trim() || fallbackTitle,
+    stripControl(
+      (md.title ?? firstLine ?? fallbackTitle).replace(/^\\(?=[#>|`~*+\-\d])/, "").replace(/[*_`]/g, ""),
+    ).trim() || fallbackTitle,
     120,
   );
   const sectionText = (h: string) => sections.get(key(h))?.text ?? "";
   const summaryFrom = (fallback: string) =>
-    clip(stripControl(firstSentence(sectionText("Summary")) || firstSentence(fallback) || title), 200);
+    clip(
+      stripControl(firstSentence(sectionText("Summary")) || firstSentence(fallback) || title).replace(
+        /^\\(?=[#>|`~*+\-\d])/,
+        "",
+      ),
+      200,
+    );
 
   const hint = typeHint?.toLowerCase();
   const candidates =
