@@ -273,7 +273,7 @@ export function validateFiles(
         `same source as ${group
           .filter((x) => x !== r)
           .map((x) => x.fm.id)
-          .join(", ")}; keep one and discard or supersede the others`,
+          .join(", ")}; keep one: aimem detach the others, then aimem discard them (or delete their files)`,
         { ref: r.fm.id },
       );
   }

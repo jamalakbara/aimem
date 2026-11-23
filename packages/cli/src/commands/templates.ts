@@ -1,5 +1,5 @@
-import { resolve } from "node:path";
-import { AimemError, SHEET_COLUMNS } from "@aimem/core";
+import { isAbsolute, relative, resolve } from "node:path";
+import { AimemError, loadProject, resolveAuthorWithGit, SHEET_COLUMNS } from "@aimem/core";
 import type { CliDeps, CommandResult, GlobalOptions } from "../deps.js";
 
 type SheetName = keyof typeof SHEET_COLUMNS;
@@ -31,9 +31,9 @@ const docTemplate = (name: string) =>
 /** `aimem templates list | export <name> --format csv|md [--out <path>]` (16 §4). */
 export async function templates(
   deps: CliDeps,
-  _g: GlobalOptions,
+  g: GlobalOptions,
   args: string[],
-  o: { format?: string; out?: string },
+  o: { format?: string; out?: string; force?: boolean; allowOutside?: boolean; author?: string },
 ): Promise<CommandResult> {
   const [sub, name] = args;
   if (sub === "list" || sub === undefined) {
@@ -66,6 +66,28 @@ export async function templates(
     );
   if (!o.out) return { data: { name, format, content }, text: content };
   const path = resolve(deps.cwd, o.out);
+  // Never overwrite by accident, and keep an agent inside the project (QA, #100).
+  const exists = await deps.fs.readBytes(path).then(
+    () => true,
+    () => false,
+  );
+  if (exists && !o.force)
+    throw new AimemError("USAGE", `${o.out} already exists; pass --force to overwrite it`);
+  const author = await resolveAuthorWithGit({
+    ...(o.author ? { flag: o.author } : {}),
+    env: deps.env,
+    git: deps.git,
+    cwd: g.dir,
+  }).catch(() => "");
+  if (author.startsWith("agent:") && !o.allowOutside) {
+    const nb = await loadProject(deps.fs, g.dir);
+    const rel = relative(nb.root, path);
+    if (rel.startsWith("..") || isAbsolute(rel))
+      throw new AimemError(
+        "USAGE",
+        `${o.out} is outside the project; an agent writes there only with --allow-outside`,
+      );
+  }
   await deps.fs.writeFile(path, content);
   return { data: { name, format, out: path }, text: `Wrote the ${name} template to ${o.out}.\n` };
 }

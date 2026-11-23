@@ -94,4 +94,55 @@ describe("sheet templates (16 §4.1)", () => {
       { row: 3, reason: "status 'nope' is not one of open, in_progress, blocked, review, done, cancelled" },
     ]);
   });
+
+  it("an unterminated quote is an error for its row only; later rows still parse (QA #100 finding 3)", () => {
+    const csv =
+      'title,summary,status\nGood,Fine.,open\n"Broken,row never closes,open\nAfter,After row.,open\n';
+    const r = sheetToRecords(parseCsv(csv), "q.csv", "tasks");
+    expect(r.items.map((i) => [i.row, i.record.title])).toEqual([
+      [2, "Good"],
+      [4, "After"],
+    ]);
+    expect(r.errors).toEqual([{ row: 3, reason: "unterminated quoted cell" }]);
+  });
+
+  it("reports rows with too few or too many cells, and refuses '..' paths (findings 7, 8)", () => {
+    const r = sheetToRecords(
+      [
+        ["title", "summary", "status", "paths"],
+        ["Short", "Fine."],
+        ["Long", "Fine.", "open", "src/**", "extra", "more"],
+        ["Escape", "Bad path.", "open", "../../etc/passwd"],
+      ],
+      "r.csv",
+      "tasks",
+    );
+    expect(r.items.map((i) => i.row)).toEqual([2, 3]);
+    expect(r.notes).toEqual([
+      { row: 2, reason: "has 2 cells, the header has 4" },
+      { row: 3, reason: "has 6 cells, the header has 4; the extra cells were left out" },
+    ]);
+    expect(r.errors).toEqual([
+      { row: 4, reason: "paths must be relative to the repository, without '.' or '..' parts" },
+    ]);
+  });
+
+  it("a key column keys rows by value instead of position (finding 4)", () => {
+    const r = sheetToRecords(
+      [
+        ["key", "title", "summary"],
+        ["T-1", "Alpha", "A."],
+        ["T-1", "Bravo", "B."],
+        ["", "Charlie", "C."],
+      ],
+      "k.csv",
+      "tasks",
+    );
+    expect(r.items.map((i) => [i.row, i.key])).toEqual([[2, "T-1"]]);
+    expect(r.errors).toEqual([
+      { row: 3, reason: "key 'T-1' is used by row 2 too" },
+      { row: 4, reason: "key is empty" },
+    ]);
+    expect(r.extraColumns).toEqual([]);
+  });
 });

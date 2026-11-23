@@ -2,38 +2,66 @@ import { STATUSES } from "@aimem/schema";
 import { firstSentence } from "../adopt/markdown.js";
 import type { DocumentRecord } from "./document.js";
 
-/** RFC 4180 CSV: quoted cells, doubled quotes, commas and newlines inside quotes, CRLF, a leading BOM. */
-export function parseCsv(text: string): string[][] {
-  const rows: string[][] = [];
-  let row: string[] = [];
-  let cell = "";
-  let quoted = false;
-  const s = text.replace(/^﻿/, "");
-  for (let i = 0; i < s.length; i++) {
-    const ch = s[i];
-    if (quoted) {
-      if (ch === '"' && s[i + 1] === '"') {
-        cell += '"';
+/** A parsed CSV row; \`error\` is set when the row could not be read (its cells are empty). */
+export type CsvRow = string[] & { error?: string };
+
+/**
+ * RFC 4180 CSV: quoted cells, doubled quotes, commas and newlines inside quotes, CRLF, a leading BOM.
+ * A quote that never closes is an error for that row only; parsing resumes on the next line (QA, #100).
+ */
+export function parseCsv(text: string): CsvRow[] {
+  const lines = text
+    .replace(/^\uFEFF/, "")
+    .replace(/\r\n?/g, "\n")
+    .split("\n");
+  const rows: CsvRow[] = [];
+  let i = 0;
+  while (i < lines.length) {
+    const start = i;
+    const row: string[] = [];
+    let cell = "";
+    let quoted = false;
+    let line = lines[i] ?? "";
+    let at = 0;
+    let broken = false;
+    for (;;) {
+      if (at >= line.length) {
+        if (!quoted) break;
+        // Inside quotes the record continues on the next line.
         i++;
-      } else if (ch === '"') quoted = false;
-      else cell += ch;
-    } else if (ch === '"' && cell === "") quoted = true;
-    else if (ch === ",") {
-      row.push(cell);
-      cell = "";
-    } else if (ch === "\n" || ch === "\r") {
-      if (ch === "\r" && s[i + 1] === "\n") i++;
-      row.push(cell);
-      rows.push(row);
-      row = [];
-      cell = "";
-    } else cell += ch;
-  }
-  if (cell !== "" || row.length) {
+        if (i >= lines.length) {
+          broken = true;
+          break;
+        }
+        cell += "\n";
+        line = lines[i] ?? "";
+        at = 0;
+        continue;
+      }
+      const ch = line[at];
+      if (quoted) {
+        if (ch === '"' && line[at + 1] === '"') {
+          cell += '"';
+          at++;
+        } else if (ch === '"') quoted = false;
+        else cell += ch;
+      } else if (ch === '"' && cell === "") quoted = true;
+      else if (ch === ",") {
+        row.push(cell);
+        cell = "";
+      } else cell += ch;
+      at++;
+    }
+    if (broken) {
+      rows.push(Object.assign([] as string[], { error: "unterminated quoted cell" }));
+      i = start + 1;
+      continue;
+    }
     row.push(cell);
-    rows.push(row);
+    if (row.some((c) => c.trim() !== "")) rows.push(row);
+    i++;
   }
-  return rows.filter((r) => r.some((c) => c.trim() !== ""));
+  return rows;
 }
 
 type SheetType = "task" | "testcase" | "incident";
@@ -64,8 +92,10 @@ const SIGNATURE: [keyof typeof SHEET_COLUMNS, string[]][] = [
 
 export interface SheetResult {
   type: SheetType;
-  items: { row: number; record: DocumentRecord & { paths?: string[] } }[];
+  items: { row: number; key?: string; record: DocumentRecord & { paths?: string[] } }[];
   errors: { row: number; reason: string }[];
+  /** Rows that imported, with something worth saying (missing or extra cells). */
+  notes: { row: number; reason: string }[];
   /** Columns that are not part of the template; kept in the body as a small table. */
   extraColumns: string[];
 }
@@ -110,14 +140,22 @@ export function sheetToRecords(rows: string[][], fileName: string, typeHint?: st
       `no sheet template matches the headers of ${fileName}; use the columns of aimem templates export tasks|testcases|incidents`,
     );
   const type = TYPE_OF[kind];
-  const known = new Set(SHEET_COLUMNS[kind]);
+  // An optional "key" column keys rows by value, so inserting or deleting rows does not shift them.
+  const known = new Set([...SHEET_COLUMNS[kind], "key"]);
+  const keyed = cols.includes("key");
+  const seenKeys = new Map<string, number>();
   const extraColumns = cols.filter((c) => c && !known.has(c));
   const items: SheetResult["items"] = [];
   const errors: SheetResult["errors"] = [];
+  const notes: SheetResult["notes"] = [];
 
   /** Maps one row; false when the row was reported as an error. */
   const mapRow = (cells: string[], i: number): boolean => {
     const row = i + 2;
+    if ((cells as CsvRow).error) {
+      errors.push({ row, reason: (cells as CsvRow).error ?? "unreadable row" });
+      return false;
+    }
     const get = (c: string) => {
       const at = cols.indexOf(c);
       return at < 0 ? "" : cellText(cells[at]);
@@ -128,6 +166,14 @@ export function sheetToRecords(rows: string[][], fileName: string, typeHint?: st
     };
     const title = get("title").replace(/\s+/g, " ").slice(0, 120);
     if (!title) return fail("title is empty");
+    let key: string | undefined;
+    if (keyed) {
+      key = get("key");
+      if (!key) return fail("key is empty");
+      const first = seenKeys.get(key);
+      if (first !== undefined) return fail(`key '${key}' is used by row ${first} too`);
+      seenKeys.set(key, row);
+    }
     const status = get("status");
     const allowed = STATUSES[type] as readonly string[];
     if (status && !allowed.includes(status))
@@ -162,6 +208,18 @@ export function sheetToRecords(rows: string[][], fileName: string, typeHint?: st
       .map((t) => t.toLowerCase().replace(/\s+/g, "-"))
       .filter((t) => /^[a-z0-9][a-z0-9-]*$/.test(t));
     const paths = list(get("paths"));
+    // Same rule as claim paths (3.4a): relative to the repository, no '.' or '..' parts.
+    if (
+      paths.some((p) => /^([a-z]:|[\\/])/i.test(p) || p.split(/[\\/]/).some((x) => x === "." || x === ".."))
+    )
+      return fail("paths must be relative to the repository, without '.' or '..' parts");
+    if (cells.length < cols.length)
+      notes.push({ row, reason: `has ${cells.length} cells, the header has ${cols.length}` });
+    else if (cells.length > cols.length && cells.slice(cols.length).some((c) => c.trim()))
+      notes.push({
+        row,
+        reason: `has ${cells.length} cells, the header has ${cols.length}; the extra cells were left out`,
+      });
     const extra = extraColumns
       .map((c) => [c, cellText(cells[cols.indexOf(c)])] as const)
       .filter(([, v]) => v);
@@ -203,6 +261,7 @@ export function sheetToRecords(rows: string[][], fileName: string, typeHint?: st
     const summary = (firstSentence(summaryText) || title).replace(/\n/g, " ").slice(0, 200);
     items.push({
       row,
+      ...(key !== undefined ? { key } : {}),
       record: {
         type,
         title,
@@ -221,5 +280,5 @@ export function sheetToRecords(rows: string[][], fileName: string, typeHint?: st
   data.forEach((cells, i) => {
     mapRow(cells, i);
   });
-  return { type, items, errors, extraColumns };
+  return { type, items, errors, notes, extraColumns };
 }

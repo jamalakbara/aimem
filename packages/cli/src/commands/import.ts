@@ -10,6 +10,7 @@ import {
   resolveAuthorWithGit,
   sheetToRecords,
   upsertExternal,
+  upsertExternalMany,
 } from "@aimem/core";
 import type { RecordType } from "@aimem/schema";
 import type { CliDeps, CommandResult, GlobalOptions } from "../deps.js";
@@ -157,40 +158,53 @@ async function importSheet(
   }
   const counts = { created: 0, updated: 0, unchanged: 0 };
   const errors = [...sheet.errors];
-  const changed = new Set<string>();
-  const warnings: string[] = [];
+  const warnings: string[] = sheet.notes.map((n) => `row ${n.row}: ${n.reason}`);
   const rows: { row: number; ref: string; action: string }[] = [];
-  await withImportLock(deps, nb.dir, async () => {
-    for (const { row, record } of sheet.items) {
-      const version = createHash("sha256").update(JSON.stringify(record)).digest("hex").slice(0, 12);
-      try {
-        const r = await upsertExternal(
-          nb,
-          {
-            type: record.type,
-            title: record.title,
-            summary: record.summary,
-            body: record.body,
-            author: a.author,
-            ...(record.status ? { status: record.status } : {}),
-            ...(record.roles ? { roles: record.roles } : {}),
-            ...(record.tags ? { tags: record.tags } : {}),
-            fields: { ...record.fields, ...(record.paths ? { paths: record.paths } : {}) },
-            source: { system: "upload", id: a.id, url: `file:${a.id}`, row, version },
-            ...(a.o.force ? { force: true } : {}),
-          },
-          a.wdeps,
-        );
-        counts[r.action]++;
-        rows.push({ row, ref: r.ref, action: r.action });
-        for (const f of r.changed) changed.add(f);
-        warnings.push(...r.warnings.map((w) => `row ${row}: ${w}`));
-      } catch (e) {
-        if (!(e instanceof AimemError)) throw e;
-        errors.push({ row, reason: `${e.code}: ${e.message}` });
-      }
+  const items = sheet.items.map(({ row, key, record }) => ({
+    row,
+    input: {
+      type: record.type,
+      title: record.title,
+      summary: record.summary,
+      body: record.body,
+      author: a.author,
+      ...(record.status ? { status: record.status } : {}),
+      ...(record.roles ? { roles: record.roles } : {}),
+      ...(record.tags ? { tags: record.tags } : {}),
+      fields: { ...record.fields, ...(record.paths ? { paths: record.paths } : {}) },
+      source: {
+        system: "upload" as const,
+        id: a.id,
+        url: `file:${a.id}`,
+        // With a key column the record follows its key; otherwise its position (QA, #100).
+        row: key !== undefined ? `key:${key}` : row,
+        version: createHash("sha256").update(JSON.stringify(record)).digest("hex").slice(0, 12),
+      },
+      ...(a.o.force ? { force: true } : {}),
+    },
+  }));
+  const done = await withImportLock(deps, nb.dir, () =>
+    upsertExternalMany(
+      nb,
+      items.map((i) => i.input),
+      a.wdeps,
+    ),
+  );
+  done.results.forEach((r, n) => {
+    const row = items[n]?.row ?? 0;
+    if ("error" in r) {
+      errors.push({ row, reason: `${r.error.code}: ${r.error.message}` });
+      return;
     }
+    counts[r.action]++;
+    rows.push({ row, ref: r.ref, action: r.action });
+    if (r.previousTitle !== undefined && !sheet.items[n]?.key)
+      warnings.push(
+        `row ${row} changed its title from "${r.previousTitle}" to "${items[n]?.input.title}"; row positions shift when rows are inserted or deleted, add a key column to keep them stable`,
+      );
   });
+  warnings.push(...done.warnings);
+  const changed = new Set(done.changed);
   errors.sort((x, y) => x.row - y.row);
   const policy = changed.size
     ? await applyWritePolicy({
@@ -259,6 +273,8 @@ async function withImportLock<T>(deps: CliDeps, aimemDir: string, f: () => Promi
   if (!exclusive) return f();
   const lock = join(aimemDir, ".cache", "import.lock");
   await deps.fs.mkdir(join(aimemDir, ".cache"));
+  const waitMs = Number(deps.env.AIMEM_IMPORT_LOCK_WAIT_MS ?? 20_000);
+  const tries = Math.max(1, Math.ceil((Number.isFinite(waitMs) ? waitMs : 20_000) / 50));
   for (let i = 0; ; i++) {
     try {
       await exclusive(lock, `${process.pid} ${new Date().toISOString()}`);
@@ -270,11 +286,18 @@ async function withImportLock<T>(deps: CliDeps, aimemDir: string, f: () => Promi
           () => 0,
         )) ?? 0;
       const owner = await deps.fs.readFile(lock).catch(() => "");
-      if (age > LOCK_STALE_MS || !lockOwnerAlive(owner)) await deps.fs.unlink(lock).catch(() => undefined);
-      else if (i >= 400)
+      const pid = Number.parseInt(owner, 10);
+      const hasPid = Number.isInteger(pid) && pid > 0;
+      // A live owner is never overtaken, however long it runs (QA, #100); a dead owner at once; a lock
+      // without a readable PID after 60 s.
+      if (hasPid ? !lockOwnerAlive(owner) : age > LOCK_STALE_MS)
+        await deps.fs.unlink(lock).catch(() => undefined);
+      else if (i >= tries)
         throw new AimemError(
           "USAGE",
-          `another aimem import is still running in this notebook (its lock expires in ${Math.ceil((LOCK_STALE_MS - age) / 1000)} s)`,
+          hasPid
+            ? `another aimem import (pid ${pid}) is still running in this notebook; try again when it has finished`
+            : `another aimem import is still running in this notebook (its lock expires in ${Math.max(1, Math.ceil((LOCK_STALE_MS - age) / 1000))} s)`,
         );
       else await new Promise((done) => setTimeout(done, 50));
     }

@@ -356,6 +356,9 @@ export async function run(argv: string[], outer: CliDeps): Promise<number> {
   )
     .option("--format <format>", "csv for sheets, md for documents")
     .option("--out <path>", "write to a file instead of stdout")
+    .option("--force", "overwrite an existing --out file")
+    .option("--allow-outside", "let an agent write --out outside the project")
+    .option("--author <who>", "human:<handle> or agent:<tool>")
     .action(action("templates", (g, args, o) => templates(deps, g, (args[0] as string[]) ?? [], o)));
 
   cmd("detach <ref>", "make an imported record notebook-owned; imports stop updating it")

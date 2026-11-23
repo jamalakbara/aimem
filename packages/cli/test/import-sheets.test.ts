@@ -161,3 +161,104 @@ describe("import safety follow-ups (QA #99 notes)", () => {
     expect(v19[0].message).toMatch(/same source as dec-/);
   });
 });
+
+describe("QA #100 review", () => {
+  const big = (n: number) =>
+    [
+      "title,summary,status",
+      ...Array.from(
+        { length: n },
+        (_, i) => `Item ${i} ${"abcdefghij"[i % 10]}${i * 7919},Summary ${i * 104729} text.,open`,
+      ),
+    ].join("\n");
+
+  it("imports 1,000 rows quickly and re-imports them faster (finding 1)", async () => {
+    writeFileSync(join(dir, "docs/big.csv"), big(1000));
+    let t0 = performance.now();
+    const a = await imp("big.csv");
+    const first = performance.now() - t0;
+    expect(a.json.data.created).toBe(1000);
+    t0 = performance.now();
+    const b = await imp("big.csv");
+    const again = performance.now() - t0;
+    expect(b.json.data.unchanged).toBe(1000);
+    expect(first).toBeLessThan(10_000);
+    expect(again).toBeLessThan(first);
+  }, 60_000);
+
+  it("never takes the lock of a live import, however old (finding 2)", async () => {
+    mkdirSync(join(dir, ".aimem/.cache"), { recursive: true });
+    const lock = join(dir, ".aimem/.cache/import.lock");
+    writeFileSync(lock, `${process.pid} 2026-01-01T00:00:00.000Z`);
+    const old = new Date(Date.now() - 10 * 60_000);
+    const { utimesSync } = await import("node:fs");
+    utimesSync(lock, old, old);
+    const r = await cli(["import", join(dir, "docs/decision.md"), "--json", "--dir", dir], {
+      env: { ...human, AIMEM_IMPORT_LOCK_WAIT_MS: "200" },
+      random,
+    });
+    expect(r.code).toBe(2);
+    expect(r.json.error.message).toMatch(
+      new RegExp(`another aimem import \\(pid ${process.pid}\\) is still running`),
+    );
+    expect(existsSync(lock)).toBe(true);
+  }, 60_000);
+
+  it("warns when a row's title changes, because row keys shift (finding 4)", async () => {
+    writeFileSync(
+      join(dir, "docs/abc.csv"),
+      "title,summary,status\nAlpha,A one.,open\nBravo,B two.,open\nCharlie,C three.,open\n",
+    );
+    await imp("abc.csv");
+    writeFileSync(
+      join(dir, "docs/abc.csv"),
+      "title,summary,status\nAlpha,A one.,open\nCharlie,C three.,open\n",
+    );
+    const r = await imp("abc.csv");
+    expect(r.json.warnings.join("\n")).toMatch(
+      /row 3 changed its title from "Bravo" to "Charlie"; row positions shift when rows are inserted or deleted, add a key column to keep them stable/,
+    );
+  });
+
+  it("templates --out refuses an existing file without --force, and an agent outside the project (finding 5)", async () => {
+    const out = join(dir, "existing.csv");
+    writeFileSync(out, "precious");
+    const no = await cli(["templates", "export", "tasks", "--out", out, "--json", "--dir", dir], {
+      env: human,
+    });
+    expect(no.code).toBe(2);
+    expect(no.json.error.message).toMatch(/already exists; pass --force to overwrite it/);
+    expect(readFileSync(out, "utf8")).toBe("precious");
+    const yes = await cli(["templates", "export", "tasks", "--out", out, "--force", "--json", "--dir", dir], {
+      env: human,
+    });
+    expect(yes.code).toBe(0);
+    const far = mkdtempSync(join(tmpdir(), "aimem-far-"));
+    try {
+      const a = await cli(
+        ["templates", "export", "tasks", "--out", join(far, "t.csv"), "--json", "--dir", dir],
+        { env: agent },
+      );
+      expect(a.code).toBe(2);
+      expect(a.json.error.message).toMatch(
+        /outside the project; an agent writes there only with --allow-outside/,
+      );
+    } finally {
+      rmSync(far, { recursive: true, force: true });
+    }
+  });
+
+  it("V019 says how to resolve it for imported records (finding 6)", async () => {
+    const a = await imp("decision.md");
+    const file = join(dir, a.json.data.file);
+    writeFileSync(
+      join(dir, ".aimem/decisions/dec-zzzzzzzz-copy.md"),
+      readFileSync(file, "utf8").replace(a.json.data.ref, "dec-zzzzzzzz"),
+    );
+    const v = await cli(["validate", "--json", "--dir", dir], { env: human, random });
+    const v19 = v.json.data.issues.find((i: { code: string }) => i.code === "V019");
+    expect(v19.message).toMatch(
+      /keep one: aimem detach the others, then aimem discard them \(or delete their files\)/,
+    );
+  });
+});
