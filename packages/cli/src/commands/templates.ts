@@ -1,5 +1,5 @@
-import { isAbsolute, relative, resolve } from "node:path";
-import { AimemError, loadProject, resolveAuthorWithGit, SHEET_COLUMNS } from "@aimem/core";
+import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { AimemError, loadProject, resolveAuthorWithGit, SHEET_COLUMNS, writeXlsx } from "@aimem/core";
 import type { CliDeps, CommandResult, GlobalOptions } from "../deps.js";
 
 type SheetName = keyof typeof SHEET_COLUMNS;
@@ -50,12 +50,15 @@ export async function templates(
     throw new AimemError("USAGE", "use aimem templates list or aimem templates export <name>");
   if (!name) throw new AimemError("USAGE", "name a template: aimem templates export <name> --format csv|md");
   const format = (o.format ?? (SHEETS.includes(name as SheetName) ? "csv" : "md")).toLowerCase();
-  if (format === "xlsx")
-    throw new AimemError("USAGE", "xlsx templates arrive in a later M4b slice; use --format csv");
-  let content: string;
+  let content: string | Uint8Array;
   if (SHEETS.includes(name as SheetName)) {
-    if (format !== "csv") throw new AimemError("USAGE", `${name} is a sheet template: use --format csv`);
-    content = `${SHEET_COLUMNS[name as SheetName].join(",")}\n`;
+    if (format !== "csv" && format !== "xlsx")
+      throw new AimemError("USAGE", `${name} is a sheet template: use --format csv or xlsx`);
+    if (format === "xlsx" && !o.out) throw new AimemError("USAGE", "xlsx is binary: pass --out <file>");
+    content =
+      format === "xlsx"
+        ? writeXlsx(name, [SHEET_COLUMNS[name as SheetName]])
+        : `${SHEET_COLUMNS[name as SheetName].join(",")}\n`;
   } else if (DOCS[name]) {
     if (format !== "md") throw new AimemError("USAGE", `${name} is a document template: use --format md`);
     content = docTemplate(name);
@@ -64,8 +67,11 @@ export async function templates(
       "USAGE",
       `unknown template '${name}' (expected one of: ${[...SHEETS, ...Object.keys(DOCS)].join(", ")})`,
     );
-  if (!o.out) return { data: { name, format, content }, text: content };
+  if (!o.out) return { data: { name, format, content }, text: String(content) };
   const path = resolve(deps.cwd, o.out);
+  // A link could send the write anywhere (QA, #100), even with --force.
+  if ((await deps.fs.lstat?.(path).catch(() => undefined))?.isSymbolicLink)
+    throw new AimemError("USAGE", `${o.out} is a symlink; write to a regular file`);
   // Never overwrite by accident, and keep an agent inside the project (QA, #100).
   const exists = await deps.fs.readBytes(path).then(
     () => true,
@@ -81,7 +87,9 @@ export async function templates(
   }).catch(() => "");
   if (author.startsWith("agent:") && !o.allowOutside) {
     const nb = await loadProject(deps.fs, g.dir);
-    const rel = relative(nb.root, path);
+    const realRoot = (await deps.fs.realpath?.(nb.root).catch(() => undefined)) ?? nb.root;
+    const realDir = (await deps.fs.realpath?.(dirname(path)).catch(() => undefined)) ?? dirname(path);
+    const rel = relative(realRoot, join(realDir, basename(path)));
     if (rel.startsWith("..") || isAbsolute(rel))
       throw new AimemError(
         "USAGE",

@@ -117,6 +117,14 @@ const control = (s: string) =>
 const cellText = (v: string | undefined) => control(v ?? "").trim();
 const mdCell = (v: string) => v.replace(/\|/g, "\\|").replace(/\n/g, "<br>");
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
+/** Spreadsheets store dates as day numbers since 1899-12-30; turn one into an ISO date or time. */
+const fromSerial = (v: string, withTime: boolean) => {
+  if (!/^\d+(\.\d+)?$/.test(v)) return v;
+  const n = Number(v);
+  if (n < 1 || n > 2958465) return v;
+  const iso = new Date(Date.UTC(1899, 11, 30) + Math.round(n * 86_400_000)).toISOString();
+  return withTime && n % 1 !== 0 ? `${iso.slice(0, 19)}Z` : iso.slice(0, 10);
+};
 const DATETIME = /^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2})?(?:Z|[+-]\d{2}:?\d{2})?)?$/;
 const NAME = /^[a-z0-9][a-z0-9_-]*$/i;
 
@@ -158,7 +166,12 @@ export function sheetToRecords(rows: string[][], fileName: string, typeHint?: st
     }
     const get = (c: string) => {
       const at = cols.indexOf(c);
-      return at < 0 ? "" : cellText(cells[at]);
+      const v = at < 0 ? "" : cellText(cells[at]);
+      return c === "due"
+        ? fromSerial(v, false)
+        : c === "started" || c === "resolved_at"
+          ? fromSerial(v, true)
+          : v;
     };
     const fail = (reason: string): false => {
       errors.push({ row, reason });

@@ -347,6 +347,7 @@ export async function run(argv: string[], outer: CliDeps): Promise<number> {
     .option("--force", "create the record even when a likely duplicate exists (e.g. a detached copy)")
     .option("--allow-outside", "let an agent import a file outside the project")
     .option("--strict", "exit 1 when a sheet row failed")
+    .option("--sheet <name>", "the worksheet of an .xlsx file (default: the first)")
     .option("--author <who>", "human:<handle> or agent:<tool>")
     .action(action("import", (g, args, o) => importFile(deps, g, String(args[0]), o)));
 
