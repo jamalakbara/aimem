@@ -14,6 +14,8 @@ export interface DocumentRecord {
   mode: "template" | "whole-document";
   /** Why the document fell back to whole-document mode. */
   warning?: string;
+  /** Other things the import left out or changed (bad tags/roles, front matter). */
+  notes?: string[];
 }
 
 type TemplateType = "decision" | "runbook" | "incident" | "memory";
@@ -29,6 +31,8 @@ const OPTIONAL: Partial<Record<TemplateType, string[]>> = { decision: ["Alternat
 const TEMPLATE_TYPES: TemplateType[] = ["decision", "runbook", "incident", "memory"];
 const META = /^\s*(roles|tags)\s*:\s*(.+)$/gim;
 
+/** Terminal escapes and other control characters never reach titles, summaries or names (QA, #99). */
+const stripControl = (s: string) => s.replace(/[\u0000-\u0008\u000b-\u001f\u007f]/g, "");
 const key = (h: string) => h.trim().toLowerCase().replace(/\s+/g, " ");
 const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1).trimEnd()}…` : s);
 
@@ -46,7 +50,17 @@ function decisionStatus(raw: string | undefined): string {
  * one `memory` (`kind: reference`) holding the whole text ("whole document" mode, 16 §3.1).
  */
 export function documentToRecord(text: string, fileName: string, typeHint?: string): DocumentRecord {
-  const clean = text.replace(/\r\n?/g, "\n").trim();
+  const notes: string[] = [];
+  let clean = stripControl(text)
+    .replace(/^\uFEFF/, "")
+    .replace(/\r\n?/g, "\n")
+    .trim();
+  // Front matter at the top is metadata of the source document, not content (and never ours).
+  const fm = /^---\n[\s\S]*?\n---(?:\n|$)/.exec(clean);
+  if (fm) {
+    clean = clean.slice(fm[0].length).trim();
+    notes.push("front matter at the top of the document was left out");
+  }
   const md = parseMarkdown(clean);
   const sections = new Map<string, Section>();
   for (const s of md.sections) if (!sections.has(key(s.heading))) sections.set(key(s.heading), s);
@@ -63,20 +77,34 @@ export function documentToRecord(text: string, fileName: string, typeHint?: stri
     ?.replace(/^#+\s*/, "")
     .trim();
   const title = clip(
-    (md.title ?? firstLine ?? fallbackTitle).replace(/[*_`]/g, "").trim() || fallbackTitle,
+    stripControl((md.title ?? firstLine ?? fallbackTitle).replace(/[*_`]/g, "")).trim() || fallbackTitle,
     120,
   );
   const sectionText = (h: string) => sections.get(key(h))?.text ?? "";
   const summaryFrom = (fallback: string) =>
-    clip(firstSentence(sectionText("Summary")) || firstSentence(fallback) || title, 200);
+    clip(stripControl(firstSentence(sectionText("Summary")) || firstSentence(fallback) || title), 200);
 
   const hint = typeHint?.toLowerCase();
   const candidates =
     hint && (TEMPLATE_TYPES as string[]).includes(hint) ? [hint as TemplateType] : TEMPLATE_TYPES;
   const match = candidates.find((t) => REQUIRED[t].every((h) => sections.has(key(h))));
+  // Roles and tags become frontmatter: keep only safe names, and say what was left out.
+  const keepNames = (list: string[] | undefined, re: RegExp, what: string) => {
+    const ok = (list ?? []).filter((x) => re.test(x));
+    const bad = (list ?? []).filter((x) => !re.test(x));
+    if (bad.length) notes.push(`ignored ${what}: ${bad.map(stripControl).join(", ")}`);
+    return ok;
+  };
+  const roles = keepNames(meta.roles, /^[a-z0-9][a-z0-9_-]*$/i, "roles");
+  const tags = keepNames(
+    meta.tags?.map((t) => t.toLowerCase().replace(/\s+/g, "-")),
+    /^[a-z0-9][a-z0-9-]*$/,
+    "tags",
+  );
   const common = {
-    ...(meta.roles?.length ? { roles: meta.roles } : {}),
-    ...(meta.tags?.length ? { tags: meta.tags.map((t) => t.toLowerCase().replace(/\s+/g, "-")) } : {}),
+    ...(roles.length ? { roles } : {}),
+    ...(tags.length ? { tags } : {}),
+    ...(notes.length ? { notes } : {}),
   };
 
   if (match && match !== "memory") {
@@ -109,7 +137,7 @@ export function documentToRecord(text: string, fileName: string, typeHint?: stri
     hint && (TEMPLATE_TYPES as string[]).includes(hint)
       ? REQUIRED[hint as TemplateType].filter((h) => !sections.has(key(h)))
       : [];
-  const afterTitle = clean.split("\n").slice(1).join("\n");
+  const afterTitle = clean.split("\n").slice(1).join("\n").replace(META, "").trim();
   return {
     type: "memory",
     title,

@@ -640,6 +640,8 @@ export interface ExternalInput {
   roles?: string[];
   tags?: string[];
   fields?: Record<string, unknown>;
+  /** Create even when a likely duplicate exists (e.g. a detached copy). */
+  force?: boolean;
   source: {
     system: ExternalSystem;
     id: string;
@@ -708,6 +710,7 @@ export async function upsertExternal(
         ...(input.roles?.length ? { roles: input.roles } : {}),
         ...(input.tags?.length ? { tags: input.tags } : {}),
         fields: { ...input.fields, managed_by: "external", source: sourceFields(input.author) },
+        ...(input.force ? { force: true } : {}),
       },
       deps,
     );

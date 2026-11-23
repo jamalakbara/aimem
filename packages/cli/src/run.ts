@@ -340,6 +340,7 @@ export async function run(argv: string[], outer: CliDeps): Promise<number> {
 
   cmd("import <file>", "import a .md or .txt document as an externally-owned record (16 §7)")
     .option("--as <type>", "auto | decision | runbook | incident | memory (default auto: by its headings)")
+    .option("--force", "create the record even when a likely duplicate exists (e.g. a detached copy)")
     .option("--author <who>", "human:<handle> or agent:<tool>")
     .action(action("import", (g, args, o) => importFile(deps, g, String(args[0]), o)));
 
