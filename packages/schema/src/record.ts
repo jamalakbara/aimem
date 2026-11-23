@@ -72,7 +72,7 @@ const extras = {
     blocked_by: z.array(ref).optional(),
     due: isoDate.optional(),
   },
-  memory: { kind: z.enum(["gotcha", "constraint", "howto", "fact", "preference"]).optional() },
+  memory: { kind: z.enum(["gotcha", "constraint", "howto", "fact", "preference", "reference"]).optional() },
   handoff: { session: z.string().optional(), task: ref.optional(), branch: z.string().optional() },
   incident: {
     severity: z.enum(["sev1", "sev2", "sev3", "sev4"]).optional(),

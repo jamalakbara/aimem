@@ -131,7 +131,7 @@ supersedes: dec-2a4b6c8d
 ### 3.3 memory
 A fact worth remembering that is not a decision (gotcha, constraint, how-something-really-works).
 - Statuses: `active`, `stale`, `superseded`.
-- Extra fields: `kind` (optional): `gotcha` \| `constraint` \| `howto` \| `fact` \| `preference`.
+- Extra fields: `kind` (optional): `gotcha` \| `constraint` \| `howto` \| `fact` \| `preference` \| `reference` (a whole imported document, 16 §3.1).
 - Body: free; start with the fact itself, then why we know it and how to verify.
 - Default freshness window: 90 days since `verified` (or `created`) → shown as stale.
 

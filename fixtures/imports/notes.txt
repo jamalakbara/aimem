@@ -1,0 +1,4 @@
+Weekly ops sync notes
+
+Couriers asked for a sandbox environment. Finance wants the nightly export to include returns.
+Nobody owns the partner portal yet.
