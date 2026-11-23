@@ -37,6 +37,7 @@ Each slice is one PR. 4b.1 alone already helps (import a markdown decision doc);
 - Core `upsertExternal(nb, { type, title, summary, body, fields, source }, deps)`: finds the record by `source.system` + `source.id` (+ `row`), creates or rewrites it, sets `content_sha` (03 §9) and `synced_at`, never touches a notebook-owned record, refuses a key owned by another system (16 §2 rule 4).
 - `aimem detach <ref>`: drops `managed_by`/`source` into a `detached_from` note in the body footer, keeps history; afterwards `update` works and sync skips it.
 - `aimem import <file> [--type decision|runbook|incident|memory] [--author]`: `.md`/`.txt`; template matching per 16 §4.2 (headings case-insensitive, Doc title → `title`, optional `Roles:`/`Tags:` lines); missing required headings → whole-document mode with a warning. `source.system: upload`, `source.id: sha256 of the file`.
+- Every write command refuses an externally-owned record with `READONLY_EXTERNAL` and an "edit at source" message, not only `update`, `move` and `discard`: also `verify`, `supersede` (as old or new record), `review` edits and MCP write tools (QA plan: ownership first, before any converter).
 - Tests first: template decision/runbook/incident/memory; fallback to whole document; re-import unchanged (no write), changed (update, new `content_sha`); `update` refused with `READONLY_EXTERNAL`; `detach` then `update` works; secret in the file → nothing written, report names the line.
 
 ## 4b.2 — Sheets
@@ -49,6 +50,7 @@ Each slice is one PR. 4b.1 alone already helps (import a markdown decision doc);
 
 - docx via `mammoth` → HTML → markdown (headings, lists, simple tables); images dropped, alt text kept. pdf via `unpdf` → text, whole-document mode only.
 - Size limit 10 MB (`--max-size`); `--keep-original`.
+- Tests first, from the QA plan (`/var/lib/openbot/OpenBot/Shared/aimem-m4b-m5-qa-test-plan.md`, Opan): zip bombs in docx/xlsx (limit the uncompressed size and entry count before reading), zip entries with `../` or absolute paths (never extracted to disk), XML external entities (XXE) in docx/xlsx, spreadsheet formulas (`=cmd|…`, `=HYPERLINK(…)`) imported as plain text and never evaluated, malformed and script-carrying PDFs (text only, no JavaScript, time limit per file).
 
 ## 4b.4 — Google connector
 
@@ -56,6 +58,7 @@ Each slice is one PR. 4b.1 alone already helps (import a markdown decision doc);
 - `sources sync`: list the folder (`files.list` with `q='<id>' in parents and trashed=false`), Docs via `files.export` (`text/markdown`), Sheets via `spreadsheets.values.get` per tab; `version` = Drive `version`/`modifiedTime`; unchanged versions are skipped; files no longer listed → `state: missing` (V018), content kept.
 - Errors: 401/403 → `SOURCE_AUTH`, nothing written; network/5xx → `SOURCE_UNREACHABLE` with the last good records kept; per-file errors are reported and the run continues.
 - CI uses recorded responses (fixtures under `fixtures/google/`), never the network.
+- Credentials never reach `.aimem/`, `calls.jsonl`, logs or error messages; tests assert that the key file contents and access tokens do not appear in any output.
 
 ## Expected files
 
