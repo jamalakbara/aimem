@@ -75,6 +75,12 @@ exports[`JSON Schema export (03 §10) > export is stable (contract snapshot) 1`]
           "google": {
             "additionalProperties": {},
             "properties": {
+              "files": {
+                "items": {
+                  "type": "string",
+                },
+                "type": "array",
+              },
               "inbox_folder_id": {
                 "type": [
                   "string",
