@@ -23,13 +23,13 @@ Each slice is one PR. 4b.1 alone already helps (import a markdown decision doc);
 
 ## Decisions to confirm before coding
 
-1. **Trust of imports.** 16 §3.1: template and whole-document imports are `verified` when a human imports them. Recommended: keep that, and give an agent importer `trust: agent`; `--extract llm` (inferred drafts) stays out of M4b.
+1. **Trust of imports.** 16 §3.1 makes template and whole-document imports `verified` when a human imports them. QA points out that this would let an unread file skip `durable_requires_review` (M3.7). Recommended: a human import is `verified` except for decision, runbook and schema records in team mode, which follow `durable_requires_review` (a second person verifies, like any human write); an agent importer gets `trust: agent`. `--extract llm` (inferred drafts) stays out of M4b.
 2. **Whole-document kind.** 16 §3.1 names `kind: reference`, which the memory schema does not have yet (`gotcha, constraint, howto, fact, preference`). Recommended: add `reference` to the schema (a small, deliberate contract change), rather than reusing `fact`.
-3. **Dependencies.** Recommended: `mammoth` (BSD-2) for docx, `exceljs` (MIT) for xlsx read/write, `unpdf` (MIT, pdf.js inside) for pdf text, all loaded lazily so the CLI start time is unchanged; no `googleapis` package: plain `fetch` against the Drive and Sheets REST APIs with a small JWT signer from `node:crypto`.
-4. **Google auth.** Recommended: a service account whose key file path comes from `GOOGLE_APPLICATION_CREDENTIALS` (or `AIMEM_GOOGLE_CREDENTIALS`), shared only with the inbox folder; read-only scopes `drive.readonly` and `spreadsheets.readonly`. Per-user OAuth is left for the server (M6). Secrets never go into `project.yaml` (16 §8).
+3. **Dependencies** (pinned exact versions; their zip readers reviewed; per-file time, page and memory limits for PDF and zip on top of the 10 MB size limit). Recommended: `mammoth` (BSD-2) for docx, `exceljs` (MIT) for xlsx read/write, `unpdf` (MIT, pdf.js inside) for pdf text, all loaded lazily so the CLI start time is unchanged; no `googleapis` package: plain `fetch` against the Drive and Sheets REST APIs with a small JWT signer from `node:crypto`.
+4. **Google auth.** The key file must lie outside the repository working tree; a path inside it is refused with a clear message, so the key can never be committed. Recommended: a service account whose key file path comes from `GOOGLE_APPLICATION_CREDENTIALS` (or `AIMEM_GOOGLE_CREDENTIALS`), shared only with the inbox folder; read-only scopes `drive.readonly` and `spreadsheets.readonly`. Per-user OAuth is left for the server (M6). Secrets never go into `project.yaml` (16 §8).
 5. **Selection.** Only the configured inbox folder (and files explicitly passed to `sources add google --file <id>`), never the whole Drive (16 §5). Subfolders are not walked in M4b.
 6. **Write policy and identity.** One commit (or `aimem/*` branch) per `import` or `sources sync` run, like `adopt`, with the importer as author. The bot identity with an `On-Behalf-Of` trailer belongs to the server (M6).
-7. **Original files.** Not stored by default; `--keep-original` writes `.aimem/attachments/<sha256>.<ext>` and warns about repository size above 1 MB (Git LFS is the user's choice).
+7. **Original files.** Not stored by default; `--keep-original` writes `.aimem/attachments/<sha256>.<ext>` and warns about repository size above 1 MB (Git LFS is the user's choice). A file that was skipped (secret, limits, parse error) is never kept, and the docs warn that binary originals can carry macros or hidden content that the text scan does not see.
 8. **Visibility warning.** Every import and sync prints once: "Imported content is visible to everyone who can read this repository" (16 §12).
 
 ## 4b.1 — Upsert, detach, markdown import
@@ -53,6 +53,8 @@ Each slice is one PR. 4b.1 alone already helps (import a markdown decision doc);
 - Tests first, from the QA plan (`/var/lib/openbot/OpenBot/Shared/aimem-m4b-m5-qa-test-plan.md`, Opan): zip bombs in docx/xlsx (limit the uncompressed size and entry count before reading), zip entries with `../` or absolute paths (never extracted to disk), XML external entities (XXE) in docx/xlsx, spreadsheet formulas (`=cmd|…`, `=HYPERLINK(…)`) imported as plain text and never evaluated, malformed and script-carrying PDFs (text only, no JavaScript, time limit per file).
 
 ## 4b.4 — Google connector
+
+- A sync that stops halfway (crash, network) leaves nothing half-written: each record is written atomically and a re-run reaches the same end state.
 
 - Config `connectors.google.inbox_folder_id` and `poll_minutes` (only used by M6) in `project.yaml`; credentials from env.
 - `sources sync`: list the folder (`files.list` with `q='<id>' in parents and trashed=false`), Docs via `files.export` (`text/markdown`), Sheets via `spreadsheets.values.get` per tab; `version` = Drive `version`/`modifiedTime`; unchanged versions are skipped; files no longer listed → `state: missing` (V018), content kept.
