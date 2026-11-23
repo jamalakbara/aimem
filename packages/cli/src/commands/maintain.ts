@@ -118,6 +118,10 @@ export async function indexCmd(
         `Embeddings (${r.provider}): ${r.chunks} chunks, ${r.built} embedded, ${r.reused} reused, ${r.removed} removed${r.rebuilt && r.reason ? ` — full rebuild: ${r.reason}` : ""}.`,
       );
       for (const e of r.excluded) lines.push(`  not embedded: ${e.ref} (${e.reason})`);
+      for (const t of r.truncated)
+        lines.push(
+          `  partly embedded: ${t.ref} (first ${t.embedded} of ${t.chunks} parts; keyword search covers all of it)`,
+        );
     }
   }
   return {

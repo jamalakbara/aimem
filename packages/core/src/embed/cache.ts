@@ -7,7 +7,7 @@ import { writeFileAtomic } from "../records/store.js";
 import { tokenize } from "../search/bm25.js";
 import { HIDDEN_STATUSES } from "../search/search.js";
 import { scanSecrets } from "../secrets/scan.js";
-import { CHUNKER_VERSION, type Chunk, chunkRecord } from "./chunk.js";
+import { CHUNKER_VERSION, type Chunk, chunkRecord, MAX_RECORD_CHUNKS, MAX_RECORD_TERMS } from "./chunk.js";
 import type { EmbeddingProvider } from "./provider.js";
 
 /** Vectors live outside git (15 §5): `.aimem/.cache/vectors/`. */
@@ -41,6 +41,8 @@ export interface BuildResult {
   rebuilt: boolean;
   reason?: string;
   excluded: { ref: string; reason: string }[];
+  /** Long records of which only the first parts were embedded. */
+  truncated: { ref: string; chunks: number; embedded: number }[];
 }
 
 const paths = (nb: Notebook) => ({
@@ -157,11 +159,17 @@ async function updateVectorCache(
   if (!old && options.onlyIfCached) return undefined;
 
   const excluded: BuildResult["excluded"] = [];
+  const truncated: BuildResult["truncated"] = [];
   const chunks: Chunk[] = [];
   for (const r of index.records) {
     if (r.tags.includes("no-embed")) excluded.push({ ref: r.id, reason: "tagged no-embed" });
     else if (scanSecrets(r.text).length) excluded.push({ ref: r.id, reason: "possible secret" });
-    else chunks.push(...chunkRecord(r));
+    else {
+      const all = chunkRecord(r);
+      if (all.length > MAX_RECORD_CHUNKS)
+        truncated.push({ ref: r.id, chunks: all.length, embedded: MAX_RECORD_CHUNKS });
+      chunks.push(...all.slice(0, MAX_RECORD_CHUNKS));
+    }
   }
   // A bounded vocabulary lets the local encoder bridge a query to a precise corpus word.
   // Each word is embedded once; ownership keeps exclusions and incremental invalidation explicit.
@@ -173,8 +181,10 @@ async function updateVectorCache(
       if (excludedRefs.has(r.id) || HIDDEN_STATUSES.has(r.status)) continue;
       const bodySha = bodyHashes.get(r.id);
       if (!bodySha) continue;
+      let own = 0;
       for (const term of new Set(tokenize(`${r.title} ${r.summary} ${r.body}`))) {
         if (!/^\p{L}{3,32}$/u.test(term)) continue;
+        if (++own > MAX_RECORD_TERMS) break;
         const prior = vocabulary.get(term);
         if (prior) prior.frequency++;
         else vocabulary.set(term, { ref: r.id, bodySha, frequency: 1 });
@@ -262,6 +272,7 @@ async function updateVectorCache(
     rebuilt: !old,
     ...(reason ? { reason } : {}),
     excluded,
+    truncated,
   };
 }
 

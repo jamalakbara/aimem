@@ -52,6 +52,8 @@ Records are short by design (≤ 400 words guideline), so chunking is simple and
 | **Head chunk** | `[type] title — summary` + tags + `paths` | yes, one per record |
 | **Section chunks** | Each markdown `##` section; split if > ~300 tokens with ~40 token overlap | for records with bodies |
 
+At most 200 chunks of one record are embedded (about 240,000 characters). Ordinary records have fewer than ten; for a longer imported document the rest stays in keyword search, `import` warns, and `index --embeddings` lists it as partly embedded.
+
 Each chunk stores: `ref`, `section`, `type`, `status`, `trust`, `repo`, `roles`, `paths`, `updated`, `body_sha`. The text actually embedded is prefixed with its context (e.g. `decision | Use Postgres for the ledger | ## Consequences\n…`) so small chunks keep their meaning.
 
 A record's semantic score = max over its chunks (head chunk gets a small bonus so summaries match first).
@@ -197,7 +199,8 @@ document frequency then lexical order; the lexically first source ref owns each
 word. Hidden, `no-embed` and secret-flagged sources are excluded. Each word is
 embedded independently because quantized outputs vary with batch composition;
 unchanged word vectors are reused even if ownership or its source body changes.
-Nonlocal providers do not build this vocabulary. Version-1 caches remain readable
+One record contributes at most 500 words, so a long import cannot crowd out the words
+of other records. Nonlocal providers do not build this vocabulary. Version-1 caches remain readable
 with the prior behavior; run `index --embeddings` to activate vocabulary matching.
 Older CLIs reject version 2 and fall back lexically until their index rebuilds it.
 
