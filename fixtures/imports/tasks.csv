@@ -1,0 +1,23 @@
+Title,Summary,Status,Priority,Assignee,Roles,Tags,Due,Paths,Notes,Sprint
+Add health route,Add health route for the parcel hub.,in_progress,p0,,dev,backlog,2026-12-15,src/api/**,,S1
+Fold scans in batches,Fold scans in batches for the parcel hub.,open,p1,dana,dev,"backlog, q1",,,"First line
+second line, with a comma",S1
+Archive old events,Archive old events for the parcel hub.,open,p2,,dev,backlog,,,=cmd|' /C calc'!A0,S1
+Courier sandbox,Courier sandbox for the parcel hub.,in_progress,p3,dana,dev,"backlog, q1",,,,S1
+Returns in nightly export,Returns in nightly export for the parcel hub.,open,p0,,dev,backlog,,,,S1
+Partner portal owner,Partner portal owner for the parcel hub.,open,p9,dana,dev,"backlog, q1",,,,S1
+Retry webhooks,Retry webhooks for the parcel hub.,in_progress,p2,,dev,backlog,,,,S1
+Index tracking codes,Index tracking codes for the parcel hub.,open,p3,dana,dev,"backlog, q1",,,,S2
+Paginate parcel list,Paginate parcel list for the parcel hub.,open,p0,,dev,backlog,,,,S2
+Alert on queue depth,Alert on queue depth for the parcel hub.,in_progress,p1,dana,dev,"backlog, q1",,,,S2
+Rotate API keys,Rotate API keys for the parcel hub.,open,p2,,dev,backlog,,,,S2
+Dark mode for portal,Dark mode for portal for the parcel hub.,open,p3,dana,dev,"backlog, q1",,,,S2
+Bulk label printing,Bulk label printing for the parcel hub.,in_progress,p0,,dev,backlog,,,,S2
+CSV export for finance,CSV export for finance for the parcel hub.,open,p1,dana,dev,"backlog, q1",,,,S2
+Rate limit scans,Rate limit scans for the parcel hub.,open,p2,,dev,backlog,,,,S3
+Audit log for admins,Audit log for admins for the parcel hub.,in_progress,p3,dana,dev,"backlog, q1",,,,S3
+Timezone fix for ETA,Timezone fix for ETA for the parcel hub.,open,p0,,dev,backlog,,,,S3
+Parcel merge tool,Parcel merge tool for the parcel hub.,open,p1,dana,dev,"backlog, q1",,,,S3
+Delivery photo upload,Delivery photo upload for the parcel hub.,in_progress,p2,,dev,backlog,,,,S3
+SMS notifications,SMS notifications for the parcel hub.,open,p3,dana,dev,"backlog, q1",,,,S3
+Driver app login,Driver app login for the parcel hub.,open,p0,,dev,backlog,,,,S3

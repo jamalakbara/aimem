@@ -25,6 +25,7 @@ import {
   setField,
 } from "../records/text.js";
 import { writeIndexMd } from "../render/index-md.js";
+import { duplicateFinder } from "../review/queue.js";
 import { tokenize } from "../search/bm25.js";
 import { HIDDEN_STATUSES } from "../search/search.js";
 import { scanSecrets } from "../secrets/scan.js";
@@ -670,97 +671,205 @@ export async function upsertExternal(
   input: ExternalInput,
   deps: WriteDeps,
 ): Promise<ExternalResult> {
+  const r = await upsertExternalMany(nb, [input], deps);
+  const one = r.results[0];
+  if (!one) throw new AimemError("USAGE", "nothing to import");
+  if ("error" in one) throw one.error;
+  return { ...one, changed: r.changed, warnings: [...one.warnings, ...r.warnings] };
+}
+
+export type ExternalItemResult =
+  | (Omit<ExternalResult, "changed"> & { previousTitle?: string })
+  | { error: AimemError };
+
+/**
+ * Many imports in one pass (a sheet, a sync run): the index is loaded once, duplicates are checked
+ * through one token index, and INDEX.md and the vector cache are refreshed once at the end (QA, #100:
+ * one loadIndex per row made a 400-row sheet take 143 s). Each item fails on its own.
+ */
+export async function upsertExternalMany(
+  nb: Notebook,
+  inputs: readonly ExternalInput[],
+  deps: WriteDeps,
+): Promise<{ results: ExternalItemResult[]; changed: string[]; warnings: string[] }> {
   const index = await loadIndex(nb, { fs: deps.fs });
-  const src = input.source;
-  const existing = index.records.find((r) => {
-    const s = r.fm.source as { system?: string; id?: unknown; row?: unknown } | undefined;
-    return (
-      !r.notebook &&
-      r.fm.managed_by === "external" &&
-      s?.system === src.system &&
-      String(s.id) === src.id &&
-      (src.row === undefined ? s.row === undefined : String(s.row) === String(src.row))
-    );
-  });
-  const body = input.body.trim();
-  const sha = contentSha(body);
   const now = deps.clock.now();
-  const sourceFields = (imported_by: string) => ({
-    system: src.system,
-    id: src.id,
-    url: src.url,
-    ...(src.row !== undefined ? { row: src.row } : {}),
-    version: src.version,
-    content_sha: sha,
-    synced_at: iso(now),
-    imported_by,
-    state: "ok",
+  const keyOf = (system: string, id: string, row: unknown) =>
+    `${system}\u0000${id}\u0000${row === undefined ? "" : String(row)}`;
+  const owned = new Map<string, IndexedRecord>();
+  for (const r of index.records) {
+    const s = r.fm.source as { system?: string; id?: unknown; row?: unknown } | undefined;
+    if (!r.notebook && r.fm.managed_by === "external" && s?.system)
+      owned.set(keyOf(s.system, String(s.id), s.row), r);
+  }
+  // Records of the sources being imported are told apart by their keys, so the duplicate check looks
+  // only at the rest of the notebook (QA, #99 / 4b.2).
+  const sources = new Set(inputs.map((i) => `${i.source.system}\u0000${i.source.id}`));
+  const others = index.records.filter((r) => {
+    const s = r.fm.source as { system?: string; id?: unknown } | undefined;
+    return !(r.fm.managed_by === "external" && s?.system && sources.has(`${s.system}\u0000${String(s.id)}`));
   });
+  const findDup = duplicateFinder(others);
+  const project = isMultiRepo(nb)
+    ? await loadProjectIndex(nb, { fs: deps.fs, ...(deps.cacheHome ? { cacheHome: deps.cacheHome } : {}) })
+    : undefined;
+  const taken = new Set([...index.records, ...(project?.records ?? [])].map((r) => r.id));
+  const changed = new Set<string>();
+  const results: ExternalItemResult[] = [];
 
-  if (!existing) {
-    const r = await addRecord(
-      nb,
-      {
+  for (const input of inputs) {
+    try {
+      results.push(await upsertOne(input));
+    } catch (e) {
+      if (!(e instanceof AimemError)) throw e;
+      results.push({ error: e });
+    }
+  }
+  const done = await finish(deps, nb, [...changed]);
+  return { results, changed: [...new Set(done.changed)].sort(), warnings: done.warnings };
+
+  async function upsertOne(input: ExternalInput): Promise<ExternalItemResult> {
+    const src = input.source;
+    const body = input.body.trim();
+    const sha = contentSha(body);
+    const title = input.title.trim();
+    const summary = input.summary.trim();
+    const sourceFields = (imported_by: string) => ({
+      system: src.system,
+      id: src.id,
+      url: src.url,
+      ...(src.row !== undefined ? { row: src.row } : {}),
+      version: src.version,
+      content_sha: sha,
+      synced_at: iso(now),
+      imported_by,
+      state: "ok",
+    });
+    const key = keyOf(src.system, src.id, src.row);
+    const existing = owned.get(key);
+
+    if (!existing) {
+      if (!AUTHOR_RE.test(input.author))
+        throw new AimemError(
+          "USAGE",
+          `author must look like human:<handle> or agent:<tool> (got '${input.author}')`,
+        );
+      if (!title || title.length > 120)
+        throw new AimemError("INVALID_RECORD", "title is required and must be at most 120 characters");
+      if (!summary || summary.length > 200 || summary.includes("\n"))
+        throw new AimemError("INVALID_RECORD", "summary is required: one line, at most 200 characters");
+      if (!body) throw new AimemError("INVALID_RECORD", "the imported body is empty");
+      const status = input.status ?? DEFAULT_STATUS[input.type];
+      if (!(STATUSES[input.type] as readonly string[]).includes(status))
+        throw new AimemError("INVALID_RECORD", `status '${status}' not allowed for ${input.type}`);
+      if (!input.force) {
+        const dup = findDup(input.type, title, summary);
+        if (dup)
+          throw new AimemError(
+            "DUPLICATE_LIKELY",
+            `a similar ${dup.type} exists: ${dup.id} "${dup.title}". Update or supersede it, or pass --force to import this one anyway.`,
+            { ref: dup.id, title: dup.title, file: dup.file },
+          );
+      }
+      const trust =
+        input.author.startsWith("human:") && !requiresReview(nb.config, input.type) ? "verified" : "agent";
+      const id = newUniqueId(input.type, deps.random, taken);
+      taken.add(id);
+      const fields: Record<string, unknown> = {
+        aimem: 1,
+        id,
         type: input.type,
-        title: input.title,
-        summary: input.summary,
-        body,
-        author: input.author,
-        ...(input.status ? { status: input.status } : {}),
-        ...(input.roles?.length ? { roles: input.roles } : {}),
+        title,
+        summary,
+        status,
+        trust,
+        roles: input.roles?.length ? input.roles : ["all"],
         ...(input.tags?.length ? { tags: input.tags } : {}),
-        fields: { ...input.fields, managed_by: "external", source: sourceFields(input.author) },
-        ...(input.force ? { force: true } : {}),
-      },
-      deps,
+        ...(nb.config.repo ? { repo: nb.config.repo } : {}),
+        author: input.author,
+        created: iso(now),
+        updated: iso(now),
+        ...(trust === "verified" ? { verified: day(now) } : {}),
+        ...input.fields,
+        managed_by: "external",
+        source: sourceFields(input.author),
+      };
+      checkSchema(fields);
+      const rec = createRecord(fields, body);
+      checkSecrets(serializeRecord(rec));
+      const file = `.aimem/${TYPE_DIR[input.type]}/${recordFileName({ id, type: input.type, title, created: iso(now) })}`;
+      await writeFileAtomic(deps.fs, join(nb.root, file), serializeRecord(rec), deps.random);
+      changed.add(file);
+      owned.set(key, {
+        id,
+        type: input.type,
+        status,
+        trust,
+        title,
+        summary,
+        tags: input.tags ?? [],
+        roles: (fields.roles as string[]) ?? ["all"],
+        paths: [],
+        links: [],
+        author: input.author,
+        created: iso(now),
+        updated: iso(now),
+        fm: fields,
+        body,
+        file,
+        text: serializeRecord(rec),
+      });
+      return { action: "created", ref: id, file, trust, warnings: [] };
+    }
+
+    const old = existing.fm.source as { content_sha?: string; state?: string; imported_by?: string };
+    const fieldsSame = Object.entries(input.fields ?? {}).every(
+      ([k, v]) => JSON.stringify(existing.fm[k]) === JSON.stringify(v),
     );
-    return {
-      action: "created",
-      ref: r.ref,
-      file: r.file,
-      trust: r.trust,
-      changed: r.changed,
-      warnings: r.warnings,
-    };
-  }
+    const same =
+      old.content_sha === sha &&
+      old.state === "ok" &&
+      existing.title === title &&
+      existing.summary === summary &&
+      fieldsSame &&
+      (input.status === undefined || existing.status === input.status);
+    if (same)
+      return {
+        action: "unchanged",
+        ref: existing.id,
+        file: existing.file,
+        trust: existing.trust,
+        warnings: [],
+      };
 
-  const old = existing.fm.source as { content_sha?: string; state?: string; imported_by?: string };
-  const same =
-    old.content_sha === sha &&
-    old.state === "ok" &&
-    existing.title === input.title.trim() &&
-    existing.summary === input.summary.trim() &&
-    (input.status === undefined || existing.status === input.status);
-  if (same)
+    const text = await loadText(deps, nb, existing);
+    setField(text, "title", title);
+    setField(text, "summary", summary);
+    if (input.status) setField(text, "status", input.status);
+    for (const [k, v] of Object.entries(input.fields ?? {})) setField(text, k, v);
+    setField(text, "updated", iso(now));
+    setField(text, "source", sourceFields(old.imported_by ?? input.author));
+    setBody(text, body);
+    checkSchema({ ...text.data });
+    checkSecrets(serializeRecord(text));
+    // A new title gets a new file name; the ID and history stay.
+    const file = `.aimem/${TYPE_DIR[existing.type]}/${recordFileName({ id: existing.id, type: existing.type, title, created: existing.created })}`;
+    await writeRecordFile(deps.fs, join(nb.root, file), text, deps.random);
+    changed.add(file);
+    if (file !== existing.file) {
+      await deps.fs.unlink(join(nb.root, existing.file));
+      changed.add(existing.file);
+    }
+    owned.set(key, { ...existing, title, summary, file, body });
     return {
-      action: "unchanged",
+      action: "updated",
       ref: existing.id,
-      file: existing.file,
+      file,
       trust: existing.trust,
-      changed: [],
       warnings: [],
+      ...(existing.title !== title ? { previousTitle: existing.title } : {}),
     };
-
-  const text = await loadText(deps, nb, existing);
-  setField(text, "title", input.title.trim());
-  setField(text, "summary", input.summary.trim());
-  if (input.status) setField(text, "status", input.status);
-  for (const [k, v] of Object.entries(input.fields ?? {})) setField(text, k, v);
-  setField(text, "updated", iso(now));
-  setField(text, "source", sourceFields(old.imported_by ?? input.author));
-  setBody(text, body);
-  checkSchema({ ...text.data });
-  checkSecrets(serializeRecord(text));
-  // A new title gets a new file name; the ID and history stay.
-  const file = `.aimem/${TYPE_DIR[existing.type]}/${recordFileName({ id: existing.id, type: existing.type, title: input.title.trim(), created: existing.created })}`;
-  await writeRecordFile(deps.fs, join(nb.root, file), text, deps.random);
-  const changed = [file];
-  if (file !== existing.file) {
-    await deps.fs.unlink(join(nb.root, existing.file));
-    changed.push(existing.file);
   }
-  const done = await finish(deps, nb, changed);
-  return { action: "updated", ref: existing.id, file, trust: existing.trust, ...done };
 }
 
 /**

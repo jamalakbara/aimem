@@ -1,0 +1,2 @@
+title,summary,severity,started,resolved_at,services,impact,root_cause,fix
+Queue overflow,Scans were dropped.,sev2,2026-03-10T09:10:00Z,2026-03-10T09:50:00Z,"worker, api","3,000 parcels stale",No backoff,Backoff added

@@ -6,12 +6,16 @@ import {
   detachRecord,
   documentToRecord,
   loadProject,
+  parseCsv,
   resolveAuthorWithGit,
+  sheetToRecords,
   upsertExternal,
+  upsertExternalMany,
 } from "@aimem/core";
 import type { RecordType } from "@aimem/schema";
 import type { CliDeps, CommandResult, GlobalOptions } from "../deps.js";
 import { writeDeps } from "./embedder.js";
+import { lockOwnerAlive } from "./refresh-state.js";
 
 /** 16 §7: default upload limit. */
 const MAX_BYTES = 10 * 1024 * 1024;
@@ -22,24 +26,29 @@ export const VISIBILITY_WARNING = "Imported content is visible to everyone who c
 const who = (deps: CliDeps, g: GlobalOptions, o: { author?: string }) =>
   resolveAuthorWithGit({ ...(o.author ? { flag: o.author } : {}), env: deps.env, git: deps.git, cwd: g.dir });
 
+/** Values of `--as`: document templates (16 §4.2) and sheet templates (16 §4.1). */
+const AS_VALUES = ["auto", "decision", "runbook", "incident", "memory", "tasks", "testcases", "incidents"];
+
 /**
- * `aimem import <file>` (16 §7, 23 §4b.1): a markdown or text file becomes one externally-owned record
- * (`source.system: upload`). Importing it again updates that record or leaves it alone.
+ * `aimem import <file>` (16 §7, 23 §4b.1–4b.2): a markdown or text file becomes one externally-owned
+ * record, a CSV sheet one record per row (\`source.system: upload\`). Importing again updates those
+ * records or leaves them alone.
  */
 export async function importFile(
   deps: CliDeps,
   g: GlobalOptions,
   file: string,
-  o: { as?: string; author?: string; force?: boolean },
+  o: { as?: string; author?: string; force?: boolean; allowOutside?: boolean; strict?: boolean },
 ): Promise<CommandResult> {
-  if (o.as !== undefined && !["auto", "decision", "runbook", "incident", "memory"].includes(o.as))
-    throw new AimemError("USAGE", "--as must be auto, decision, runbook, incident or memory");
+  if (o.as !== undefined && !AS_VALUES.includes(o.as))
+    throw new AimemError("USAGE", `--as must be ${AS_VALUES.slice(0, -1).join(", ")} or ${AS_VALUES.at(-1)}`);
   const path = resolve(deps.cwd, file);
   const ext = extname(path).toLowerCase();
-  if (!TEXT.has(ext))
+  const sheet = ext === ".csv";
+  if (!TEXT.has(ext) && !sheet)
     throw new AimemError(
       "USAGE",
-      `${ext || "extension-less"} files arrive in a later M4b slice; this version imports .md and .txt`,
+      `${ext || "extension-less"} files arrive in a later M4b slice; this version imports .md, .txt and .csv`,
     );
   const author = await who(deps, g, o);
   const nb = await loadProject(deps.fs, g.dir);
@@ -57,13 +66,24 @@ export async function importFile(
   const realRoot = (await deps.fs.realpath?.(nb.root).catch(() => undefined)) ?? nb.root;
   const realPath = (await deps.fs.realpath?.(path).catch(() => undefined)) ?? path;
   const rel = relative(realRoot, realPath).split("\\").join("/");
+  const inside = !rel.startsWith("..") && !isAbsolute(rel);
+  // An agent can be told to read any file on disk (prompt injection): outside the project it needs an
+  // explicit flag (QA, #99). A person importing a file they chose is fine.
+  if (!inside && author.startsWith("agent:") && !o.allowOutside)
+    throw new AimemError(
+      "USAGE",
+      `${file} is outside the project; an agent imports it only with --allow-outside`,
+    );
   // Outside the project two files may share a name: add a hash of the full path, never the path itself.
-  const id =
-    !rel.startsWith("..") && !isAbsolute(rel)
-      ? rel
-      : `name:${basename(path)}#${createHash("sha256").update(realPath).digest("hex").slice(0, 12)}`;
+  const id = inside
+    ? rel
+    : `name:${basename(path)}#${createHash("sha256").update(realPath).digest("hex").slice(0, 12)}`;
+  const wdeps = await writeDeps(deps, nb);
+  if (sheet) return importSheet(deps, nb, { text, file, id, author, o, wdeps });
+
   const version = createHash("sha256").update(bytes).digest("hex").slice(0, 12);
-  const doc = documentToRecord(text, basename(path), o.as && o.as !== "auto" ? o.as : undefined);
+  const asDoc = o.as && !["auto", "tasks", "testcases", "incidents"].includes(o.as) ? o.as : undefined;
+  const doc = documentToRecord(text, basename(path), asDoc);
   const r = await withImportLock(deps, nb.dir, async () =>
     upsertExternal(
       nb,
@@ -80,7 +100,7 @@ export async function importFile(
         source: { system: "upload", id, url: `file:${id}`, version },
         ...(o.force ? { force: true } : {}),
       },
-      await writeDeps(deps, nb),
+      wdeps,
     ),
   );
   const policy = r.changed.length
@@ -116,6 +136,106 @@ export async function importFile(
   };
 }
 
+/** 16 §4.1: one record per row, keyed by \`(upload, file, row)\`; bad rows are reported, good rows imported. */
+async function importSheet(
+  deps: CliDeps,
+  nb: Awaited<ReturnType<typeof loadProject>>,
+  a: {
+    text: string;
+    file: string;
+    id: string;
+    author: string;
+    o: { as?: string; force?: boolean; strict?: boolean };
+    wdeps: Awaited<ReturnType<typeof writeDeps>>;
+  },
+): Promise<CommandResult> {
+  let sheet: ReturnType<typeof sheetToRecords>;
+  try {
+    const hint = a.o.as && ["tasks", "testcases", "incidents"].includes(a.o.as) ? a.o.as : undefined;
+    sheet = sheetToRecords(parseCsv(a.text), basename(a.file), hint);
+  } catch (e) {
+    throw new AimemError("USAGE", e instanceof Error ? e.message : String(e));
+  }
+  const counts = { created: 0, updated: 0, unchanged: 0 };
+  const errors = [...sheet.errors];
+  const warnings: string[] = sheet.notes.map((n) => `row ${n.row}: ${n.reason}`);
+  const rows: { row: number; ref: string; action: string }[] = [];
+  const items = sheet.items.map(({ row, key, record }) => ({
+    row,
+    input: {
+      type: record.type,
+      title: record.title,
+      summary: record.summary,
+      body: record.body,
+      author: a.author,
+      ...(record.status ? { status: record.status } : {}),
+      ...(record.roles ? { roles: record.roles } : {}),
+      ...(record.tags ? { tags: record.tags } : {}),
+      fields: { ...record.fields, ...(record.paths ? { paths: record.paths } : {}) },
+      source: {
+        system: "upload" as const,
+        id: a.id,
+        url: `file:${a.id}`,
+        // With a key column the record follows its key; otherwise its position (QA, #100).
+        row: key !== undefined ? `key:${key}` : row,
+        version: createHash("sha256").update(JSON.stringify(record)).digest("hex").slice(0, 12),
+      },
+      ...(a.o.force ? { force: true } : {}),
+    },
+  }));
+  const done = await withImportLock(deps, nb.dir, () =>
+    upsertExternalMany(
+      nb,
+      items.map((i) => i.input),
+      a.wdeps,
+    ),
+  );
+  done.results.forEach((r, n) => {
+    const row = items[n]?.row ?? 0;
+    if ("error" in r) {
+      errors.push({ row, reason: `${r.error.code}: ${r.error.message}` });
+      return;
+    }
+    counts[r.action]++;
+    rows.push({ row, ref: r.ref, action: r.action });
+    if (r.previousTitle !== undefined && !sheet.items[n]?.key)
+      warnings.push(
+        `row ${row} changed its title from "${r.previousTitle}" to "${items[n]?.input.title}"; row positions shift when rows are inserted or deleted, add a key column to keep them stable`,
+      );
+  });
+  warnings.push(...done.warnings);
+  const changed = new Set(done.changed);
+  errors.sort((x, y) => x.row - y.row);
+  const policy = changed.size
+    ? await applyWritePolicy({
+        git: deps.git,
+        nb,
+        author: a.author,
+        files: [...changed].sort(),
+        message: `aimem: import ${counts.created + counts.updated} ${sheet.type} rows from ${a.id}`,
+      })
+    : { action: "none" as const, warnings: [] };
+  return {
+    data: {
+      type: sheet.type,
+      ...counts,
+      errors,
+      rows,
+      source: { system: "upload", id: a.id },
+      git: policy.action,
+    },
+    text: `${sheet.type} rows from ${a.id}: ${counts.created} created, ${counts.updated} updated, ${counts.unchanged} unchanged${errors.length ? `, ${errors.length} with errors` : ""}.\n`,
+    warnings: [
+      ...errors.map((e) => `row ${e.row}: ${e.reason}`),
+      ...(sheet.extraColumns.length ? [`columns kept in the body: ${sheet.extraColumns.join(", ")}`] : []),
+      ...warnings,
+      ...policy.warnings,
+      VISIBILITY_WARNING,
+    ],
+    ...(a.o.strict && errors.length ? { exitCode: 1 } : {}),
+  };
+}
+
 /** `aimem detach <ref>` (16 §2 rule 3). */
 export async function detach(
   deps: CliDeps,
@@ -140,30 +260,45 @@ export async function detach(
   };
 }
 
-/** A lock older than this belongs to a crashed import. */
+/** A lock older than this belongs to a crashed import, even when its PID cannot be checked. */
 const LOCK_STALE_MS = 60_000;
 
 /**
  * One import at a time per notebook, so two runs of the same new file cannot both create a record
- * (QA, #99). Waits up to 20 s for another import to finish.
+ * (QA, #99). A lock whose process is gone is taken over at once (as in #80); otherwise it waits up to
+ * 20 s and then says how long the other import's lock still counts.
  */
 async function withImportLock<T>(deps: CliDeps, aimemDir: string, f: () => Promise<T>): Promise<T> {
   const exclusive = deps.fs.createExclusive?.bind(deps.fs);
   if (!exclusive) return f();
   const lock = join(aimemDir, ".cache", "import.lock");
   await deps.fs.mkdir(join(aimemDir, ".cache"));
+  const waitMs = Number(deps.env.AIMEM_IMPORT_LOCK_WAIT_MS ?? 20_000);
+  const tries = Math.max(1, Math.ceil((Number.isFinite(waitMs) ? waitMs : 20_000) / 50));
   for (let i = 0; ; i++) {
     try {
       await exclusive(lock, `${process.pid} ${new Date().toISOString()}`);
       break;
     } catch {
-      const age = await deps.fs.stat?.(lock).then(
-        (st) => Date.now() - st.mtimeMs,
-        () => 0,
-      );
-      if ((age ?? 0) > LOCK_STALE_MS) await deps.fs.unlink(lock).catch(() => undefined);
-      else if (i >= 400)
-        throw new AimemError("USAGE", "another aimem import is still running in this notebook");
+      const age =
+        (await deps.fs.stat?.(lock).then(
+          (st) => Date.now() - st.mtimeMs,
+          () => 0,
+        )) ?? 0;
+      const owner = await deps.fs.readFile(lock).catch(() => "");
+      const pid = Number.parseInt(owner, 10);
+      const hasPid = Number.isInteger(pid) && pid > 0;
+      // A live owner is never overtaken, however long it runs (QA, #100); a dead owner at once; a lock
+      // without a readable PID after 60 s.
+      if (hasPid ? !lockOwnerAlive(owner) : age > LOCK_STALE_MS)
+        await deps.fs.unlink(lock).catch(() => undefined);
+      else if (i >= tries)
+        throw new AimemError(
+          "USAGE",
+          hasPid
+            ? `another aimem import (pid ${pid}) is still running in this notebook; try again when it has finished`
+            : `another aimem import is still running in this notebook (its lock expires in ${Math.max(1, Math.ceil((LOCK_STALE_MS - age) / 1000))} s)`,
+        );
       else await new Promise((done) => setTimeout(done, 50));
     }
   }

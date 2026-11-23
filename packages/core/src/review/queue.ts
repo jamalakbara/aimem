@@ -157,3 +157,48 @@ export function likelyDuplicates(records: readonly DuplicateInput[]): Map<string
   });
   return out;
 }
+
+/**
+ * A reusable duplicate check for many lookups against one fixed set of records (imports): the same rule
+ * as \`add\`, through an inverted token index built once instead of a full scan per lookup.
+ */
+export function duplicateFinder<T extends DuplicateInput>(
+  records: readonly T[],
+): (type: string, title: string, summary: string) => T | undefined {
+  const titles: Set<string>[] = [];
+  const alls: Set<string>[] = [];
+  const byTitle = new Map<string, number[]>();
+  const byAll = new Map<string, number[]>();
+  const put = (m: Map<string, number[]>, k: string, i: number) => {
+    const list = m.get(k);
+    if (list) list.push(i);
+    else m.set(k, [i]);
+  };
+  records.forEach((r, i) => {
+    titles[i] = new Set(tokenize(r.title));
+    alls[i] = new Set(tokenize(`${r.title} ${r.summary}`));
+    for (const t of titles[i] ?? []) put(byTitle, `${r.type}\u0000${t}`, i);
+    for (const t of alls[i] ?? []) put(byAll, `${r.type}\u0000${t}`, i);
+  });
+  return (type, title, summary) => {
+    const t = new Set(tokenize(title));
+    const a = new Set(tokenize(`${title} ${summary}`));
+    let best: number | undefined;
+    const check = (
+      index: Map<string, number[]>,
+      set: Set<string>,
+      sets: Set<string>[],
+      threshold: number,
+    ) => {
+      const shared = new Map<number, number>();
+      for (const tok of set)
+        for (const j of index.get(`${type}\u0000${tok}`) ?? []) shared.set(j, (shared.get(j) ?? 0) + 1);
+      for (const [j, n] of shared)
+        if (n / (set.size + (sets[j]?.size ?? 0) - n) >= threshold && (best === undefined || j < best))
+          best = j;
+    };
+    if (t.size) check(byTitle, t, titles, 0.7);
+    if (a.size) check(byAll, a, alls, 0.5);
+    return best === undefined ? undefined : records[best];
+  };
+}
