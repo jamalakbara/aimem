@@ -160,3 +160,39 @@ describe("sheet templates (16 §4.1)", () => {
     });
   });
 });
+
+describe("invisible characters in sheets (QA, #106 and #108)", () => {
+  const HEAD = ["key", "title", "summary", "status", "priority", "notes"];
+  it("removes them from title and summary, keeps key, cells and ZWNJ", () => {
+    const r = sheetToRecords(
+      [
+        HEAD,
+        [
+          "k\u200B1",
+          "Fix\u200B the\u2060 queue",
+          "\u200B\n\nReal\u200B summary.",
+          "open",
+          "p2",
+          "n\u200Bote",
+        ],
+      ],
+      "t.csv",
+    );
+    expect(r.errors).toEqual([]);
+    expect(r.items[0]).toMatchObject({
+      key: "k\u200B1",
+      record: { title: "Fix the queue", summary: "Real summary." },
+    });
+    expect(r.items[0]?.record.body).toContain("n\u200Bote");
+    const fa = sheetToRecords([HEAD, ["k", "\u0645\u06CC\u200C\u062E", "", "open", "p2", ""]], "t.csv");
+    expect(fa.items[0]?.record.title).toContain("\u200C");
+  });
+  it("uses the title when the summary has nothing visible, and reports a title without anything visible", () => {
+    const r = sheetToRecords(
+      [HEAD, ["a", "Named", "\u200B", "open", "p2", ""], ["b", "\u200B\u2060", "s", "open", "p2", ""]],
+      "t.csv",
+    );
+    expect(r.items.map((i) => i.record.summary)).toEqual(["Named"]);
+    expect(r.errors).toEqual([{ row: 3, reason: "title is empty" }]);
+  });
+});

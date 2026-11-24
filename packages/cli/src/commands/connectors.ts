@@ -36,7 +36,7 @@ const googleConfig = (nb: Notebook) => {
   };
 };
 
-/** `aimem sources list | add google | remove google | sync` (04, 16 §5, 23 §4b.4). */
+/** `aimem sources list | status | add google | remove google | sync` (04, 16 §5, 23 §4b.4). */
 export async function sources(
   deps: CliDeps,
   g: GlobalOptions,
@@ -46,9 +46,10 @@ export async function sources(
   const [sub = "list", kind] = args;
   const nb = await loadProject(deps.fs, g.dir);
   if (sub === "list") return list(deps, nb);
+  if (sub === "status") return status(deps, nb);
   if (sub === "sync") return sync(deps, g, nb, o);
   if (sub !== "add" && sub !== "remove")
-    throw new AimemError("USAGE", "use aimem sources list, add google, remove google or sync");
+    throw new AimemError("USAGE", "use aimem sources list, status, add google, remove google or sync");
   if (kind !== "google") throw new AimemError("USAGE", `unknown source '${kind ?? ""}' (expected: google)`);
   const author = await who(deps, g, o);
   // Which documents are shared with the project is a person's choice (16 §5, §12), not an agent's.
@@ -99,6 +100,79 @@ async function list(deps: CliDeps, nb: Notebook): Promise<CommandResult> {
     text: found.length
       ? `google  folder ${cfg.folder ?? "none"}, ${cfg.files.length} single file(s), ${records} record(s)\n`
       : "No sources. Add one with aimem sources add google --folder <id>.\n",
+  };
+}
+
+/** What is synced and what is wrong with it, from the notebook and the key file alone: no network, no writes. */
+async function status(deps: CliDeps, nb: Notebook): Promise<CommandResult> {
+  const cfg = googleConfig(nb);
+  const raw = nb.config.connectors?.google;
+  const warnings: string[] = [];
+  if (raw?.inbox_folder_id && !cfg.folder)
+    warnings.push("connectors.google.inbox_folder_id in project.yaml is not a Google Drive id or link");
+  if ((raw?.files ?? []).length > cfg.files.length)
+    warnings.push(
+      "connectors.google.files in project.yaml has entries that are not Google Drive ids or links",
+    );
+  const configured = Boolean(cfg.folder || cfg.files.length);
+  const index = await loadIndex(nb, { fs: deps.fs });
+  const mine = index.records.flatMap((r) => {
+    const s = r.fm.source as { system?: string; state?: string; synced_at?: unknown } | undefined;
+    return r.fm.managed_by === "external" && s?.system?.startsWith("google-") ? [{ r, s }] : [];
+  });
+  if (!configured && !mine.length)
+    return {
+      data: { sources: [] },
+      text: "No sources. Add one with aimem sources add google --folder <id>.\n",
+      warnings,
+    };
+  let credentials: "ready" | "missing" | "unusable" = "missing";
+  if (deps.env.AIMEM_GOOGLE_CREDENTIALS || deps.env.GOOGLE_APPLICATION_CREDENTIALS)
+    try {
+      await googleKey(deps, nb);
+      credentials = "ready";
+    } catch (e) {
+      credentials = "unusable";
+      warnings.push(e instanceof AimemError ? e.message : "the Google key file cannot be used");
+    }
+  const missing = mine
+    .filter(({ s }) => s.state === "missing")
+    .map(({ r }) => ({ ref: r.id, title: r.title }))
+    .sort((a, b) => (a.ref < b.ref ? -1 : 1));
+  const documents = mine.filter(({ s }) => s.system === "google-doc").length;
+  const times = mine
+    .map(({ s }) => (s.synced_at instanceof Date ? s.synced_at.getTime() : Date.parse(String(s.synced_at))))
+    .filter((t) => !Number.isNaN(t));
+  const last_change = times.length ? new Date(Math.max(...times)).toISOString() : null;
+  const rows = mine.length - documents;
+  return {
+    data: {
+      sources: [
+        {
+          kind: "google",
+          configured,
+          folder: cfg.folder ?? null,
+          files: cfg.files,
+          credentials,
+          documents,
+          rows,
+          missing,
+          last_change,
+        },
+      ],
+    },
+    text: [
+      configured
+        ? `google  folder ${cfg.folder ?? "none"}, ${cfg.files.length} single file(s)`
+        : "google  not configured; its records are no longer updated",
+      `  key      ${{ ready: "ready (not tried against Google)", missing: "not set", unusable: "cannot be used" }[credentials]}`,
+      `  records  ${documents} from Docs, ${rows} from Sheet rows, ${missing.length} missing at the source`,
+      `  last change from a sync: ${last_change ?? "none"}`,
+      ...missing.slice(0, 20).map((m) => `  missing  ${m.ref}  ${m.title}`),
+      ...(missing.length > 20 ? [`  … ${missing.length - 20} more (--json lists all)`] : []),
+      "",
+    ].join("\n"),
+    warnings,
   };
 }
 

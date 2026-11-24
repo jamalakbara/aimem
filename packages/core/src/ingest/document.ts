@@ -1,6 +1,6 @@
 import type { RecordType } from "@aimem/schema";
 import { firstSentence, parseMarkdown, type Section } from "../adopt/markdown.js";
-import { cleanText } from "../util/clean.js";
+import { cleanText, stripInvisible } from "../util/clean.js";
 import { splitFrontMatter } from "./front-matter.js";
 
 /** A document turned into one record (16 §4.2), before it is written. */
@@ -35,8 +35,6 @@ const META = /^\s*(roles|tags)\s*:\s*(.+)$/gim;
 
 /** Terminal escapes and other control characters never reach titles, summaries or names (QA, #99). */
 const stripControl = cleanText;
-/** Zero-width spaces and word joiners; ZWNJ and ZWJ stay for the languages that need them. */
-const stripInvisible = (s: string) => s.replace(/[\u200B\u2060]/g, "");
 /** A markdown horizontal rule: `---`, `***` or `___` (three or more), alone on its line. */
 const RULE = /^\s*([-*_])(?:\s*\1){2,}\s*$/;
 /**
@@ -85,7 +83,7 @@ export function documentToRecord(text: string, fileName: string, typeHint?: stri
       .split(",")
       .map((x) => x.trim())
       .filter(Boolean);
-  const fallbackTitle = fileName.replace(/\.[^.]+$/, "");
+  const fallbackTitle = stripInvisible(stripControl(fileName.replace(/\.[^.]+$/, ""))).trim() || "Untitled";
   const firstLine = prose(clean)
     .split("\n")
     .find((l) => l.trim())
@@ -93,9 +91,7 @@ export function documentToRecord(text: string, fileName: string, typeHint?: stri
     .trim();
   const title = clip(
     stripInvisible(
-      stripControl(
-        (md.title ?? firstLine ?? fallbackTitle).replace(/^\\(?=[#>|`~*+\-\d])/, "").replace(/[*_`]/g, ""),
-      ),
+      stripControl((md.title ?? firstLine ?? "").replace(/^\\(?=[#>|`~*+\-\d])/, "").replace(/[*_`]/g, "")),
     ).trim() || fallbackTitle,
     120,
   );

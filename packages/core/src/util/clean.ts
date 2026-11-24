@@ -19,3 +19,6 @@ export function cleanText(s: string): string {
   }
   return out;
 }
+
+/** For titles, summaries and names: zero-width spaces and word joiners go too; ZWNJ and ZWJ stay. */
+export const stripInvisible = (s: string) => s.replace(/[\u200B\u2060]/g, "");
