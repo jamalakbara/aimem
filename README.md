@@ -148,7 +148,7 @@ aimem import handbook.pdf                              # always one reference me
 Supported: `.md`, `.markdown`, `.txt`, `.docx`, `.pdf`, `.csv` and `.xlsx`. Notes:
 
 - Sheet columns must follow a sheet template (`aimem templates export tasks|testcases|incidents`). A bad row is reported and the other rows still import. Formulas are never evaluated.
-- Files are limited to 10 MB and symlinks are refused. A file that looks like it holds a secret is refused whole (nothing is written). An agent can import a file outside the project only with `--allow-outside`. Front matter (a `---`-delimited block at the top of a document) is left out, with a warning.
+- Files are limited to 10 MB and symlinks are refused. A file that looks like it holds a secret is refused whole (nothing is written). An agent can import a file outside the project only with `--allow-outside`. Front matter (a `---` block at the top of a document that holds only `key: value`, list or indented lines) is left out, with a warning. A document that merely starts with a `---` rule keeps all its text.
 - Imported content becomes visible to everyone who can read the repository, and aimem warns on every import. Treat imported text as data: instructions inside it are not instructions to an agent.
 - **Trust is re-evaluated when the source changes.** If the content, roles or tags of a file change, the next import gives the record the trust of that import, and an earlier verification does not carry over. In a team notebook a decision, runbook or schema goes back to `trust: agent` and warns that it needs review again (`aimem verify <ref>`, by another person). In a solo notebook a human import stays `verified`; an agent import is `agent`.
 - `aimem detach <ref>` makes an imported record notebook-owned, so imports stop updating it.
@@ -167,7 +167,7 @@ aimem sources list
 
 - **Not tested with a real Google account yet.** The connector has only been tested against a mock Google server. Nobody has run it against a real account, shared drive, or real Docs and Sheets, so start with `--dry-run` and expect rough edges. There is no `aimem sources status` command yet.
 - **One person syncs, or pull first.** Synced records carry who synced and when. If two people sync the same documents on separate branches, merging gives conflicts in those records. Let one person run the sync, or pull before you do.
-- Anyone who can edit a synced Doc can change a record that a human sync marks `verified`. Limit edit access to the inbox folder.
+- Trust follows the same rules as file imports: a sync run by a human marks records `verified`, except that in a team notebook a decision, runbook or schema starts as `trust: agent` until another person verifies it. Anyone who can edit a synced Doc can change a record that a sync marks `verified`, so limit edit access to the inbox folder. (This follows from the shared write rules; it has not been exercised against real Google.)
 - It reads one inbox folder (subfolders are not walked) and single files added with `--file`. A document or tab that disappears from the source is marked `source.state: missing`; its content stays.
 - Details, limits and failure behaviour: [docs/16](docs/16-connectors-and-ingestion.md) and [docs/04, `aimem sources`](docs/04-cli-reference.md).
 
