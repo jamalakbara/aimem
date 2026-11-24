@@ -311,6 +311,11 @@ describe("recordPage (24 §5.2)", () => {
     ]);
   });
 
+  it("says In review for a task in review", () => {
+    const task = record({ id: "tsk-zzzzzzzz", type: "task", status: "review" });
+    expect(badges(recordPage(withRecords(empty, task), task.id).html)).toContainEqual(["In review", ""]);
+  });
+
   it("shows freshness only when there is something to say", () => {
     expect(badges(recordPage(withRecords(empty, record()), "mem-zzzzzzzz").html)).toHaveLength(3);
     const old = record({ created: "2020-01-01T00:00:00Z" });

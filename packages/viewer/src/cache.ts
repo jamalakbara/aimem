@@ -26,6 +26,15 @@ export interface Snapshot {
   stale?: string;
 }
 
+/** Loads `project.yaml` of exactly this folder, and says why when that is not possible. */
+export async function openNotebook(fs: Fs, root: string): Promise<Notebook> {
+  // Core treats an unreadable project.yaml as "no notebook here"; reading it first gives the reason.
+  await fs.readFile(join(root, AIMEM_DIR, "project.yaml"));
+  const nb = await loadProject(fs, root);
+  if (nb.root !== root) throw new AimemError("NOT_INITIALIZED", "the notebook is gone");
+  return nb;
+}
+
 export interface CacheDeps {
   fs: Fs;
   clock: Clock;
@@ -92,9 +101,7 @@ export class IndexCache {
     // Core looks in parent folders too; the viewer must not switch to another notebook on its own.
     if (!(await fs.lstat?.(join(root, AIMEM_DIR, "project.yaml")).catch(() => undefined)))
       throw new AimemError("NOT_INITIALIZED", "the notebook is gone");
-    const nb = await loadProject(fs, root);
-    if (nb.root !== root) throw new AimemError("INVALID_RECORD", "project.yaml is not a regular file");
-    return nb;
+    return openNotebook(fs, root);
   }
 
   /** Changes whenever a record or project.yaml of any source changes, also when size and mtime stay. */

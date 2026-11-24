@@ -124,11 +124,20 @@ process.exitCode = await run(process.argv.slice(2), {
       dir,
       port,
     });
-    ready(viewer.url);
-    await new Promise<void>((done) => {
-      for (const signal of ["SIGINT", "SIGTERM"] as const) process.once(signal, () => done());
+    // Listening before the URL is printed: whoever reads it may stop the viewer at once.
+    const signals = ["SIGINT", "SIGTERM"] as const;
+    let stop: () => void = () => undefined;
+    const stopped = new Promise<void>((done) => {
+      stop = done;
     });
+    for (const s of signals) process.on(s, stop);
+    ready(viewer.url);
+    await stopped;
+    // From here on another signal ends the process at once, as usual.
+    for (const s of signals) process.off(s, stop);
     await viewer.close();
+    // A read that hangs (dead network share) keeps the process alive, and process.exit waits for it too.
+    setTimeout(() => process.kill(process.pid, "SIGTERM"), 2000).unref();
     return { url: viewer.url };
   },
   // stdout carries the MCP protocol: nothing else may be printed while serving.
