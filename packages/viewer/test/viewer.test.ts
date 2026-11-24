@@ -122,7 +122,7 @@ describe("read-only", () => {
     const calls: string[] = [];
     const fs = new Proxy(nodeFs, {
       get: (t, k: keyof Fs) =>
-        ["readFile", "readdir", "stat", "lstat", "realpath"].includes(k)
+        ["readFile", "readRegular", "readdir", "stat", "lstat", "realpath"].includes(k)
           ? t[k]
           : () => {
               calls.push(k);
@@ -190,6 +190,33 @@ describe("aimem serve web (built CLI)", () => {
     const code = await s.exit;
     if (process.platform !== "win32") expect(code).toBe(0);
     await expect(fetch(url)).rejects.toThrow();
+  });
+
+  it.skipIf(process.platform === "win32")("stops on one signal even when a file read hangs", async () => {
+    const dir = notebook();
+    spawnSync("mkfifo", [join(dir, "fifo")]);
+    const hang = `data:text/javascript,import {readFile} from "node:fs/promises"; readFile(${JSON.stringify(join(dir, "fifo"))}).catch(() => {});`;
+    const p = spawn(process.execPath, ["--import", hang, BIN, "serve", "web", "--port", "0"], {
+      cwd: dir,
+      env,
+    });
+    await new Promise((d) => p.stdout.once("data", d));
+    let code: number | null = null;
+    let signal: string | null = null;
+    p.on("close", (c, s) => {
+      code = c;
+      signal = s;
+    });
+    const t0 = Date.now();
+    const gone = new Promise((d) => p.on("close", d));
+    p.kill("SIGINT");
+    await Promise.race([
+      gone,
+      new Promise((_, fail) => setTimeout(() => fail(new Error("still running")), 8000)),
+    ]).finally(() => p.kill("SIGKILL"));
+    // Not the default SIGINT: the viewer closed first, and then ended itself.
+    expect([code, signal]).toEqual([null, "SIGTERM"]);
+    expect(Date.now() - t0).toBeGreaterThan(1500);
   });
 
   it("fails clearly outside a notebook, on a taken port and on a bad port", async () => {

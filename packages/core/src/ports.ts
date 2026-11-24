@@ -1,9 +1,11 @@
 import { randomBytes } from "node:crypto";
+import { constants } from "node:fs";
 import {
   appendFile,
   chmod,
   lstat,
   mkdir,
+  open,
   readdir,
   readFile,
   realpath,
@@ -32,6 +34,12 @@ export interface Fs {
   /** Optional for older injected filesystems; metadata logging is best effort. */
   appendFile?(path: string, data: string): Promise<void>;
   readFile(path: string): Promise<string>;
+  /**
+   * Like `readFile`, but only for a regular file of at most `maxBytes` that is not a link, checked on the opened
+   * file itself, so a swap after an earlier check cannot make it wait on a FIFO or read another file.
+   * Rejects with `ENOTREG`, `EFBIG`, `ELOOP` or the system error.
+   */
+  readRegular?(path: string, maxBytes: number): Promise<string>;
   writeFile(path: string, data: string | Uint8Array): Promise<void>;
   /** Creates the file only if it does not exist yet (atomic); rejects with EEXIST otherwise. */
   createExclusive?(path: string, data: string): Promise<void>;
@@ -51,6 +59,29 @@ export interface Clock {
 
 export interface Random {
   bytes(n: number): Uint8Array;
+}
+
+const failed = (code: string, path: string) => Object.assign(new Error(`${code}: ${path}`), { code });
+
+async function readRegular(path: string, maxBytes: number): Promise<string> {
+  // Windows has neither flag; it has no FIFOs in folders, and callers check links with lstat first.
+  const flags = constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0) | (constants.O_NONBLOCK ?? 0);
+  const file = await open(path, flags);
+  try {
+    if (!(await file.stat()).isFile()) throw failed("ENOTREG", path);
+    const chunks: Buffer[] = [];
+    let total = 0;
+    // Read to the end instead of trusting the size: the file may grow meanwhile.
+    for (;;) {
+      const { bytesRead, buffer } = await file.read(Buffer.allocUnsafe(64 * 1024), 0, 64 * 1024, null);
+      if (bytesRead === 0) return Buffer.concat(chunks).toString("utf8");
+      total += bytesRead;
+      if (total > maxBytes) throw failed("EFBIG", path);
+      chunks.push(buffer.subarray(0, bytesRead));
+    }
+  } finally {
+    await file.close();
+  }
 }
 
 export const nodeFs: Fs = {
@@ -73,6 +104,7 @@ export const nodeFs: Fs = {
   realpath: (p) => realpath(p),
   appendFile: (p, d) => appendFile(p, d, "utf8"),
   readFile: (p) => readFile(p, "utf8"),
+  readRegular,
   writeFile: (p, d) => (typeof d === "string" ? writeFile(p, d, "utf8") : writeFile(p, d)),
   createExclusive: (p, d) => writeFile(p, d, { encoding: "utf8", flag: "wx" }),
   readBytes: async (p) => new Uint8Array(await readFile(p)),

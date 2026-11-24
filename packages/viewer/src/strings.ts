@@ -23,7 +23,8 @@ export const T = {
     500: "Something went wrong",
     503: "The notebook cannot be read right now",
   } as Record<number, string>,
-  tryAgain: "Try again in a moment. aimem validate shows what is wrong.",
+  tryAgain:
+    "Try again in a moment. If this stays, stop and restart aimem serve web; aimem validate shows what is wrong with the files.",
   failed: "This page could not be shown. The other pages still work.",
   missing: "There is no page at this address.",
   home: "Back to the dashboard",

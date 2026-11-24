@@ -1,6 +1,7 @@
 import { execFileSync } from "node:child_process";
 import {
   appendFileSync,
+  chmodSync,
   existsSync,
   mkdirSync,
   readdirSync,
@@ -67,9 +68,9 @@ describe("reading the notebook (24 §5.1 Cache)", () => {
     let reads = 0;
     const fs: Fs = {
       ...nodeFs,
-      readFile: (p) => {
+      readRegular: async (p, max) => {
         if (p.endsWith(".md")) reads++;
-        return nodeFs.readFile(p);
+        return (await nodeFs.readRegular?.(p, max)) ?? "";
       },
     };
     const v = await viewer(dir, { fs });
@@ -85,12 +86,12 @@ describe("reading the notebook (24 §5.1 Cache)", () => {
     let reads = 0;
     const fs: Fs = {
       ...nodeFs,
-      readFile: async (p) => {
+      readRegular: async (p, max) => {
         if (p.endsWith(".md")) {
           reads++;
           await new Promise((r) => setTimeout(r, 5));
         }
-        return nodeFs.readFile(p);
+        return (await nodeFs.readRegular?.(p, max)) ?? "";
       },
     };
     const v = await viewer(dir, { fs });
@@ -124,9 +125,9 @@ describe("reading the notebook (24 §5.1 Cache)", () => {
       const opened: string[] = [];
       const fs: Fs = {
         ...nodeFs,
-        readFile: (p) => {
+        readRegular: async (p, max) => {
           opened.push(p);
-          return nodeFs.readFile(p);
+          return (await nodeFs.readRegular?.(p, max)) ?? "";
         },
       };
       const b = await page(await viewer(dir, { fs }));
@@ -145,12 +146,12 @@ describe("reading the notebook (24 §5.1 Cache)", () => {
     let hit = false;
     const fs: Fs = {
       ...nodeFs,
-      readFile: async (p) => {
+      readRegular: async (p, max) => {
         if (!hit && p === first(dir)) {
           hit = true;
           unlinkSync(p);
         }
-        return nodeFs.readFile(p);
+        return (await nodeFs.readRegular?.(p, max)) ?? "";
       },
     };
     const r = await get(await viewer(dir, { fs }), "/p/acme-ledger");
@@ -163,8 +164,8 @@ describe("reading the notebook (24 §5.1 Cache)", () => {
     let hit = false;
     const fs: Fs = {
       ...nodeFs,
-      readFile: async (p) => {
-        const text = await nodeFs.readFile(p);
+      readRegular: async (p, max) => {
+        const text = (await nodeFs.readRegular?.(p, max)) ?? "";
         if (!hit && p === first(dir)) {
           hit = true;
           appendFileSync(p, "\nmore\n");
@@ -198,8 +199,10 @@ describe("reading the notebook (24 §5.1 Cache)", () => {
     let mode: "hang" | "ok" = "hang";
     const fs: Fs = {
       ...nodeFs,
-      readFile: (p) =>
-        p.endsWith(".md") && mode === "hang" ? new Promise(() => undefined) : nodeFs.readFile(p),
+      readRegular: async (p, max) =>
+        p.endsWith(".md") && mode === "hang"
+          ? new Promise<string>(() => undefined)
+          : ((await nodeFs.readRegular?.(p, max)) ?? ""),
     };
     const v = await viewer(dir, { fs, loadMs: 300 });
     const t0 = Date.now();
@@ -209,6 +212,7 @@ describe("reading the notebook (24 §5.1 Cache)", () => {
     expect((await get(v, "/p/acme-ledger")).status).toBe(503);
     expect(Date.now() - t0).toBeLessThan(5000);
     mode = "ok";
+    expect(r.body).toMatch(/restart aimem serve web/i);
     expect((await get(v, "/assets/style.css")).status).toBe(200);
   });
 
@@ -237,5 +241,100 @@ describe("reading the notebook (24 §5.1 Cache)", () => {
     mkdirSync(join(root, "infra/.aimem"), { recursive: true });
     writeFileSync(join(root, "infra/.aimem/project.yaml"), "aimem: 1\nproject: another\n");
     expect((await get(v, `/p/${name}`)).body).toMatch(/was skipped/);
+  });
+
+  it.skipIf(!posix)(
+    "does not follow .aimem when it is a link, at the start, later, or in a hub",
+    async () => {
+      const dir = notebook();
+      const other = notebook("medium");
+      renameSync(join(dir, ".aimem"), join(dir, "real"));
+      symlinkSync(join(other, ".aimem"), join(dir, ".aimem"));
+      await expect(viewer(dir)).rejects.toThrow(/\.aimem is a link/);
+      unlinkSync(join(dir, ".aimem"));
+      renameSync(join(dir, "real"), join(dir, ".aimem"));
+      const v = await viewer(dir);
+      await page(v);
+      renameSync(join(dir, ".aimem"), join(dir, "real"));
+      symlinkSync(join(other, ".aimem"), join(dir, ".aimem"));
+      const b = await page(v);
+      expect(total(b)).toBe(8);
+      expect(b).toMatch(/could not refresh/i);
+
+      const root = notebook("multirepo");
+      const before = total((await get(await viewer(join(root, "backend")), "/p/acme-shop")).body);
+      const hub = join(root, "shop-hub");
+      renameSync(join(hub, ".aimem"), join(root, "moved"));
+      symlinkSync(join(root, "moved"), join(hub, ".aimem"));
+      const after = (await get(await viewer(join(root, "backend")), "/p/acme-shop")).body;
+      expect(total(after)).toBeLessThan(before);
+      expect(after).toMatch(/hub is not checked out/);
+    },
+  );
+
+  it.skipIf(!posix || process.getuid?.() === 0)("says which folder cannot be listed", async () => {
+    const dir = notebook();
+    chmodSync(mem(dir), 0o000);
+    try {
+      const b = await page(await viewer(dir));
+      expect(b).toMatch(/\.aimem\/memory[\s\S]*cannot be listed/);
+    } finally {
+      chmodSync(mem(dir), 0o755);
+    }
+  });
+
+  it.skipIf(!posix || process.getuid?.() === 0)(
+    "says what is wrong with project.yaml at the start",
+    async () => {
+      const y = (d: string) => join(d, ".aimem/project.yaml");
+      const a = notebook();
+      chmodSync(y(a), 0o000);
+      await expect(viewer(a)).rejects.toThrow(/project\.yaml.*cannot be read/);
+      const b = notebook();
+      renameSync(y(b), join(b, "p.yaml"));
+      symlinkSync(join(b, "p.yaml"), y(b));
+      await expect(viewer(b)).rejects.toThrow(/project\.yaml.*a link/);
+      const c = notebook();
+      unlinkSync(y(c));
+      execFileSync("mkfifo", [y(c)]);
+      await expect(viewer(c)).rejects.toThrow(/project\.yaml.*not a regular file/);
+    },
+  );
+
+  it.skipIf(!posix)("does not hang or leak when an entry is swapped after it was checked", async () => {
+    for (const swap of [
+      (p: string) => execFileSync("mkfifo", [p]),
+      (p: string) => symlinkSync("/etc/hostname", p),
+      (p: string) => mkdirSync(p),
+    ]) {
+      const dir = notebook();
+      const f = first(dir);
+      let looks = 0;
+      let opened = "";
+      const fs: Fs = {
+        ...nodeFs,
+        readRegular: async (p, max) => {
+          const text = (await nodeFs.readRegular?.(p, max)) ?? "";
+          if (p === f) opened = text;
+          return text;
+        },
+        lstat: async (p) => {
+          const s = await nodeFs.lstat?.(p);
+          if (!s) throw new Error("no lstat");
+          // First look: the signature. Second: the check right before the read.
+          if (p === f && ++looks === 2) {
+            unlinkSync(p);
+            swap(p);
+          }
+          return s;
+        },
+      };
+      const v = await viewer(dir, { fs, loadMs: 3000 });
+      const r = await get(v, "/p/acme-ledger");
+      expect(r.status).toBe(200);
+      expect(total(r.body)).toBe(7);
+      expect(looks).toBeGreaterThan(1);
+      expect(opened).toBe("");
+    }
   });
 });
