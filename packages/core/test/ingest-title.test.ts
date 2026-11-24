@@ -22,13 +22,34 @@ describe("import titles", () => {
   });
 
   it("removes zero-width spaces and word joiners from the title and summary", () => {
-    const r = documentToRecord("Zero​width⁠ title\n\nFirst​ sentence here.\n", "z.txt");
+    const r = documentToRecord("Zero\u200Bwidth\u2060 title\n\nFirst\u200B sentence here.\n", "z.txt");
     expect(r.title).toBe("Zerowidth title");
-    expect(r.summary).not.toMatch(/[​⁠]/);
+    expect(r.summary).not.toMatch(/[\u200B\u2060]/);
   });
 
   it("keeps joiners that real languages need (ZWNJ in Persian)", () => {
-    const r = documentToRecord("می‌خواهم\n\nBody text.\n", "fa.txt");
-    expect(r.title).toContain("‌");
+    const r = documentToRecord("می\u200Cخواهم\n\nBody text.\n", "fa.txt");
+    expect(r.title).toContain("\u200C");
+  });
+
+  it("keeps a summary when the first paragraph is only zero-width characters", () => {
+    const r = documentToRecord("# Title A\n\n\u200B\n\nReal text here.\n", "a.md");
+    expect(r.summary).toBe("Real text here.");
+    const d = documentToRecord(
+      "# Use X\n\n## Context\n\n\u200B\n\nWe need X.\n\n## Decision\n\nUse X.\n\n## Consequences\n\nNone.\n",
+      "d.md",
+    );
+    expect(d.type).toBe("decision");
+    expect(d.summary).not.toBe("");
+  });
+
+  it("does not take a rule as the summary", () => {
+    const r = documentToRecord("# My Doc\n\n---\n\nTeks utama.\n", "m.md");
+    expect(r.summary).toBe("Teks utama.");
+  });
+
+  it("treats a first line of only zero-width characters plus a rule as a rule", () => {
+    const r = documentToRecord("\u200B---\n\nReal first line\n\nMore.\n", "r.txt");
+    expect(r.title).toBe("Real first line");
   });
 });

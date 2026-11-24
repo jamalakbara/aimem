@@ -35,10 +35,19 @@ const META = /^\s*(roles|tags)\s*:\s*(.+)$/gim;
 
 /** Terminal escapes and other control characters never reach titles, summaries or names (QA, #99). */
 const stripControl = cleanText;
-/** Titles and summaries also lose zero-width spaces and word joiners; ZWNJ/ZWJ stay for the languages that need them. */
-const stripInvisible = (s: string) => s.replace(/[​⁠]/g, "");
+/** Zero-width spaces and word joiners; ZWNJ and ZWJ stay for the languages that need them. */
+const stripInvisible = (s: string) => s.replace(/[\u200B\u2060]/g, "");
 /** A markdown horizontal rule: `---`, `***` or `___` (three or more), alone on its line. */
 const RULE = /^\s*([-*_])(?:\s*\1){2,}\s*$/;
+/**
+ * Text that a title or summary is picked from: invisible characters go first and rule lines are blanked,
+ * so a paragraph that is only a rule or only invisible characters is skipped instead of winning.
+ */
+const prose = (s: string) =>
+  stripInvisible(s)
+    .split("\n")
+    .map((l) => (RULE.test(l) ? "" : l))
+    .join("\n");
 const key = (h: string) => h.trim().toLowerCase().replace(/\s+/g, " ");
 const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1).trimEnd()}…` : s);
 
@@ -77,9 +86,9 @@ export function documentToRecord(text: string, fileName: string, typeHint?: stri
       .map((x) => x.trim())
       .filter(Boolean);
   const fallbackTitle = fileName.replace(/\.[^.]+$/, "");
-  const firstLine = clean
+  const firstLine = prose(clean)
     .split("\n")
-    .find((l) => l.trim() && !RULE.test(l))
+    .find((l) => l.trim())
     ?.replace(/^#+\s*/, "")
     .trim();
   const title = clip(
@@ -94,7 +103,7 @@ export function documentToRecord(text: string, fileName: string, typeHint?: stri
   const summaryFrom = (fallback: string) =>
     clip(
       stripInvisible(
-        stripControl(firstSentence(sectionText("Summary")) || firstSentence(fallback) || title),
+        stripControl(firstSentence(prose(sectionText("Summary"))) || firstSentence(prose(fallback)) || title),
       ).replace(/^\\(?=[#>|`~*+\-\d])/, ""),
       200,
     );
