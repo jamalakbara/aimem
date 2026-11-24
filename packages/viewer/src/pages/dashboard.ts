@@ -1,22 +1,25 @@
 import { summarizeNotebook } from "@aimem/core";
-import type { Snapshot } from "../cache.js";
-import { type Html, html } from "../html.js";
+import { html } from "../html.js";
 import { T } from "../strings.js";
+import type { ViewContext } from "../view.js";
+import { notebookPage } from "./layout.js";
 
-export function dashboard(s: Snapshot, now: Date): Html {
+export function dashboard(c: ViewContext): string {
   // Without its `live` argument: claims would need Git (24).
-  const sum = summarizeNotebook(s.nb, s.index, now);
+  const sum = summarizeNotebook(c.nb, c.index, c.now);
   const rows = Object.entries(sum.counts).flatMap(([type, by]) =>
     Object.entries(by).map(([status, n]) => html`<tr><td>${type}</td><td>${status}</td><td>${n}</td></tr>\n`),
   );
-  const notices = [...(s.stale ? [s.stale] : []), ...s.warnings];
-  return html`<h1>${s.nb.config.name ?? s.nb.config.project}</h1>
-<p>${T.readOnly} · ${T.records(sum.total)}</p>
-${notices.length > 0 && html`<h2>${T.notices}</h2><ul>${notices.map((n) => html`<li>${n}</li>\n`)}</ul>`}
+  const title = c.nb.config.name ?? c.nb.config.project;
+  return notebookPage(
+    c,
+    title,
+    html`<article><h1>${title}</h1>
+<p class="lead">${T.records(sum.total)}</p>
 <h2>${T.byStatus}</h2>
 ${
   rows.length
-    ? html`<table><thead><tr><th scope="col">${T.type}</th><th scope="col">${T.status}</th><th scope="col">${T.count}</th></tr></thead><tbody>${rows}</tbody></table>`
+    ? html`<div class="scroll" tabindex="0"><table><thead><tr><th scope="col">${T.type}</th><th scope="col">${T.status}</th><th scope="col">${T.count}</th></tr></thead><tbody>${rows}</tbody></table></div>`
     : html`<p>${T.none}</p>`
 }
 <h2>${T.unreviewed}</h2>
@@ -24,9 +27,6 @@ ${
 ${
   sum.lastHandoff &&
   html`<h2>${T.latestHandoff}</h2><p>${sum.lastHandoff.created} ${sum.lastHandoff.author}: ${sum.lastHandoff.summary}</p>`
-}
-${
-  s.problems.length > 0 &&
-  html`<h2>${T.notShown}</h2><ul>${s.problems.map((p) => html`<li>${p.file}: ${p.message}</li>\n`)}</ul>`
-}`;
+}</article>`,
+  );
 }

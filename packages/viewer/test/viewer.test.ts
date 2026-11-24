@@ -103,6 +103,7 @@ describe("read-only", () => {
 
   it("changes nothing in the project, whatever is requested", async () => {
     const dir = notebook();
+    const id = (await loadIndex(await loadProject(nodeFs, dir), { fs: nodeFs })).records[0]?.id ?? "";
     const before = tree(dir);
     const v = await viewer(dir);
     for (const p of [
@@ -112,6 +113,8 @@ describe("read-only", () => {
       "/assets/app.js",
       "/x",
       "/p/acme-ledger/r/x",
+      `/p/acme-ledger/r/${id}`,
+      `/p/acme-ledger/r/${id}?view=plain`,
     ])
       for (const method of ["GET", "HEAD", "POST", "DELETE"]) await get(v, p, { method });
     expect(tree(dir)).toEqual(before);
@@ -144,7 +147,8 @@ describe("read-only", () => {
       for (const m of text.matchAll(/(?:from|import)\s*\(?\s*"([^"]+)"/g)) {
         const spec = m[1] ?? "";
         expect(
-          spec.startsWith(".") || ["node:http", "node:path", "@aimem/core", "@aimem/schema"].includes(spec),
+          spec.startsWith(".") ||
+            ["node:http", "node:path", "@aimem/core", "@aimem/schema", "markdown-it"].includes(spec),
           `${f}: ${spec}`,
         ).toBe(true);
       }

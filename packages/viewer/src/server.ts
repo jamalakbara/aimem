@@ -4,12 +4,13 @@ import { SCRIPT } from "./assets/app.js";
 import { STYLE } from "./assets/style.js";
 import { IndexCache, type Snapshot } from "./cache.js";
 import { checkRequest, type Target } from "./guard.js";
-import type { Html } from "./html.js";
 import { dashboard } from "./pages/dashboard.js";
 import { errorPage } from "./pages/error.js";
 import { layout } from "./pages/layout.js";
+import { recordPage } from "./pages/record.js";
 import { findRoot, safeFs } from "./safe-fs.js";
 import { T } from "./strings.js";
+import type { ViewContext } from "./view.js";
 
 export interface ViewerOptions {
   fs: Fs;
@@ -54,13 +55,9 @@ interface Answer {
   body: string;
   headers?: Record<string, string>;
 }
-const page = (status: number, title: string, body: Html): Answer => ({
-  status,
-  type: HTML,
-  body: layout(title, body),
-});
+const page = (status: number, body: string): Answer => ({ status, type: HTML, body });
 const failure = (status: number, message: string) =>
-  page(status, T.errors[status] ?? "aimem", errorPage(status, message));
+  page(status, layout(T.errors[status] ?? T.app, errorPage(status, message)));
 
 /** Starts the local, read-only viewer (24 §5.1). Listens on 127.0.0.1 only; there is no option for more. */
 export async function startViewer(o: ViewerOptions): Promise<Viewer> {
@@ -80,7 +77,7 @@ export async function startViewer(o: ViewerOptions): Promise<Viewer> {
   let port = o.port;
   let hook: () => void = () => undefined;
 
-  async function answer({ segments }: Target): Promise<Answer> {
+  async function answer({ segments, query }: Target): Promise<Answer> {
     const [a, b, ...rest] = segments;
     if (a === undefined)
       return {
@@ -94,7 +91,9 @@ export async function startViewer(o: ViewerOptions): Promise<Viewer> {
       if (b === "app.js") return { status: 200, type: "text/javascript; charset=utf-8", body: SCRIPT };
     }
     if (a !== "p" || b !== project) return failure(404, T.missing);
-    if (rest.length) return failure(404, T.missing);
+    const [section, ref, ...more] = rest;
+    const record = section === "r" && ref !== undefined && more.length === 0;
+    if (section !== undefined && !record) return failure(404, T.missing);
     let snapshot: Snapshot;
     try {
       snapshot = await cache.get();
@@ -102,7 +101,10 @@ export async function startViewer(o: ViewerOptions): Promise<Viewer> {
       return failure(503, T.tryAgain);
     }
     hook();
-    return page(200, snapshot.nb.config.name ?? project, dashboard(snapshot, o.clock.now()));
+    const c: ViewContext = { ...snapshot, now: o.clock.now() };
+    if (!record) return page(200, dashboard(c));
+    const found = recordPage(c, ref, { plain: query.get("view") === "plain" });
+    return page(found.status, found.html);
   }
 
   function send(req: IncomingMessage, res: ServerResponse, a: Answer): void {

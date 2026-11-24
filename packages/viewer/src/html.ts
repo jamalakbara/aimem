@@ -26,3 +26,23 @@ function show(v: unknown): string {
 export function html(parts: TemplateStringsArray, ...values: unknown[]): Html {
   return new Safe(parts.reduce((out, part, i) => out + show(values[i - 1]) + part));
 }
+
+/** Longest prefix of at most `max` UTF-16 units that does not end in half a character. */
+export function cut(text: string, max: number): string {
+  if (text.length <= max) return text;
+  const last = text.charCodeAt(max - 1);
+  return text.slice(0, last >= 0xd800 && last <= 0xdbff ? max - 1 : max);
+}
+
+/** The address when it is an absolute web or mail link without credentials (24 decision 2). */
+export function safeExternalHref(href: string): string | undefined {
+  let url: URL;
+  try {
+    url = new URL(href);
+  } catch {
+    return undefined;
+  }
+  if (url.protocol === "mailto:") return url.href;
+  if (url.protocol !== "https:" && url.protocol !== "http:") return undefined;
+  return url.username || url.password ? undefined : url.href;
+}
