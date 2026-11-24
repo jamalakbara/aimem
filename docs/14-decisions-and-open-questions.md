@@ -92,6 +92,12 @@ Decision log in ADR style. Status: **accepted** (decided in brainstorm), **propo
 - **Verified (Claude Code 2.1.304, Windows, 2026-11-16):** with these flags the model reported no tools; no hook or plugin text reached it (a user SessionStart hook was installed); no session was saved under `~/.claude/projects`; auth came from the login with `ANTHROPIC_API_KEY` unset; a multi-line system prompt passed through the `.cmd` shim via the file; about 6 s per call. With `--setting-sources ""` the user's default model setting is not read, so set `retrieval.llm.model` (e.g. `sonnet`) for answer quality.
 - **Consequences:** + no API key in aimem; works wherever Claude Code is signed in. − depends on Claude Code's CLI flags staying stable (pinned by tests on the argument list); slower start (~1–2 s) than an HTTP call; usage counts against the user's Claude plan.
 
+### ADR-018 — The local viewer is server-rendered and uses markdown-it
+- **Status:** accepted (owner approved 24 on 2026-11-24); changes ADR-003's web choice for the local viewer only
+- **Context:** `aimem serve web` shows one folder to one person. Next.js, React and React DOM would add 338 MB to the CLI. Record bodies are untrusted, and remark blocked the process for more than 20 s on two of 16 hostile 200 KB inputs (24).
+- **Decision:** `@aimem/viewer` renders HTML on `node:http` with no build step and no client framework, and renders markdown with `markdown-it` (`html: false`) through a renderer that can only write listed tags and attributes. 09 T5 changes from a sanitizer to that allow-list, checked in a parsed DOM, with the CSP as the second layer. It listens on `127.0.0.1` only, has no login and no way to write.
+- **Consequences:** + small install, no framework updates, pages work without JavaScript. − M6 reuses rules, URLs and tests but not the page templates; a mistake in the allow-list is ours, so the XSS corpus is part of every change to it.
+
 ## Open questions (with recommended defaults)
 
 ### T3 — Codex CLI provider verification (2026-11-16)

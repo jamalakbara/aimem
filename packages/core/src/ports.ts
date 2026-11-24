@@ -18,7 +18,15 @@ export interface Fs {
   /** Optional development-build diagnostic metadata; no file contents. */
   stat?(path: string): Promise<{ mtimeMs: number; isDirectory: boolean; isFile?: boolean; size?: number }>;
   /** Like `stat`, but describes a symlink itself instead of its target (adopt never follows links). */
-  lstat?(path: string): Promise<{ isDirectory: boolean; isSymbolicLink: boolean }>;
+  lstat?(path: string): Promise<{
+    isDirectory: boolean;
+    isSymbolicLink: boolean;
+    isFile?: boolean;
+    size?: number;
+    mtimeMs?: number;
+    ctimeMs?: number;
+    ino?: number;
+  }>;
   /** Absolute path with every symlink resolved. */
   realpath?(path: string): Promise<string>;
   /** Optional for older injected filesystems; metadata logging is best effort. */
@@ -52,7 +60,15 @@ export const nodeFs: Fs = {
   },
   lstat: async (path) => {
     const s = await lstat(path);
-    return { isDirectory: s.isDirectory(), isSymbolicLink: s.isSymbolicLink() };
+    return {
+      isDirectory: s.isDirectory(),
+      isSymbolicLink: s.isSymbolicLink(),
+      isFile: s.isFile(),
+      size: s.size,
+      mtimeMs: s.mtimeMs,
+      ctimeMs: s.ctimeMs,
+      ino: s.ino,
+    };
   },
   realpath: (p) => realpath(p),
   appendFile: (p, d) => appendFile(p, d, "utf8"),

@@ -13,7 +13,7 @@ Project: `aimem` · mode: solo · sync: none
 - decision: 5 (proposed 1, accepted 4)
 - task: 12 (done 12)
 - memory: 11 (active 11)
-- handoff: 89 (final 89)
+- handoff: 90 (final 90)
 
 ## Pinned
 - mem-134qcb5d [agent] Project overview — aimem: a git-based shared notebook where humans and AI agents read and write project knowledge as markdown records in .aimem/.
@@ -21,8 +21,8 @@ Project: `aimem` · mode: solo · sync: none
 - mem-gv0gjym6 [agent] Working conventions for this repo — Plan first and wait for approval, one slice per PR, tests first, spec 03 is the contract, contract snapshots change only on purpose, end every session with aimem handoff.
 
 ## Recent handoffs
+- hnd-zj855axj 2026-11-24 (agent:openbot-backend) — Done: M5 slice 5.1: aimem serve web with request guard, safe reads, index cache and a plain dashboard · Next: QA review and merge of 5.1, then 5.2 (Virgi)
 - hnd-7v8epan5 2026-11-24 (agent:openbot-backend) — Done: aimem sources status; sheet row titles and Google names without invisible characters; readable file-name titles · Next: QA review and merge; M5 slice 1 technical plan for owner approval
 - hnd-hd02pgdb 2026-11-24 (agent:openbot-junior-backend) — Done: Import title fixes: a leading horizontal rule is skipped when the title comes from the first line; zero-width space and word joiner removed from titles and summaries (ZWNJ/ZWJ kept); aimem impo…
 - hnd-j5vdqgjc 2026-11-24 (agent:openbot-junior-backend) — Done: README now covers adopt/review/discard, imports (.md .txt .csv .xlsx .docx .pdf), Google Docs/Sheets sources, docs/08 and docs/16 links; corrected the superseded-not-deleted claim. Every exampl…
 - hnd-86sbcfyn 2026-11-23 (agent:openbot-backend) — Done: M4b.4 (#106): QA blocker fixed (look-alike Google Docs) plus QA findings 1-9 except author authentication, which is documented · Next: QA re-test and merge of #106; then owner acceptance with a…
-- hnd-f31d8x3y 2026-11-23 (agent:openbot-backend) — Done: M4b.4 on codex/m4b-4-google: Google connector (sources list/add/remove/sync) against a simulated Google; network blocked in tests. Also fixed: imported records kept 'verified' when their source…

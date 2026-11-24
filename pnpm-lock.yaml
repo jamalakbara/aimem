@@ -231,6 +231,9 @@ importers:
       '@aimem/schema':
         specifier: workspace:*
         version: link:../schema
+      '@aimem/viewer':
+        specifier: workspace:*
+        version: link:../viewer
       commander:
         specifier: ^14.0.3
         version: 14.0.3
@@ -292,6 +295,15 @@ importers:
       yaml:
         specifier: ^2.9.1
         version: 2.9.1
+
+  packages/viewer:
+    dependencies:
+      '@aimem/core':
+        specifier: workspace:*
+        version: link:../core
+      '@aimem/schema':
+        specifier: workspace:*
+        version: link:../schema
 
 packages:
 

@@ -73,4 +73,4 @@ Each slice is one PR (4.2 and 4.5 may split further at review). 4.1–4.2 alread
 
 ## Out of scope
 
-Google and upload connectors (M4b), the web review queue (M5), LLM extraction inside `adopt` itself (only `--agent-plan`).
+Google and upload connectors (M4b), the web review queue (M6, see 24), LLM extraction inside `adopt` itself (only `--agent-plan`).

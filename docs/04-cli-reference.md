@@ -349,7 +349,7 @@ and its metadata-only policy (15 §17). This adds a check to `data.checks`; the 
 and exit codes remain unchanged.
 | `aimem config get\|set\|list` | Edit `project.yaml` safely |
 | `aimem serve mcp [--http <port>]` | Start the MCP server (05). v0.1: stdio only; stdout carries the protocol, so nothing else is printed |
-| `aimem serve web` | Start the web viewer locally against the working tree |
+| `aimem serve web [--port <n>]` | Read-only web viewer of this notebook and its hub and sibling checkouts (10 §2, 24). Listens on `127.0.0.1` only (there is no `--host`), port 4747; `--port 0` picks a free one. Prints the URL at once (on stderr with `--json`) and runs until Ctrl-C. No login: anyone logged in to this computer can open it while it runs. It writes nothing and runs no Git, model or network request. Links, folders named `*.md`, FIFOs and files over 10 MB are listed as not shown; the CLI still reads them. Port in use or not allowed, bad port: `USAGE` |
 
 ## 7. Output contracts (for agents)
 

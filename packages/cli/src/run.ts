@@ -15,6 +15,7 @@ import { indexCmd, validateCmd } from "./commands/maintain.js";
 import { move } from "./commands/move.js";
 import { list, searchCmd, show } from "./commands/read.js";
 import { discard, review } from "./commands/review.js";
+import { serveWeb } from "./commands/serve.js";
 import { doctor, type HandoffOptions, handoff, status } from "./commands/session.js";
 import { liveClaims, taskClaim, taskHeartbeat, taskRelease } from "./commands/task.js";
 import { templates } from "./commands/templates.js";
@@ -316,12 +317,14 @@ export async function run(argv: string[], outer: CliDeps): Promise<number> {
       ),
     );
 
-  cmd("serve", "run a server: mcp (stdio) — web arrives in M5")
-    .argument("<what>", "mcp")
+  cmd("serve", "run a server: mcp (stdio) | web (read-only viewer on this computer)")
+    .argument("<what>", "mcp | web")
+    .option("--port <n>", "port of the web viewer; 0 picks a free one (default 4747)")
     .action(
-      action("serve", async (_g, [what]) => {
+      action("serve", async (g, [what], o) => {
+        if (what === "web") return serveWeb(deps, g, o as { port?: string });
         if (what !== "mcp")
-          throw new AimemError("USAGE", `aimem serve ${String(what)} is not available (only: mcp)`);
+          throw new AimemError("USAGE", `aimem serve ${String(what)} is not available (only: mcp, web)`);
         if (!deps.serveMcp) throw new AimemError("USAGE", "the MCP server is not available in this build");
         await deps.serveMcp();
         return { data: null, text: "" };

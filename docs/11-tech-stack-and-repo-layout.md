@@ -24,7 +24,8 @@
 | MCP | `@modelcontextprotocol/sdk` | Official | |
 | Server | Fastify (or Hono) + Postgres (`pg`) + Drizzle ORM migrations | Light, fast, familiar | Go service |
 | Realtime | SSE; Postgres LISTEN/NOTIFY | No extra infra | Redis pub/sub when scaling |
-| Web | Next.js (App Router), Tailwind, Radix/shadcn | Fast to build, accessible | Vite + React Router |
+| Web (team app, M6) | Next.js (App Router), Tailwind, Radix/shadcn | Fast to build, accessible | Vite + React Router |
+| Local viewer (M5) | `node:http`, HTML templates, `markdown-it` (ADR-018) | Small enough to ship in the CLI | Next.js |
 | Auth | GitHub OAuth via Auth.js (or minimal custom) | Team is on GitHub | |
 | Tests | Vitest; Playwright for web; `testcontainers` for Postgres | | |
 | Lint/format | Biome (or ESLint + Prettier) | One fast tool | |
@@ -53,7 +54,8 @@ aimem/
     cli/                    # aimem           binary entrypoint, commands
     mcp/                    # @aimem/mcp      MCP server
     server/                 # @aimem/server   REST+SSE, Postgres, indexer, auth
-    web/                    # @aimem/web      Next.js app
+    viewer/                 # @aimem/viewer   local read-only web viewer (M5)
+    web/                    # @aimem/web      Next.js app (M6)
   fixtures/
     projects/               # sample .aimem/ trees (small, medium, multi-repo, adopt-me)
     remotes/                # scripts to create bare git remotes for concurrency tests
@@ -72,10 +74,12 @@ schema  ←  core  ←  adapters
               ↑        ↑
               ├──── cli ┘
               ├──── mcp
+              ├──── viewer (loaded lazily by cli)
               └──── server  ←  web (via HTTP + schema types only)
 ```
 - `schema` has no runtime dependencies except `zod`.
-- `core` must not import from `cli`, `mcp`, `server`, or `web`.
+- `core` must not import from `cli`, `mcp`, `viewer`, `server`, or `web`.
+- `viewer` depends on `core` and `schema` only; it never writes, starts a process or opens a network connection (a test checks its imports).
 - `connectors` depends on `core` only; it never imports `server`. The server and CLI call into it.
 - `web` never imports server code; it talks HTTP.
 - Only `core/git` and `core/process` spawn processes (`core/process` runs non-git programs such as `claude -p`, ADR-017, in an empty temp directory).

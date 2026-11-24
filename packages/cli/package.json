@@ -16,6 +16,7 @@
     "@aimem/core": "workspace:*",
     "@aimem/mcp": "workspace:*",
     "@aimem/schema": "workspace:*",
+    "@aimem/viewer": "workspace:*",
     "commander": "^14.0.3"
   },
   "devDependencies": {
