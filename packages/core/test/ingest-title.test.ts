@@ -52,4 +52,11 @@ describe("import titles", () => {
     const r = documentToRecord("\u200B---\n\nReal first line\n\nMore.\n", "r.txt");
     expect(r.title).toBe("Real first line");
   });
+
+  it("keeps a file-name title readable and free of escapes and invisible characters", () => {
+    expect(documentToRecord("\u200B\n", "only_invisible*.md").title).toBe("only_invisible*");
+    expect(documentToRecord("---\n", "a\u001B[31m\u200Bb\u202Ec.md").title).toBe("a[31mbc");
+    expect(documentToRecord("---\n", "\u200B.md").title).toBe("Untitled");
+    expect(documentToRecord("---\n", "\u200B.md").summary).toBe("Untitled");
+  });
 });

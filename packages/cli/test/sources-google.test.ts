@@ -510,3 +510,94 @@ describe("QA #106 review", () => {
     expect((await sync(g)).json.warnings).toContain("Archive: subfolders are not synced");
   });
 });
+
+describe("aimem sources status", () => {
+  const offline = { fetch: () => Promise.reject(new Error("status must not use the network")) };
+  const status = (deps: Record<string, unknown> = {}) => run(["sources", "status"], { ...offline, ...deps });
+
+  it("reports the selection, records and missing ones, without the network or any write", async () => {
+    const doc = decisionDoc();
+    const g = fakeGoogle([doc, taskSheet()]);
+    const ref = (await sync(g)).json.data.records.find((r: { ref: string }) => r.ref.startsWith("dec-")).ref;
+    g.state.files = [
+      taskSheet(),
+      decisionDoc({ id: "1DocLaterZZZZZZZZZZZZZZZZZZZ", name: "Rename the courier queue" }),
+    ];
+    await sync(g, [], { clock: { now: () => new Date("2026-11-24T08:00:00Z") } });
+    const tree = () =>
+      readdirSync(join(dir, ".aimem"), { recursive: true })
+        .map(String)
+        .sort()
+        .filter((f) => statSync(join(dir, ".aimem", f)).isFile() && !f.startsWith(".cache"))
+        .map((f) => [f, readFileSync(join(dir, ".aimem", f), "utf8")]);
+    const before = tree();
+    for (const env of [human, agent]) {
+      const r = await status({ env });
+      expect(r.code, r.stderr).toBe(0);
+      expect(r.json.data.sources).toEqual([
+        {
+          kind: "google",
+          configured: true,
+          folder: FOLDER,
+          files: [],
+          credentials: "ready",
+          documents: 2,
+          rows: 20,
+          missing: [{ ref, title: "Store parcel events for 90 days" }],
+          last_change: "2026-11-24T08:00:00.000Z",
+        },
+      ]);
+    }
+    expect(tree()).toEqual(before);
+    const text = await cli(["sources", "status", "--dir", dir], {
+      env: { ...human, GOOGLE_APPLICATION_CREDENTIALS: key },
+      random: cryptoRandom,
+    });
+    expect(text.stdout).toContain(`missing  ${ref}  Store parcel events for 90 days`);
+  });
+
+  it("says why the key cannot be used, without its path or content, and still exits 0", async () => {
+    const none = await status({ env: { GOOGLE_APPLICATION_CREDENTIALS: "" } });
+    expect(none.code).toBe(0);
+    expect(none.json.data.sources[0]).toMatchObject({
+      credentials: "missing",
+      documents: 0,
+      last_change: null,
+    });
+    writeFileSync(key, `{"type":"service_account","private_key":"${TOKEN.slice(0, 4)}secret"`);
+    const bad = await status();
+    expect(bad.json.data.sources[0].credentials).toBe("unusable");
+    expect(bad.stdout + bad.stderr).not.toMatch(/secret"/);
+    expect(bad.stdout).not.toContain(key);
+    cpSync(key, join(dir, "key.json"));
+    const inside = await status({ env: { GOOGLE_APPLICATION_CREDENTIALS: join(dir, "key.json") } });
+    expect(inside.json.warnings.join()).toMatch(/inside the repository/);
+  });
+
+  it("reports records of a removed source, an empty notebook and a broken id in project.yaml", async () => {
+    await sync(fakeGoogle([decisionDoc()]));
+    await run(["sources", "remove", "google"]);
+    expect((await status()).json.data.sources[0]).toMatchObject({ configured: false, documents: 1 });
+    rmSync(join(dir, ".aimem/decisions"), { recursive: true });
+    expect((await status()).json.data.sources).toEqual([]);
+    expect((await run(["sources", "add", "google", "--folder", FOLDER])).code).toBe(0);
+    const y = join(dir, ".aimem/project.yaml");
+    writeFileSync(y, readFileSync(y, "utf8").replace(FOLDER, '"not an id!"'));
+    const r = await status();
+    expect(r.json.warnings.join()).toMatch(/inbox_folder_id/);
+  });
+
+  it("names in warnings carry no invisible characters", async () => {
+    const r = await sync(
+      fakeGoogle([
+        {
+          id: "1ZeroWidthAAAAAAAAAAAAAAAAAA",
+          name: "Arch\u200Bive\u2060",
+          mimeType: "application/vnd.google-apps.folder",
+          modifiedTime: "2026-11-20T00:00:00Z",
+        },
+      ]),
+    );
+    expect(r.json.warnings).toContain("Archive: subfolders are not synced");
+  });
+});

@@ -371,7 +371,7 @@ export async function run(argv: string[], outer: CliDeps): Promise<number> {
 
   cmd(
     "sources [args...]",
-    "Google documents synced into the notebook: list | add google | remove google | sync",
+    "Google documents synced into the notebook: list | status | add google | remove google | sync",
   )
     .option("--folder <id>", "Drive inbox folder: id or link (add)")
     .option("--file <id>", "a single Doc or Sheet: id or link (add)")
