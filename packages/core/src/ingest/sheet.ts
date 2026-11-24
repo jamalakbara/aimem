@@ -1,6 +1,6 @@
 import { STATUSES } from "@aimem/schema";
 import { firstSentence } from "../adopt/markdown.js";
-import { cleanText } from "../util/clean.js";
+import { cleanText, stripInvisible } from "../util/clean.js";
 import type { DocumentRecord } from "./document.js";
 
 /** A parsed CSV row; \`error\` is set when the row could not be read (its cells are empty). */
@@ -179,7 +179,8 @@ export function sheetToRecords(
       errors.push({ row, reason });
       return false;
     };
-    const title = get("title").replace(/\s+/g, " ").slice(0, 120);
+    // Only what is shown is cleaned: the key and the cells in the body stay as they are in the sheet.
+    const title = stripInvisible(get("title")).replace(/\s+/g, " ").trim().slice(0, 120);
     if (!title) return fail("title is empty");
     let key: string | undefined;
     if (keyed) {
@@ -277,7 +278,7 @@ export function sheetToRecords(
               section("Prevention", ""),
               ...(table ? [`## Other columns\n\n${table}`] : []),
             ];
-    const summary = (firstSentence(summaryText) || title).replace(/\n/g, " ").slice(0, 200);
+    const summary = (firstSentence(stripInvisible(summaryText)) || title).replace(/\n/g, " ").slice(0, 200);
     items.push({
       row,
       ...(key !== undefined ? { key } : {}),

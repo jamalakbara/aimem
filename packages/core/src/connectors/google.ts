@@ -7,7 +7,7 @@ import { splitFrontMatter } from "../ingest/front-matter.js";
 import { sheetToRecords } from "../ingest/sheet.js";
 import type { ExternalInput } from "../ops/write.js";
 import type { Clock } from "../ports.js";
-import { cleanText } from "../util/clean.js";
+import { cleanText, stripInvisible } from "../util/clean.js";
 
 /** Read-only, and nothing else (16 §5, 23 decision 4). */
 export const GOOGLE_SCOPES = [
@@ -84,7 +84,7 @@ interface DriveFile {
 }
 
 const plain = (s: unknown) =>
-  cleanText(String(s ?? ""))
+  stripInvisible(cleanText(String(s ?? "")))
     .replace(/[\t\n]+/g, " ")
     .trim();
 
