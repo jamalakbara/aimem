@@ -1,8 +1,8 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { AimemError, type Clock, type Fs, loadProject } from "@aimem/core";
+import { AimemError, type Clock, type Fs } from "@aimem/core";
 import { SCRIPT } from "./assets/app.js";
 import { STYLE } from "./assets/style.js";
-import { IndexCache, type Snapshot } from "./cache.js";
+import { IndexCache, openNotebook, type Snapshot } from "./cache.js";
 import { checkRequest, type Target } from "./guard.js";
 import type { Html } from "./html.js";
 import { dashboard } from "./pages/dashboard.js";
@@ -66,9 +66,7 @@ const failure = (status: number, message: string) =>
 export async function startViewer(o: ViewerOptions): Promise<Viewer> {
   const root = await findRoot(o.fs, o.dir);
   if (!root) throw new AimemError("NOT_INITIALIZED", "No .aimem/ found. Run `aimem init` in your repo.");
-  const nb = await loadProject(safeFs(o.fs).fs, root);
-  if (nb.root !== root)
-    throw new AimemError("INVALID_RECORD", ".aimem/project.yaml is a link or not a regular file");
+  const nb = await openNotebook(safeFs(o.fs).fs, root);
   const project = nb.config.project;
   const cache = new IndexCache({
     fs: o.fs,
@@ -141,6 +139,8 @@ export async function startViewer(o: ViewerOptions): Promise<Viewer> {
 
   const timeout = o.timeoutMs ?? 10_000;
   const server = createServer({
+    // The guard answers these, so that every answer has the same headers.
+    requireHostHeader: false,
     headersTimeout: timeout,
     requestTimeout: timeout,
     connectionsCheckingInterval: Math.min(1000, timeout),
@@ -153,6 +153,7 @@ export async function startViewer(o: ViewerOptions): Promise<Viewer> {
   server.on("request", on);
   // Without this, node would answer `100 Continue` and invite the body.
   server.on("checkContinue", on);
+  server.on("checkExpectation", on);
   server.on("connect", (_req, socket) => socket.destroy());
   server.on("upgrade", (_req, socket) => socket.destroy());
   server.on("clientError", (_e, socket) => {

@@ -46,7 +46,7 @@ describe("request guard (24 §5.1)", () => {
     expect(await status("GET / HTTP/1.0\r\n\r\n")).toBe(421);
     expect(await status(`GET / HTTP/1.1\r\nHost: ${host}\r\nHost: ${host}\r\n\r\n`)).toBe(421);
     expect(await status(`GET / HTTP/1.1\r\nHost: ${host}\r\nhost: evil.example\r\n\r\n`)).toBe(421);
-    expect(await status("GET / HTTP/1.1\r\n\r\n")).toBeGreaterThanOrEqual(400);
+    expect(await status("GET / HTTP/1.1\r\n\r\n")).toBe(421);
   });
 
   it("refuses absolute targets, // and bad percent-encoding with 400", async () => {
@@ -156,6 +156,11 @@ describe("request guard (24 §5.1)", () => {
       expect(Object.keys(a.headers).filter((h) => h.startsWith("access-control"))).toEqual([]);
       expect(a.headers["x-powered-by"]).toBeUndefined();
     }
+    for (const text of [
+      "GET / HTTP/1.1\r\n\r\n",
+      `GET / HTTP/1.1\r\nHost: ${host}\r\nExpect: something\r\n\r\n`,
+    ])
+      expect(await raw(v, text), text).toMatch(/Content-Security-Policy: default-src 'none'/i);
     const malformed = await raw(v, "NOT HTTP\r\n\r\n");
     expect(malformed).toMatch(/^HTTP\/1\.1 400 /);
     expect(malformed).toMatch(/X-Content-Type-Options: nosniff/i);

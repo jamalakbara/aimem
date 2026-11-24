@@ -1,7 +1,16 @@
 import { basename, dirname, join, resolve, sep } from "node:path";
-import type { Fs } from "@aimem/core";
+import { AimemError, type Fs } from "@aimem/core";
 
 const MAX_FILE = 10 * 1024 * 1024;
+
+const codeOf = (e: unknown) => (e as { code?: string } | null)?.code;
+const REASONS: Record<string, string> = {
+  ENOENT: "gone while reading",
+  ELOOP: "a link; not read",
+  ENOTREG: "not a regular file; not read",
+  EFBIG: "larger than 10 MB; not read",
+};
+const reasonOf = (e: unknown) => REASONS[codeOf(e) ?? ""] ?? "cannot be read";
 
 export interface SafeFs {
   fs: Fs;
@@ -11,14 +20,17 @@ export interface SafeFs {
 
 /**
  * The only way the viewer reads a notebook (24 §5.1 Cache). An entry is checked with `lstat` before it is
- * opened: links, folders, FIFOs, devices and files over 10 MB are never opened. A record file that is left
- * out reads as empty text, so one odd entry cannot stop core from loading the others.
+ * opened, and the opened file again: links, folders, FIFOs, devices and files over 10 MB are never read. An
+ * `.aimem` that is a link is not followed. A record file that is left out reads as empty text, so one odd entry
+ * cannot stop core from loading the others.
  */
 export function safeFs(inner: Fs): SafeFs {
   const skipped = new Map<string, string>();
   const lstat = inner.lstat?.bind(inner);
   const realpath = inner.realpath?.bind(inner);
-  if (!lstat || !realpath) throw new Error("the viewer needs lstat and realpath");
+  const readRegular = inner.readRegular?.bind(inner);
+  if (!lstat || !realpath || !readRegular)
+    throw new Error("the viewer needs lstat, realpath and readRegular");
   const readOnly = async (): Promise<never> => {
     throw new Error("the viewer is read-only");
   };
@@ -32,6 +44,7 @@ export function safeFs(inner: Fs): SafeFs {
       const s = await lstat(dir);
       if (s.isSymbolicLink) return "linked folder; not read";
       if (!s.isDirectory) return "not a folder; not read";
+      if ((await lstat(dirname(dir))).isSymbolicLink) return ".aimem is a link; not read";
       const top = await realpath(dirname(dir));
       return (await realpath(dir)).startsWith(top.endsWith(sep) ? top : top + sep)
         ? undefined
@@ -55,24 +68,38 @@ export function safeFs(inner: Fs): SafeFs {
     readdir: async (given) => {
       const dir = resolve(given);
       if (basename(dirname(dir)) !== ".aimem") return inner.readdir(dir);
-      const why = await checkFolder(dir);
-      if (!why) return inner.readdir(dir);
+      let why: string | undefined;
+      try {
+        why = await checkFolder(dir);
+        if (!why) return await inner.readdir(dir);
+      } catch (e) {
+        // Most notebooks do not have every type folder.
+        if (codeOf(e) === "ENOENT") return [];
+        why = "cannot be listed";
+      }
       skipped.set(dir, why);
       return [];
     },
     readFile: async (given) => {
       const path = resolve(given);
       if (!isRecord(path)) {
+        const name = `.aimem/${basename(path)}`;
+        if ((await lstat(dirname(path))).isSymbolicLink)
+          throw new AimemError("INVALID_RECORD", ".aimem is a link; the viewer does not follow it");
         const why = await reject(path);
-        if (why) throw new Error(`${basename(path)}: ${why}`);
-        return inner.readFile(path);
+        if (why) throw new AimemError("INVALID_RECORD", `${name}: ${why}`);
+        try {
+          return await readRegular(path, MAX_FILE);
+        } catch (e) {
+          throw new AimemError("INVALID_RECORD", `${name}: ${reasonOf(e)}`);
+        }
       }
       let why: string | undefined;
       try {
         why = (await checkFolder(dirname(path))) ?? (await reject(path));
-        if (!why) return await inner.readFile(path);
+        if (!why) return await readRegular(path, MAX_FILE);
       } catch (e) {
-        why = (e as { code?: string }).code === "ENOENT" ? "gone while reading" : "cannot be read";
+        why = reasonOf(e);
       }
       skipped.set(path, why);
       return "";
