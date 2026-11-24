@@ -35,6 +35,10 @@ const META = /^\s*(roles|tags)\s*:\s*(.+)$/gim;
 
 /** Terminal escapes and other control characters never reach titles, summaries or names (QA, #99). */
 const stripControl = cleanText;
+/** Titles and summaries also lose zero-width spaces and word joiners; ZWNJ/ZWJ stay for the languages that need them. */
+const stripInvisible = (s: string) => s.replace(/[​⁠]/g, "");
+/** A markdown horizontal rule: `---`, `***` or `___` (three or more), alone on its line. */
+const RULE = /^\s*([-*_])(?:\s*\1){2,}\s*$/;
 const key = (h: string) => h.trim().toLowerCase().replace(/\s+/g, " ");
 const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1).trimEnd()}…` : s);
 
@@ -75,22 +79,23 @@ export function documentToRecord(text: string, fileName: string, typeHint?: stri
   const fallbackTitle = fileName.replace(/\.[^.]+$/, "");
   const firstLine = clean
     .split("\n")
-    .find((l) => l.trim())
+    .find((l) => l.trim() && !RULE.test(l))
     ?.replace(/^#+\s*/, "")
     .trim();
   const title = clip(
-    stripControl(
-      (md.title ?? firstLine ?? fallbackTitle).replace(/^\\(?=[#>|`~*+\-\d])/, "").replace(/[*_`]/g, ""),
+    stripInvisible(
+      stripControl(
+        (md.title ?? firstLine ?? fallbackTitle).replace(/^\\(?=[#>|`~*+\-\d])/, "").replace(/[*_`]/g, ""),
+      ),
     ).trim() || fallbackTitle,
     120,
   );
   const sectionText = (h: string) => sections.get(key(h))?.text ?? "";
   const summaryFrom = (fallback: string) =>
     clip(
-      stripControl(firstSentence(sectionText("Summary")) || firstSentence(fallback) || title).replace(
-        /^\\(?=[#>|`~*+\-\d])/,
-        "",
-      ),
+      stripInvisible(
+        stripControl(firstSentence(sectionText("Summary")) || firstSentence(fallback) || title),
+      ).replace(/^\\(?=[#>|`~*+\-\d])/, ""),
       200,
     );
 

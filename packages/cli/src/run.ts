@@ -340,7 +340,10 @@ export async function run(argv: string[], outer: CliDeps): Promise<number> {
     )
     .action(action("adopt", (g, _a, o) => adopt(deps, g, o)));
 
-  cmd("import <file>", "import a .md/.txt document or a .csv sheet as externally-owned records (16 §7)")
+  cmd(
+    "import <file>",
+    "import a .md/.txt/.docx/.pdf document or a .csv/.xlsx sheet as externally-owned records (16 §7)",
+  )
     .option(
       "--as <type>",
       "auto | decision | runbook | incident | memory | tasks | testcases | incidents (default auto)",
