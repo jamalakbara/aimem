@@ -69,10 +69,10 @@ Markdown, 200 KB per input, 16 inputs (time to render):
 
 ## 5.2–5.3 — Record page and search
 
-- Record page: title, body, then status, trust and freshness as separate text labels, `verified` date, roles, tags, paths as text, links, supersede chain, source and notebook label (`hub`, `repo:<name>`). **Copy reference** appears only when the script runs.
+- Record page: title, then type, status, trust (with its `verified` date) and the source of an imported record as separate text labels, freshness when stale or expired, body, roles, tags, paths as text, links, supersede chain, source and notebook label (`hub`, `repo:<name>`). **Copy reference** appears only when the script runs.
 - Lookup by id from the index only. Moved stubs resolve as in `loadProjectIndex`; a stub whose target is not checked out says so. `[[ref]]` and record ids become links; `sourceWarnings()` and `problems` are shown as notices.
 - Every value is escaped, including title, tags, author, paths and `source`. The raw file text is never served.
-- Bodies above 200 KB are shown as plain text, cut at 1 MB with a note. A record that fails to render shows an error card; the rest of the page still loads.
+- One page formats at most 200,000 characters; longer bodies are shown as plain text, cut at 1,000,000 with a note, and at most five records that share an id are shown. Control characters and bidi overrides are not shown. A record that fails to render shows an error card; the rest of the page still loads.
 - Search is a plain GET form that works without JavaScript; the script adds `Ctrl/⌘+K`. Query, filters and page live in the URL, so Back restores them; the selected hit is kept as a fragment so focus returns to it. Query at most 200 characters; 25 results per page.
 - Every list shows trust as text, so an inferred draft cannot pass for a verified record.
 

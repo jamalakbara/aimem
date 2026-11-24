@@ -61,6 +61,7 @@ p { margin: 0 0 12px; }
   background: var(--panel); color: var(--ink); box-shadow: var(--ring); font: inherit; font-size: 14px;
   text-decoration: none; cursor: pointer;
 }
+.button[data-copy] { min-inline-size: 136px; justify-content: center; }
 .button[hidden] { display: none; }
 .button:hover { background: var(--well); }
 .prose > :first-child { margin-top: 0; }

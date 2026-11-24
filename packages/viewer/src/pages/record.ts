@@ -6,15 +6,23 @@ import { dateLabel, FRESHNESS, statusLabel, systemLabel, T, trustLabel, typeLabe
 import { type Page, projectHref, recordHref, type ViewContext } from "../view.js";
 import { notebookPage } from "./layout.js";
 
-/** Longer bodies are not parsed as Markdown (24 §5.2). Both limits count UTF-16 units. */
+/** Limits for one page, over all bodies on it (24 §5.2). Both count UTF-16 units; more is plain, then cut. */
 export const MAX_RENDER_CHARS = 200_000;
 export const MAX_PLAIN_CHARS = 1_000_000;
+/** Records shown on one page when several files carry the same id. */
+export const MAX_SAME_ID = 5;
 
 export interface RecordOptions {
   /** Show the body as plain text. */
   plain?: boolean;
   /** Replaces the Markdown renderer (tests). */
   render?: typeof renderMarkdown;
+}
+
+/** What is left of the page limits; each body takes its part. */
+interface Budget {
+  render: number;
+  plain: number;
 }
 
 /** Records by id. Two local files can carry the same id, so each id has a list. */
@@ -75,7 +83,6 @@ function details(c: ViewContext, r: IndexedRecord, byId: ById): Html {
     );
   const one = (v: unknown) => (text(v) ? [String(v)] : []);
   add("Reference", [r.id]);
-  add("Verified", date(r.fm.verified));
   add("Author", [r.author]);
   add("Created", date(r.created));
   add("Updated", date(r.updated));
@@ -88,7 +95,6 @@ function details(c: ViewContext, r: IndexedRecord, byId: ById): Html {
   add("Evidence", list(r.fm.evidence));
   if (r.fm.managed_by === "external" && isMap(r.fm.source)) {
     const s = r.fm.source;
-    add("Source", [systemLabel(text(s.system) ?? "")]);
     add("Last synced", date(s.synced_at));
     if (text(s.state) && s.state !== "ok") add("Source state", [T.sourceGone]);
   }
@@ -102,15 +108,24 @@ function details(c: ViewContext, r: IndexedRecord, byId: ById): Html {
   return html`<dl class="details">${rows}</dl>`;
 }
 
-function bodyOf(c: ViewContext, r: IndexedRecord, byId: ById, o: RecordOptions, level: 1 | 2): Html {
+function bodyOf(
+  c: ViewContext,
+  r: IndexedRecord,
+  byId: ById,
+  o: RecordOptions,
+  level: 1 | 2,
+  budget: Budget,
+): Html {
   if (!r.body.trim()) return html`<p class="meta">${T.emptyBody}</p>`;
   const { project } = c.nb.config;
   const plain = (before: Html) => {
-    const shown = cut(r.body, MAX_PLAIN_CHARS);
+    const shown = cut(r.body, budget.plain);
+    budget.plain -= shown.length;
     return html`${before}<pre class="plain" tabindex="0">${shown}</pre>${shown.length < r.body.length && html`<p class="note">${T.cut}</p>`}`;
   };
-  if (r.body.length > MAX_RENDER_CHARS) return plain(html`<p class="note">${T.tooLong}</p>`);
+  if (r.body.length > budget.render) return plain(html`<p class="note">${T.tooLong}</p>`);
   if (o.plain) return plain(html`<p class="meta"><a href="?">${T.showFormatted}</a></p>`);
+  budget.render -= r.body.length;
   try {
     const rendered = (o.render ?? renderMarkdown)(r.body, {
       project,
@@ -123,18 +138,27 @@ function bodyOf(c: ViewContext, r: IndexedRecord, byId: ById, o: RecordOptions, 
   }
 }
 
-function article(c: ViewContext, r: IndexedRecord, byId: ById, o: RecordOptions, level: 1 | 2): Html {
+function article(
+  c: ViewContext,
+  r: IndexedRecord,
+  byId: ById,
+  o: RecordOptions,
+  level: 1 | 2,
+  budget: Budget,
+): Html {
   const fresh = freshnessOf({ ...r.fm, type: r.type, created: r.created }, c.nb.config, c.now);
   const movedTo = text(r.fm.moved_to);
   const replacedBy = text(r.fm.superseded_by);
+  const system = r.fm.managed_by === "external" && isMap(r.fm.source) ? text(r.fm.source.system) : undefined;
   return html`<article>
 <h${level}>${r.title}</h${level}>
 <p class="lead">${r.summary}</p>
-<ul class="badges"><li class="badge">${typeLabel(r.type)}</li><li class="badge">${statusLabel(r.status)}</li><li class="badge ${r.trust === "verified" ? "ok" : "warn"}">${trustLabel(r.trust)}</li><li class="badge ${fresh !== "fresh" && "warn"}">${FRESHNESS[fresh]}</li></ul>
+<ul class="badges"><li class="badge">${typeLabel(r.type)}</li><li class="badge">${statusLabel(r.status)}</li><li class="badge ${r.trust === "verified" ? "ok" : "warn"}">${trustLabel(r.trust, r.fm.verified)}</li>${fresh !== "fresh" && html`<li class="badge warn">${FRESHNESS[fresh]}</li>`}</ul>
+${system && html`<p class="meta">${T.source(systemLabel(system))}</p>`}
 <p class="actions"><button class="button" type="button" hidden data-copy="${r.id}">${T.copyRef}</button></p>
 ${movedTo && html`<p class="note">${T.moved(movedTo)}</p>`}
 ${!movedTo && replacedBy && html`<p class="note">${T.replaced} ${refLink(c, replacedBy, byId)}</p>`}
-${bodyOf(c, r, byId, o, level)}
+${bodyOf(c, r, byId, o, level, budget)}
 <section class="side"><h${level + 1}>${T.details}</h${level + 1}>${details(c, r, byId)}</section>
 </article>
 `;
@@ -159,9 +183,18 @@ export function recordPage(c: ViewContext, ref: string, o: RecordOptions = {}): 
   const found = byId.get(id) ?? [];
   const [first] = found;
   if (!first) return notFound(c);
+  const budget = { render: MAX_RENDER_CHARS, plain: MAX_PLAIN_CHARS };
   if (found.length === 1)
-    return { status: 200, html: notebookPage(c, first.title, article(c, first, byId, o, 1)) };
+    return { status: 200, html: notebookPage(c, first.title, article(c, first, byId, o, 1, budget)) };
   const title = T.shared(found.length, id);
-  const articles = found.map((r) => article(c, r, byId, o, 2));
-  return { status: 200, html: notebookPage(c, title, html`<h1>${title}</h1>\n${articles}`) };
+  const articles = found.slice(0, MAX_SAME_ID).map((r) => article(c, r, byId, o, 2, budget));
+  const rest = found.length - articles.length;
+  return {
+    status: 200,
+    html: notebookPage(
+      c,
+      title,
+      html`<h1>${title}</h1>\n${articles}${rest > 0 && html`<p class="note">${T.sharedRest(rest)}</p>`}`,
+    ),
+  };
 }

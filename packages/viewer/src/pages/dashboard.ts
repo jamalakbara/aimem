@@ -1,6 +1,6 @@
 import { summarizeNotebook } from "@aimem/core";
 import { html } from "../html.js";
-import { T } from "../strings.js";
+import { statusLabel, T, typeLabel } from "../strings.js";
 import type { ViewContext } from "../view.js";
 import { notebookPage } from "./layout.js";
 
@@ -8,7 +8,10 @@ export function dashboard(c: ViewContext): string {
   // Without its `live` argument: claims would need Git (24).
   const sum = summarizeNotebook(c.nb, c.index, c.now);
   const rows = Object.entries(sum.counts).flatMap(([type, by]) =>
-    Object.entries(by).map(([status, n]) => html`<tr><td>${type}</td><td>${status}</td><td>${n}</td></tr>\n`),
+    Object.entries(by).map(
+      ([status, n]) =>
+        html`<tr><td>${typeLabel(type)}</td><td>${statusLabel(status)}</td><td>${n}</td></tr>\n`,
+    ),
   );
   const title = c.nb.config.name ?? c.nb.config.project;
   return notebookPage(

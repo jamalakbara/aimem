@@ -16,10 +16,20 @@ const ENTITIES: Record<string, string> = {
 };
 export const escapeHtml = (s: string): string => s.replace(/[&<>"']/g, (c) => ENTITIES[c] ?? c);
 
+/**
+ * Text as it may be shown: without control characters, and without the bidi overrides and invisible tags
+ * that can make a title or a link read as something else. ZWJ and ZWNJ stay (emoji, Persian). Addresses
+ * are not changed by this: a checked `href` is ASCII only.
+ */
+export const visible = (s: string): string =>
+  s.replace(/[\p{Cc}\u2028\u2029\u202A-\u202E\u2066-\u2069\uFEFF\u{E0000}-\u{E007F}]/gu, (c) =>
+    c === "\t" || c === "\n" || c === "\r" ? c : c === "\u2028" || c === "\u2029" ? "\n" : "",
+  );
+
 function show(v: unknown): string {
   if (v instanceof Safe) return v.toString();
   if (Array.isArray(v)) return v.map(show).join("");
-  return v === null || v === undefined || v === false ? "" : escapeHtml(String(v));
+  return v === null || v === undefined || v === false ? "" : escapeHtml(visible(String(v)));
 }
 
 /** Tagged template for pages: every value is escaped unless `html` made it. Quote attributes with `"`. */

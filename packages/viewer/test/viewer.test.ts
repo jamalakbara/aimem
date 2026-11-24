@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import { type Fs, loadIndex, loadProject, nodeFs, summarizeNotebook } from "@aimem/core";
 import { escapeHtml, html } from "@aimem/viewer";
 import { afterEach, describe, expect, it } from "vitest";
+import { statusLabel, typeLabel } from "../src/strings.js";
 import { clean, get, notebook, viewer } from "./helpers.js";
 
 afterEach(clean);
@@ -44,7 +45,9 @@ describe("dashboard", () => {
       Number(m[3]),
     ]);
     expect(cells).toEqual(
-      Object.entries(s.counts).flatMap(([t, by]) => Object.entries(by).map(([st, n]) => [t, st, n])),
+      Object.entries(s.counts).flatMap(([t, by]) =>
+        Object.entries(by).map(([st, n]) => [typeLabel(t), statusLabel(st), n]),
+      ),
     );
     expect(b).toMatch(new RegExp(`Agent-written[^0-9]*${s.unreviewed.agent}\\b`));
     expect(b).toMatch(new RegExp(`Inferred[^0-9]*${s.unreviewed.inferred}\\b`));

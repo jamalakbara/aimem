@@ -9,7 +9,8 @@ import {
 } from "@aimem/core";
 import { parse, type DefaultTreeAdapterTypes as T } from "parse5";
 import { beforeAll, describe, expect, it } from "vitest";
-import { MAX_PLAIN_CHARS, MAX_RENDER_CHARS, recordPage } from "../src/pages/record.js";
+import { renderMarkdown } from "../src/markdown.js";
+import { MAX_PLAIN_CHARS, MAX_RENDER_CHARS, MAX_SAME_ID, recordPage } from "../src/pages/record.js";
 import type { ViewContext } from "../src/view.js";
 
 const fixture = (name: string) =>
@@ -100,7 +101,7 @@ describe("recordPage (24 §5.2)", () => {
       "Decision",
       "Accepted",
       "Verified",
-      "Up to date",
+      "Verified on 11 Oct 2026",
       "dec-094vmt9t",
       "human:akbar",
       "11 Oct 2026",
@@ -281,6 +282,108 @@ describe("recordPage (24 §5.2)", () => {
     const main = all(recordPage(broken, "dec-094vmt9t").html);
     expect(main).toContain("1 file is not shown");
     expect(main).toContain(".aimem/x.md: bad <b>");
+  });
+
+  const badges = (html: string) =>
+    find(html, (e) => e.tagName === "li" && /^badge\b/.test(attr(e, "class") ?? "")).map((e) => [
+      nodeText(e),
+      (attr(e, "class") ?? "").replace("badge", "").trim(),
+    ]);
+
+  it("puts the date next to Verified, and never for a record that is not verified", () => {
+    const fm = { verified: "2026-11-01" };
+    for (const [trust, label, kind] of [
+      ["verified", "Verified on 1 Nov 2026", "ok"],
+      ["agent", "Not verified: written by an agent", "warn"],
+      ["inferred", "Not verified: inferred draft", "warn"],
+      ["strange", "Not verified: strange", "warn"],
+    ] as const) {
+      const { html } = recordPage(withRecords(empty, record({ trust, fm })), "mem-zzzzzzzz");
+      expect(badges(html)).toContainEqual([label, kind]);
+      expect(texts(html, "dt"), trust).not.toContain("Verified");
+      expect(all(html).includes("1 Nov 2026 "), trust).toBe(true); // created
+      expect(badges(html).filter(([, k]) => k === "ok")).toHaveLength(trust === "verified" ? 1 : 0);
+      if (trust !== "verified") expect(all(html)).not.toContain("Verified on");
+    }
+    expect(badges(recordPage(withRecords(empty, record()), "mem-zzzzzzzz").html)).toContainEqual([
+      "Verified",
+      "ok",
+    ]);
+  });
+
+  it("shows freshness only when there is something to say", () => {
+    expect(badges(recordPage(withRecords(empty, record()), "mem-zzzzzzzz").html)).toHaveLength(3);
+    const old = record({ created: "2020-01-01T00:00:00Z" });
+    expect(badges(recordPage(withRecords(empty, old), old.id).html)).toContainEqual([
+      "May be out of date",
+      "warn",
+    ]);
+  });
+
+  it.each([
+    ["upload", "Imported file"],
+    ["google-doc", "Google Doc"],
+    ["google-sheet", "Google Sheet"],
+  ])("names the source %s before the body", (system, label) => {
+    const source = { system, id: "x", url: "x", state: "missing", synced_at: "2026-11-01T00:00:00Z" };
+    const r = record({ fm: { managed_by: "external", source } });
+    const main = all(recordPage(withRecords(empty, r), r.id).html);
+    expect(main.indexOf(`Source: ${label}`)).toBeGreaterThan(0);
+    expect(main.indexOf(`Source: ${label}`)).toBeLessThan(main.indexOf("Body text."));
+    expect(main).toContain("Last synced");
+    expect(main).toContain("The source was missing");
+    const own = record({ fm: { managed_by: "notebook", source } });
+    expect(all(recordPage(withRecords(empty, own), own.id).html)).not.toContain("Source:");
+  });
+
+  it("formats up to the limit and not one character more", () => {
+    const at = (n: number) => {
+      const r = record({ body: `**b** ${"x".repeat(n - 6)}` });
+      return texts(recordPage(withRecords(empty, r), r.id).html, "strong").length;
+    };
+    expect(at(MAX_RENDER_CHARS)).toBe(1);
+    expect(at(MAX_RENDER_CHARS + 1)).toBe(0);
+  });
+
+  it("limits the whole page when many files share an id", () => {
+    const body = "![".repeat(MAX_RENDER_CHARS / 2 - 1);
+    const many = Array.from({ length: 40 }, (_, i) =>
+      record({ body, file: `.aimem/memory/mem-zzzzzzzz-${i}.md` }),
+    );
+    let rendered = 0;
+    const { html } = recordPage(withRecords(empty, ...many), "mem-zzzzzzzz", {
+      render: (b, ctx) => {
+        rendered += b.length;
+        return renderMarkdown("", ctx);
+      },
+    });
+    expect(rendered).toBeLessThanOrEqual(MAX_RENDER_CHARS);
+    expect(find(html, (e) => e.tagName === "article")).toHaveLength(MAX_SAME_ID);
+    expect(html.length).toBeLessThan(MAX_PLAIN_CHARS + 50_000);
+    expect(all(html)).toContain("35 more records are not shown");
+    const huge = many.map((r) => ({ ...r, body: "x".repeat(900_000) }));
+    expect(recordPage(withRecords(empty, ...huge), "mem-zzzzzzzz").html.length).toBeLessThan(
+      MAX_PLAIN_CHARS + 50_000,
+    );
+  });
+
+  it("does not show characters that hide or reverse text", () => {
+    const bad = "\u202E\u202D\u2066\u2069\u001B[2J\u0007\u007F\u009B\uFEFF\u{E0041}";
+    const keep = "می\u200Cخواهم 👨\u200D👩";
+    const mixed = `a${bad}b ${keep}`;
+    const r = record({
+      title: mixed,
+      summary: mixed,
+      body: `${mixed}\u2028[x${bad}](https://e.example/${bad}) \`${bad}\``,
+    });
+    for (const plain of [false, true]) {
+      const { html } = recordPage({ ...withRecords(empty, r), warnings: [mixed] }, r.id, { plain });
+      expect(html).not.toMatch(
+        /[\u202A-\u202E\u2066-\u2069\uFEFF\u{E0000}-\u{E007F}\u2028]|(?![\t\n])\p{Cc}/u,
+      );
+      expect(html).toContain(`ab`);
+      expect(html).toContain(keep);
+    }
   });
 
   it("says when the data may be old", () => {

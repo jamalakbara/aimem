@@ -37,7 +37,11 @@ describe("record page over HTTP (24 §5.2)", () => {
   });
 
   it("finds records by reference only", async () => {
-    const v = await viewer(notebook());
+    const dir = notebook();
+    const id = "mem-zzzzzzzz";
+    add(dir, id, "x");
+    const v = await viewer(dir);
+    expect((await get(v, `${P}/r/${id}`)).status).toBe(200);
     for (const p of [
       `${P}/r`,
       `${P}/r/`,
@@ -49,7 +53,9 @@ describe("record page over HTTP (24 §5.2)", () => {
       `${P}/r/project.yaml`,
       `${P}/r/__proto__`,
       `${P}/r/constructor`,
-      `/p/other/r/mem-zzzzzzzz`,
+      `${P}/r/${id}/x`,
+      `${P}/x/${id}`,
+      `/p/other/r/${id}`,
     ]) {
       const r = await get(v, p);
       expect(r.status, p).toBe(404);

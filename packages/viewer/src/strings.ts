@@ -20,16 +20,19 @@ const SYSTEMS: ReadonlyMap<string, string> = new Map([
   ["google-sheet", "Google Sheet"],
   ["upload", "Imported file"],
 ]);
-export const FRESHNESS = { fresh: "Up to date", stale: "May be out of date", expired: "Expired" } as const;
+export const FRESHNESS = { stale: "May be out of date", expired: "Expired" } as const;
 
 const sentence = (s: string) => {
   const words = s.replace(/_/g, " ");
   return words.charAt(0).toUpperCase() + words.slice(1);
 };
 export const typeLabel = (type: string): string => TYPES.get(type) ?? sentence(type);
-export const statusLabel = (status: string): string => sentence(status);
-/** Only a known `verified` may read as verified. */
-export const trustLabel = (trust: string): string => TRUST.get(trust) ?? `Not verified: ${trust}`;
+export const statusLabel = (status: string): string => (status === "review" ? "In review" : sentence(status));
+/** Only a known `verified` may read as verified; the date is shown only then. */
+export const trustLabel = (trust: string, verified?: unknown): string =>
+  trust === "verified" && typeof verified === "string" && verified
+    ? `Verified on ${dateLabel(verified)}`
+    : (TRUST.get(trust) ?? `Not verified: ${trust}`);
 export const systemLabel = (system: string): string => SYSTEMS.get(system) ?? system;
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -82,6 +85,9 @@ export const T = {
   links: "Linked records",
   notHere: "not in this notebook",
   moved: (to: string) => `This record moved to ${to}, which is not available on this computer.`,
+  source: (from: string) => `Source: ${from}`,
+  sharedRest: (n: number) =>
+    `${n} more ${n === 1 ? "record is" : "records are"} not shown. Run aimem validate.`,
   shared: (n: number, id: string) => `${n} records share ${id}`,
   sourceGone: "The source was missing or could not be read at the last sync.",
 };

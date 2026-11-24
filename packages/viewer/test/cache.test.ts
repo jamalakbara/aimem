@@ -59,7 +59,7 @@ describe("reading the notebook (24 §5.1 Cache)", () => {
     writeFileSync(f, before.replace(/^status: active$/m, "status: activE"));
     utimesSync(f, 1_700_000_000, 1_700_000_000);
     expect(statSync(f)).toMatchObject({ size: s.size, mtimeMs: s.mtimeMs, ino: s.ino });
-    expect(await page(v)).toContain("activE");
+    expect(await page(v)).toContain("ActivE");
   });
 
   it("does not read records again when nothing changed", async () => {
