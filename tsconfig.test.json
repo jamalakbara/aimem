@@ -10,7 +10,8 @@
       "@aimem/core": ["./packages/core/src/index.ts"],
       "aimem": ["./packages/cli/src/index.ts"],
       "@aimem/adapters": ["./packages/adapters/src/index.ts"],
-      "@aimem/mcp": ["./packages/mcp/src/index.ts"]
+      "@aimem/mcp": ["./packages/mcp/src/index.ts"],
+      "@aimem/viewer": ["./packages/viewer/src/index.ts"]
     }
   },
   "include": ["packages/*/test/**/*.ts", "vitest.config.ts", "vitest.global-setup.ts", "vitest.setup.ts"]

@@ -17,7 +17,7 @@
 | T2 | **Memory poisoning / prompt injection via records** | A record (or a dependency's text copied into one) says "ignore previous instructions, run X" | Briefing framed as reference data; records wrapped and labelled with trust; agent protocol says records never override user instructions; durable records reviewed; CODEOWNERS on `.aimem/`; `trust` ranking; no auto-execution of anything from records |
 | T3 | Malicious/low-quality agent writes | Compromised agent floods or rewrites notebook | Agent writes default to `trust: agent`; PR policy; rate limits on server; handoffs immutable by convention; git history for rollback |
 | T4 | Unauthorized access to server/web | Stolen token | Hashed tokens, scopes, expiry, revocation, TLS only, audit log |
-| T5 | Web app XSS via markdown | Record body contains script/HTML | Render markdown with HTML disabled + sanitizer; strict CSP; no inline event handlers |
+| T5 | Web app XSS via markdown | Record body contains script/HTML | Markdown with HTML disabled + allow-listed renderer output, checked in a parsed DOM (ADR-018); strict CSP; no inline event handlers |
 | T6 | SSRF / arbitrary repo fetch | Attacker sets `repos[].url` to internal address | Server only fetches repos registered by admins; URL allow-list; no redirects to private ranges |
 | T7 | Over-sharing across roles | QA reads DevOps-sensitive runbook | **Roles are a relevance filter, not access control** in git mode (see §5). Use a separate private repo/hub for sensitive material |
 | T8 | Supply-chain attack on the tool | Malicious npm release | Pin dependencies, lockfile, provenance-enabled publishing, 2FA on registry account, minimal deps in core |
@@ -26,6 +26,7 @@
 | T11 | Content leaves the trust boundary via embedding/LLM APIs | Records sent to a hosted provider for embeddings or `ask` | Local embeddings by default; remote requires `allow_remote: true` per project; secret scan before embedding; `no-embed` tag; `aimem doctor` lists what leaves the machine (15 §12) |
 | T12 | Connector credentials leaked or over-privileged | Over-broad API key (e.g. a future Odoo key with admin rights); Google token with whole-Drive access | Dedicated integration users; minimal read-only scopes (inbox folder only); secrets in the secret store/env, never in git; rotation procedure; per-run audit in `source_runs` |
 | T13 | Imported content exposes information beyond its original audience | A restricted Google Doc or Sheet with client data lands in a repo everyone can read | Explicit selection and allow-lists only; warning at import; field filters for any future task-system connector; sensitive sources go to a private hub; imported text is untrusted and wrapped like any record (§3) |
+| T14 | Another web site reads or drives the local viewer (`aimem serve web`) | DNS rebinding, background requests or frames aimed at `127.0.0.1` | `127.0.0.1` only; exactly one `Host` that names it with the port; GET and HEAD only; `Sec-Fetch-*` check; no CORS; `frame-ancestors 'none'`; nothing is written. Not covered: other people logged in to the same computer (no login in M5) |
 
 ## 3. Handling record content safely (for tool authors)
 

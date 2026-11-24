@@ -115,6 +115,22 @@ process.exitCode = await run(process.argv.slice(2), {
   spawnBackground: (args, cwd) =>
     spawnDetached(process.execPath, [fileURLToPath(import.meta.url), ...args], cwd),
   loadLlm: (config) => loadLlmProvider(config, { runner: execaRunner(), env: process.env }),
+  serveWeb: async ({ dir, port, ready }) => {
+    const { startViewer } = await import("@aimem/viewer");
+    const viewer = await startViewer({
+      fs: nodeFs,
+      clock: systemClock,
+      cacheHome: process.env.AIMEM_HOME ?? join(homedir(), ".cache", "aimem"),
+      dir,
+      port,
+    });
+    ready(viewer.url);
+    await new Promise<void>((done) => {
+      for (const signal of ["SIGINT", "SIGTERM"] as const) process.once(signal, () => done());
+    });
+    await viewer.close();
+    return { url: viewer.url };
+  },
   // stdout carries the MCP protocol: nothing else may be printed while serving.
   serveMcp: () =>
     serveStdio({

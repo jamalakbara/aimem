@@ -49,6 +49,8 @@ export interface CliDeps {
   scheduleVectorRefresh?: (root: string) => void;
   /** Runs the MCP server on this process's stdio until the client disconnects (bin only). */
   serveMcp?: () => Promise<void>;
+  /** Runs the local web viewer until the process is asked to stop (bin only). */
+  serveWeb?: (o: { dir: string; port: number; ready: (url: string) => void }) => Promise<{ url: string }>;
 }
 
 export interface GlobalOptions {

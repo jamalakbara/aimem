@@ -12,7 +12,7 @@ The web app exists for people who do not live in git or the terminal (PM, QA, De
 ## 2. Modes
 | Mode | Requires | Capabilities |
 |------|----------|--------------|
-| Local viewer | `aimem serve web` | Read-only view of the working tree; no auth; single user |
+| Local viewer | `aimem serve web` | Read-only view of the working tree; no auth; `127.0.0.1` only (24, ADR-018) |
 | Team app | Sync server | Multi-project, multi-repo, auth, live panel, edit-via-PR, review queue |
 
 ## 3. Information architecture
@@ -104,6 +104,7 @@ Filter/pivot by service, severity, root-cause category, month; grouped recurrenc
 - Session cookies: HttpOnly, SameSite=Lax, CSRF token on mutations.
 
 ## 7. Technical design
+This section describes the team app (M6). The local viewer (`@aimem/viewer`) uses server-rendered HTML on `node:http` and `markdown-it` instead (24, ADR-018).
 - **Framework:** Next.js (App Router) + TypeScript + Tailwind; component primitives from an accessible library (e.g. Radix/shadcn).
 - **Data:** server components call the sync server REST API; client components subscribe to SSE for live panels.
 - **Shared code:** `@aimem/schema` and `@aimem/core` (browser-safe subset: parse, validate, render summaries).
