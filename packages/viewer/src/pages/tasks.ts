@@ -2,7 +2,7 @@ import type { IndexedRecord } from "@aimem/core";
 import { DEFAULT_PRIORITY, STATUSES } from "@aimem/schema";
 import { type Html, html } from "../html.js";
 import { PAGE_SIZE, readChoice, readPage } from "../query.js";
-import { columnLabel, dateLabel, T, tasksHeading } from "../strings.js";
+import { columnLabel, dateLabel, T, tasksHeading, viewAllTasks } from "../strings.js";
 import { type Page, sectionHref, type ViewContext } from "../view.js";
 import { anchors, byRecord, byUpdated, type Chip, card, chips, compare, idCounts, pager } from "./cards.js";
 import { notebookPage } from "./layout.js";
@@ -137,7 +137,10 @@ ${
     ? html`<ol class="cards" role="list">
 ${cards}</ol>`
     : html`<p class="meta">${T.noTasksInColumn}</p>`
-}${list.length > BOARD_CAP && html`<p><a href="${href(s)}">${T.showAll(list.length)}</a></p>`}</section>
+}${
+  list.length > BOARD_CAP &&
+  html`<p class="meta">${T.shownOf(BOARD_CAP, list.length)}</p><p><a href="${href(s)}">${viewAllTasks(s, list.length)}</a></p>`
+}</section>
 `,
     ];
   });

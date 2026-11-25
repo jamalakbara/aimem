@@ -111,10 +111,52 @@ describe("board columns equal the task statuses (24 §5.4)", () => {
     const html = open(c);
     expect(col(html, "In review")).toHaveLength(BOARD_CAP);
     expect(columns(html).find(([h]) => h.startsWith("In review"))?.[0]).toBe(`In review ${BOARD_CAP + 5}`);
-    expect(link(html, `Show all ${BOARD_CAP + 5}`)).toBe(`${P}/tasks?status=review`);
+    expect(link(html, `View all ${BOARD_CAP + 5} tasks in review`)).toBe(`${P}/tasks?status=review`);
     // Not when everything is shown already.
     const few = open(only(...tasks(BOARD_CAP, () => ({ status: "review" }))));
-    expect(few).not.toContain("Show all");
+    expect(few).not.toContain("View all");
+    expect(few).not.toContain("Showing");
+  });
+
+  it.each([
+    ["open", "open", "View all 16 open tasks"],
+    ["in_progress", "in_progress", "View all 16 tasks in progress"],
+    ["blocked", "blocked", "View all 16 blocked tasks"],
+    ["review", "review", "View all 16 tasks in review"],
+    ["done", "done", "View all 16 done tasks"],
+    ["cancelled", "cancelled", "View all 16 cancelled tasks"],
+    ["wip", "other", "View all 16 tasks with another status"],
+  ])("says in a column of %s why it stops, and what the link opens", (status, column, label) => {
+    const html = open(only(...tasks(16, () => ({ status }))));
+    const full = find(html, (e) => e.tagName === "section").filter((s) => cardsOf(s).length > 0);
+    expect(full).toHaveLength(1);
+    const section = full[0] as T.Node;
+    expect(within(section, (e) => e.tagName === "p").map((e) => nodeText(e).trim())).toContain(
+      "Showing 10 of 16",
+    );
+    // The name of the link says the number and the status, so it can be read on its own.
+    const links = within(section, (e) => e.tagName === "a" && /^View all/.test(nodeText(e)));
+    expect(links.map((e) => [nodeText(e), attr(e, "href")])).toEqual([
+      [label, `${P}/tasks?status=${column}`],
+    ]);
+    expect(texts(open(only(...tasks(16, () => ({ status }))), { status: column }), "h1")).toHaveLength(1);
+  });
+
+  it("gives every full column its own link name, and only full columns one", () => {
+    const rs = [
+      ...tasks(11, () => ({ status: "open" })),
+      ...Array.from({ length: 12 }, (_, i) => task(100 + i, { status: "done" })),
+      ...Array.from({ length: 10 }, (_, i) => task(200 + i, { status: "review" })),
+    ];
+    const html = open(only(...rs));
+    const names = find(html, (e) => e.tagName === "a" && /^View all/.test(nodeText(e))).map((e) =>
+      nodeText(e),
+    );
+    expect(names).toEqual(["View all 11 open tasks", "View all 12 done tasks"]);
+    expect(texts(html, "p").filter((t) => t.startsWith("Showing"))).toEqual([
+      "Showing 10 of 11",
+      "Showing 10 of 12",
+    ]);
   });
 
   it("says which columns are empty", () => {
