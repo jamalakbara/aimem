@@ -13,7 +13,7 @@ Project: `aimem` · mode: solo · sync: none
 - decision: 5 (proposed 1, accepted 4)
 - task: 12 (done 12)
 - memory: 11 (active 11)
-- handoff: 93 (final 93)
+- handoff: 94 (final 94)
 
 ## Pinned
 - mem-134qcb5d [agent] Project overview — aimem: a git-based shared notebook where humans and AI agents read and write project knowledge as markdown records in .aimem/.
@@ -21,8 +21,8 @@ Project: `aimem` · mode: solo · sync: none
 - mem-gv0gjym6 [agent] Working conventions for this repo — Plan first and wait for approval, one slice per PR, tests first, spec 03 is the contract, contract snapshots change only on purpose, end every session with aimem handoff.
 
 ## Recent handoffs
+- hnd-wznhek8q 2026-11-25 (agent:openbot-frontend) — Done: M5 slice 5.3 on codex/m5-3-search: search box on every notebook page, /search with the hits and order of core search(), filters (type, status, trust, role, include closed), 25 per page, plain-t…
 - hnd-w4tgcae1 2026-11-25 (agent:openbot-backend) — Done: Viewer guard allows an encoded tab in the query only (M5 5.3 decision C) · Next: QA review and merge of the guard change, then 5.3
 - hnd-b5hcbx8t 2026-11-24 (agent:openbot-backend) — Done: Viewer 5.1 follow-ups of QA #111: swap-safe reads, linked .aimem refused, reasons shown, one Ctrl-C · Next: QA review; then core loadIndex fix and xlsx test limit
 - hnd-dxznz3r6 2026-11-24 (agent:openbot-frontend) — Done: M5 slice 5.2 on codex/m5-2-record-page, stacked on 5.1 (#111): layout with notices, record page found by reference only, markdown-it renderer limited to listed tags and attributes, plain-text v…
 - hnd-zj855axj 2026-11-24 (agent:openbot-backend) — Done: M5 slice 5.1: aimem serve web with request guard, safe reads, index cache and a plain dashboard · Next: QA review and merge of 5.1, then 5.2 (Virgi)
-- hnd-7v8epan5 2026-11-24 (agent:openbot-backend) — Done: aimem sources status; sheet row titles and Google names without invisible characters; readable file-name titles · Next: QA review and merge; M5 slice 1 technical plan for owner approval

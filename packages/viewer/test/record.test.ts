@@ -1,86 +1,8 @@
-import { fileURLToPath } from "node:url";
-import {
-  type IndexedRecord,
-  loadProject,
-  loadProjectIndex,
-  nodeFs,
-  type ProjectIndex,
-  sourceWarnings,
-} from "@aimem/core";
-import { parse, type DefaultTreeAdapterTypes as T } from "parse5";
 import { beforeAll, describe, expect, it } from "vitest";
 import { renderMarkdown } from "../src/markdown.js";
 import { MAX_PLAIN_CHARS, MAX_RENDER_CHARS, MAX_SAME_ID, recordPage } from "../src/pages/record.js";
 import type { ViewContext } from "../src/view.js";
-
-const fixture = (name: string) =>
-  fileURLToPath(new URL(`../../../fixtures/projects/${name}`, import.meta.url));
-
-async function context(name: string, over: Partial<ViewContext> = {}): Promise<ViewContext> {
-  const nb = await loadProject(nodeFs, fixture(name));
-  const index = await loadProjectIndex(nb, { fs: nodeFs });
-  return {
-    nb,
-    index,
-    problems: index.problems,
-    warnings: sourceWarnings(index),
-    now: new Date("2026-11-24T00:00:00Z"),
-    ...over,
-  };
-}
-
-/** The fixture with some records replaced or added. */
-function withRecords(ctx: ViewContext, ...records: IndexedRecord[]): ViewContext {
-  const index: ProjectIndex = { ...ctx.index, records: [...ctx.index.records, ...records] };
-  return { ...ctx, index };
-}
-
-function record(over: Partial<IndexedRecord> = {}): IndexedRecord {
-  const base = {
-    id: "mem-zzzzzzzz",
-    type: "memory" as const,
-    status: "active",
-    trust: "verified",
-    title: "Title",
-    summary: "Summary",
-    tags: [],
-    roles: ["all"],
-    paths: [],
-    links: [],
-    author: "human:dana",
-    created: "2026-11-01T00:00:00Z",
-    updated: "2026-11-02T00:00:00Z",
-    fm: {},
-    body: "Body text.",
-    file: ".aimem/memory/mem-zzzzzzzz-title.md",
-    text: "RAW FILE TEXT",
-  };
-  return { ...base, ...over } as IndexedRecord;
-}
-
-const nodeText = (n: T.Node): string =>
-  n.nodeName === "#text" && "value" in n
-    ? n.value
-    : "childNodes" in n
-      ? n.childNodes.map(nodeText).join("")
-      : "";
-function find(html: string, test: (e: T.Element) => boolean): T.Element[] {
-  const out: T.Element[] = [];
-  const walk = (n: T.Node): void => {
-    if ("tagName" in n && test(n)) out.push(n);
-    if ("childNodes" in n) for (const c of n.childNodes) walk(c);
-  };
-  walk(parse(html));
-  return out;
-}
-const texts = (html: string, tag: string) =>
-  find(html, (e) => e.tagName === tag).map((e) => nodeText(e).trim());
-const attr = (e: T.Element | undefined, name: string) => e?.attrs.find((a) => a.name === name)?.value;
-const all = (html: string) =>
-  find(html, (e) => e.tagName === "main")
-    .map(nodeText)
-    .join(" ")
-    .replace(/\s+/g, " ");
+import { all, attr, context, find, nodeText, record, texts, withRecords } from "./pages.js";
 
 let medium: ViewContext;
 let empty: ViewContext;
@@ -420,7 +342,10 @@ describe("layout and error pages", () => {
   });
 
   it("hides Copy reference until the script shows it", () => {
-    const button = find(recordPage(medium, "dec-094vmt9t").html, (e) => e.tagName === "button")[0];
+    const button = find(
+      recordPage(medium, "dec-094vmt9t").html,
+      (e) => attr(e, "data-copy") !== undefined,
+    )[0];
     expect(attr(button, "hidden")).toBe("");
     expect(attr(button, "data-copy")).toBe("dec-094vmt9t");
   });

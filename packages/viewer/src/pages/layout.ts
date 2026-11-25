@@ -1,6 +1,7 @@
 import { type Html, html } from "../html.js";
+import { MAX_QUERY } from "../query.js";
 import { T } from "../strings.js";
-import { projectHref, type ViewContext } from "../view.js";
+import { projectHref, SEARCH_FORM, searchHref, type ViewContext } from "../view.js";
 
 /** A whole page. `header` defaults to a link to the start page. */
 export function layout(title: string, body: Html, header?: Html): string {
@@ -46,12 +47,12 @@ ${
 </aside>`;
 }
 
-/** A page about the notebook: its name, that it is read-only, and what is missing. */
-export function notebookPage(c: ViewContext, title: string, body: Html): string {
+/** A page about the notebook: its name, that it is read-only, the search box, and what is missing. */
+export function notebookPage(c: ViewContext, title: string, body: Html, q = ""): string {
   const { name, project } = c.nb.config;
   return layout(
     title,
     html`${notices(c)}${body}`,
-    html`<a class="project" href="${projectHref(project)}">${name ?? project}</a><span class="badge">${T.readOnly}</span>`,
+    html`<a class="project" href="${projectHref(project)}">${name ?? project}</a><span class="badge">${T.readOnly}</span><form class="search" id="${SEARCH_FORM}" action="${searchHref(project)}" role="search"><input id="q" type="search" name="q" value="${q}" maxlength="${MAX_QUERY}" placeholder="${T.searchRecords}" aria-label="${T.searchRecords}" aria-keyshortcuts="Control+K Meta+K" autocomplete="off" spellcheck="false"><button class="button" type="submit">${T.search}</button></form>`,
   );
 }

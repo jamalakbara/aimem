@@ -8,6 +8,7 @@ import { dashboard } from "./pages/dashboard.js";
 import { errorPage } from "./pages/error.js";
 import { layout } from "./pages/layout.js";
 import { recordPage } from "./pages/record.js";
+import { searchPage } from "./pages/search.js";
 import { findRoot, safeFs } from "./safe-fs.js";
 import { T } from "./strings.js";
 import type { ViewContext } from "./view.js";
@@ -91,7 +92,8 @@ export async function startViewer(o: ViewerOptions): Promise<Viewer> {
     if (a !== "p" || b !== project) return failure(404, T.missing);
     const [section, ref, ...more] = rest;
     const record = section === "r" && ref !== undefined && more.length === 0;
-    if (section !== undefined && !record) return failure(404, T.missing);
+    const searching = section === "search" && ref === undefined;
+    if (section !== undefined && !record && !searching) return failure(404, T.missing);
     let snapshot: Snapshot;
     try {
       snapshot = await cache.get();
@@ -100,8 +102,10 @@ export async function startViewer(o: ViewerOptions): Promise<Viewer> {
     }
     hook();
     const c: ViewContext = { ...snapshot, now: o.clock.now() };
-    if (!record) return page(200, dashboard(c));
-    const found = recordPage(c, ref, { plain: query.get("view") === "plain" });
+    if (section === undefined) return page(200, dashboard(c));
+    const found = record
+      ? recordPage(c, ref, { plain: query.get("view") === "plain" })
+      : searchPage(c, query);
     return page(found.status, found.html);
   }
 

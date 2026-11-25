@@ -33,6 +33,9 @@ export const trustLabel = (trust: string, verified?: unknown): string =>
   trust === "verified" && typeof verified === "string" && verified
     ? `Verified on ${dateLabel(verified)}`
     : (TRUST.get(trust) ?? `Not verified: ${trust}`);
+/** Short name of a trust level, for a choice in a list. */
+export const trustName = (trust: string): string =>
+  trust === "agent" ? "Written by an agent" : trust === "inferred" ? "Inferred draft" : sentence(trust);
 export const systemLabel = (system: string): string => SYSTEMS.get(system) ?? system;
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -47,6 +50,29 @@ export const T = {
   app: "aimem",
   skip: "Skip to content",
   readOnly: "Read-only",
+  search: "Search",
+  searchRecords: "Search records",
+  filters: "Filters",
+  trust: "Verification",
+  role: "Role",
+  any: "All",
+  includeClosed: "Include closed",
+  apply: "Apply filters",
+  clearFilters: "Clear filters",
+  typeAWord: "Type a word to search this notebook.",
+  noMatch: "No matching records",
+  wholeWords: "Search matches whole words. Try a different word or spelling.",
+  keywordOnly: "Keyword search, so the order can differ from aimem search.",
+  filterIgnored: "A filter in the address is not one of the choices, so it was ignored.",
+  queryCut: "Only the first 200 characters were used.",
+  results: (n: number, q: string) => `${n} result${n === 1 ? "" : "s"} for “${q}”`,
+  showing: (a: number, b: number, n: number) => `Showing ${a}–${b} of ${n}.`,
+  page: (n: number) => `page ${n}`,
+  pages: "Pages",
+  previous: "Previous",
+  next: "Next",
+  open: (ref: string) => `Open ${ref}`,
+  movedTo: (to: string) => `Moved to ${to}`,
   records: (n: number) => `${n} record${n === 1 ? "" : "s"}`,
   byStatus: "Records by type and status",
   type: "Type",
