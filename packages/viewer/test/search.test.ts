@@ -17,7 +17,7 @@ const open = (c: ViewContext, params: Record<string, string> | string) =>
   searchPage(c, new URLSearchParams(params)).html;
 /** The results as shown: [record id, title], in order. */
 const hits = (html: string) =>
-  find(html, (e) => e.tagName === "a" && /^r-/.test(attr(e, "id") ?? "")).map((e) => [
+  find(html, (e) => e.tagName === "a" && /^r-(?!direct-)/.test(attr(e, "id") ?? "")).map((e) => [
     decodeURIComponent((attr(e, "href") ?? "").split("/").at(-1) ?? ""),
     nodeText(e),
   ]);
@@ -93,6 +93,27 @@ describe("results equal search() (24 §5.3)", () => {
     expect(seen).toBeGreaterThan(0);
   });
 
+  it("labels every result with its notebook", async () => {
+    const c = await context("multirepo/backend");
+    const other = [
+      record({ id: "mem-aaaaaaaa", title: "Zebra", notebook: "hub" }),
+      record({ id: "mem-bbbbbbbb", title: "Zebra", notebook: "repo:frontend" }),
+      record({ id: "mem-cccccccc", title: "Zebra" }),
+    ];
+    const html = open(withRecords(c, ...other), { q: "zebra" });
+    const shown = find(html, (e) => attr(e, "data-ref") !== undefined).map((li) => [
+      attr(li, "data-ref"),
+      within(li, (b) => attr(b, "class") === "badge")
+        .map(nodeText)
+        .slice(2),
+    ]);
+    expect(shown).toEqual([
+      ["mem-aaaaaaaa", ["hub"]],
+      ["mem-bbbbbbbb", ["repo:frontend"]],
+      ["mem-cccccccc", []],
+    ]);
+  });
+
   it("keeps the order search() gives within a type, which differs from filtering afterwards", () => {
     const q = "webhook payment task claim session handoff token budget search";
     for (const type of RECORD_TYPES)
@@ -141,7 +162,9 @@ describe("pages", () => {
     const first = open(c, { q: "zebra" });
     expect(link(first, "Previous")).toBeUndefined();
     if (n <= PAGE_SIZE) expect(link(first, "Next")).toBeUndefined();
-    if (n > 0) expect(all(first)).toContain(`Showing 1–${Math.min(n, PAGE_SIZE)} of ${n}`);
+    const range = `Showing 1–${PAGE_SIZE} of ${n}.`;
+    if (n > PAGE_SIZE) expect(all(first)).toContain(range);
+    else expect(all(first)).not.toContain("Showing");
   });
 
   it("reads page leniently and stays in range", () => {
@@ -212,6 +235,8 @@ describe("filters in the form", () => {
     expect(values(html, "status")).toEqual(["", ...new Set(Object.values(STATUSES).flat())]);
     expect(values(html, "trust")).toEqual(["", ...TRUST_LEVELS]);
     expect(values(html, "role")).toEqual(["", "analyst", "dev", "devops", "pm", "qa"]);
+    const mixed = open(withRecords(empty, record({ roles: ["data_eng", "QA", "qa", "all"] })), {});
+    expect(values(mixed, "role")).toEqual(["", "QA", "data_eng", "qa"]);
   });
 
   it("offers only short, plain roles, and not too many", () => {
@@ -233,6 +258,25 @@ describe("filters in the form", () => {
     for (const name of ["type", "status", "trust", "role"]) expect(selected(html, name), name).toEqual([""]);
     expect(html).not.toContain("__proto__");
     expect(html).not.toContain("nobody");
+  });
+
+  it("says so when a filter in the address is not one of the choices", () => {
+    const note = "A filter in the address is not one of the choices, so it was ignored.";
+    for (const p of ["type=x", "status=x", "trust=x", "role=nobody", "role=DEV", "type=decision&role=x"])
+      expect(all(open(medium, `q=schema&${p}`)), p).toContain(note);
+    for (const p of ["", "type=&status=&trust=&role=", "type=decision&role=dev", "zz=1", "page=x"])
+      expect(all(open(medium, `q=schema&${p}`)), p).not.toContain(note);
+  });
+
+  it("finds roles with capitals and underscores, exactly as written", () => {
+    const c = withRecords(
+      empty,
+      record({ id: "mem-aaaaaaaa", title: "Zebra", roles: ["QA"] }),
+      record({ id: "mem-bbbbbbbb", title: "Zebra", roles: ["qa", "data_eng"] }),
+    );
+    const ids = (role: string) => hits(open(c, { q: "zebra", role })).map(([id]) => id);
+    expect(ids("QA")).toEqual(["mem-aaaaaaaa"]);
+    expect(ids("data_eng")).toEqual(["mem-bbbbbbbb"]);
   });
 
   it("the longest address a form can make stays under the limit of the guard", () => {
@@ -271,7 +315,7 @@ describe("what the page says", () => {
       const html = open(medium, { q });
       expect(texts(html, "h1"), q).toEqual([`0 results for “${q}”`]);
       expect(all(html)).toContain("No matching records");
-      expect(all(html)).toContain("Search matches whole words. Try another form of the word.");
+      expect(all(html)).toContain("Search matches whole words. Try a different word or spelling.");
       expect(link(html, "Clear filters")).toBeUndefined();
     }
     const filtered = open(medium, { q: "schema", type: "testcase", status: "retired" });
@@ -309,6 +353,16 @@ describe("what the page says", () => {
     ]);
   });
 
+  it("treats a pasted tab as a space, also before the query is cut", () => {
+    const c = withRecords(empty, ...many(30));
+    const html = open(c, { q: "zebra\tzebra" });
+    expect(texts(html, "h1")).toEqual(["30 results for “zebra zebra”"]);
+    expect(link(html, "Next")).not.toContain("%09");
+    expect(html).not.toContain("\t");
+    expect(hits(html)).toEqual(hits(open(c, { q: "zebra zebra" })));
+    expect(all(open(c, { q: `zebra${"\t".repeat(MAX_QUERY - 5)}` }))).not.toContain("Only the first");
+  });
+
   it("cuts a long query and says so", () => {
     const long = `zebra ${"x".repeat(MAX_QUERY)}`;
     const c = withRecords(empty, ...many(1));
@@ -319,6 +373,24 @@ describe("what the page says", () => {
     expect(all(open(c, { q: long.slice(0, MAX_QUERY) }))).not.toContain("Only the first");
     const emoji = open(c, { q: `${"y".repeat(MAX_QUERY - 1)}😀` });
     expect(emoji).not.toMatch(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])/);
+  });
+
+  it("gives the direct link a place to come back to, apart from the results", () => {
+    const ref = "dec-094vmt9t";
+    const c = withRecords(medium, record({ title: `About ${ref}` }));
+    const html = open(c, { q: ref });
+    const direct = find(html, (e) => e.tagName === "a" && nodeText(e) === `Open ${ref}`)[0];
+    expect(attr(direct, "id")).toBe(`r-direct-${ref}`);
+    const ids = find(html, (e) => attr(e, "id") !== undefined).map((e) => attr(e, "id"));
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("marks the search form and the page links for assistive technology", () => {
+    const html = open(withRecords(empty, ...many(60)), { q: "zebra", page: "2" });
+    expect(find(html, (e) => e.tagName === "form").map((e) => attr(e, "role"))).toEqual(["search"]);
+    const rel = (t: string) =>
+      find(html, (e) => e.tagName === "a" && nodeText(e) === t).map((e) => attr(e, "rel"));
+    expect([rel("Previous"), rel("Next")]).toEqual([["prev"], ["next"]]);
   });
 
   it("offers to open a reference that exists, above the unchanged results", () => {

@@ -141,13 +141,13 @@ function results(c: ViewContext, x: Query): { heading: string; title: string; bo
   return {
     heading,
     title: page > 1 ? `${heading}, ${T.page(page)}` : heading,
-    body: html`<p class="meta">${T.showing(from + 1, from + shown.length, n)} ${T.keywordOnly}</p>
+    body: html`${last > 1 && html`<p class="meta">${T.showing(from + 1, from + shown.length, n)}</p>`}
 <ol class="results" role="list">
 ${items}</ol>
 ${
   last > 1 &&
   html`<nav class="pages" aria-label="${T.pages}">${page > 1 && to(page - 1, T.previous, "prev")}${page < last && to(page + 1, T.next, "next")}</nav>`
-}`,
+}<p class="meta">${T.keywordOnly}</p>`,
   };
 }
 
@@ -171,8 +171,9 @@ export function searchPage(c: ViewContext, params: URLSearchParams): Page {
       found ? found.title : T.search,
       html`<h1>${found ? found.heading : T.search}</h1>
 ${filters(x, roles)}
+${x.ignored && html`<p class="note">${T.filterIgnored}</p>`}
 ${x.cutOff && html`<p class="note">${T.queryCut}</p>`}
-${direct && html`<p><a class="button" href="${recordHref(project, direct)}">${T.open(direct)}</a></p>`}
+${direct && html`<p><a class="button" id="r-direct-${direct}" href="${recordHref(project, direct)}">${T.open(direct)}</a></p>`}
 ${found ? found.body : html`<div class="empty"><p>${c.index.records.length ? T.typeAWord : T.none}</p></div>`}`,
       x.q,
     ),

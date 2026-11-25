@@ -6,8 +6,8 @@ import { cut } from "./html.js";
 export const MAX_QUERY = 200;
 export const PAGE_SIZE = 25;
 const MAX_ROLES = 50;
-/** Short and plain, so that the longest address of the form stays under the guard's limit. */
-const ROLE = /^[a-z0-9-]{1,32}$/;
+/** As imports accept them, but short, so that the longest address of the form stays under the guard's limit. */
+const ROLE = /^[a-z0-9][a-z0-9_-]{0,31}$/i;
 
 export const ALL_STATUSES: readonly string[] = [...new Set<string>(Object.values(STATUSES).flat())];
 
@@ -26,13 +26,16 @@ export interface Query {
   trust?: string;
   role?: string;
   closed: boolean;
+  /** A filter in the address is not one of the choices. */
+  ignored: boolean;
   /** At least 1; may be past the end. */
   page: number;
 }
 
-/** Reads an address. Anything unknown is left out, and the first of a repeated parameter counts. */
+/** Reads an address. Anything unknown is left out (an unknown filter is reported), and the first of a repeated parameter counts. */
 export function readQuery(p: URLSearchParams, roles: readonly string[]): Query {
-  const raw = p.get("q") ?? "";
+  // A pasted tab separates words like a space, and would only show in the box and the links.
+  const raw = (p.get("q") ?? "").replaceAll("\t", " ");
   const q = cut(raw, MAX_QUERY);
   const pick = (name: string, allowed: readonly string[]) => allowed.find((v) => v === p.get(name));
   const type = pick("type", RECORD_TYPES);
@@ -40,6 +43,7 @@ export function readQuery(p: URLSearchParams, roles: readonly string[]): Query {
   const trust = pick("trust", TRUST_LEVELS);
   const role = pick("role", roles);
   const page = p.get("page") ?? "";
+  const unknown = (name: string, found: string | undefined) => Boolean(p.get(name)) && !found;
   return {
     q,
     cutOff: q !== raw,
@@ -48,6 +52,8 @@ export function readQuery(p: URLSearchParams, roles: readonly string[]): Query {
     ...(trust ? { trust } : {}),
     ...(role ? { role } : {}),
     closed: p.get("closed") === "1",
+    ignored:
+      unknown("type", type) || unknown("status", status) || unknown("trust", trust) || unknown("role", role),
     page: /^[1-9]\d*$/.test(page) ? Number(page) : 1,
   };
 }

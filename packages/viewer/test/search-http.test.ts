@@ -23,6 +23,13 @@ describe("search over HTTP (24 §5.3)", () => {
     expect([head.status, head.body]).toEqual([200, ""]);
   });
 
+  it("accepts a pasted tab", async () => {
+    const v = await viewer(notebook());
+    const r = await get(v, `${P}/search?q=float%09column`);
+    expect(r.status).toBe(200);
+    expect(r.body).toContain("for “float column”");
+  });
+
   it("answers 404 for anything below it and for another project", async () => {
     const v = await viewer(notebook());
     for (const p of [
