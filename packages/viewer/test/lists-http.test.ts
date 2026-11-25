@@ -71,15 +71,17 @@ describe("lists over HTTP (24 §5.5)", () => {
 });
 
 describe("the lists show what `aimem list` shows (24 §5.5)", () => {
-  const list = (dir: string, type: string, ...args: string[]) => {
-    const r = spawnSync(process.execPath, [BIN, "list", type, ...args, "--json"], {
+  type Listed = { ref: string; type: string; status: string };
+  /** `aimem list [type] --json`. One process lists every type, because a process is slow on some machines. */
+  const list = (dir: string, ...args: string[]): Listed[] => {
+    const r = spawnSync(process.execPath, [BIN, "list", ...args, "--json"], {
       cwd: dir,
       env,
       encoding: "utf8",
-      timeout: 30000,
+      timeout: 60000,
     });
     expect(r.status, r.stderr).toBe(0);
-    return (JSON.parse(r.stdout) as { data: { records: { ref: string; status: string }[] } }).data.records;
+    return (JSON.parse(r.stdout) as { data: { records: Listed[] } }).data.records;
   };
   const pages = async (v: Awaited<ReturnType<typeof viewer>>, base: string) => {
     const got: string[] = [];
@@ -93,28 +95,36 @@ describe("the lists show what `aimem list` shows (24 §5.5)", () => {
     return got;
   };
 
-  it.each(["tiny", "medium", "messy"])("in %s, every type, on its own page and in Browse", async (name) => {
-    const dir = notebook(name);
-    const v = await viewer(dir);
-    const project = (readFileSync(join(dir, ".aimem/project.yaml"), "utf8").match(/^project: (.+)$/m) ??
-      [])[1];
-    for (const type of RECORD_TYPES) {
-      const want = list(dir, type)
-        .map((r) => r.ref)
-        .sort();
-      expect((await pages(v, `/p/${project}/records?type=${type}`)).sort(), `${name} ${type}`).toEqual(want);
-      const own: Record<string, string> = { decision: "decisions", handoff: "handoffs" };
-      if (own[type])
-        expect((await pages(v, `/p/${project}/${own[type]}`)).sort(), `${name} ${own[type]}`).toEqual(want);
-    }
-    const first = list(dir, "decision").map((r) => r.status)[0];
-    if (first) {
-      const want = list(dir, "decision", "--status", first)
-        .map((r) => r.ref)
-        .sort();
-      expect((await pages(v, `/p/${project}/decisions?status=${first}`)).sort()).toEqual(want);
-    }
-  });
+  it.each(["tiny", "medium", "messy"])(
+    "in %s, every type, on its own page and in Browse",
+    async (name) => {
+      const dir = notebook(name);
+      const v = await viewer(dir);
+      const project = (readFileSync(join(dir, ".aimem/project.yaml"), "utf8").match(/^project: (.+)$/m) ??
+        [])[1];
+      const everything = list(dir);
+      for (const type of RECORD_TYPES) {
+        const want = everything
+          .filter((r) => r.type === type)
+          .map((r) => r.ref)
+          .sort();
+        expect((await pages(v, `/p/${project}/records?type=${type}`)).sort(), `${name} ${type}`).toEqual(
+          want,
+        );
+        const own: Record<string, string> = { decision: "decisions", handoff: "handoffs" };
+        if (own[type])
+          expect((await pages(v, `/p/${project}/${own[type]}`)).sort(), `${name} ${own[type]}`).toEqual(want);
+      }
+      const first = everything.find((r) => r.type === "decision")?.status;
+      if (first) {
+        const want = list(dir, "decision", "--status", first)
+          .map((r) => r.ref)
+          .sort();
+        expect((await pages(v, `/p/${project}/decisions?status=${first}`)).sort()).toEqual(want);
+      }
+    },
+    120_000,
+  );
 
   it("in a project with a hub, the decisions of the hub as well", async () => {
     const root = mkdtempSync(join(tmpdir(), "aimem-viewer-multi-"));
@@ -133,5 +143,5 @@ describe("the lists show what `aimem list` shows (24 §5.5)", () => {
     } finally {
       rmSync(root, { recursive: true, force: true, maxRetries: 5 });
     }
-  });
+  }, 120_000);
 });
