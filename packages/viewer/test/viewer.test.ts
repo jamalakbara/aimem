@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import { type Fs, loadIndex, loadProject, nodeFs, summarizeNotebook } from "@aimem/core";
 import { escapeHtml, html } from "@aimem/viewer";
 import { afterEach, describe, expect, it } from "vitest";
+import { statusLabel, typeLabel } from "../src/strings.js";
 import { clean, get, notebook, viewer } from "./helpers.js";
 
 afterEach(clean);
@@ -44,7 +45,9 @@ describe("dashboard", () => {
       Number(m[3]),
     ]);
     expect(cells).toEqual(
-      Object.entries(s.counts).flatMap(([t, by]) => Object.entries(by).map(([st, n]) => [t, st, n])),
+      Object.entries(s.counts).flatMap(([t, by]) =>
+        Object.entries(by).map(([st, n]) => [typeLabel(t), statusLabel(st), n]),
+      ),
     );
     expect(b).toMatch(new RegExp(`Agent-written[^0-9]*${s.unreviewed.agent}\\b`));
     expect(b).toMatch(new RegExp(`Inferred[^0-9]*${s.unreviewed.inferred}\\b`));
@@ -103,6 +106,7 @@ describe("read-only", () => {
 
   it("changes nothing in the project, whatever is requested", async () => {
     const dir = notebook();
+    const id = (await loadIndex(await loadProject(nodeFs, dir), { fs: nodeFs })).records[0]?.id ?? "";
     const before = tree(dir);
     const v = await viewer(dir);
     for (const p of [
@@ -112,6 +116,8 @@ describe("read-only", () => {
       "/assets/app.js",
       "/x",
       "/p/acme-ledger/r/x",
+      `/p/acme-ledger/r/${id}`,
+      `/p/acme-ledger/r/${id}?view=plain`,
     ])
       for (const method of ["GET", "HEAD", "POST", "DELETE"]) await get(v, p, { method });
     expect(tree(dir)).toEqual(before);
@@ -144,7 +150,8 @@ describe("read-only", () => {
       for (const m of text.matchAll(/(?:from|import)\s*\(?\s*"([^"]+)"/g)) {
         const spec = m[1] ?? "";
         expect(
-          spec.startsWith(".") || ["node:http", "node:path", "@aimem/core", "@aimem/schema"].includes(spec),
+          spec.startsWith(".") ||
+            ["node:http", "node:path", "@aimem/core", "@aimem/schema", "markdown-it"].includes(spec),
           `${f}: ${spec}`,
         ).toBe(true);
       }

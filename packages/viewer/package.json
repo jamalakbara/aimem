@@ -10,6 +10,10 @@
   },
   "dependencies": {
     "@aimem/core": "workspace:*",
-    "@aimem/schema": "workspace:*"
+    "@aimem/schema": "workspace:*",
+    "markdown-it": "15.0.3"
+  },
+  "devDependencies": {
+    "parse5": "8.1.1"
   }
 }
