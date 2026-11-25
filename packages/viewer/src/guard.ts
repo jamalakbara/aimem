@@ -6,7 +6,10 @@ export interface Target {
 export type Verdict = { ok: true; target: Target } | { ok: false; status: number; message: string };
 
 const MAX_URL = 2048;
-/** Control characters never belong in a path or query of this site (headers, log lines, NUL in names). */
+/**
+ * Control characters never belong in an address of this site (headers, log lines, NUL in names). One exception:
+ * an encoded tab in the query, because it can be pasted into the search box and browsers keep it there.
+ */
 const CONTROL = /\p{Cc}/u;
 
 /**
@@ -30,15 +33,16 @@ export function checkRequest(
 
   const url = req.url ?? "";
   if (url.length > MAX_URL) return no(414, "The address is too long.");
-  if (!url.startsWith("/") || url.startsWith("//")) return no(400, "The address is not valid.");
+  if (!url.startsWith("/") || url.startsWith("//") || CONTROL.test(url))
+    return no(400, "The address is not valid.");
   const cut = url.indexOf("?");
   const path = cut < 0 ? url : url.slice(0, cut);
   const search = cut < 0 ? "" : url.slice(cut + 1);
   let segments: string[];
   try {
     segments = path.split("/").slice(1).map(decodeURIComponent);
-    if (CONTROL.test(segments.join("")) || CONTROL.test(decodeURIComponent(search.replaceAll("+", " "))))
-      return no(400, "The address is not valid.");
+    const query = decodeURIComponent(search.replaceAll("+", " ")).replaceAll("\t", " ");
+    if (CONTROL.test(segments.join("")) || CONTROL.test(query)) return no(400, "The address is not valid.");
   } catch {
     return no(400, "The address is not valid.");
   }
