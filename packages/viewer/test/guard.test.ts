@@ -1,5 +1,6 @@
 import type { Viewer } from "@aimem/viewer";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { checkRequest } from "../src/guard.js";
 import { clean, get, notebook, raw, viewer } from "./helpers.js";
 
 let v: Viewer;
@@ -63,6 +64,30 @@ describe("request guard (24 §5.1)", () => {
       "/p/x?q=%zz",
     ])
       expect(await status(`GET ${t} HTTP/1.1\r\nHost: ${host}\r\n\r\n`), t).toBe(400);
+  });
+
+  it("allows an encoded tab in the query, and no other control character anywhere", async () => {
+    const at = (t: string) => status(`GET ${t} HTTP/1.1\r\nHost: ${host}\r\nConnection: close\r\n\r\n`);
+    const page = "/p/acme-ledger";
+    // A tab can be pasted into the search box; browsers send it as %09.
+    for (const q of ["q=a%09b", "q=%09", "q=a%09%09b+c", "a%09b=c", "q=%2509"])
+      expect(await at(`${page}?${q}`), q).toBe(200);
+    for (let n = 0; n < 0xa0; n++) {
+      if (n === 9 || (n >= 0x20 && n < 0x7f)) continue;
+      const c = encodeURIComponent(String.fromCharCode(n));
+      expect(await at(`${page}?q=a${c}b`), `query ${c}`).toBe(400);
+      expect(await at(`${page}?q=a%09${c}`), `query tab and ${c}`).toBe(400);
+      expect(await at(`${page}/a${c}b`), `path ${c}`).toBe(400);
+    }
+    for (const t of [`${page}/a%09b`, `${page}%09`, "/%09", "/assets/%09style.css", `${page}/%09?q=a%09b`])
+      expect(await at(t), t).toBe(400);
+    // Not encoded: no browser sends that. Node's parser refuses it first, so the guard is asked directly.
+    const direct = (url: string) => checkRequest({ method: "GET", url, rawHeaders: ["Host", host] }, v.port);
+    expect(direct(`${page}?q=a%09b`)).toMatchObject({ ok: true });
+    for (const t of [`${page}?q=a\tb`, `${page}\t?q=a`, `${page}?q=a\fb`]) {
+      expect(await at(t), JSON.stringify(t)).toBe(400);
+      expect(direct(t), JSON.stringify(t)).toMatchObject({ ok: false, status: 400 });
+    }
   });
 
   it("answers 405 with Allow to every method but GET and HEAD", async () => {
