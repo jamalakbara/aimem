@@ -26,7 +26,7 @@ interface Budget {
 }
 
 /** Records by id. Two local files can carry the same id, so each id has a list. */
-type ById = ReadonlyMap<string, readonly IndexedRecord[]>;
+export type ById = ReadonlyMap<string, readonly IndexedRecord[]>;
 
 const text = (v: unknown): string | undefined =>
   typeof v === "string" && v ? v : typeof v === "number" ? String(v) : undefined;
@@ -54,7 +54,8 @@ const EXTRA: readonly (readonly [key: string, label: string])[] = [
   ["branch", "Branch"],
 ];
 
-function refLink(c: ViewContext, ref: string, byId: ById): Html {
+/** A reference as a link to the record, with how far it can be trusted; as text when this notebook does not have it. */
+export function refLink(c: ViewContext, ref: string, byId: ById): Html {
   const { project } = c.nb.config;
   const { project: other, id } = parseRef(ref);
   const target = other === undefined || other === project ? byId.get(id)?.[0] : undefined;

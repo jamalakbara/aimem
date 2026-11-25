@@ -123,6 +123,11 @@ main.wide { max-width: 1320px; }
 .board h2 { font-size: 15px; margin: 0 0 12px; }
 .board .count { color: var(--ink-2); font-weight: 400; }
 .board section > p { margin: 0 0 4px; }
+.types { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.types li { background: var(--panel); border-radius: 8px; box-shadow: var(--ring); }
+.types a { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 44px; padding: 10px 16px; color: var(--ink); text-decoration: none; }
+.types a:hover { background: var(--well); border-radius: 8px; }
+.types .meta { font-size: 14px; }
 .cards { list-style: none; margin: 0 0 8px; padding: 0; }
 .cards li { background: var(--panel); border-radius: 8px; box-shadow: var(--ring); padding: 12px; margin: 0 0 8px; }
 .cards h3 { font-size: 14px; margin: 0 0 6px; line-height: 20px; }
@@ -145,5 +150,5 @@ main.wide { max-width: 1320px; }
   input[type="search"], select { font-size: 16px; }
 }
 @media (prefers-reduced-motion: no-preference) { .button { transition: background-color 150ms; } }
-@media (forced-colors: active) { .badge, .button, article, .chips a, .cards li { border: 1px solid; } }
+@media (forced-colors: active) { .badge, .button, article, .chips a, .cards li, .types li { border: 1px solid; } }
 `;

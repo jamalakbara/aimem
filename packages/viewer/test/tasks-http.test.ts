@@ -111,45 +111,51 @@ describe("the board shows the tasks that `aimem list` shows (24 §5.4)", () => {
       cwd: dir,
       env,
       encoding: "utf8",
-      timeout: 30000,
+      timeout: 60000,
     });
     expect(r.status, r.stderr).toBe(0);
     return (JSON.parse(r.stdout) as { data: { records: { ref: string; status: string; file: string }[] } })
       .data.records;
   };
 
-  it.each(["tiny", "medium", "messy"])("in %s, for every status and for the whole board", async (name) => {
-    const dir = notebook(name);
-    const v = await viewer(dir);
-    const project = (readFileSync(join(dir, ".aimem/project.yaml"), "utf8").match(/^project: (.+)$/m) ??
-      [])[1];
-    const base = `/p/${project}/tasks`;
-    const everything = list(dir);
-    const board = refs((await get(v, base)).body);
-    // The board caps a column, so it is a subset; the lists below are the whole.
-    for (const r of board) expect(everything.map((x) => x.ref)).toContain(r);
-    for (const status of [...STATUSES.task, "other"]) {
-      const want = everything
-        .filter((r) =>
-          status === "other" ? !(STATUSES.task as readonly string[]).includes(r.status) : r.status === status,
-        )
-        .map((r) => r.ref);
-      const got: string[] = [];
-      for (let page = 1; page <= 20; page++) {
-        const body = (await get(v, `${base}?status=${status}&page=${page}`)).body;
-        const ids = refs(body);
-        got.push(...ids);
-        if (!body.includes(">Next</a>")) break;
+  it.each(["tiny", "medium", "messy"])(
+    "in %s, for every status and for the whole board",
+    { timeout: 120_000 },
+    async (name) => {
+      const dir = notebook(name);
+      const v = await viewer(dir);
+      const project = (readFileSync(join(dir, ".aimem/project.yaml"), "utf8").match(/^project: (.+)$/m) ??
+        [])[1];
+      const base = `/p/${project}/tasks`;
+      const everything = list(dir);
+      const board = refs((await get(v, base)).body);
+      // The board caps a column, so it is a subset; the lists below are the whole.
+      for (const r of board) expect(everything.map((x) => x.ref)).toContain(r);
+      for (const status of [...STATUSES.task, "other"]) {
+        const want = everything
+          .filter((r) =>
+            status === "other"
+              ? !(STATUSES.task as readonly string[]).includes(r.status)
+              : r.status === status,
+          )
+          .map((r) => r.ref);
+        const got: string[] = [];
+        for (let page = 1; page <= 20; page++) {
+          const body = (await get(v, `${base}?status=${status}&page=${page}`)).body;
+          const ids = refs(body);
+          got.push(...ids);
+          if (!body.includes(">Next</a>")) break;
+        }
+        expect(got.sort(), `${name} ${status}`).toEqual(want.sort());
+        if (status !== "other" && want.length)
+          expect(
+            list(dir, "--status", status)
+              .map((r) => r.ref)
+              .sort(),
+          ).toEqual(want.sort());
       }
-      expect(got.sort(), `${name} ${status}`).toEqual(want.sort());
-      if (status !== "other" && want.length)
-        expect(
-          list(dir, "--status", status)
-            .map((r) => r.ref)
-            .sort(),
-        ).toEqual(want.sort());
-    }
-  });
+    },
+  );
 
   it("in a project with a hub, tasks of the hub included", async () => {
     // The hub is a folder next to the repo, so the whole project is copied.

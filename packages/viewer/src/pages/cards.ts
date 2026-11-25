@@ -79,6 +79,17 @@ export function chips(label: string, items: readonly Chip[]): Html {
   )}</nav>`;
 }
 
+/** The records by id. Two files can carry one id, so each id has a list. */
+export function byIdMap(records: readonly IndexedRecord[]): Map<string, IndexedRecord[]> {
+  const by = new Map<string, IndexedRecord[]>();
+  for (const r of records) {
+    const same = by.get(r.id);
+    if (same) same.push(r);
+    else by.set(r.id, [r]);
+  }
+  return by;
+}
+
 /** Code-unit order, so that it does not depend on the language of the computer. */
 export const compare = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 /** The last ties of every list: id, then notebook, then file. */
@@ -87,3 +98,6 @@ export const byRecord = (a: IndexedRecord, b: IndexedRecord): number =>
 /** Newest update first. */
 export const byUpdated = (a: IndexedRecord, b: IndexedRecord): number =>
   compare(b.updated, a.updated) || byRecord(a, b);
+/** Newest first, as the latest handoff of the dashboard is picked; ties by id, notebook and file. */
+export const byCreated = (a: IndexedRecord, b: IndexedRecord): number =>
+  compare(b.created, a.created) || byRecord(a, b);

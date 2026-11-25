@@ -577,6 +577,9 @@ describe("the way to the page (24 §5.4)", () => {
     const links = within(n as T.Node, (e) => e.tagName === "a");
     expect(links.map((e) => [nodeText(e), attr(e, "href"), attr(e, "aria-current")])).toEqual([
       ["Tasks", `${P}/tasks`, "page"],
+      ["Decisions", `${P}/decisions`, undefined],
+      ["Handoffs", `${P}/handoffs`, undefined],
+      ["Browse", `${P}/records`, undefined],
     ]);
     const header = find(html, (e) => e.tagName === "header")[0];
     expect(
@@ -609,7 +612,7 @@ describe("the way to the page (24 §5.4)", () => {
   it("only links to pages that exist", () => {
     const [n] = nav(open(medium));
     for (const a of within(n as T.Node, (e) => e.tagName === "a"))
-      expect(attr(a, "href")).toMatch(/^\/p\/aimem\/(tasks)$/);
+      expect(attr(a, "href")).toMatch(/^\/p\/aimem\/(tasks|decisions|handoffs|records)$/);
   });
 
   it("offers the board in a desktop layout, a stacked one on a phone, and no horizontal scroll", async () => {
