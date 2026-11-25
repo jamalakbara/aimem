@@ -72,6 +72,9 @@ export const severityLabel = (severity: unknown): string | undefined => {
   return m ? `Sev ${m[1]}` : undefined;
 };
 export const tasksHeading = (status: string): string => TASKS_BY_STATUS.get(status) ?? "Tasks";
+/** The link under a full column. It ends as the heading of the list it opens, so it can be read on its own. */
+export const viewAllTasks = (status: string, n: number): string =>
+  `View all ${n} ${tasksHeading(status).toLowerCase()}`;
 export const systemLabel = (system: string): string => SYSTEMS.get(system) ?? system;
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -125,7 +128,7 @@ export const T = {
   noTasks: "No tasks yet",
   noTasksInColumn: "No tasks",
   otherStatus: "Other status",
-  showAll: (n: number) => `Show all ${n}`,
+  shownOf: (shown: number, n: number) => `Showing ${shown} of ${n}`,
   withCount: (label: string, n: number) => `${label} (${n})`,
   priority: "Priority",
   blockedBy: (n: number) => `Blocked by ${n} task${n === 1 ? "" : "s"}`,
