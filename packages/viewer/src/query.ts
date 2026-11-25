@@ -17,6 +17,23 @@ export function roleChoices(records: readonly IndexedRecord[]): string[] {
   return [...found].sort().slice(0, MAX_ROLES);
 }
 
+/** A page number from an address: at least 1, anything else counts as 1. It may be past the end. */
+export function readPage(p: URLSearchParams): number {
+  const page = p.get("page") ?? "";
+  return /^[1-9]\d*$/.test(page) ? Number(page) : 1;
+}
+
+/** One of the allowed values, as written. `unknown` is set when something else was given (not for an empty value). */
+export function readChoice<T extends string>(
+  p: URLSearchParams,
+  name: string,
+  allowed: readonly T[],
+): { value?: T; unknown: boolean } {
+  const given = p.get(name);
+  const value = allowed.find((v) => v === given);
+  return { ...(value !== undefined ? { value } : {}), unknown: Boolean(given) && value === undefined };
+}
+
 export interface Query {
   q: string;
   /** The address had more characters than are used. */
@@ -42,7 +59,6 @@ export function readQuery(p: URLSearchParams, roles: readonly string[]): Query {
   const status = pick("status", ALL_STATUSES);
   const trust = pick("trust", TRUST_LEVELS);
   const role = pick("role", roles);
-  const page = p.get("page") ?? "";
   const unknown = (name: string, found: string | undefined) => Boolean(p.get(name)) && !found;
   return {
     q,
@@ -54,7 +70,7 @@ export function readQuery(p: URLSearchParams, roles: readonly string[]): Query {
     closed: p.get("closed") === "1",
     ignored:
       unknown("type", type) || unknown("status", status) || unknown("trust", trust) || unknown("role", role),
-    page: /^[1-9]\d*$/.test(page) ? Number(page) : 1,
+    page: readPage(p),
   };
 }
 

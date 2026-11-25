@@ -1,6 +1,6 @@
 # 24 — M5 Web Viewer Plan
 
-Status: **approved by the owner (2026-11-24) with the recommended defaults below.** Slices land one PR at a time; this line records which are implemented: **5.1** (server, guard, index cache, plain dashboard), **5.2** (layout, record page, markdown renderer, error pages; pages use the auto-escaping `html` template of 5.1; besides `href`, `rel` and `class` the renderer writes an integer `start` on lists and the constants `scope="col"` and `tabindex="0"`; the limits count characters), **5.3** (search page, filters, pages, search key; the owner approved its plan on 2026-11-25). This plan turns the M5 entry in 13 and the local mode in 10 §2 into PRs. It builds on the PM task list (Nanda), the UX spec (Ajaw), backend constraints and review (Eko), the QA test plan items 20–33 (Opan) and the acceptance script (Wisnu).
+Status: **approved by the owner (2026-11-24) with the recommended defaults below.** Slices land one PR at a time; this line records which are implemented: **5.1** (server, guard, index cache, plain dashboard), **5.2** (layout, record page, markdown renderer, error pages; pages use the auto-escaping `html` template of 5.1; besides `href`, `rel` and `class` the renderer writes an integer `start` on lists and the constants `scope="col"` and `tabindex="0"`; the limits count characters), **5.3** (search page, filters, pages, search key; the owner approved its plan on 2026-11-25), **5.4** (task board, list of one status, header links, shared cards; the owner approved the plan of 5.4 and 5.5 on 2026-11-25). This plan turns the M5 entry in 13 and the local mode in 10 §2 into PRs. It builds on the PM task list (Nanda), the UX spec (Ajaw), backend constraints and review (Eko), the QA test plan items 20–33 (Opan) and the acceptance script (Wisnu).
 
 M5 acceptance (13): a non-developer teammate answers three scripted questions ("why did we choose X?", "what's in QA?", "what happened in incident Y?") without help.
 
@@ -76,6 +76,17 @@ Markdown, 200 KB per input, 16 inputs (time to render):
 - Search is a plain GET form that works without JavaScript; the script adds `Ctrl/⌘+K`. Query, filters and page live in the URL, so Back restores them; the selected hit is kept as a fragment so focus returns to it. Query at most 200 characters; 25 results per page.
 - Results are `search(index, q, …)` with the filters as its options (`type`, `status`, `role`, include closed) and no limit; the trust filter is applied to the hits afterwards, so their order stays. Filtering by type afterwards would give another order. A query that is a reference of this notebook adds a link to that record above the unchanged results, because `search()` does not look at ids. Unknown filter values are ignored, and the page says so. A tab in the query counts as a space. Each result shows type, status, trust, reference, summary and a plain-text excerpt of at most 240 characters.
 - Every list shows trust as text, so an inferred draft cannot pass for a verified record.
+
+## 5.4 — Task board
+
+Decided with the owner's approval of the 5.4–5.5 plan (2026-11-25):
+
+- `/p/:project/tasks`: one column per status of the schema (`STATUSES.task`) plus an **Other status** column when a task has a status that is not in the schema (the index keeps such records; `validate` reports them), so the board holds the same tasks as `aimem list task`, not those of `filterRecords()` (which hides `done` and `cancelled`). `?status=` shows one status as a list of 25 per page (`Tasks in review` is `?status=review`); `page` as in search. An unknown value is ignored and the page says so, without repeating it.
+- A column shows 10 cards. A fuller column says `Showing 10 of 16` and links to the list of that status with a name that can be read on its own (`View all 16 open tasks`, `View all 16 tasks with another status`; UX review). Without a limit, 5,000 tasks in one column made a 1.8 MB page.
+- Order: a column by priority (`p0`–`p3`; a task without priority counts as `DEFAULT_PRIORITY`, `p2`, 03 §3.2; an invalid value comes last), then newest `updated`, then id, notebook and file. **Done** and **Cancelled** by newest `updated`, whatever the priority. Plain code-unit comparison, so the order does not depend on the language of the computer.
+- One HTML for every screen: six columns from 1100 px, three by two from 768 px, stacked groups below. No script, no `User-Agent`, no sideways scroll. Cards do not repeat the type or the status that the column says; a priority is shown only when the record has one; trust is always shown as text.
+- Header links (`Tasks`) on every notebook page, with the open page marked `aria-current="page"`. Only pages that exist are linked (`SECTIONS` in `view.ts`). Pages without a notebook (404, 500, 503) have none.
+- Cards, page links and filter chips live in `pages/cards.ts`; search uses them with byte-identical output.
 
 ## 5.4–5.7 — Lists, dashboard and sources
 
