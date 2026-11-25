@@ -90,7 +90,7 @@ Solo level (M0–M2) is the first usable product and the fastest way to learn wh
 
 ## M5 — Web viewer, read-only (M)
 **Deliverables**
-- `aimem serve web` (local), server-rendered (24, ADR-018). The Next.js app arrives with M6. Status: slices 5.1 (server, guard, index cache, plain dashboard) and 5.2 (layout, record page, markdown).
+- `aimem serve web` (local), server-rendered (24, ADR-018). The Next.js app arrives with M6. Status: slices 5.1 (server, guard, index cache, plain dashboard), 5.2 (layout, record page, markdown) and 5.3 (search).
 - Dashboard, search, record page, decision timeline, task board (read-only), handoff feed, role lenses.
 - Import guide (upload moves to M6, 24), source badges, **Edit at source** on externally-owned records.
 - Markdown sanitization, a11y checks.

@@ -116,6 +116,8 @@ describe("read-only", () => {
       "/assets/app.js",
       "/x",
       "/p/acme-ledger/r/x",
+      "/p/acme-ledger/search",
+      "/p/acme-ledger/search?q=float&closed=1",
       `/p/acme-ledger/r/${id}`,
       `/p/acme-ledger/r/${id}?view=plain`,
     ])
