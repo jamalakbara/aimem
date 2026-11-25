@@ -9,9 +9,10 @@ import { errorPage } from "./pages/error.js";
 import { layout } from "./pages/layout.js";
 import { recordPage } from "./pages/record.js";
 import { searchPage } from "./pages/search.js";
+import { tasksPage } from "./pages/tasks.js";
 import { findRoot, safeFs } from "./safe-fs.js";
 import { T } from "./strings.js";
-import type { ViewContext } from "./view.js";
+import type { Page, Section, ViewContext } from "./view.js";
 
 export interface ViewerOptions {
   fs: Fs;
@@ -47,6 +48,10 @@ const HEADERS = {
   "Cross-Origin-Opener-Policy": "same-origin",
   "Cache-Control": "no-store",
 };
+/** The pages that list records, by the segment after the project. Each is added to the header links in view.ts. */
+const LISTS: ReadonlyMap<Section, (c: ViewContext, query: URLSearchParams) => Page> = new Map([
+  ["tasks", tasksPage],
+]);
 const HTML = "text/html; charset=utf-8";
 const TEXT = "text/plain; charset=utf-8";
 
@@ -93,7 +98,8 @@ export async function startViewer(o: ViewerOptions): Promise<Viewer> {
     const [section, ref, ...more] = rest;
     const record = section === "r" && ref !== undefined && more.length === 0;
     const searching = section === "search" && ref === undefined;
-    if (section !== undefined && !record && !searching) return failure(404, T.missing);
+    const list = ref === undefined ? LISTS.get(section as Section) : undefined;
+    if (section !== undefined && !record && !searching && !list) return failure(404, T.missing);
     let snapshot: Snapshot;
     try {
       snapshot = await cache.get();
@@ -103,9 +109,11 @@ export async function startViewer(o: ViewerOptions): Promise<Viewer> {
     hook();
     const c: ViewContext = { ...snapshot, now: o.clock.now() };
     if (section === undefined) return page(200, dashboard(c));
-    const found = record
-      ? recordPage(c, ref, { plain: query.get("view") === "plain" })
-      : searchPage(c, query);
+    const found = list
+      ? list(c, query)
+      : record
+        ? recordPage(c, ref, { plain: query.get("view") === "plain" })
+        : searchPage(c, query);
     return page(found.status, found.html);
   }
 

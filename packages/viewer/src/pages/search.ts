@@ -1,4 +1,4 @@
-import { type IndexedRecord, search, tokenize } from "@aimem/core";
+import { search, tokenize } from "@aimem/core";
 import { parseRef, RECORD_TYPES, REF_RE, TRUST_LEVELS } from "@aimem/schema";
 import { cut, type Html, html } from "../html.js";
 import {
@@ -11,8 +11,9 @@ import {
   searchOptions,
   writeQuery,
 } from "../query.js";
-import { statusLabel, T, trustLabel, trustName, typeLabel } from "../strings.js";
+import { statusLabel, T, trustName, typeLabel } from "../strings.js";
 import { type Page, recordHref, SEARCH_FORM, searchHref, type ViewContext } from "../view.js";
+import { anchors, card, idCounts, pager } from "./cards.js";
 import { notebookPage } from "./layout.js";
 
 /** How far down a body is looked at, and how much of it is shown, in UTF-16 units. */
@@ -93,21 +94,6 @@ ${select(
 <button class="button" type="submit" form="${SEARCH_FORM}">${T.apply}</button>
 </div>`;
 
-function result(
-  c: ViewContext,
-  r: IndexedRecord,
-  anchor: string,
-  shared: boolean,
-  terms: ReadonlySet<string>,
-): Html {
-  const found = excerpt(r.body, terms);
-  const moved = r.fm.moved_to;
-  return html`<li data-ref="${r.id}"><h2><a id="${anchor}" href="${recordHref(c.nb.config.project, r.id)}">${r.title}</a></h2>
-<p class="facts"><span class="badge">${typeLabel(r.type)}</span> <span class="badge">${statusLabel(r.status)}</span> <span class="badge ${r.trust === "verified" ? "ok" : "warn"}">${trustLabel(r.trust, r.fm.verified)}</span>${r.notebook && html` <span class="badge">${r.notebook}</span>`} <span class="meta">${r.id}</span></p>
-${typeof moved === "string" && html`<p class="meta">${T.movedTo(moved)}</p>`}${shared && html`<p class="meta">${r.file}</p>`}<p>${r.summary}</p>${found && html`<p class="excerpt">${found}</p>`}</li>
-`;
-}
-
 function results(c: ViewContext, x: Query): { heading: string; title: string; body: Html } {
   const { project } = c.nb.config;
   const hits = search(c.index, x.q, searchOptions(x)).filter((h) => !x.trust || h.record.trust === x.trust);
@@ -124,30 +110,26 @@ function results(c: ViewContext, x: Query): { heading: string; title: string; bo
         html`<p><a class="button" href="${searchHref(project)}?${new URLSearchParams({ q: x.q })}">${T.clearFilters}</a></p>`
       }</div>`,
     };
-  const count = new Map<string, number>();
-  for (const r of c.index.records) count.set(r.id, (count.get(r.id) ?? 0) + 1);
+  const count = idCounts(c.index.records);
   const terms = new Set(tokenize(x.q));
   const from = (page - 1) * PAGE_SIZE;
   const shown = hits.slice(from, from + PAGE_SIZE);
-  // The id of a link is where Back returns to; a second record with the same id gets its own.
-  const used = new Map<string, number>();
+  const anchor = anchors();
   const items = shown.map(({ record: r }) => {
-    const k = (used.get(r.id) ?? 0) + 1;
-    used.set(r.id, k);
-    return result(c, r, k > 1 ? `r-${r.id}-${k}` : `r-${r.id}`, (count.get(r.id) ?? 0) > 1, terms);
+    const found = excerpt(r.body, terms);
+    return card(c, r, {
+      anchor: anchor(r.id),
+      shared: (count.get(r.id) ?? 0) > 1,
+      after: found && html`<p class="excerpt">${found}</p>`,
+    });
   });
-  const to = (p: number, text: string, rel: string) =>
-    html`<a class="button" rel="${rel}" href="${searchHref(project)}?${writeQuery(x, p)}">${text}</a> `;
   return {
     heading,
     title: page > 1 ? `${heading}, ${T.page(page)}` : heading,
     body: html`${last > 1 && html`<p class="meta">${T.showing(from + 1, from + shown.length, n)}</p>`}
 <ol class="results" role="list">
 ${items}</ol>
-${
-  last > 1 &&
-  html`<nav class="pages" aria-label="${T.pages}">${page > 1 && to(page - 1, T.previous, "prev")}${page < last && to(page + 1, T.next, "next")}</nav>`
-}<p class="meta">${T.keywordOnly}</p>`,
+${pager((p) => `${searchHref(project)}?${writeQuery(x, p)}`, page, last)}<p class="meta">${T.keywordOnly}</p>`,
   };
 }
 

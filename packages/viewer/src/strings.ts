@@ -36,6 +36,19 @@ export const trustLabel = (trust: string, verified?: unknown): string =>
 /** Short name of a trust level, for a choice in a list. */
 export const trustName = (trust: string): string =>
   trust === "agent" ? "Written by an agent" : trust === "inferred" ? "Inferred draft" : sentence(trust);
+/** A column of the task board, and the heading of the list of one status. */
+export const columnLabel = (status: string): string =>
+  status === "other" ? T.otherStatus : statusLabel(status);
+const TASKS_BY_STATUS: ReadonlyMap<string, string> = new Map([
+  ["open", "Open tasks"],
+  ["in_progress", "Tasks in progress"],
+  ["blocked", "Blocked tasks"],
+  ["review", "Tasks in review"],
+  ["done", "Done tasks"],
+  ["cancelled", "Cancelled tasks"],
+  ["other", "Tasks with another status"],
+]);
+export const tasksHeading = (status: string): string => TASKS_BY_STATUS.get(status) ?? "Tasks";
 export const systemLabel = (system: string): string => SYSTEMS.get(system) ?? system;
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -73,6 +86,17 @@ export const T = {
   next: "Next",
   open: (ref: string) => `Open ${ref}`,
   movedTo: (to: string) => `Moved to ${to}`,
+  sections: "Sections",
+  tasks: "Tasks",
+  noTasks: "No tasks yet",
+  noTasksInColumn: "No tasks",
+  otherStatus: "Other status",
+  showAll: (n: number) => `Show all ${n}`,
+  withCount: (label: string, n: number) => `${label} (${n})`,
+  priority: "Priority",
+  blockedBy: (n: number) => `Blocked by ${n} task${n === 1 ? "" : "s"}`,
+  due: (date: string) => `Due ${date}`,
+  titled: (heading: string, n: number) => `${heading}: ${n}`,
   records: (n: number) => `${n} record${n === 1 ? "" : "s"}`,
   byStatus: "Records by type and status",
   type: "Type",

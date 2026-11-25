@@ -1,10 +1,18 @@
 import { type Html, html } from "../html.js";
 import { MAX_QUERY } from "../query.js";
 import { T } from "../strings.js";
-import { projectHref, SEARCH_FORM, searchHref, type ViewContext } from "../view.js";
+import {
+  projectHref,
+  SEARCH_FORM,
+  SECTIONS,
+  type Section,
+  searchHref,
+  sectionHref,
+  type ViewContext,
+} from "../view.js";
 
-/** A whole page. `header` defaults to a link to the start page. */
-export function layout(title: string, body: Html, header?: Html): string {
+/** A whole page. `header` defaults to a link to the start page. `wide` gives the content more room (the task board). */
+export function layout(title: string, body: Html, header?: Html, wide = false): string {
   return String(html`<!doctype html>
 <html lang="en">
 <head>
@@ -17,7 +25,7 @@ export function layout(title: string, body: Html, header?: Html): string {
 <body>
 <a class="skip" href="#main">${T.skip}</a>
 <header class="top">${header ?? html`<a class="project" href="/">${T.app}</a>`}</header>
-<main id="main" tabindex="-1">
+<main id="main" tabindex="-1"${wide && html` class="wide"`}>
 ${body}
 </main>
 </body>
@@ -47,12 +55,35 @@ ${
 </aside>`;
 }
 
-/** A page about the notebook: its name, that it is read-only, the search box, and what is missing. */
-export function notebookPage(c: ViewContext, title: string, body: Html, q = ""): string {
+const SECTION_NAMES: Record<Section, string> = { tasks: T.tasks };
+
+/** The lists of records, as links. The page that is shown is marked as the current one. */
+function sections(project: string, current?: Section): Html {
+  return html`<nav class="sections" aria-label="${T.sections}">${SECTIONS.map(
+    (s) =>
+      html`<a${s === current && html` aria-current="page"`} href="${sectionHref(project, s)}">${SECTION_NAMES[s]}</a>`,
+  )}</nav>`;
+}
+
+export interface NotebookPageOptions {
+  /** The list that is open, for the header. */
+  current?: Section;
+  wide?: boolean;
+}
+
+/** A page about the notebook: its name, that it is read-only, the lists, the search box, and what is missing. */
+export function notebookPage(
+  c: ViewContext,
+  title: string,
+  body: Html,
+  q = "",
+  o: NotebookPageOptions = {},
+): string {
   const { name, project } = c.nb.config;
   return layout(
     title,
     html`${notices(c)}${body}`,
-    html`<a class="project" href="${projectHref(project)}">${name ?? project}</a><span class="badge">${T.readOnly}</span><form class="search" id="${SEARCH_FORM}" action="${searchHref(project)}" role="search"><input id="q" type="search" name="q" value="${q}" maxlength="${MAX_QUERY}" placeholder="${T.searchRecords}" aria-label="${T.searchRecords}" aria-keyshortcuts="Control+K Meta+K" autocomplete="off" spellcheck="false"><button class="button" type="submit">${T.search}</button></form>`,
+    html`<a class="project" href="${projectHref(project)}">${name ?? project}</a><span class="badge">${T.readOnly}</span>${sections(project, o.current)}<form class="search" id="${SEARCH_FORM}" action="${searchHref(project)}" role="search"><input id="q" type="search" name="q" value="${q}" maxlength="${MAX_QUERY}" placeholder="${T.searchRecords}" aria-label="${T.searchRecords}" aria-keyshortcuts="Control+K Meta+K" autocomplete="off" spellcheck="false"><button class="button" type="submit">${T.search}</button></form>`,
+    o.wide,
   );
 }

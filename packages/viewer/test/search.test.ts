@@ -248,6 +248,11 @@ describe("filters in the form", () => {
       expect(find(html, (o) => o.tagName === "option" && attr(o, "value") === bad)).toEqual([]);
   });
 
+  it("does not offer a role that starts with a mark", () => {
+    const html = open(withRecords(empty, record({ roles: ["_x", "-x", "x_", "x-", "0a"] })), {});
+    expect(values(html, "role")).toEqual(["", "0a", "x-", "x_"]);
+  });
+
   it("ignores unknown values and repeated parameters, and shows All", () => {
     const want = hits(open(medium, { q: "schema" }));
     const html = open(
@@ -345,6 +350,17 @@ describe("what the page says", () => {
     expect(texts(open(withRecords(empty, ...many(30)), { q: "zebra", page: "2" }), "title")).toEqual([
       "30 results for “zebra”, page 2 · aimem",
     ]);
+  });
+
+  it("says that the order can differ, below the list and only when there is one", () => {
+    const note = "Keyword search, so the order can differ from aimem search.";
+    const html = open(medium, { q: "schema" });
+    const text = all(html);
+    expect(text).toContain(note);
+    expect(text.indexOf(note)).toBeGreaterThan(text.indexOf(hits(html)[0]?.[1] ?? "\u0000"));
+    expect(find(html, (e) => e.tagName === "p" && nodeText(e).includes(note))).toHaveLength(1);
+    expect(all(open(medium, { q: "nothingmatchesthis" }))).not.toContain(note);
+    expect(all(open(medium, {}))).not.toContain(note);
   });
 
   it("does not repeat the page in the heading", () => {
