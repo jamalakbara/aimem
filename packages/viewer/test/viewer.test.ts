@@ -120,6 +120,10 @@ describe("read-only", () => {
       "/p/acme-ledger/search?q=float&closed=1",
       "/p/acme-ledger/tasks",
       "/p/acme-ledger/tasks?status=review",
+      "/p/acme-ledger/decisions",
+      "/p/acme-ledger/handoffs",
+      "/p/acme-ledger/records",
+      "/p/acme-ledger/records?type=incident&status=resolved",
       `/p/acme-ledger/r/${id}`,
       `/p/acme-ledger/r/${id}?view=plain`,
     ])

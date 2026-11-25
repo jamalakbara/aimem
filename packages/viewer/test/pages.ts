@@ -80,3 +80,8 @@ export const all = (html: string) =>
     .map(nodeText)
     .join(" ")
     .replace(/\s+/g, " ");
+
+/** A card of a list: an `li` that names its record. */
+export const isCard = (e: T.Element) => e.tagName === "li" && attr(e, "data-ref") !== undefined;
+export const cardsOf = (root: T.Node): T.Element[] => within(root, isCard);
+export const refsOf = (root: T.Node): string[] => cardsOf(root).map((e) => attr(e, "data-ref") ?? "");

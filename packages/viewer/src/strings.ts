@@ -48,6 +48,29 @@ const TASKS_BY_STATUS: ReadonlyMap<string, string> = new Map([
   ["cancelled", "Cancelled tasks"],
   ["other", "Tasks with another status"],
 ]);
+const PLURAL: ReadonlyMap<string, string> = new Map([
+  ["decision", "Decisions"],
+  ["task", "Tasks"],
+  ["memory", "Memories"],
+  ["handoff", "Handoffs"],
+  ["incident", "Incidents"],
+  ["runbook", "Runbooks"],
+  ["schema", "Schemas"],
+  ["testcase", "Test cases"],
+]);
+export const typePlural = (type: string): string => PLURAL.get(type) ?? `${sentence(type)}s`;
+/** "Accepted decisions", "Decisions with another status", or just "Decisions". */
+export const listHeading = (plural: string, status?: string): string =>
+  status === undefined
+    ? plural
+    : status === "other"
+      ? `${plural} with another status`
+      : `${columnLabel(status)} ${plural.toLowerCase()}`;
+/** `sev2` as `Sev 2`; anything else is not shown. */
+export const severityLabel = (severity: unknown): string | undefined => {
+  const m = typeof severity === "string" ? /^sev([1-4])$/.exec(severity) : null;
+  return m ? `Sev ${m[1]}` : undefined;
+};
 export const tasksHeading = (status: string): string => TASKS_BY_STATUS.get(status) ?? "Tasks";
 export const systemLabel = (system: string): string => SYSTEMS.get(system) ?? system;
 
@@ -88,6 +111,17 @@ export const T = {
   movedTo: (to: string) => `Moved to ${to}`,
   sections: "Sections",
   tasks: "Tasks",
+  decisions: "Decisions",
+  handoffs: "Handoffs",
+  browse: "Browse",
+  browseByType: "Browse by type",
+  noneYet: (plural: string) => `No ${plural.toLowerCase()} yet`,
+  replaces: "Replaces",
+  replacedBy: "Replaced by",
+  taskOfHandoff: "Task",
+  branch: "Branch",
+  updated: (date: string) => `Updated ${date}`,
+  started: (date: string) => `Started ${date}`,
   noTasks: "No tasks yet",
   noTasksInColumn: "No tasks",
   otherStatus: "Other status",

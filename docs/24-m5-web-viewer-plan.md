@@ -1,6 +1,6 @@
 # 24 — M5 Web Viewer Plan
 
-Status: **approved by the owner (2026-11-24) with the recommended defaults below.** Slices land one PR at a time; this line records which are implemented: **5.1** (server, guard, index cache, plain dashboard), **5.2** (layout, record page, markdown renderer, error pages; pages use the auto-escaping `html` template of 5.1; besides `href`, `rel` and `class` the renderer writes an integer `start` on lists and the constants `scope="col"` and `tabindex="0"`; the limits count characters), **5.3** (search page, filters, pages, search key; the owner approved its plan on 2026-11-25), **5.4** (task board, list of one status, header links, shared cards; the owner approved the plan of 5.4 and 5.5 on 2026-11-25). This plan turns the M5 entry in 13 and the local mode in 10 §2 into PRs. It builds on the PM task list (Nanda), the UX spec (Ajaw), backend constraints and review (Eko), the QA test plan items 20–33 (Opan) and the acceptance script (Wisnu).
+Status: **approved by the owner (2026-11-24) with the recommended defaults below.** Slices land one PR at a time; this line records which are implemented: **5.1** (server, guard, index cache, plain dashboard), **5.2** (layout, record page, markdown renderer, error pages; pages use the auto-escaping `html` template of 5.1; besides `href`, `rel` and `class` the renderer writes an integer `start` on lists and the constants `scope="col"` and `tabindex="0"`; the limits count characters), **5.3** (search page, filters, pages, search key; the owner approved its plan on 2026-11-25), **5.4** (task board, list of one status, header links, shared cards; the owner approved the plan of 5.4 and 5.5 on 2026-11-25), **5.5** (decision timeline, handoff feed, browse by type). This plan turns the M5 entry in 13 and the local mode in 10 §2 into PRs. It builds on the PM task list (Nanda), the UX spec (Ajaw), backend constraints and review (Eko), the QA test plan items 20–33 (Opan) and the acceptance script (Wisnu).
 
 M5 acceptance (13): a non-developer teammate answers three scripted questions ("why did we choose X?", "what's in QA?", "what happened in incident Y?") without help.
 
@@ -87,6 +87,17 @@ Decided with the owner's approval of the 5.4–5.5 plan (2026-11-25):
 - One HTML for every screen: six columns from 1100 px, three by two from 768 px, stacked groups below. No script, no `User-Agent`, no sideways scroll. Cards do not repeat the type or the status that the column says; a priority is shown only when the record has one; trust is always shown as text.
 - Header links (`Tasks`) on every notebook page, with the open page marked `aria-current="page"`. Only pages that exist are linked (`SECTIONS` in `view.ts`). Pages without a notebook (404, 500, 503) have none.
 - Cards, page links and filter chips live in `pages/cards.ts`; search uses them with byte-identical output.
+
+## 5.5 — Decision timeline, handoff feed, browse by type
+
+Decided with the same approval (2026-11-25):
+
+- `/p/:project/decisions`, `/handoffs` and `/records` (menu of the eight types with their counts; `?type=` for one type). `/decisions` and `/records` take `status=` (the statuses of the type, or `other`); every list is 25 a page, with `page` as in search. An unknown `type` or `status` is ignored and the page says so, without repeating it. There is no `/incidents` page: incidents are `/records?type=incident` (the incident explorer, 10 §5.7, is not in 13's M5 list); the menu sends `decision`, `task` and `handoff` to their own pages.
+- Same set as `aimem list <type>` for every type (the viewer reads the merged index of the project, hub and siblings included; no status is hidden).
+- Order, without `localeCompare`: decisions and handoffs by `created`, newest first, then id, notebook and file, so the first handoff is the "Latest handoff" of the dashboard; Browse by `updated`, newest first.
+- A decision shows one step to the decision it replaced and one to the decision that replaced it, as written, with a link or "(not in this notebook)". The chain is not walked, so a loop, a decision that replaces itself, an unknown target and a pair that does not agree cannot hang or mislead the page.
+- A handoff shows its day, author, branch and task; an incident shows its severity (`Sev 1`–`Sev 4`), services and start. Status badges are left out where the list is of one status (handoffs are all `final`). Trust is shown as text on every card.
+- Header links: Tasks, Decisions, Handoffs, Browse. Browse is the open one on every `/records` page.
 
 ## 5.4–5.7 — Lists, dashboard and sources
 

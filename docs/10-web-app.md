@@ -30,7 +30,7 @@ The web app exists for people who do not live in git or the terminal (PM, QA, De
 /p/:project/decisions   Decision timeline
 /p/:project/live        Who is working on what (live)
 /p/:project/handoffs    Handoff feed
-/p/:project/incidents   Incident explorer
+/p/:project/incidents   Incident explorer (local viewer: /records?type=incident, 24)
 /p/:project/review      Review queue (agent drafts, inferred, stale)
 /p/:project/graph       Link graph (later)
 /p/:project/settings    Members, roles, repos, tokens (admin)

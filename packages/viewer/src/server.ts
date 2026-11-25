@@ -5,9 +5,12 @@ import { STYLE } from "./assets/style.js";
 import { IndexCache, openNotebook, type Snapshot } from "./cache.js";
 import { checkRequest, type Target } from "./guard.js";
 import { dashboard } from "./pages/dashboard.js";
+import { decisionsPage } from "./pages/decisions.js";
 import { errorPage } from "./pages/error.js";
+import { handoffsPage } from "./pages/handoffs.js";
 import { layout } from "./pages/layout.js";
 import { recordPage } from "./pages/record.js";
+import { recordsPage } from "./pages/records.js";
 import { searchPage } from "./pages/search.js";
 import { tasksPage } from "./pages/tasks.js";
 import { findRoot, safeFs } from "./safe-fs.js";
@@ -51,6 +54,9 @@ const HEADERS = {
 /** The pages that list records, by the segment after the project. Each is added to the header links in view.ts. */
 const LISTS: ReadonlyMap<Section, (c: ViewContext, query: URLSearchParams) => Page> = new Map([
   ["tasks", tasksPage],
+  ["decisions", decisionsPage],
+  ["handoffs", handoffsPage],
+  ["records", recordsPage],
 ]);
 const HTML = "text/html; charset=utf-8";
 const TEXT = "text/plain; charset=utf-8";

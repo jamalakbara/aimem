@@ -55,7 +55,12 @@ ${
 </aside>`;
 }
 
-const SECTION_NAMES: Record<Section, string> = { tasks: T.tasks };
+const SECTION_NAMES: Record<Section, string> = {
+  tasks: T.tasks,
+  decisions: T.decisions,
+  handoffs: T.handoffs,
+  records: T.browse,
+};
 
 /** The lists of records, as links. The page that is shown is marked as the current one. */
 function sections(project: string, current?: Section): Html {

@@ -18,7 +18,7 @@ export const recordHref = (project: string, id: string): string =>
   `${projectHref(project)}/r/${encodeURIComponent(id)}`;
 
 /** Pages that list records, in the order of the header links. Only pages that exist belong here. */
-export const SECTIONS = ["tasks"] as const;
+export const SECTIONS = ["tasks", "decisions", "handoffs", "records"] as const;
 export type Section = (typeof SECTIONS)[number];
 /** The address of a list page; a parameter without a value, and the first page, are left out. */
 export function sectionHref(
