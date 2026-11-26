@@ -1,7 +1,7 @@
 import { type IndexedRecord, summarizeNotebook } from "@aimem/core";
 import { type Html, html } from "../html.js";
 import { lensChoices } from "../query.js";
-import { T, viewAllTasks } from "../strings.js";
+import { T, typeLabel, viewAllTasks } from "../strings.js";
 import { projectHref, sectionHref, shown, type ViewContext } from "../view.js";
 import { anchors, byCreated, byIdMap, idCounts, type Part } from "./cards.js";
 import { decisionCard } from "./decisions.js";
@@ -77,7 +77,7 @@ ${part(
   view(
     decisions.length,
     sectionHref(project, "decisions", { lens }),
-    T.viewAll(decisions.length, T.decisions),
+    T.viewAll(decisions.length, T.decisions, typeLabel("decision")),
   ),
 )}
 ${part(
@@ -86,7 +86,11 @@ ${part(
   handoffs.length,
   handoffs.slice(0, LATEST_HANDOFFS).map((r) => handoffCard(c, r, o(r), byId, 3)),
   T.noneYet(T.handoffs),
-  view(handoffs.length, sectionHref(project, "handoffs", { lens }), T.viewAll(handoffs.length, T.handoffs)),
+  view(
+    handoffs.length,
+    sectionHref(project, "handoffs", { lens }),
+    T.viewAll(handoffs.length, T.handoffs, typeLabel("handoff")),
+  ),
 )}
 <section aria-labelledby="d-browse"><h2 id="d-browse">${T.browse}</h2>
 ${typeMenu(c)}</section>

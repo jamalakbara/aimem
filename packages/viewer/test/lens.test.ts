@@ -277,9 +277,7 @@ describe("pages with a lens", () => {
       empty,
       record({ id: "tsk-aaaaaaaa", type: "task", status: "review", roles: ["qa"] }),
     );
-    expect(link(open(c, `${P}?lens=qa`), "View all 1 tasks in review")).toBe(
-      `${P}/tasks?status=review&lens=qa`,
-    );
+    expect(link(open(c, `${P}?lens=qa`), "View 1 task in review")).toBe(`${P}/tasks?status=review&lens=qa`);
   });
 
   it("name the file of a shared id on the dashboard, also when the lens hides the other file", () => {
@@ -301,6 +299,20 @@ describe("pages with a lens", () => {
       }),
     );
     expect(all(open(c, `${P}?lens=qa`))).toContain(".aimem/decisions/one.md");
+  });
+
+  it("keep the lens in Clear filters on an empty status", () => {
+    const inc = withRecords(
+      empty,
+      record({ id: "inc-aaaaaaaa", type: "incident", status: "resolved", roles: ["qa"] }),
+    );
+    const html = open(inc, `${P}/records?type=incident&status=investigating&lens=qa`);
+    expect(link(html, "Clear filters")).toBe(`${P}/records?type=incident&lens=qa`);
+    const tasks = open(
+      withRecords(empty, record({ id: "tsk-aaaaaaaa", type: "task", status: "open", roles: ["qa"] })),
+      `${P}/tasks?status=done&lens=qa`,
+    );
+    expect(link(tasks, "Clear filters")).toBe(`${P}/tasks?lens=qa`);
   });
 
   it("have one search form, without the lens", () => {
@@ -335,7 +347,7 @@ describe("dashboard (24 §5.6)", () => {
         html,
         (e) =>
           e.tagName === "a" &&
-          (/^View all \d/.test(nodeText(e)) || attr(e.parentNode as never, "class") === "type"),
+          (/^View (all )?\d/.test(nodeText(e)) || attr(e.parentNode as never, "class") === "type"),
       );
       expect(counted.length).toBeGreaterThanOrEqual(3);
       for (const a of counted) {
@@ -383,7 +395,7 @@ describe("dashboard (24 §5.6)", () => {
     const c = withRecords(empty, record({ roles: ["qa"] }));
     const main = all(dashboard(c));
     for (const s of ["No tasks in review", "No decisions yet", "No handoffs yet"]) expect(main).toContain(s);
-    expect(find(dashboard(c), (e) => e.tagName === "a" && /^View all/.test(nodeText(e)))).toEqual([]);
+    expect(find(dashboard(c), (e) => e.tagName === "a" && /^View /.test(nodeText(e)))).toEqual([]);
     const none = dashboard(empty);
     expect(all(none)).toContain("No records yet");
     expect(find(none, (e) => e.tagName === "section")).toEqual([]);
@@ -408,7 +420,9 @@ describe("dashboard (24 §5.6)", () => {
     expect(options.filter((o) => attr(o, "selected") !== undefined).map((o) => attr(o, "value"))).toEqual([
       "qa",
     ]);
-    expect(all(html)).toContain("Roles narrow what is shown here; every record can still be opened.");
+    expect(all(html)).toContain(
+      "Filters the dashboard and lists. Records for all roles are always included. Search still covers the whole notebook.",
+    );
     expect(all(html)).not.toContain("Show all roles");
   });
 
@@ -417,6 +431,44 @@ describe("dashboard (24 §5.6)", () => {
       /@media \(pointer: coarse\), \(max-width: 767px\) \{\s*\.more a, p\.lens a \{[^}]*min-height: 44px/,
     );
     expect(STYLE).toMatch(/\.results h3 \{[^}]*margin: 0 0 8px/);
+  });
+
+  it.each([undefined, "qa", "dev"])("lens %s: the count in each heading is the count of its list", (lens) => {
+    const html = open(medium, lens ? `${P}?lens=${lens}` : P);
+    for (const [heading, href] of [
+      ["Tasks in review", `${P}/tasks?status=review`],
+      ["Recent decisions", `${P}/decisions`],
+      ["Latest handoffs", `${P}/handoffs`],
+    ] as const) {
+      const h = find(html, (e) => e.tagName === "h2" && nodeText(e).startsWith(heading))[0];
+      const n = Number(/\((\d+)\)$/.exec(h ? nodeText(h) : "")?.[1]);
+      expect(n, heading).toBe(
+        everyPage(medium, lens ? `${href}${href.includes("?") ? "&" : "?"}lens=${lens}` : href).length,
+      );
+    }
+  });
+
+  it("says View 1 for one, and View all for more", () => {
+    const one = withRecords(
+      empty,
+      record({ id: "tsk-aaaaaaaa", type: "task", status: "review" }),
+      record({ id: "dec-aaaaaaaa", type: "decision", status: "accepted", file: "d.md" }),
+      record({ id: "hnd-aaaaaaaa", type: "handoff", status: "final", file: "h.md" }),
+    );
+    const names = (html: string) =>
+      find(html, (e) => e.tagName === "a" && /^View /.test(nodeText(e))).map(nodeText);
+    expect(names(dashboard(one))).toEqual(["View 1 task in review", "View 1 decision", "View 1 handoff"]);
+    const two = withRecords(
+      one,
+      record({ id: "tsk-bbbbbbbb", type: "task", status: "review", file: "t2.md" }),
+      record({ id: "dec-bbbbbbbb", type: "decision", status: "accepted", file: "d2.md" }),
+      record({ id: "hnd-bbbbbbbb", type: "handoff", status: "final", file: "h2.md" }),
+    );
+    expect(names(dashboard(two))).toEqual([
+      "View all 2 tasks in review",
+      "View all 2 decisions",
+      "View all 2 handoffs",
+    ]);
   });
 
   it("does not show the old table", () => {
@@ -436,5 +488,15 @@ describe("dashboard (24 §5.6)", () => {
       ]);
       expect(find(html, (e) => e.attrs.some((a) => /^on/.test(a.name)))).toEqual([]);
     }
+  });
+});
+
+describe("addresses", () => {
+  it("a project address is only ever a prefix; the dashboard with a lens has its own", async () => {
+    const { projectHref, dashboardHref } = await import("../src/view.js");
+    expect(projectHref("acme")).toBe("/p/acme");
+    expect(projectHref.length).toBe(1);
+    expect(dashboardHref("acme", "qa")).toBe("/p/acme?lens=qa");
+    expect(dashboardHref("acme")).toBe("/p/acme");
   });
 });

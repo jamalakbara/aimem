@@ -25,8 +25,11 @@ export interface Page {
   html: string;
 }
 
-export const projectHref = (project: string, lens?: string): string =>
-  `/p/${encodeURIComponent(project)}${lens ? `?${new URLSearchParams({ lens })}` : ""}`;
+/** The start of every address of a notebook; never with a query, because other addresses append to it. */
+export const projectHref = (project: string): string => `/p/${encodeURIComponent(project)}`;
+/** The dashboard, with the lens when there is one (24 §5.6). */
+export const dashboardHref = (project: string, lens?: string): string =>
+  `${projectHref(project)}${lens ? `?${new URLSearchParams({ lens })}` : ""}`;
 /** Id of the one search form, in the header of every notebook page; filters belong to it by this id. */
 export const SEARCH_FORM = "search";
 export const searchHref = (project: string): string => `${projectHref(project)}/search`;

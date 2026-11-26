@@ -2,6 +2,7 @@ import { type Html, html } from "../html.js";
 import { MAX_QUERY } from "../query.js";
 import { T } from "../strings.js";
 import {
+  dashboardHref,
   projectHref,
   SEARCH_FORM,
   SECTIONS,
@@ -94,7 +95,7 @@ export function notebookPage(
   return layout(
     c.lens ? `${title} · ${c.lens}` : title,
     html`${notices(c)}${lens}${body}`,
-    html`<a class="project" href="${projectHref(project, c.lens)}">${name ?? project}</a><span class="badge">${T.readOnly}</span>${sections(project, o.current, c.lens)}<form class="search" id="${SEARCH_FORM}" action="${searchHref(project)}" role="search"><input id="q" type="search" name="q" value="${q}" maxlength="${MAX_QUERY}" placeholder="${T.searchRecords}" aria-label="${T.searchRecords}" aria-keyshortcuts="Control+K Meta+K" autocomplete="off" spellcheck="false"><button class="button" type="submit">${T.search}</button></form>`,
+    html`<a class="project" href="${dashboardHref(project, c.lens)}">${name ?? project}</a><span class="badge">${T.readOnly}</span>${sections(project, o.current, c.lens)}<form class="search" id="${SEARCH_FORM}" action="${searchHref(project)}" role="search"><input id="q" type="search" name="q" value="${q}" maxlength="${MAX_QUERY}" placeholder="${T.searchRecords}" aria-label="${T.searchRecords}" aria-keyshortcuts="Control+K Meta+K" autocomplete="off" spellcheck="false"><button class="button" type="submit">${T.search}</button></form>`,
     o.wide,
   );
 }
