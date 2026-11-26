@@ -19,7 +19,7 @@ The web app exists for people who do not live in git or the terminal (PM, QA, De
 
 ```
 /                       Project switcher → Dashboard
-/p/:project             Dashboard (role lens selector)
+/p/:project             Dashboard (role lens selector; the lens narrows dashboard and lists, never search)
 /p/:project/search      Global search (also Cmd/Ctrl-K)
 /p/:project/ask         Ask the notebook: answers with citations (15 §10)
 /p/:project/import      Upload or link documents; import results (16)

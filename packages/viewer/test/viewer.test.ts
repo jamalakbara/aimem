@@ -6,9 +6,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { type Fs, loadIndex, loadProject, nodeFs, summarizeNotebook } from "@aimem/core";
+import { RECORD_TYPES } from "@aimem/schema";
 import { escapeHtml, html } from "@aimem/viewer";
 import { afterEach, describe, expect, it } from "vitest";
-import { statusLabel, typeLabel } from "../src/strings.js";
+import { typePlural } from "../src/strings.js";
 import { clean, get, notebook, viewer } from "./helpers.js";
 
 afterEach(clean);
@@ -39,15 +40,12 @@ describe("dashboard", () => {
     const b = (await get(v, `/p/${nb.config.project}`)).body;
     expect(b).toMatch(/Read-only/);
     expect(b).toContain(`${s.total} records`);
-    const cells = [...b.matchAll(/<tr><td>([^<]+)<\/td><td>([^<]+)<\/td><td>(\d+)<\/td><\/tr>/g)].map((m) => [
-      m[1],
-      m[2],
-      Number(m[3]),
-    ]);
-    expect(cells).toEqual(
-      Object.entries(s.counts).flatMap(([t, by]) =>
-        Object.entries(by).map(([st, n]) => [typeLabel(t), statusLabel(st), n]),
-      ),
+    // Every type with its count, in the Browse part (24 §5.6).
+    const types = [
+      ...b.matchAll(/<li class="type"><a href="[^"]+">([^<]+) <span class="meta">(\d+)<\/span>/g),
+    ].map((m) => [m[1], Number(m[2])]);
+    expect(types).toEqual(
+      RECORD_TYPES.map((t) => [typePlural(t), Object.values(s.counts[t] ?? {}).reduce((x, y) => x + y, 0)]),
     );
     expect(b).toMatch(new RegExp(`Agent-written[^0-9]*${s.unreviewed.agent}\\b`));
     expect(b).toMatch(new RegExp(`Inferred[^0-9]*${s.unreviewed.inferred}\\b`));

@@ -17,6 +17,20 @@ export function roleChoices(records: readonly IndexedRecord[]): string[] {
   return [...found].sort().slice(0, MAX_ROLES);
 }
 
+/** The roles a lens can be: those of `project.yaml` in their order, then those that records use (24 §5.6). */
+export function lensChoices(
+  nb: { config: { roles?: readonly string[] } },
+  records: readonly IndexedRecord[],
+): string[] {
+  const listed = (nb.config.roles ?? []).filter((r) => r !== "all" && ROLE.test(r));
+  const out = [...new Set(listed)];
+  for (const r of roleChoices(records)) if (!out.includes(r)) out.push(r);
+  return out.slice(0, MAX_ROLES);
+}
+
+/** The lens of an address. Empty means none; `all` and anything else that is not a choice is reported, not used. */
+export const readLens = (p: URLSearchParams, choices: readonly string[]) => readChoice(p, "lens", choices);
+
 /** A page number from an address: at least 1, anything else counts as 1. It may be past the end. */
 export function readPage(p: URLSearchParams): number {
   const page = p.get("page") ?? "";

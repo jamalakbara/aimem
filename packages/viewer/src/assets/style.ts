@@ -104,6 +104,13 @@ dd { margin: 0; }
 .facts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .excerpt { color: var(--ink-2); font-size: 14px; }
 .pages { display: flex; gap: 12px; }
+.lens { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 4px; }
+.lens label { color: var(--ink-2); font-size: 14px; }
+.lens select { width: auto; min-width: 160px; }
+p.lens { color: var(--ink-2); font-size: 14px; }
+.more { margin: 0 0 8px; }
+.results h3 { font-size: 16px; margin: 0 0 8px; }
+section + section { margin-top: 32px; }
 .empty { text-align: center; padding: 48px 24px; }
 .sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .sections { display: flex; gap: 4px; }
@@ -144,6 +151,9 @@ main.wide { max-width: 1320px; }
   input[type="search"], select { font-size: 16px; }
   .field { flex-basis: 40%; }
   .details > div { grid-template-columns: 1fr; gap: 0; }
+}
+@media (pointer: coarse), (max-width: 767px) {
+  .more a, p.lens a { display: inline-block; min-height: 44px; padding: 10px 0; }
 }
 @media (pointer: coarse) {
   .button, input[type="search"], select, .field.check { min-height: 44px; }

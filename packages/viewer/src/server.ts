@@ -13,6 +13,7 @@ import { recordPage } from "./pages/record.js";
 import { recordsPage } from "./pages/records.js";
 import { searchPage } from "./pages/search.js";
 import { tasksPage } from "./pages/tasks.js";
+import { lensChoices, readLens } from "./query.js";
 import { findRoot, safeFs } from "./safe-fs.js";
 import { T } from "./strings.js";
 import type { Page, Section, ViewContext } from "./view.js";
@@ -113,7 +114,12 @@ export async function startViewer(o: ViewerOptions): Promise<Viewer> {
       return failure(503, T.tryAgain);
     }
     hook();
-    const c: ViewContext = { ...snapshot, now: o.clock.now() };
+    let c: ViewContext = { ...snapshot, now: o.clock.now() };
+    // The lens narrows the dashboard and the lists only; search and record pages never read it (24 §5.6).
+    if (section === undefined || list) {
+      const lens = readLens(query, lensChoices(c.nb, c.index.records));
+      c = { ...c, ...(lens.value ? { lens: lens.value } : {}), lensIgnored: lens.unknown };
+    }
     if (section === undefined) return page(200, dashboard(c));
     const found = list
       ? list(c, query)

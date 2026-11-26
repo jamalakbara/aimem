@@ -54,13 +54,14 @@ describe("reading the notebook (24 §5.1 Cache)", () => {
     // Whole seconds, so that the second utimes restores exactly the same time.
     utimesSync(f, 1_700_000_000, 1_700_000_000);
     const s = statSync(f);
-    expect(await page(v)).not.toContain("activE");
+    const memories = async () => (await get(v, "/p/acme-ledger/records?type=memory")).body;
+    expect(await memories()).not.toContain("activE");
     const before = readFileSync(f, "utf8");
     expect(before).toMatch(/^status: active$/m);
     writeFileSync(f, before.replace(/^status: active$/m, "status: activE"));
     utimesSync(f, 1_700_000_000, 1_700_000_000);
     expect(statSync(f)).toMatchObject({ size: s.size, mtimeMs: s.mtimeMs, ino: s.ino });
-    expect(await page(v)).toContain("ActivE");
+    expect(await memories()).toContain("ActivE");
   });
 
   it("does not read records again when nothing changed", async () => {

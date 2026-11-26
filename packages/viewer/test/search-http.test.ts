@@ -47,7 +47,7 @@ describe("search over HTTP (24 §5.3)", () => {
     const v = await viewer(notebook());
     for (const p of [P, `${P}/search`, `${P}/r/mem-zzzzzzzz`]) {
       const { body } = await get(v, p);
-      expect(body.match(/<form /g), p).toHaveLength(1);
+      expect(body.match(/<form [^>]*role="search"/g), p).toHaveLength(1);
       expect(body).toContain(`action="${P}/search"`);
     }
   });

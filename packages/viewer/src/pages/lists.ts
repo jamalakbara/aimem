@@ -20,7 +20,7 @@ export interface ListSpec {
   /** The statuses of the schema, for the chips. A list without them has no filter. */
   statuses?: readonly string[];
   /** The address of a page of this list. */
-  href: (o: { status?: string; page?: number }) => string;
+  href: (o: { status?: string; page?: number; lens?: string }) => string;
   card: (r: IndexedRecord, o: { anchor: string; shared: boolean }) => Html;
   /** Above the list, such as the note about an address that was ignored. */
   note?: Part;
@@ -40,11 +40,14 @@ export function listPage(c: ViewContext, params: URLSearchParams, spec: ListSpec
   }
   const choices = spec.statuses ? [...spec.statuses, OTHER] : [];
   const { value: status, unknown } = readChoice(params, "status", choices);
-  const note = html`${spec.note}${unknown && html`<p class="note">${T.filterIgnored}</p>`}`;
+  const note = html`${spec.note}${(unknown || c.lensIgnored) && html`<p class="note">${T.filterIgnored}</p>`}`;
   const heading = listHeading(spec.plural, status);
   const shell = (title: string, body: Html): Page => ({
     status: 200,
-    html: notebookPage(c, title, body, "", { current: spec.section }),
+    html: notebookPage(c, title, body, "", {
+      current: spec.section,
+      lensOff: spec.href(status ? { status } : {}),
+    }),
   });
   if (sorted.length === 0)
     return shell(
@@ -54,12 +57,16 @@ export function listPage(c: ViewContext, params: URLSearchParams, spec: ListSpec
 
   const nav: Chip[] = spec.statuses
     ? [
-        { text: T.withCount(T.any, sorted.length), href: spec.href({}), current: status === undefined },
+        {
+          text: T.withCount(T.any, sorted.length),
+          href: spec.href({ lens: c.lens }),
+          current: status === undefined,
+        },
         ...choices
           .filter((s) => s !== OTHER || (by.get(s)?.length ?? 0) > 0)
           .map((s) => ({
             text: T.withCount(columnLabel(s), by.get(s)?.length ?? 0),
-            href: spec.href({ status: s }),
+            href: spec.href({ status: s, lens: c.lens }),
             current: status === s,
           })),
       ]
@@ -73,7 +80,7 @@ export function listPage(c: ViewContext, params: URLSearchParams, spec: ListSpec
   if (n === 0)
     return shell(
       title,
-      html`<h1>${heading}</h1>${note}${filter}<div class="empty"><h2>${T.noMatch}</h2><p><a class="button" href="${spec.href({})}">${T.clearFilters}</a></p></div>`,
+      html`<h1>${heading}</h1>${note}${filter}<div class="empty"><h2>${T.noMatch}</h2><p><a class="button" href="${spec.href({ lens: c.lens })}">${T.clearFilters}</a></p></div>`,
     );
   const count = idCounts(c.index.records);
   const anchor = anchors();
@@ -85,6 +92,6 @@ export function listPage(c: ViewContext, params: URLSearchParams, spec: ListSpec
     html`<h1>${heading}</h1>${note}${filter}${last > 1 && html`<p class="meta">${T.showing(from + 1, from + shown.length, n)}</p>`}
 <ol class="results" role="list">
 ${items}</ol>
-${pager((p) => spec.href({ ...(status ? { status } : {}), page: p }), page, last)}`,
+${pager((p) => spec.href({ ...(status ? { status } : {}), page: p, lens: c.lens }), page, last)}`,
   );
 }

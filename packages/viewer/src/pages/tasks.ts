@@ -3,7 +3,7 @@ import { DEFAULT_PRIORITY, STATUSES } from "@aimem/schema";
 import { type Html, html } from "../html.js";
 import { PAGE_SIZE, readChoice, readPage } from "../query.js";
 import { columnLabel, dateLabel, T, tasksHeading, viewAllTasks } from "../strings.js";
-import { type Page, sectionHref, type ViewContext } from "../view.js";
+import { type Page, sectionHref, shown, type ViewContext } from "../view.js";
 import { anchors, byRecord, byUpdated, type Chip, card, chips, compare, idCounts, pager } from "./cards.js";
 import { notebookPage } from "./layout.js";
 
@@ -33,7 +33,7 @@ const byPriority = (a: IndexedRecord, b: IndexedRecord): number =>
 
 const text = (v: unknown): string | undefined => (typeof v === "string" && v ? v : undefined);
 
-function taskCard(
+export function taskCard(
   c: ViewContext,
   r: IndexedRecord,
   o: { level: 2 | 3; anchor: string; shared: boolean; summary: boolean },
@@ -58,10 +58,10 @@ function taskCard(
   });
 }
 
-/** The tasks of the notebook by status, each column in its order. */
-function groups(c: ViewContext): Map<string, IndexedRecord[]> {
+/** The tasks of the notebook (or of the lens) by status, each column in its order. */
+export function groups(c: ViewContext): Map<string, IndexedRecord[]> {
   const by = new Map<string, IndexedRecord[]>(COLUMNS.map((s) => [s, []]));
-  for (const r of c.index.records) if (r.type === "task") by.get(statusOf(r))?.push(r);
+  for (const r of shown(c)) if (r.type === "task") by.get(statusOf(r))?.push(r);
   for (const [s, list] of by) list.sort(CLOSED.has(s) ? byUpdated : byPriority);
   return by;
 }
@@ -72,8 +72,9 @@ export function tasksPage(c: ViewContext, params: URLSearchParams): Page {
   const by = groups(c);
   const total = [...by.values()].reduce((n, l) => n + l.length, 0);
   const { value: status, unknown } = readChoice(params, "status", COLUMNS);
-  const note = unknown && html`<p class="note">${T.filterIgnored}</p>`;
-  const href = (s?: string, page?: number) => sectionHref(project, "tasks", { status: s, page });
+  const note = (unknown || c.lensIgnored) && html`<p class="note">${T.filterIgnored}</p>`;
+  const href = (s?: string, page?: number) =>
+    sectionHref(project, "tasks", { status: s, page, lens: c.lens });
   const nav: Chip[] = [
     { text: T.withCount(T.any, total), href: href(), current: status === undefined },
     ...COLUMNS.filter((s) => s !== OTHER || (by.get(s)?.length ?? 0) > 0).map((s) => ({
@@ -85,7 +86,11 @@ export function tasksPage(c: ViewContext, params: URLSearchParams): Page {
   const heading = tasksHeading(status ?? "");
   const shell = (title: string, body: Html, wide = false) => ({
     status: 200,
-    html: notebookPage(c, title, body, "", { current: "tasks", wide }),
+    html: notebookPage(c, title, body, "", {
+      current: "tasks",
+      wide,
+      lensOff: sectionHref(project, "tasks", { status }),
+    }),
   });
   if (total === 0)
     return shell(heading, html`<h1>${heading}</h1>${note}<div class="empty"><p>${T.noTasks}</p></div>`);
@@ -99,7 +104,7 @@ export function tasksPage(c: ViewContext, params: URLSearchParams): Page {
     if (!n)
       return shell(
         title,
-        html`<h1>${heading}</h1>${chips(T.status, nav)}<div class="empty"><h2>${T.noMatch}</h2><p><a class="button" href="${href()}">${T.clearFilters}</a></p></div>`,
+        html`<h1>${heading}</h1>${note}${chips(T.status, nav)}<div class="empty"><h2>${T.noMatch}</h2><p><a class="button" href="${href()}">${T.clearFilters}</a></p></div>`,
       );
     const count = idCounts(c.index.records);
     const anchor = anchors();
