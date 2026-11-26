@@ -73,8 +73,11 @@ export const severityLabel = (severity: unknown): string | undefined => {
 };
 export const tasksHeading = (status: string): string => TASKS_BY_STATUS.get(status) ?? "Tasks";
 /** The link under a full column. It ends as the heading of the list it opens, so it can be read on its own. */
+/** "View all 16 open tasks", or "View 1 open task": one is not "all". */
 export const viewAllTasks = (status: string, n: number): string =>
-  `View all ${n} ${tasksHeading(status).toLowerCase()}`;
+  n === 1
+    ? `View 1 ${tasksHeading(status).toLowerCase().replace("tasks", "task")}`
+    : `View all ${n} ${tasksHeading(status).toLowerCase()}`;
 export const systemLabel = (system: string): string => SYSTEMS.get(system) ?? system;
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -113,6 +116,19 @@ export const T = {
   open: (ref: string) => `Open ${ref}`,
   movedTo: (to: string) => `Moved to ${to}`,
   sections: "Sections",
+  lensShown: (role: string) => `Role: ${role}`,
+  allRoles: "Show all roles",
+  allRolesOption: "All roles",
+  lensHint:
+    "Filters the dashboard and lists. Records for all roles are always included. Search still covers the whole notebook.",
+  applyLens: "Apply",
+  /** "View all 6 decisions", or "View 1 decision". */
+  viewAll: (n: number, plural: string, singular: string) =>
+    n === 1 ? `View 1 ${singular.toLowerCase()}` : `View all ${n} ${plural.toLowerCase()}`,
+  tasksInReview: "Tasks in review",
+  recentDecisions: "Recent decisions",
+  latestHandoffs: "Latest handoffs",
+  noTasksInReview: "No tasks in review",
   tasks: "Tasks",
   decisions: "Decisions",
   handoffs: "Handoffs",

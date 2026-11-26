@@ -2,6 +2,7 @@ import { type Html, html } from "../html.js";
 import { MAX_QUERY } from "../query.js";
 import { T } from "../strings.js";
 import {
+  dashboardHref,
   projectHref,
   SEARCH_FORM,
   SECTIONS,
@@ -63,10 +64,10 @@ const SECTION_NAMES: Record<Section, string> = {
 };
 
 /** The lists of records, as links. The page that is shown is marked as the current one. */
-function sections(project: string, current?: Section): Html {
+function sections(project: string, current?: Section, lens?: string): Html {
   return html`<nav class="sections" aria-label="${T.sections}">${SECTIONS.map(
     (s) =>
-      html`<a${s === current && html` aria-current="page"`} href="${sectionHref(project, s)}">${SECTION_NAMES[s]}</a>`,
+      html`<a${s === current && html` aria-current="page"`} href="${sectionHref(project, s, { lens })}">${SECTION_NAMES[s]}</a>`,
   )}</nav>`;
 }
 
@@ -74,6 +75,8 @@ export interface NotebookPageOptions {
   /** The list that is open, for the header. */
   current?: Section;
   wide?: boolean;
+  /** This page without the lens, for "Show all roles"; given by the pages that a lens narrows. */
+  lensOff?: string;
 }
 
 /** A page about the notebook: its name, that it is read-only, the lists, the search box, and what is missing. */
@@ -85,10 +88,14 @@ export function notebookPage(
   o: NotebookPageOptions = {},
 ): string {
   const { name, project } = c.nb.config;
+  const lens =
+    c.lens &&
+    o.lensOff !== undefined &&
+    html`<p class="lens">${T.lensShown(c.lens)} · <a href="${o.lensOff}">${T.allRoles}</a></p>`;
   return layout(
-    title,
-    html`${notices(c)}${body}`,
-    html`<a class="project" href="${projectHref(project)}">${name ?? project}</a><span class="badge">${T.readOnly}</span>${sections(project, o.current)}<form class="search" id="${SEARCH_FORM}" action="${searchHref(project)}" role="search"><input id="q" type="search" name="q" value="${q}" maxlength="${MAX_QUERY}" placeholder="${T.searchRecords}" aria-label="${T.searchRecords}" aria-keyshortcuts="Control+K Meta+K" autocomplete="off" spellcheck="false"><button class="button" type="submit">${T.search}</button></form>`,
+    c.lens ? `${title} · ${c.lens}` : title,
+    html`${notices(c)}${lens}${body}`,
+    html`<a class="project" href="${dashboardHref(project, c.lens)}">${name ?? project}</a><span class="badge">${T.readOnly}</span>${sections(project, o.current, c.lens)}<form class="search" id="${SEARCH_FORM}" action="${searchHref(project)}" role="search"><input id="q" type="search" name="q" value="${q}" maxlength="${MAX_QUERY}" placeholder="${T.searchRecords}" aria-label="${T.searchRecords}" aria-keyshortcuts="Control+K Meta+K" autocomplete="off" spellcheck="false"><button class="button" type="submit">${T.search}</button></form>`,
     o.wide,
   );
 }
