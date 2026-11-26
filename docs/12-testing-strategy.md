@@ -215,8 +215,10 @@ in Chromium. First run: `pnpm exec playwright install chromium`.
 Each test also fails on a request to another host, a console error, a dialog or a
 request other than GET. `pnpm test:budget` runs `timing.budget.ts` alone: on 5,000
 records the median of a cached page must be under 300 ms and of a search under
-600 ms. CI runs both on Ubuntu / Node 24 only. Not covered: other browsers,
-screen readers, real phones, and real browser zoom (the viewport is emulated).
+600 ms. The first request is not budgeted: while it answers 503 because the first
+load is still running, it is asked again every 500 ms, for 60 s in all. CI runs
+both on Ubuntu / Node 24 only. Not covered: other browsers, screen readers, real
+phones, and real browser zoom (the viewport is emulated).
 
 ## Hosted CI runner capacity
 

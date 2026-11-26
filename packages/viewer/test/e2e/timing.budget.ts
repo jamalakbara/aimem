@@ -12,6 +12,9 @@ const RECORDS = 5000;
 const PAGE_MS = 300;
 const SEARCH_MS = 600;
 const RUNS = 7;
+/** How long the first request, which is not budgeted, may take until the viewer is ready, and the pause between. */
+const READY_MS = 60_000;
+const READY_PAUSE_MS = 500;
 
 const WORDS =
   "ledger webhook retry idempotent schema migration claim branch embedding briefing handoff decision agent token budget".split(
@@ -79,6 +82,26 @@ test.afterAll(async () => {
 
 test("5,000 records: cached pages and searches stay within the budget", async ({ request }) => {
   test.setTimeout(180_000);
+  /**
+   * Until the first load of the records is done, a request that has waited 10 s for it gets 503, while the load
+   * goes on. Only that answer is asked again, and only before the measurements: any other status, a failed
+   * request, or a 503 that lasts to the limit fails the test.
+   */
+  const untilReady = async (path: string) => {
+    const t0 = performance.now();
+    for (let refused = 0; ; refused++) {
+      // A timeout of 0 would mean none.
+      const left = Math.max(1, Math.round(READY_MS - (performance.now() - t0)));
+      const r = await request.get(server.origin + path, { timeout: left });
+      await r.body();
+      if (r.status() !== 503) {
+        expect(r.status(), path).toBe(200);
+        return { ms: performance.now() - t0, refused };
+      }
+      expect(performance.now() - t0 + READY_PAUSE_MS, `${path} still answers 503`).toBeLessThan(READY_MS);
+      await new Promise((done) => setTimeout(done, READY_PAUSE_MS));
+    }
+  };
   const timed = async (path: string) => {
     const t0 = performance.now();
     const r = await request.get(server.origin + path, { timeout: 60_000 });
@@ -86,9 +109,9 @@ test("5,000 records: cached pages and searches stay within the budget", async ({
     expect(r.status(), path).toBe(200);
     return performance.now() - t0;
   };
-  const cold = await timed(P);
+  const first = await untilReady(P);
   console.log(
-    `${cpus().length} CPUs, load ${loadavg()[0]?.toFixed(1)}, node ${process.version}; first page ${Math.round(cold)} ms (not budgeted)`,
+    `${cpus().length} CPUs, load ${loadavg()[0]?.toFixed(1)}, node ${process.version}; ready after ${Math.round(first.ms)} ms with ${first.refused} answers 503 (not budgeted)`,
   );
   const rows: { name: string; median: number; max: number; budget: number }[] = [];
   for (const [name, path, budget] of addresses) {
