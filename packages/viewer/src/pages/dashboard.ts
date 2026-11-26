@@ -7,7 +7,7 @@ import { anchors, byCreated, byIdMap, idCounts, type Part } from "./cards.js";
 import { decisionCard } from "./decisions.js";
 import { handoffCard } from "./handoffs.js";
 import { notebookPage } from "./layout.js";
-import { typeMenu } from "./records.js";
+import { importLink, typeMenu } from "./records.js";
 import { groups, taskCard } from "./tasks.js";
 
 /** How many cards each part of the dashboard shows; the link under it leads to all of them (24 §5.6). */
@@ -32,7 +32,11 @@ export function dashboard(c: ViewContext): string {
   const { project } = c.nb.config;
   const title = c.nb.config.name ?? c.nb.config.project;
   if (c.index.records.length === 0)
-    return notebookPage(c, title, html`<h1>${title}</h1><div class="empty"><p>${T.none}</p></div>`);
+    return notebookPage(
+      c,
+      title,
+      html`<h1>${title}</h1><div class="empty"><p>${T.none}</p>${importLink(c)}</div>`,
+    );
   const records = shown(c);
   // Without its `live` argument: claims would need Git (24).
   const sum = summarizeNotebook(c.nb, { ...c.index, records: records as IndexedRecord[] }, c.now);

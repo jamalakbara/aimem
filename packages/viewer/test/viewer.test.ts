@@ -122,6 +122,7 @@ describe("read-only", () => {
       "/p/acme-ledger/handoffs",
       "/p/acme-ledger/records",
       "/p/acme-ledger/records?type=incident&status=resolved",
+      "/p/acme-ledger/import",
       `/p/acme-ledger/r/${id}`,
       `/p/acme-ledger/r/${id}?view=plain`,
     ])
