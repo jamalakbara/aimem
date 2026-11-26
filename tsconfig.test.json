@@ -14,5 +14,11 @@
       "@aimem/viewer": ["./packages/viewer/src/index.ts"]
     }
   },
-  "include": ["packages/*/test/**/*.ts", "vitest.config.ts", "vitest.global-setup.ts", "vitest.setup.ts"]
+  "include": [
+    "packages/*/test/**/*.ts",
+    "vitest.config.ts",
+    "vitest.global-setup.ts",
+    "vitest.setup.ts",
+    "playwright.config.ts"
+  ]
 }

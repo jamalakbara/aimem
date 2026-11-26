@@ -15,10 +15,14 @@
     "format": "biome format --write .",
     "eval": "pnpm -s build && node scripts/eval.mjs",
     "eval:ask": "pnpm -s build && node scripts/eval-ask.mjs",
-    "compare-models": "pnpm -s build && node scripts/compare-models.mjs"
+    "compare-models": "pnpm -s build && node scripts/compare-models.mjs",
+    "test:e2e": "pnpm -s build && playwright test --project=chromium",
+    "test:budget": "pnpm -s build && playwright test --project=budget --workers=1"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.14.1",
     "@biomejs/biome": "^2.5.15",
+    "@playwright/test": "1.65.1",
     "@types/node": "^26.6.5",
     "typescript": "^7.0.2",
     "vitest": "^5.0.3"
