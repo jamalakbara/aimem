@@ -89,6 +89,17 @@ describe("dashboard", () => {
   });
 });
 
+/**
+ * The module names a source file imports: `from`, a bare `import` and `import(…)`, with any quotes the language
+ * allows there (a back tick only inside `import(…)` and after a bare `import`).
+ */
+const IMPORTS =
+  /\bfrom\s*["']([^"']+)["']|\bimport\s*\(\s*["'`]([^"'`]+)["'`]|^\s*import\s*["'`]([^"'`]+)["'`]/gm;
+const importsOf = (text: string): string[] =>
+  [...text.matchAll(IMPORTS)].map((m) => m[1] ?? m[2] ?? m[3] ?? "");
+/** `import(…)` of something that is not written out, which the list of names cannot check. */
+const HIDDEN_IMPORT = /\bimport\s*\(\s*(?![\s"'`])/;
+
 describe("read-only", () => {
   const tree = (d: string): string[] =>
     readdirSync(d, { recursive: true })
@@ -147,6 +158,45 @@ describe("read-only", () => {
     expect(calls).toEqual([]);
   });
 
+  it.each([
+    'import { readFile } from "node:fs";',
+    "import { connect } from 'node:net';",
+    'import "node:fs";',
+    "import 'node:fs';",
+    'import {\n  a,\n  b,\n} from "node:fs";',
+    'export * from "node:fs";',
+    "export { a } from 'node:fs';",
+    'await import("node:fs");',
+    "await import('node:child_process');",
+    "await import(`node:fs`);",
+    'await import (  "node:fs"  );',
+    'const x = await import(\n  "node:fs"\n);',
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: the sample is source text with a placeholder
+    "await import(`node:${name}`);",
+  ])("sees what %j imports, whatever the quotes", (line) => {
+    expect(importsOf(line).join(), line).toMatch(/^node:/);
+  });
+
+  it("refuses an import whose name is not written out", () => {
+    for (const line of ["await import(name);", 'await import(/* x */ "node:fs");', "import ( String(a) )"])
+      expect(line).toMatch(HIDDEN_IMPORT);
+    for (const line of [
+      'await import("./x.js");',
+      "await import( `./x.js` );",
+      'await import(\n  "./x.js"\n);',
+    ])
+      expect(line).not.toMatch(HIDDEN_IMPORT);
+  });
+
+  it("does not read a quoted word as an import", () => {
+    for (const line of [
+      'const guide = section === "import" && ref === undefined;',
+      'export const SEGMENT = "import";\nconst other = "x";',
+      "const help = [`aimem import notes.md`, 'from the file'];",
+    ])
+      expect(importsOf(line), line).toEqual([]);
+  });
+
   it("imports only what it needs: no process, file or network client API", () => {
     const files = readdirSync(SRC, { recursive: true })
       .map(String)
@@ -154,14 +204,14 @@ describe("read-only", () => {
     expect(files.length).toBeGreaterThan(4);
     for (const f of files) {
       const text = readFileSync(join(SRC, f), "utf8");
-      for (const m of text.matchAll(/(?:from|import)\s*\(?\s*"([^"]+)"/g)) {
-        const spec = m[1] ?? "";
+      for (const spec of importsOf(text)) {
         expect(
           spec.startsWith(".") ||
             ["node:http", "node:path", "@aimem/core", "@aimem/schema", "markdown-it"].includes(spec),
           `${f}: ${spec}`,
         ).toBe(true);
       }
+      expect(text, f).not.toMatch(HIDDEN_IMPORT);
       expect(text, f).not.toMatch(
         /\brequire\(|process\.|eval\(|new Function|fetch\(|http\.request|from "node:http".*request/,
       );

@@ -7,6 +7,16 @@ import { systemLabel, T } from "./strings.js";
 /** The systems that have a place to edit a document. An imported file has none, and an unknown system is not assumed to. */
 const EDITABLE: ReadonlySet<string> = new Set(["google-doc", "google-sheet", "odoo"]);
 
+/** Only a spreadsheet, or a sheet that was imported, has rows; a row written on anything else is not shown. */
+const WITH_ROWS: ReadonlySet<string> = new Set(["google-sheet", "upload"]);
+
+/**
+ * An address as it must be written: `https://`, a host without user name or password, then path, query and
+ * fragment; no space, control character or back slash anywhere. The parser would repair those (`https:///x`,
+ * a line break inside the host, back slashes), and the link would not be what the file says.
+ */
+const WRITTEN = /^https:\/\/[^/?#@\\\s\p{Cc}]+(?:[/?#][^\\\s\p{Cc}]*)?$/iu;
+
 export interface EditLink {
   href: string;
   /** Shown next to the link: the name of the system comes from the file, so the reader sees where it really leads. */
@@ -14,13 +24,12 @@ export interface EditLink {
 }
 
 /**
- * The link of "Edit at source", only for a system that can be edited and an address that is written as
- * `https://…`, parses without a base, and has no user name or password. The parsed form is what is linked.
+ * The link of "Edit at source", only for a system that can be edited and an address that is written as above,
+ * parses without a base, and has protocol `https:`. The parsed form is what is linked.
  */
 export function editLink(system: unknown, url: unknown): EditLink | undefined {
   if (typeof system !== "string" || !EDITABLE.has(system)) return undefined;
-  // The parser would also take `https:host`, back slashes and leading spaces.
-  if (typeof url !== "string" || !/^https:\/\//i.test(url)) return undefined;
+  if (typeof url !== "string" || !WRITTEN.test(url)) return undefined;
   const href = safeExternalHref(url);
   return href?.startsWith("https://") ? { href, host: new URL(href).host } : undefined;
 }
@@ -51,7 +60,7 @@ export function externalSource(r: IndexedRecord): ExternalSource | undefined {
     return undefined;
   const { system, url, row: at } = source as Record<string, unknown>;
   if (typeof system !== "string" || !system) return undefined;
-  const row = rowOf(at);
+  const row = WITH_ROWS.has(system) ? rowOf(at) : undefined;
   const edit = editLink(system, url);
   return { name: systemLabel(system), ...(row ? { row } : {}), ...(edit ? { edit } : {}) };
 }

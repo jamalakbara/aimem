@@ -45,7 +45,8 @@ describe("which address becomes Edit at source (24 §5.7)", () => {
     [SHEET, SHEET, "docs.google.com"],
     ["HTTPS://Docs.Google.com/x", "https://docs.google.com/x", "docs.google.com"],
     ["https://example.com:8443/a?b=1#c", "https://example.com:8443/a?b=1#c", "example.com:8443"],
-    ["https://bücher.example/a b", "https://xn--bcher-kva.example/a%20b", "xn--bcher-kva.example"],
+    ["https://bücher.example/é", "https://xn--bcher-kva.example/%C3%A9", "xn--bcher-kva.example"],
+    ["https://example.com/@team?to=a@b#@c", "https://example.com/@team?to=a@b#@c", "example.com"],
     ['https://example.com/"><script>', "https://example.com/%22%3E%3Cscript%3E", "example.com"],
   ])("links %j", (url, href, host) => {
     expect(editLink("google-doc", url)).toEqual({ href, host });
@@ -77,6 +78,26 @@ describe("which address becomes Edit at source (24 §5.7)", () => {
     "https://docs.google.com@evil.example/x",
     "https://",
     "https://exa mple.com/",
+    // What the parser would repair or drop: the link would not be what is written.
+    "https:///docs.google.com/x",
+    "https:////evil.example",
+    "https://\\evil.example",
+    "https://docs.google.com\\.evil.example/",
+    "https://evil.example\\@docs.google.com/",
+    "https://example.com/a\\b",
+    "https://docs.go\togle.com/d/1",
+    "https://docs.google.com\n.evil.example",
+    "https://docs.google.com/d/1\n",
+    "https://docs.google.com/d/1 ",
+    "https://docs.google.com/d/1\u0000",
+    "https://docs.google.com/d/1\u007f",
+    "https://docs.google.com/d/1\u0085",
+    "https://docs.google.com/a b",
+    "https://docs.google.com/a\u00a0b",
+    "https://docs.google.com/a\u2028b",
+    // Credentials, also empty ones.
+    "https://@docs.google.com/x",
+    "https://:@docs.google.com/x",
     "",
   ])("does not link %j", (url) => {
     expect(editLink("google-doc", url)).toBeUndefined();
@@ -119,14 +140,23 @@ describe("what a record says about its source (24 §5.7)", () => {
       expect(externalSource(external({ system }))?.name).toBe(name);
   });
 
-  it("names the row of a sheet record", () => {
-    expect(externalSource(external({ system: "google-sheet", row: 12 }))?.row).toBe("row 12");
-    expect(externalSource(external({ system: "upload", row: "3" }))?.row).toBe("row 3");
-    expect(externalSource(external({ system: "google-sheet", row: "key:TC-7" }))?.row).toBe(
-      "row with key TC-7",
-    );
-    for (const row of [undefined, "", "key:", "abc", 0, -1, 1.5, null, {}])
-      expect(externalSource(external({ row }))?.row, String(row)).toBeUndefined();
+  it("names the row of a record that came from a sheet", () => {
+    const row = (system: string, at: unknown) => externalSource(external({ system, row: at }))?.row;
+    expect(row("google-sheet", 12)).toBe("row 12");
+    expect(row("upload", "3")).toBe("row 3");
+    expect(row("google-sheet", "key:TC-7")).toBe("row with key TC-7");
+    expect(row("upload", "key:TC-7")).toBe("row with key TC-7");
+    for (const at of [undefined, "", "key:", "abc", 0, -1, 1.5, null, {}])
+      expect(row("google-sheet", at), String(at)).toBeUndefined();
+  });
+
+  it("names no row for a source that is not a sheet, whatever the file says", () => {
+    for (const system of ["google-doc", "odoo", "other-thing", "constructor"])
+      for (const at of [12, "3", "key:TC-7"])
+        expect(externalSource(external({ system, row: at }))?.row, `${system} ${at}`).toBeUndefined();
+    const html = page(external({ system: "google-doc", row: 12 }));
+    expect(all(html)).toContain("Source: Google Doc");
+    expect(all(html)).not.toMatch(/row 12|Google Doc,/);
   });
 
   it("says nothing for a record the notebook owns, or without a usable source", () => {
@@ -339,6 +369,7 @@ describe("the import guide (24 §5.7, decision 3)", () => {
     ])
       expect(text).toContain(s);
     expect(text).toContain("Imported content is visible to everyone who can read this repository.");
+    expect(text).toContain("A person does this, not an agent.");
   });
 
   it("cannot upload or send anything", () => {
