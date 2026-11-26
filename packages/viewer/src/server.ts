@@ -8,6 +8,7 @@ import { dashboard } from "./pages/dashboard.js";
 import { decisionsPage } from "./pages/decisions.js";
 import { errorPage } from "./pages/error.js";
 import { handoffsPage } from "./pages/handoffs.js";
+import { importPage } from "./pages/import.js";
 import { layout } from "./pages/layout.js";
 import { recordPage } from "./pages/record.js";
 import { recordsPage } from "./pages/records.js";
@@ -16,7 +17,7 @@ import { tasksPage } from "./pages/tasks.js";
 import { lensChoices, readLens } from "./query.js";
 import { findRoot, safeFs } from "./safe-fs.js";
 import { T } from "./strings.js";
-import type { Page, Section, ViewContext } from "./view.js";
+import { GUIDE_SEGMENT, type Page, type Section, type ViewContext } from "./view.js";
 
 export interface ViewerOptions {
   fs: Fs;
@@ -105,8 +106,9 @@ export async function startViewer(o: ViewerOptions): Promise<Viewer> {
     const [section, ref, ...more] = rest;
     const record = section === "r" && ref !== undefined && more.length === 0;
     const searching = section === "search" && ref === undefined;
+    const guide = section === GUIDE_SEGMENT && ref === undefined;
     const list = ref === undefined ? LISTS.get(section as Section) : undefined;
-    if (section !== undefined && !record && !searching && !list) return failure(404, T.missing);
+    if (section !== undefined && !record && !searching && !guide && !list) return failure(404, T.missing);
     let snapshot: Snapshot;
     try {
       snapshot = await cache.get();
@@ -116,11 +118,13 @@ export async function startViewer(o: ViewerOptions): Promise<Viewer> {
     hook();
     let c: ViewContext = { ...snapshot, now: o.clock.now() };
     // The lens narrows the dashboard and the lists only; search and record pages never read it (24 §5.6).
-    if (section === undefined || list) {
+    // The import guide narrows nothing and reads it only to keep it in its links.
+    if (section === undefined || list || guide) {
       const lens = readLens(query, lensChoices(c.nb, c.index.records));
       c = { ...c, ...(lens.value ? { lens: lens.value } : {}), lensIgnored: lens.unknown };
     }
     if (section === undefined) return page(200, dashboard(c));
+    if (guide) return page(200, importPage(c));
     const found = list
       ? list(c, query)
       : record

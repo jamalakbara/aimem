@@ -33,6 +33,11 @@ export const dashboardHref = (project: string, lens?: string): string =>
 /** Id of the one search form, in the header of every notebook page; filters belong to it by this id. */
 export const SEARCH_FORM = "search";
 export const searchHref = (project: string): string => `${projectHref(project)}/search`;
+/** The segment of the import guide (24 §5.7), for the route and the links. */
+export const GUIDE_SEGMENT = "import";
+/** The guide lists nothing, but it keeps the lens so that the way back keeps it (24 §5.6). */
+export const importHref = (project: string, lens?: string): string =>
+  `${projectHref(project)}/${GUIDE_SEGMENT}${lens ? `?${new URLSearchParams({ lens })}` : ""}`;
 export const recordHref = (project: string, id: string): string =>
   `${projectHref(project)}/r/${encodeURIComponent(id)}`;
 

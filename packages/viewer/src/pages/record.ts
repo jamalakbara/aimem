@@ -2,7 +2,8 @@ import { freshnessOf, type IndexedRecord } from "@aimem/core";
 import { parseRef, REF_RE } from "@aimem/schema";
 import { cut, type Html, html } from "../html.js";
 import { renderMarkdown } from "../markdown.js";
-import { dateLabel, FRESHNESS, statusLabel, systemLabel, T, trustLabel, typeLabel } from "../strings.js";
+import { externalSource } from "../source.js";
+import { dateLabel, FRESHNESS, statusLabel, T, trustLabel, typeLabel } from "../strings.js";
 import { type Page, projectHref, recordHref, type ViewContext } from "../view.js";
 import { notebookPage } from "./layout.js";
 
@@ -150,13 +151,14 @@ function article(
   const fresh = freshnessOf({ ...r.fm, type: r.type, created: r.created }, c.nb.config, c.now);
   const movedTo = text(r.fm.moved_to);
   const replacedBy = text(r.fm.superseded_by);
-  const system = r.fm.managed_by === "external" && isMap(r.fm.source) ? text(r.fm.source.system) : undefined;
+  const source = externalSource(r);
+  const edit = source?.edit;
   return html`<article>
 <h${level}>${r.title}</h${level}>
 <p class="lead">${r.summary}</p>
 <ul class="badges"><li class="badge">${typeLabel(r.type)}</li><li class="badge">${statusLabel(r.status)}</li><li class="badge ${r.trust === "verified" ? "ok" : "warn"}">${trustLabel(r.trust, r.fm.verified)}</li>${fresh !== "fresh" && html`<li class="badge warn">${FRESHNESS[fresh]}</li>`}</ul>
-${system && html`<p class="meta">${T.source(systemLabel(system))}</p>`}
-<p class="actions"><button class="button" type="button" hidden data-copy="${r.id}">${T.copyRef}</button></p>
+${source && html`<p class="meta">${T.source(source.row ? `${source.name}, ${source.row}` : source.name)}</p>`}
+<p class="actions">${edit && html`<a class="button" rel="noopener noreferrer" href="${edit.href}">${T.editAtSource}</a> `}<button class="button" type="button" hidden data-copy="${r.id}">${T.copyRef}</button></p>${edit && html`<p class="meta">${T.opens(edit.host)}</p>`}
 ${movedTo && html`<p class="note">${T.moved(movedTo)}</p>`}
 ${!movedTo && replacedBy && html`<p class="note">${T.replaced} ${refLink(c, replacedBy, byId)}</p>`}
 ${bodyOf(c, r, byId, o, level, budget)}

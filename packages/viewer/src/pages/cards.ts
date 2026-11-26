@@ -1,5 +1,6 @@
 import type { IndexedRecord } from "@aimem/core";
 import { type Html, html } from "../html.js";
+import { externalSource } from "../source.js";
 import { statusLabel, T, trustLabel, typeLabel } from "../strings.js";
 import { recordHref, type ViewContext } from "../view.js";
 
@@ -50,9 +51,10 @@ export interface CardOptions {
 export function card(c: ViewContext, r: IndexedRecord, o: CardOptions): Html {
   const level = o.level ?? 2;
   const moved = r.fm.moved_to;
+  const source = externalSource(r);
   return html`<li data-ref="${r.id}"><h${level}><a id="${o.anchor}" href="${recordHref(c.nb.config.project, r.id)}">${r.title}</a></h${level}>
 <p class="facts">${o.lead}${o.type !== false && html`<span class="badge">${typeLabel(r.type)}</span> `}${o.status !== false && html`<span class="badge">${statusLabel(r.status)}</span> `}<span class="badge ${r.trust === "verified" ? "ok" : "warn"}">${trustLabel(r.trust, r.fm.verified)}</span>${r.notebook && html` <span class="badge">${r.notebook}</span>`} <span class="meta">${r.id}</span></p>
-${o.meta}${typeof moved === "string" && html`<p class="meta">${T.movedTo(moved)}</p>`}${o.shared && html`<p class="meta">${r.file}</p>`}${o.summary !== false && html`<p>${r.summary}</p>`}${o.after}</li>
+${source && html`<p class="meta">${T.source(source.name)}</p>`}${o.meta}${typeof moved === "string" && html`<p class="meta">${T.movedTo(moved)}</p>`}${o.shared && html`<p class="meta">${r.file}</p>`}${o.summary !== false && html`<p>${r.summary}</p>`}${o.after}</li>
 `;
 }
 

@@ -22,7 +22,7 @@ The web app exists for people who do not live in git or the terminal (PM, QA, De
 /p/:project             Dashboard (role lens selector; the lens narrows dashboard and lists, never search)
 /p/:project/search      Global search (also Cmd/Ctrl-K)
 /p/:project/ask         Ask the notebook: answers with citations (15 §10)
-/p/:project/import      Upload or link documents; import results (16)
+/p/:project/import      Upload or link documents; import results (16) (local viewer: a guide to the CLI, no upload, 24)
 /p/:project/sources     Connected sources and sync history (admin)
 /p/:project/records     Browse by type, filters
 /p/:project/r/:ref      Record page

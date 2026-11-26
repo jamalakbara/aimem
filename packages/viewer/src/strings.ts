@@ -19,6 +19,7 @@ const SYSTEMS: ReadonlyMap<string, string> = new Map([
   ["google-doc", "Google Doc"],
   ["google-sheet", "Google Sheet"],
   ["upload", "Imported file"],
+  ["odoo", "Odoo"],
 ]);
 export const FRESHNESS = { stale: "May be out of date", expired: "Expired" } as const;
 
@@ -190,8 +191,84 @@ export const T = {
   notHere: "not in this notebook",
   moved: (to: string) => `This record moved to ${to}, which is not available on this computer.`,
   source: (from: string) => `Source: ${from}`,
+  sheetRow: (row: string) => `row ${row}`,
+  sheetKey: (key: string) => `row with key ${key}`,
+  editAtSource: "Edit at source",
+  opens: (host: string) => `Opens ${host}`,
+  importLink: "How to import documents",
   sharedRest: (n: number) =>
     `${n} more ${n === 1 ? "record is" : "records are"} not shown. Run aimem validate.`,
   shared: (n: number, id: string) => `${n} records share ${id}`,
   sourceGone: "The source was missing or could not be read at the last sync.",
+};
+
+/** One paragraph, or command lines to type, of the import guide. */
+type Block = { text: string } | { commands: readonly string[] };
+const text = (t: string): Block => ({ text: t });
+const run = (...commands: string[]): Block => ({ commands });
+
+/** The import guide (24 decision 3). A test runs every command, so they stay those of the CLI. */
+export const GUIDE: {
+  title: string;
+  intro: string;
+  visible: string;
+  sections: readonly { heading: string; blocks: readonly Block[] }[];
+} = {
+  title: "Import documents",
+  intro:
+    "This viewer is read-only: nothing is uploaded here. Documents and sheets are added with the aimem command line, run in the project folder. If you do not use a terminal, ask a teammate who does.",
+  visible: "Imported content is visible to everyone who can read this repository.",
+  sections: [
+    {
+      heading: "Import a file",
+      blocks: [
+        text(
+          "A document (.md, .markdown, .txt, .docx or .pdf) becomes one record. A sheet (.csv or .xlsx) becomes one record for each row. A file can be at most 10 MB.",
+        ),
+        run("aimem import notes.md"),
+        text(
+          "Importing the same file again updates its record. A file that seems to contain a password or key is refused, and nothing is written.",
+        ),
+      ],
+    },
+    {
+      heading: "Start a sheet from a template",
+      blocks: [
+        run("aimem templates list", "aimem templates export tasks --format csv --out tasks.csv"),
+        text(
+          "Fill in one task on each row, then import the sheet. For an Excel workbook, --sheet <name> picks the worksheet.",
+        ),
+        run("aimem import tasks.csv --as tasks"),
+      ],
+    },
+    {
+      heading: "Google Docs and Sheets",
+      blocks: [
+        text(
+          "This needs a Google service account. Keep its key file outside the project, set AIMEM_GOOGLE_CREDENTIALS to its path, and share the folder or document with the service account.",
+        ),
+        text(
+          "Choose the folder to read. A person does this, not an agent. For a single document, use --file instead of --folder.",
+        ),
+        run("aimem sources add google --folder <folder-id>", "aimem sources status"),
+        text("Look at what would change, then sync."),
+        run("aimem sources sync --dry-run", "aimem sources sync"),
+        text(
+          "Two people who sync the same documents on separate branches get merge conflicts, so let one person sync, or pull before you sync.",
+        ),
+        text("To see the sources, or to stop reading from Google (the records stay):"),
+        run("aimem sources list", "aimem sources remove google"),
+      ],
+    },
+    {
+      heading: "Change an imported record",
+      blocks: [
+        text(
+          "Change the document where it came from, then import or sync again. Where aimem has a web address for it, the record page has Edit at source.",
+        ),
+        text("To edit a record in aimem from now on, detach it. Updates from its source then stop."),
+        run("aimem detach <ref>"),
+      ],
+    },
+  ],
 };

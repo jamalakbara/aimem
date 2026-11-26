@@ -3,7 +3,7 @@ import { RECORD_TYPES, STATUSES } from "@aimem/schema";
 import { type Html, html } from "../html.js";
 import { readChoice } from "../query.js";
 import { dateLabel, severityLabel, T, typePlural } from "../strings.js";
-import { type Page, type Section, sectionHref, shown, type ViewContext } from "../view.js";
+import { importHref, type Page, type Section, sectionHref, shown, type ViewContext } from "../view.js";
 import { byUpdated, card } from "./cards.js";
 import { notebookPage } from "./layout.js";
 import { listPage } from "./lists.js";
@@ -24,6 +24,10 @@ function incident(r: IndexedRecord): string[] {
   ];
 }
 
+/** The way to the import guide, on the dashboard and under Browse. */
+export const importLink = (c: ViewContext): Html =>
+  html`<p class="more"><a href="${importHref(c.nb.config.project, c.lens)}">${T.importLink}</a></p>`;
+
 /** The types with their counts (of the lens), each linking to its list. Also on the dashboard. */
 export function typeMenu(c: ViewContext): Html {
   const { project } = c.nb.config;
@@ -38,7 +42,8 @@ export function typeMenu(c: ViewContext): Html {
 `;
   });
   return html`<ul class="types" role="list">
-${items}</ul>`;
+${items}</ul>
+${importLink(c)}`;
 }
 
 /** Browse by type: a menu of the types with their counts, and the list of one type (24 §5.5). */
