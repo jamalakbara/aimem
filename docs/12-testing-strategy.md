@@ -199,6 +199,25 @@ Server mode: same scenarios through the API with parallel requests, plus transac
 - Security checklist (09 §9) complete.
 - Dogfood: 2 projects × 2 weeks with the author's real agents; issues triaged.
 
+## Local viewer in a browser (24 §5.8)
+
+`pnpm test:e2e` builds, starts the built `aimem serve web` on made-up copies of
+`medium` and on an empty notebook, and runs `packages/viewer/test/e2e/*.spec.ts`
+in Chromium. First run: `pnpm exec playwright install chromium`.
+
+| File | Checks |
+|------|--------|
+| `a11y.spec.ts` | axe (WCAG 2.1 A and AA) on every page type and state in light and dark, at 1280 and 390 px; page titles, one `h1`, heading levels, control names, trust and current page in words. Best-practice rules are reported as test annotations, not as failures |
+| `keyboard.spec.ts` | Tab order, visible focus ring with 3 : 1 contrast, nothing covered, no trap; skip link, search and back, filters, pages, role lens, copy status; the forms without the script |
+| `display.spec.ts` | no sideways scroll at 640 px (200 % zoom of 1280) and 320 px; reduced motion; contrast of field edges |
+| `safety.spec.ts` | hostile Markdown and text in the browser's own document, source links, CSP; a crawl of every linked page leaves the notebook unchanged |
+
+Each test also fails on a request to another host, a console error, a dialog or a
+request other than GET. `pnpm test:budget` runs `timing.budget.ts` alone: on 5,000
+records the median of a cached page must be under 300 ms and of a search under
+600 ms. CI runs both on Ubuntu / Node 24 only. Not covered: other browsers,
+screen readers, real phones, and real browser zoom (the viewport is emulated).
+
 ## Hosted CI runner capacity
 
 CI keeps Ubuntu, macOS and Windows on Node 22 and 24, with identical lint,

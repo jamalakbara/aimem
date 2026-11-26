@@ -121,6 +121,7 @@ Decided with the same approval (2026-11-25):
 - Wisnu's script on one fixture notebook, with one non-developer. This needs a person the owner chooses.
 - Budget on 5,000 records, in the test machine's terms: a cached page under 300 ms and a search under 600 ms, measured outside the parallel unit suite so a busy machine does not fail a merge.
 - Vitest covers the HTTP behaviour on all six CI cells. Playwright runs on Ubuntu / Node 24 only (new dev dependencies `@playwright/test`, `@axe-core/playwright`).
+- Status: the automated checks and the time budget are written (12, "Local viewer in a browser"). The acceptance run with a person has not been held, so 5.8 is not complete.
 
 ## Expected files
 
