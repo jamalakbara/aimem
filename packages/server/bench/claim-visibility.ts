@@ -28,6 +28,9 @@ interface Instance {
   log: string[];
 }
 
+/** Starting an instance is bounded too (QA 6.1b P3): without its "listening" line in time, it is killed. */
+const START_TIMEOUT_MS = 30_000;
+
 function startInstance(name: string, databaseUrl: string): Promise<Instance> {
   const proc = spawn(process.execPath, [BIN, "serve", "--port", "0"], {
     env: { PATH: process.env.PATH ?? "", DATABASE_URL: databaseUrl, AIMEM_INSTANCE: name },
@@ -46,6 +49,14 @@ function startInstance(name: string, databaseUrl: string): Promise<Instance> {
       }
     });
     proc.on("exit", (c) => fail(new Error(`instance ${name} exited with ${c}`)));
+    const timer = setTimeout(() => {
+      proc.kill("SIGKILL");
+      fail(new Error(`instance ${name} did not start within ${START_TIMEOUT_MS} ms`));
+    }, START_TIMEOUT_MS);
+    proc.once("exit", () => clearTimeout(timer));
+    proc.stdout?.on("data", () => {
+      if (/listening on/.test(out)) clearTimeout(timer);
+    });
   });
 }
 
@@ -54,6 +65,8 @@ const stopInstance = (i: Instance) =>
     if (i.proc.exitCode !== null) return done();
     i.proc.once("exit", () => done());
     i.proc.kill("SIGTERM");
+    // An instance that does not stop within 5 s is killed, so teardown always ends.
+    setTimeout(() => i.proc.exitCode === null && i.proc.kill("SIGKILL"), 5_000).unref();
   });
 
 function gitSha(): string {
@@ -69,12 +82,19 @@ async function main(): Promise<number> {
   const { values } = parseArgs({ options: { out: { type: "string", default: "p95-report.json" } } });
   const out = values.out as string;
   const instances: Instance[] = [];
+  // SIGTERM/SIGINT (a cancelled CI job) stop the run like its deadline: teardown, then the report.
+  const outside = new AbortController();
+  for (const sig of ["SIGTERM", "SIGINT"] as const)
+    process.once(sig, () => outside.abort(new Error(`stopped by ${sig}`)));
   const { verdict: v, report } = await runMeasurement({
     out,
+    signal: outside.signal,
     meta: {
       kind: "aimem claim visibility (plan 6.1 §8)",
       label: "simulation on one machine; not a LAN or internet measurement",
       sha: gitSha(),
+      // On pull_request runs GITHUB_SHA is a temporary merge commit; the head is what "5 runs on one head" counts.
+      headSha: process.env.AIMEM_HEAD_SHA || null,
       runner: {
         name: process.env.RUNNER_NAME ?? null,
         os: `${platform()} ${release()} ${arch()}`,

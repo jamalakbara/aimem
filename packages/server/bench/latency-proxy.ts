@@ -3,7 +3,8 @@ import { createConnection, createServer, type Server, type Socket } from "node:n
 /**
  * A TCP proxy for profile 3 of the measurement (plan 6.1 §8): every chunk, in both directions, is forwarded
  * `delayMs` after it arrived. Order is kept, and delays do not add up: a chunk that arrives while another waits is
- * sent at its own arrival + delay, not after the other's. Only data is delayed; the TCP handshake to the proxy is
+ * sent at its own arrival + delay, not after the other's. A normal close is queued behind the data before it.
+ * Only data is delayed; the TCP handshake to the proxy is
  * as fast as loopback (plan §8, QA re-check 4), and there is no TLS.
  */
 export interface LatencyProxy {
@@ -20,6 +21,7 @@ function delayed(from: Socket, to: Socket, delayMs: number, now: () => number): 
   let ended = false;
   const flush = () => {
     timer = undefined;
+    if (to.destroyed) return;
     const t = now();
     while (queue.length && (queue[0] as { at: number }).at <= t) to.write((queue.shift() as { chunk: Buffer }).chunk);
     if (queue.length) timer = setTimeout(flush, Math.max(0, (queue[0] as { at: number }).at - now()));
@@ -29,9 +31,10 @@ function delayed(from: Socket, to: Socket, delayMs: number, now: () => number): 
     queue.push({ at: now() + delayMs, chunk });
     if (!timer) timer = setTimeout(flush, delayMs);
   });
+  // A normal close (FIN) is forwarded like data: after everything queued before it (QA 6.1b P1).
   from.on("end", () => {
     ended = true;
-    if (!timer && queue.length === 0) to.end();
+    if (!timer && queue.length === 0 && !to.destroyed) to.end();
   });
 }
 
@@ -44,9 +47,14 @@ export async function startLatencyProxy(o: {
   const now = o.now ?? (() => performance.now());
   const sockets = new Set<Socket>();
   let accepted = 0;
-  const server: Server = createServer((client) => {
+  // Half-open sockets: when one side has finished sending, the reply still queued for it is delivered first.
+  const server: Server = createServer({ allowHalfOpen: true }, (client) => {
     accepted++;
-    const upstream = createConnection({ port: o.targetPort, host: o.targetHost ?? "127.0.0.1" });
+    const upstream = createConnection({
+      port: o.targetPort,
+      host: o.targetHost ?? "127.0.0.1",
+      allowHalfOpen: true,
+    });
     for (const s of [client, upstream]) {
       sockets.add(s);
       s.setNoDelay(true);
@@ -58,8 +66,13 @@ export async function startLatencyProxy(o: {
     };
     client.on("error", kill);
     upstream.on("error", kill);
-    client.on("close", () => upstream.destroy());
-    upstream.on("close", () => client.destroy());
+    // Only a broken connection tears down the other side at once; a normal close goes through the queue.
+    client.on("close", (hadError) => {
+      if (hadError) kill();
+    });
+    upstream.on("close", (hadError) => {
+      if (hadError) kill();
+    });
     delayed(client, upstream, o.delayMs, now);
     delayed(upstream, client, o.delayMs, now);
   });

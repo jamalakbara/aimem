@@ -37,7 +37,7 @@ export interface SseStream {
 export function openStream(
   base: string,
   path: string,
-  o: { token?: string; lastEventId?: string; headers?: Record<string, string> } = {},
+  o: { token?: string; lastEventId?: string; headers?: Record<string, string>; timeoutMs?: number } = {},
 ): Promise<SseStream> {
   return new Promise((done, fail) => {
     const url = new URL(path, base);
@@ -56,6 +56,7 @@ export function openStream(
         },
       },
       (res) => {
+        clearTimeout(timer);
         let rawText = "";
         let buffer = "";
         let ended = false;
@@ -170,7 +171,14 @@ export function openStream(
         done(s);
       },
     );
-    req.on("error", fail);
+    // Without an answer (status line and headers) in `timeoutMs`, the request is dropped and the promise fails.
+    const timer = o.timeoutMs
+      ? setTimeout(() => req.destroy(new Error(`no answer within ${o.timeoutMs} ms`)), o.timeoutMs)
+      : undefined;
+    req.on("error", (e) => {
+      clearTimeout(timer);
+      fail(e);
+    });
     req.end();
   });
 }

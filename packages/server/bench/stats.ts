@@ -80,11 +80,16 @@ const COUNTS: Counts = { warmup: WARMUP, measured: MEASURED };
 
 export function problems(r: ProfileResult, counts: Counts = COUNTS): string[] {
   const out: string[] = [];
+  // Samples missing because of failures make a failed run; missing without a failure, a run that is not valid.
+  const mark = r.failures.length ? "" : INVALID;
   if (r.warmup.length !== counts.warmup)
-    out.push(`${r.name}: ${r.warmup.length} warm-up samples, expected ${counts.warmup}${INVALID}`);
+    out.push(`${r.name}: ${r.warmup.length} warm-up samples, expected ${counts.warmup}${mark}`);
   if (r.samples.length !== counts.measured)
-    out.push(`${r.name}: ${r.samples.length} samples, expected ${counts.measured}${INVALID}`);
+    out.push(`${r.name}: ${r.samples.length} samples, expected ${counts.measured}${mark}`);
   for (const f of r.failures) out.push(`${r.name}: sample ${f.sample} ${f.kind}: ${f.detail}`);
+  // One limit per sample, from sending the POST to receiving the event (QA 6.1b P2): a longer one fails the run.
+  const over = [...r.warmup, ...r.samples].filter((x) => x > SAMPLE_TIMEOUT_MS);
+  if (over.length) out.push(`${r.name}: ${over.length} samples over ${SAMPLE_TIMEOUT_MS} ms`);
   const wrongA = r.instances.a.filter((x) => x !== r.expected.a);
   if (wrongA.length) out.push(`${r.name}: ${wrongA.length} POSTs answered by another instance than ${r.expected.a}${INVALID}`);
   if (r.instances.b !== r.expected.b) out.push(`${r.name}: stream on ${r.instances.b || "no instance"}, expected ${r.expected.b}${INVALID}`);
