@@ -243,3 +243,16 @@ export async function age(pool: Pool, task: string, minutesAgo: number): Promise
     [task, minutesAgo],
   );
 }
+
+/**
+ * The whole stored state that a refused request must leave alone: every claim with every column, every event and
+ * every audit row (token use times are not part of it).
+ */
+export async function state(pool: Pool): Promise<string> {
+  const [claims, events, audit] = await Promise.all([
+    pool.query("SELECT * FROM claims ORDER BY id"),
+    pool.query("SELECT project_id, seq, type, payload, at FROM events ORDER BY project_id, seq"),
+    pool.query("SELECT id, project_id, actor, action, target, at, meta FROM audit_log ORDER BY id"),
+  ]);
+  return JSON.stringify([claims.rows, events.rows, audit.rows]);
+}

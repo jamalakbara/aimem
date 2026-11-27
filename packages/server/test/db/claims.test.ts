@@ -20,7 +20,8 @@ import {
 let db: TestDb;
 let srv: RunningServer;
 let dropNext: string | undefined;
-let failCommitFor: string | undefined;
+let cutConnectionAt: { point: "read" | "beforeCommit"; task: string } | undefined;
+let loseNextCommitConfirmation = false;
 let alphaId: string;
 // biome-ignore lint/suspicious/noExplicitAny: clients of the test project
 let dana: any, rina: any, bot1: any, bot2: any, beta: any;
@@ -29,8 +30,8 @@ beforeAll(async () => {
   db = await freshDb();
   srv = await server(db, {
     at: async (point, info) => {
-      // KL-7 (1): the database connection is lost just before commit.
-      if (point === "beforeCommit" && info.task === failCommitFor) {
+      // KL-7 (1): the database connection is lost in the middle of the transaction or just before commit.
+      if (cutConnectionAt && point === cutConnectionAt.point && info.task === cutConnectionAt.task) {
         const pid = (await info.client.query("SELECT pg_backend_pid() AS p")).rows[0].p;
         await db.pool.query("SELECT pg_terminate_backend($1)", [pid]);
         // Wait until the backend is really gone, so the commit cannot slip through first.
@@ -41,6 +42,15 @@ beforeAll(async () => {
           if (r.rows[0].n === 0) break;
           await sleep(10);
         }
+      }
+    },
+    // KL-7 (3): COMMIT runs and stores the change, then its confirmation is lost. Only a client-side failure
+    // after a real COMMIT makes this deterministic; a TCP proxy could not tell where in the reply it cuts.
+    commit: async (client) => {
+      await client.query("COMMIT");
+      if (loseNextCommitConfirmation) {
+        loseNextCommitConfirmation = false;
+        throw new Error("Connection terminated unexpectedly");
       }
     },
     afterCommit: (info) => {
@@ -280,16 +290,63 @@ describe("acquire, heartbeat, release (plan §4, §6)", () => {
     expect((await bot1.acquire({ task, steal: true })).status).toBe(409);
   });
 
-  it("a connection lost before commit leaves nothing behind, and the server recovers (KL-7)", async () => {
+  it("a connection lost during the transaction rolls back for sure and says so (KL-7)", async () => {
     const task = newTask();
     const before = await counts(db.pool);
-    failCommitFor = `alpha:${task}`;
+    cutConnectionAt = { point: "read", task: `alpha:${task}` };
     const r = await dana.acquire({ task });
-    failCommitFor = undefined;
+    cutConnectionAt = undefined;
     expect(r.status).toBe(503);
     checkProblem(r, "SYNC_FAILED");
+    expect(r.json.detail).toMatch(/nothing was saved/);
+    expect(r.json.details).toBeUndefined();
     expect(await counts(db.pool)).toEqual(before);
     expect((await dana.acquire({ task })).status).toBe(201);
+  });
+
+  it("a connection lost at COMMIT is an unknown outcome; repeating with the session tells (KL-7)", async () => {
+    const task = newTask();
+    const before = await counts(db.pool);
+    cutConnectionAt = { point: "beforeCommit", task: `alpha:${task}` };
+    const r = await dana.acquire({ task });
+    cutConnectionAt = undefined;
+    expect(r.status).toBe(503);
+    checkProblem(r, "SYNC_FAILED");
+    expect(r.json.detail).toMatch(/may or may not have been saved.*same Aimem-Session/);
+    expect(r.json.details).toEqual({ outcome: "unknown" });
+    expect(r.headers.get("retry-after")).toBe("1");
+    // Here nothing was stored, so the repeat creates it.
+    expect(await counts(db.pool)).toEqual(before);
+    expect((await dana.acquire({ task })).status).toBe(201);
+  });
+
+  it("a stored change whose COMMIT confirmation is lost: the repeat gets 200 and nothing doubles (KL-7)", async () => {
+    const task = newTask();
+    const ref = `alpha:${task}`;
+    const before = await counts(db.pool);
+    loseNextCommitConfirmation = true;
+    const r = await dana.acquire({ task });
+    expect(loseNextCommitConfirmation).toBe(false);
+    expect(r.status).toBe(503);
+    expect(r.json.details).toEqual({ outcome: "unknown" });
+    expect(r.json.detail).not.toMatch(/nothing was saved/);
+    const stored = async () =>
+      (
+        await db.pool.query(
+          `SELECT (SELECT count(*) FROM claims WHERE task_ref = $1)::int AS claims,
+                  (SELECT count(*) FROM events WHERE payload->'claim'->>'task' = $1)::int AS events,
+                  (SELECT count(*) FROM audit_log WHERE target = $1)::int AS audit`,
+          [ref],
+        )
+      ).rows[0];
+    expect(await stored()).toEqual({ claims: 1, events: 1, audit: 1 });
+    const again = await dana.acquire({ task });
+    expect(again.status).toBe(200);
+    expect(again.json.claim).toMatchObject({ task: ref, holder: "human:dana", session: "s-dana" });
+    expect(await stored()).toEqual({ claims: 1, events: 1, audit: 1 });
+    const after = await counts(db.pool);
+    expect(after).toEqual({ claims: before.claims + 1, events: before.events + 1, audit: before.audit + 1 });
+    await assertInvariants(db.pool);
   });
 });
 

@@ -1,11 +1,22 @@
 import { connect } from "node:net";
 import { createToken, newToken, ROUTES, type RunningServer } from "@aimem/server";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { assertInvariants, call, counts, freshDb, newTask, server, type TestDb, token } from "./helpers.js";
+import {
+  assertInvariants,
+  call,
+  counts,
+  freshDb,
+  newTask,
+  server,
+  state,
+  type TestDb,
+  token,
+} from "./helpers.js";
 
 let db: TestDb;
 let srv: RunningServer;
 const T: Record<string, string> = {};
+const goneTasks: string[] = [];
 
 beforeAll(async () => {
   db = await freshDb();
@@ -26,9 +37,22 @@ beforeAll(async () => {
   await p.query("UPDATE tokens SET revoked_at = clock_timestamp() WHERE id = $1", [revoked.id]);
   T.revoked = revoked.token;
   // Rina is a member of alpha and beta; this token is for beta only.
-  await token(p, "alpha", "rina");
+  T.rinaAlpha = await token(p, "alpha", "rina");
   T.otherProject = await token(p, "beta", "rina");
   T.removed = await token(p, "alpha", "gone");
+  // Claims that the removed member still owns, so that a request that slipped through would change them.
+  for (let i = 0; i < 4; i++) {
+    const task = newTask();
+    const r = await call(srv.url, {
+      method: "POST",
+      path: "/v1/projects/alpha/claims",
+      token: T.removed,
+      session: "s-m",
+      body: { task },
+    });
+    expect(r.status).toBe(201);
+    goneTasks.push(task);
+  }
   await p.query(
     "DELETE FROM memberships WHERE user_id = (SELECT id FROM users WHERE handle = 'gone') AND project_id = (SELECT id FROM projects WHERE slug = 'alpha')",
   );
@@ -38,89 +62,133 @@ afterAll(async () => {
   await db.drop();
 });
 
-/** A request by a caller that is refused before the resource is looked at. */
-function attempt(route: (typeof ROUTES)[number], tok: string | undefined, authHeader?: string) {
-  const task = newTask();
-  return call(srv.url, {
+type Route = (typeof ROUTES)[number];
+
+/**
+ * The target of a refused request: for heartbeat and release, an existing claim that belongs to the identity the
+ * token would have if a check were skipped, so a skipped check would change it; for acquire, a free task.
+ */
+async function target(route: Route, owner: string | undefined): Promise<string> {
+  if (route.name === "heartbeat" || route.name === "release") {
+    if (owner === "gone") {
+      const task = goneTasks.shift();
+      if (!task) throw new Error("no claim of the removed member left");
+      return task;
+    }
+    const task = newTask();
+    const r = await call(srv.url, {
+      method: "POST",
+      path: "/v1/projects/alpha/claims",
+      token: owner ?? T.full,
+      session: "s-m",
+      body: { task },
+    });
+    expect(r.status).toBe(201);
+    return task;
+  }
+  return newTask();
+}
+
+/** A refused request, with the full stored state compared before and after it (QA #121, IZ-1). */
+async function refused(
+  route: Route,
+  o: { token?: string; header?: string; owner?: string },
+  status: number,
+  code: string,
+  label: string,
+) {
+  const task = await target(route, o.owner);
+  // Later than the claim's own heartbeat, so a heartbeat that slipped through would change the row.
+  await new Promise((d) => setTimeout(d, 3));
+  const before = await state(db.pool);
+  const r = await call(srv.url, {
     method: route.method,
     path: route.path("alpha", task),
-    ...(tok !== undefined ? { token: tok } : {}),
-    ...(authHeader !== undefined ? { headers: { Authorization: authHeader } } : {}),
+    ...(o.token !== undefined ? { token: o.token } : {}),
+    ...(o.header !== undefined ? { headers: { Authorization: o.header } } : {}),
     session: "s-m",
     ...(route.name === "acquire" ? { body: { task } } : {}),
   });
+  expect(r.status, label).toBe(status);
+  expect(r.json.code, label).toBe(code);
+  if (status === 401) expect(r.headers.get("www-authenticate"), label).toBe('Bearer realm="aimem"');
+  expect(await state(db.pool), `${label}: stored state changed`).toBe(before);
 }
 
 describe("permission matrix (IZ-1, plan §6.4)", () => {
-  const expectFor = (route: (typeof ROUTES)[number], scopes: string[]) =>
-    scopes.includes(route.scope) ? "allowed" : "403";
-
-  it("every route answers each kind of caller as the table says, in the fixed order", async () => {
+  it("every refusal leaves the stored state as it was, also next to existing claims", async () => {
     expect(ROUTES.map((r) => r.name)).toEqual(["live", "acquire", "heartbeat", "release"]);
     for (const route of ROUTES) {
-      const before = await counts(db.pool);
-      for (const [name, tok, header] of [
-        ["no token", undefined, undefined],
-        ["Basic scheme", undefined, `Basic ${Buffer.from("a:b").toString("base64")}`],
-        ["malformed", undefined, "Bearer abc"],
-        ["lower-case scheme", undefined, `bearer ${T.full}`],
-        ["unknown", newToken(), undefined],
-        ["revoked", T.revoked, undefined],
-        ["expired", T.expired, undefined],
-      ] as const) {
-        const r = await attempt(route, tok, header);
-        expect(r.status, `${route.name} ${name}`).toBe(401);
-        expect(r.json.code).toBe("UNAUTHENTICATED");
-        expect(r.headers.get("www-authenticate")).toBe('Bearer realm="aimem"');
-      }
-      for (const [name, tok] of [
-        ["other project", T.otherProject],
-        ["membership removed", T.removed],
-      ] as const) {
-        const r = await attempt(route, tok);
-        expect(r.status, `${route.name} ${name}`).toBe(404);
-        expect(r.json.code).toBe("NOT_FOUND");
-      }
-      // Heartbeat and release of someone else's claim are conflicts; their own claims need their own token.
+      const at = (name: string) => `${route.name} ${name}`;
+      // 401: the identity in brackets is the one the token would have, so its own claim is the target.
+      await refused(route, {}, 401, "UNAUTHENTICATED", at("no token"));
+      await refused(
+        route,
+        { header: `Basic ${Buffer.from("a:b").toString("base64")}` },
+        401,
+        "UNAUTHENTICATED",
+        at("Basic scheme"),
+      );
+      await refused(route, { header: "Bearer abc" }, 401, "UNAUTHENTICATED", at("malformed"));
+      await refused(
+        route,
+        { header: `bearer ${T.full}`, owner: T.full },
+        401,
+        "UNAUTHENTICATED",
+        at("lower-case scheme"),
+      );
+      await refused(route, { token: newToken() }, 401, "UNAUTHENTICATED", at("unknown"));
+      await refused(route, { token: T.revoked, owner: T.full }, 401, "UNAUTHENTICATED", at("revoked (dana)"));
+      await refused(route, { token: T.expired, owner: T.full }, 401, "UNAUTHENTICATED", at("expired (dana)"));
+      // 404: rina's beta token against her own alpha claim; the removed member against claims it still owns.
+      await refused(
+        route,
+        { token: T.otherProject, owner: T.rinaAlpha },
+        404,
+        "NOT_FOUND",
+        at("other project (rina)"),
+      );
+      await refused(
+        route,
+        { token: T.removed, owner: "gone" },
+        404,
+        "NOT_FOUND",
+        at("membership removed (gone)"),
+      );
+      // 403: dana's tokens without the scope, against dana's own claim.
       for (const [name, tok, scopes] of [
         ["no scope", T.none, []],
         ["admin only", T.admin, ["admin"]],
         ["read only", T.readOnly, ["read"]],
         ["write:live only", T.writeOnly, ["write:live"]],
+      ] as const)
+        if (!(scopes as readonly string[]).includes(route.scope))
+          await refused(route, { token: tok, owner: T.full }, 403, "PERMISSION_DENIED", at(name));
+    }
+    await assertInvariants(db.pool);
+  });
+
+  it("an allowed scope does reach the claim (the same targets, so the refusals above are meaningful)", async () => {
+    for (const route of ROUTES)
+      for (const [name, tok, scopes] of [
+        ["read only", T.readOnly, ["read"]],
+        ["write:live only", T.writeOnly, ["write:live"]],
+        ["both", T.full, ["read", "write:live"]],
       ] as const) {
-        const task = newTask();
-        if (
-          route.name !== "live" &&
-          route.name !== "acquire" &&
-          expectFor(route, [...scopes]) === "allowed"
-        ) {
-          // The same user (dana) holds the claim with the same session, so it is "theirs".
-          expect(
-            (
-              await call(srv.url, {
-                method: "POST",
-                path: "/v1/projects/alpha/claims",
-                token: T.full,
-                session: "s-own",
-                body: { task },
-              })
-            ).status,
-          ).toBe(201);
-        }
+        if (!(scopes as readonly string[]).includes(route.scope)) continue;
+        const task = await target(route, T.full);
+        await new Promise((d) => setTimeout(d, 3));
+        const before = await state(db.pool);
         const r = await call(srv.url, {
           method: route.method,
           path: route.path("alpha", task),
           token: tok,
-          session: "s-own",
+          session: "s-m",
           ...(route.name === "acquire" ? { body: { task } } : {}),
         });
-        if (expectFor(route, [...scopes]) === "403") {
-          expect(r.status, `${route.name} ${name}`).toBe(403);
-          expect(r.json.code).toBe("PERMISSION_DENIED");
-        } else expect(r.status, `${route.name} ${name}`).toBeLessThan(300);
+        expect(r.status, `${route.name} ${name}`).toBe(route.name === "acquire" ? 201 : 200);
+        if (route.name !== "live") expect(await state(db.pool), `${route.name} ${name}`).not.toBe(before);
       }
-      void before;
-    }
     await assertInvariants(db.pool);
   });
 

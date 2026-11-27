@@ -88,6 +88,11 @@ export class Claims {
     private readonly hooks: Hooks = {},
   ) {}
 
+  /** A writing transaction; tests may replace its COMMIT (hooks.commit). */
+  private tx<T>(fn: (c: Client) => Promise<T>): Promise<T> {
+    return inTx(this.pool, fn, "BEGIN ISOLATION LEVEL READ COMMITTED", this.hooks.commit?.bind(this.hooks));
+  }
+
   private async hook(point: HookPoint, info: HookInfo) {
     await this.hooks.at?.(point, info);
   }
@@ -212,7 +217,7 @@ export class Claims {
     const info = (c: Client): HookInfo => ({ op: "acquire", task: input.task, client: c });
     let out: { status: number; body: unknown; changed: boolean };
     try {
-      out = await inTx(this.pool, async (c) => {
+      out = await this.tx(async (c) => {
         const { t, current } = await this.begin(c, caller, input.task, info(c));
         const d = decide(current && open(current), { kind: "acquire", steal: input.steal, me }, t);
         if ("error" in d) fail(d, current);
@@ -272,7 +277,7 @@ export class Claims {
 
   async heartbeat(caller: Caller, session: string, task: string): Promise<Outcome> {
     const me: Owner = { userId: caller.userId, holder: caller.holder, session };
-    return inTx(this.pool, async (c) => {
+    return this.tx(async (c) => {
       const info: HookInfo = { op: "heartbeat", task, client: c };
       const { t, current } = await this.begin(c, caller, task, info);
       const d = decide(current && open(current), { kind: "heartbeat", me }, t);
@@ -296,7 +301,7 @@ export class Claims {
 
   async release(caller: Caller, session: string, task: string): Promise<Outcome> {
     const me: Owner = { userId: caller.userId, holder: caller.holder, session };
-    return inTx(this.pool, async (c) => {
+    return this.tx(async (c) => {
       const info: HookInfo = { op: "release", task, client: c };
       const { t, current } = await this.begin(c, caller, task, info);
       const d = decide(current && open(current), { kind: "release", me }, t);

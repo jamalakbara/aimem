@@ -1,6 +1,6 @@
 export { createToken, type NewTokenInput, revokeToken, SCOPES, type Scope } from "./admin.js";
 export { type ClaimView, taskLockKey } from "./claims.js";
-export { createPool, inTx, type Pool } from "./db.js";
+export { CommitUncertain, createPool, inTx, type Pool } from "./db.js";
 export {
   type Action,
   decide,

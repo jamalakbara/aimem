@@ -11,6 +11,11 @@ export interface HookInfo {
 
 export interface Hooks {
   at?(point: HookPoint, info: HookInfo): Promise<void> | void;
+  /**
+   * Replaces the COMMIT statement. Tests use it to run the real COMMIT and then lose its confirmation, the one
+   * failure whose outcome the server cannot know.
+   */
+  commit?(client: Client): Promise<void>;
   /** After commit, before the response. `drop` closes the connection without an answer (a lost response). */
   afterCommit?(info: { op: HookInfo["op"]; task: string; drop(): void }): Promise<void> | void;
 }

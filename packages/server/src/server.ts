@@ -2,7 +2,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import type { Scope } from "./admin.js";
 import { authenticate, type Caller } from "./auth.js";
 import { Claims, type Outcome } from "./claims.js";
-import { createPool, type Pool, unavailable } from "./db.js";
+import { CommitUncertain, createPool, type Pool, unavailable } from "./db.js";
 import type { Hooks } from "./hooks.js";
 import { HttpError, notFound, problemBody, unauthenticated } from "./problem.js";
 import { readAcquire, readEmptyBody, readSession, readTaskId } from "./validate.js";
@@ -98,6 +98,23 @@ function readBody(req: IncomingMessage): Promise<{ text: string; tooLarge: boole
   });
 }
 
+/** How a failure that is not a request error is answered; only a lost COMMIT confirmation has an unknown outcome. */
+function failure(e: unknown): HttpError {
+  if (e instanceof CommitUncertain)
+    return new HttpError(
+      503,
+      "SYNC_FAILED",
+      "The database did not confirm the change, so it may or may not have been saved. Repeat the same request with the same Aimem-Session header: the answer then shows what is stored.",
+      { outcome: "unknown" },
+      { "Retry-After": "1" },
+    );
+  if (unavailable(e))
+    return new HttpError(503, "SYNC_FAILED", "The database is not available; nothing was saved.", undefined, {
+      "Retry-After": "1",
+    });
+  return new HttpError(500, "SYNC_FAILED", "The server could not complete the request; nothing was saved.");
+}
+
 export async function startServer(o: ServerOptions): Promise<RunningServer> {
   const pool = o.pool ?? createPool(o.databaseUrl ?? "", o.poolMax ?? 10);
   // A failing idle client must not crash the process; the next query reconnects.
@@ -157,24 +174,7 @@ export async function startServer(o: ServerOptions): Promise<RunningServer> {
       }
       send(out.status, JSON.stringify(out.body), "application/json");
     } catch (e) {
-      const err =
-        e instanceof HttpError
-          ? e
-          : unavailable(e)
-            ? new HttpError(
-                503,
-                "SYNC_FAILED",
-                "The database is not available; nothing was saved.",
-                undefined,
-                {
-                  "Retry-After": "1",
-                },
-              )
-            : new HttpError(
-                500,
-                "SYNC_FAILED",
-                "The server could not complete the request; nothing was saved.",
-              );
+      const err = e instanceof HttpError ? e : failure(e);
       if (!(e instanceof HttpError))
         log(`error ${err.status} ${(e as { code?: string })?.code ?? (e as Error)?.name ?? "unknown"}`);
       send(err.status, problemBody(err), "application/problem+json", err.headers);
