@@ -27,7 +27,7 @@ const MUTATIONS = [
   {
     name: "project filter dropped from overlaps",
     file: `${S}claims.ts`,
-    edits: [["WHERE project_id = $1 AND released_at IS NULL AND paths IS NOT NULL AND task_ref <> $2", "WHERE ($1::bigint IS NOT NULL) AND released_at IS NULL AND paths IS NOT NULL AND split_part(task_ref, ':', 2) <> split_part($2, ':', 2)"]],
+    edits: [["WHERE project_id = $1 AND released_at IS NULL AND paths IS NOT NULL AND task_ref <> $2", "WHERE $1::bigint IS NOT NULL AND released_at IS NULL AND paths IS NOT NULL AND task_ref <> $2"]],
     test: ["claims.test.ts", "same task ID in two projects"],
   },
   {
