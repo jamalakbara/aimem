@@ -1,4 +1,5 @@
-import { createServer, type IncomingMessage, type Server } from "node:http";
+import { createServer, type IncomingMessage, request, type Server, type ServerResponse } from "node:http";
+import type { Socket } from "node:net";
 import {
   EventHub,
   formatEvent,
@@ -24,6 +25,7 @@ class FakeDb {
   allowed = true;
   failReads = false;
   queries = 0;
+  accessChecks = 0;
   commit(projectId: string, type = "claim.created", extra: Record<string, unknown> = {}) {
     const list = this.events.get(projectId) ?? [];
     const seq = BigInt(list.length + 1);
@@ -47,6 +49,7 @@ class FakeDb {
       const n = (this.events.get(params[0] as string) ?? []).length;
       return { rows: [{ last_seq: String(n) }] };
     }
+    if (sql.includes("FROM tokens")) this.accessChecks++;
     if (sql.includes("FROM tokens")) return { rows: this.allowed ? [{ "?column?": 1 }] : [] };
     throw new Error(`unexpected query ${sql}`);
   }
@@ -78,6 +81,8 @@ interface Rig {
   hub: FakeHub;
   streams: Streams;
   base: string;
+  /** Server-side sockets of the requests, in order (connection cleanup). */
+  sockets: Socket[];
   open(path?: string, lastEventId?: string): Promise<SseStream>;
 }
 const servers: Server[] = [];
@@ -89,15 +94,26 @@ afterEach(async () => {
 });
 
 async function rig(
-  o: { maxStreams?: number; pingMs?: number; bufferBytes?: number; drainWaitMs?: number; hooks?: Hooks } = {},
+  o: {
+    maxStreams?: number;
+    pingMs?: number;
+    bufferBytes?: number;
+    drainWaitMs?: number;
+    hooks?: Hooks;
+    /** Runs before `streams.start`, like the token check in server.ts. */
+    beforeStart?: (req: IncomingMessage, res: ServerResponse) => Promise<void>;
+  } = {},
 ) {
   const db = new FakeDb();
   const hub = new FakeHub();
   const streams = new Streams(db, hub, o);
+  const sockets: Socket[] = [];
   const server = createServer((req, res) => {
+    sockets.push(req.socket);
     const url = new URL(req.url ?? "/", "http://x");
     void (async () => {
       try {
+        await o.beforeStart?.(req, res);
         await streams.start(req, res, CALLER, readCursor(req, url));
       } catch (e) {
         const err = e as HttpError;
@@ -115,6 +131,7 @@ async function rig(
     hub,
     streams,
     base,
+    sockets,
     open: (path = "/events", lastEventId) =>
       openStream(base, path, lastEventId !== undefined ? { lastEventId } : {}),
   };
@@ -357,6 +374,83 @@ describe("access, limits and cleanup (IZ-6, EV-9, plan A12)", () => {
     await until(() => r.streams.count === 1, 10_000);
     fast.close();
     await until(() => r.streams.count === 0);
+  });
+
+  it("a client that leaves while its token is still being checked does not keep a slot (QA Q1)", async () => {
+    let started = false;
+    const r = await rig({
+      pingMs: 20,
+      // Hold the start until the client's connection is gone, as a slow token check would.
+      beforeStart: async (_req, res) => {
+        const end = Date.now() + 3_000;
+        while (!(res.socket?.destroyed ?? true) && Date.now() < end)
+          await new Promise((d) => setTimeout(d, 5));
+        started = true;
+      },
+    });
+    const url = new URL(`${r.base}/events?since=0`);
+    const req = request({
+      host: url.hostname,
+      port: url.port,
+      path: url.pathname + url.search,
+      agent: false,
+    });
+    req.on("error", () => undefined);
+    req.end();
+    setTimeout(() => req.destroy(), 50);
+    await until(() => started, 3_000);
+    await new Promise((d) => setTimeout(d, 20));
+    expect(r.streams.count).toBe(0);
+    expect(r.hub.size).toBe(0);
+    // No ping keeps checking access for a client that is not there.
+    const checks = r.db.accessChecks;
+    await new Promise((d) => setTimeout(d, 150));
+    expect(r.db.accessChecks).toBe(checks);
+    // The slot is really free: a limit of one still admits the next client.
+    const next = await r.open();
+    expect(next.status).toBe(200);
+    next.close();
+    await until(() => r.streams.count === 0);
+  });
+
+  it("access is checked again after waiting for a slow reader, before writing more (QA Q4)", async () => {
+    // The ping is far away, so only the check after the wait can stop the stream.
+    const r = await rig({ bufferBytes: 64 * 1024, drainWaitMs: 5_000, pingMs: 60_000 });
+    const s = await r.open("/events?since=0");
+    s.pause();
+    // 300 × 128 KB is far more than the loopback socket buffers hold, so the writer really has to wait.
+    const big = "y".repeat(128 * 1024);
+    for (let i = 0; i < 300; i++) r.db.commit("1", "claim.created", { note: big });
+    r.hub.notify("1");
+    // The first read is 200 events with one access check; the writer then waits for the paused reader.
+    await until(() => r.db.accessChecks >= 1);
+    await new Promise((d) => setTimeout(d, 500));
+    r.db.allowed = false;
+    s.resume();
+    await s.ended;
+    // Without the check after the wait, the whole first read (200 events) would be written after the revocation.
+    expect(s.events.length).toBeLessThan(200);
+    expect(seqs(s)).toEqual(Array.from({ length: s.events.length }, (_, i) => i + 1));
+    await until(() => r.streams.count === 0);
+  });
+
+  it("a closed stream whose reader takes nothing is cut after the wait, not left open (QA N1)", async () => {
+    // A large buffer: everything is queued at once, so no wait happens before the close.
+    const r = await rig({ bufferBytes: 64 * 1024 * 1024, drainWaitMs: 300, pingMs: 60_000 });
+    const s = await r.open("/events?since=0");
+    s.pause();
+    // 300 × 128 KB: queued in the response at once, more than the socket buffers take.
+    const big = "z".repeat(128 * 1024);
+    for (let i = 0; i < 300; i++) r.db.commit("1", "claim.created", { note: big });
+    r.hub.notify("1");
+    await until(() => r.db.accessChecks >= 2);
+    await new Promise((d) => setTimeout(d, 200));
+    r.streams.closeAll();
+    expect(r.streams.count).toBe(0);
+    const socket = r.sockets.at(-1) as Socket;
+    expect(socket.destroyed).toBe(false);
+    await until(() => socket.destroyed, 2_000);
+    s.close();
   });
 
   it("a failed read does not close the stream; it tries again", async () => {

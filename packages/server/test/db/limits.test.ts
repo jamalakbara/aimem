@@ -30,9 +30,11 @@ describe("server limits (plan A12, §6.4)", () => {
     expect(await counts(db.pool)).toEqual(before);
   });
 
-  it("answers 404 for routes outside 6.1a, and healthz without details", async () => {
+  it("answers 404 for routes the server does not have, and healthz without details", async () => {
+    // GET /events is a route since 6.1b (a stream that stays open), so only addresses that do not exist here.
     for (const [method, path] of [
-      ["GET", "/v1/projects/alpha/events"],
+      ["GET", "/v1/projects/alpha/events/extra"],
+      ["POST", "/v1/projects/alpha/events"],
       ["GET", "/v1/projects/alpha/claims"],
       ["POST", "/v1/projects/alpha/live"],
       ["GET", "/"],

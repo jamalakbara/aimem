@@ -151,7 +151,7 @@ describe("one client takes a task, the other sees it (EV-1 over SSE, KT-1)", () 
     const start = await lastSeq();
     const task = newTask();
     const t0 = Date.now();
-    const a = await dana.acquire({ task, paths: ["src/a/"], note: "from A" });
+    const a = await dana.acquire({ task, paths: ["src/a/**"], note: "from A" });
     expect(a.status).toBe(201);
     // The ping is 15 s and LISTEN is up: arriving this fast means the notification woke the stream.
     await b.waitFor(forTask(task), 2_000, "claim.created");

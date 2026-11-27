@@ -72,6 +72,12 @@ async function allowed(db: Queryable, caller: Caller): Promise<boolean> {
   return r.rows.length === 1;
 }
 
+/** The connection already ended (closed, destroyed, or its socket is gone). */
+// `req.destroyed` is not used: a request is destroyed once its body has been read, also on a live connection.
+function gone(res: ServerResponse): boolean {
+  return res.destroyed || res.closed || !res.socket || res.socket.destroyed;
+}
+
 /** Every open SSE stream of one server instance. */
 export class Streams {
   private open = 0;
@@ -129,7 +135,16 @@ export class Streams {
       unsubscribe();
       clearInterval(ping);
       clearTimeout(retry);
-      if (started && !res.destroyed) res.end();
+      if (!started || res.destroyed) return;
+      res.end();
+      // A reader that never takes the rest would keep the connection open: cut it after the same wait (QA N1).
+      if (!res.writableFinished) {
+        const cut = setTimeout(() => {
+          if (!res.writableFinished) res.destroy();
+        }, this.drainWaitMs);
+        cut.unref();
+        res.once("finish", () => clearTimeout(cut));
+      }
     };
     const pump = () => {
       if (closed || !started) return;
@@ -170,7 +185,10 @@ export class Streams {
         res.on("drain", onDrain);
         res.on("close", onClose);
       });
-    /** Reads `seq > last` in order and sends it; access is checked after the read, before the send. */
+    /**
+     * Reads `seq > last` in order and sends it. Access is checked once per read, after the read and before the
+     * first write, and again after every wait for a slow reader (plan §5, QA Q4).
+     */
     const drain = async () => {
       for (;;) {
         if (closed) return;
@@ -191,9 +209,14 @@ export class Streams {
           if (closed) return;
           // More than the limit is still unsent: wait for the reader; one that does not read is dropped and
           // reconnects with Last-Event-ID (plan §5).
-          if (res.writableLength >= this.bufferBytes && !(await drained())) {
-            res.destroy();
-            return close();
+          if (res.writableLength >= this.bufferBytes) {
+            if (!(await drained())) {
+              res.destroy();
+              return close();
+            }
+            if (closed) return;
+            // Access may have gone while we waited: check again before writing more (QA Q4, plan §5).
+            if (!(await allowed(this.db, caller))) return close();
           }
           if (closed) return;
           res.write(formatEvent(seq.toString(), String(row.type), row.payload));
@@ -208,6 +231,12 @@ export class Streams {
     const unsubscribe = this.hub.subscribe(caller.projectId, pump);
     req.on("close", close);
     res.on("close", close);
+    // The client may have gone while the token was checked, before these listeners existed: its "close" has
+    // already fired, so release the slot now (QA Q1).
+    if (gone(res)) {
+      close();
+      return;
+    }
     try {
       await this.o.hooks?.stream?.("registered", { projectId: caller.projectId });
       const r = await this.db.query(

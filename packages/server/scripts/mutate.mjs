@@ -160,7 +160,26 @@ const checkOnly = process.argv.includes("--check");
 const only = process.argv.slice(2).find((a) => !a.startsWith("--"));
 const rows = [];
 let bad = 0;
+const runTest = ([file, name]) =>
+  spawnSync("pnpm", ["exec", "vitest", "run", "--config", "vitest.server.config.ts", file, "-t", name], {
+    encoding: "utf8",
+    env: process.env,
+    timeout: 600_000,
+  });
+// A target test that already fails without a patch would make every patch look caught (QA 6.1b Q3): each
+// target must pass unpatched first.
+const baseline = new Map();
 for (const m of MUTATIONS.filter((x) => !only || x.name.includes(only))) {
+  const key = m.test.join(" › ");
+  if (!checkOnly && !baseline.has(key)) {
+    const r = runTest(m.test);
+    baseline.set(key, r.status === 0 && /passed/i.test(`${r.stdout}${r.stderr}`));
+  }
+  if (!checkOnly && !baseline.get(key)) {
+    rows.push([m.name, `${key} fails without the patch`, "FAIL"]);
+    bad++;
+    continue;
+  }
   const original = readFileSync(m.file, "utf8");
   let text = original;
   let applied = true;
@@ -179,11 +198,7 @@ for (const m of MUTATIONS.filter((x) => !only || x.name.includes(only))) {
   }
   writeFileSync(m.file, text);
   try {
-    const r = spawnSync(
-      "pnpm",
-      ["exec", "vitest", "run", "--config", "vitest.server.config.ts", m.test[0], "-t", m.test[1]],
-      { encoding: "utf8", env: process.env, timeout: 600_000 },
-    );
+    const r = runTest(m.test);
     const caught = r.status !== 0 && /failed/i.test(`${r.stdout}${r.stderr}`);
     rows.push([m.name, `${m.test[0]} › ${m.test[1]}`, caught ? "caught" : "SURVIVED"]);
     if (!caught) bad++;
