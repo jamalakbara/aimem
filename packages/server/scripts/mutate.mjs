@@ -69,7 +69,10 @@ const MUTATIONS = [
   {
     name: "session not scanned for tokens",
     file: `${S}validate.ts`,
-    edits: [['  if (/^aimem_/i.test(session)) throw usage("A session ID must not start with aimem_.");\n  scan([session]);\n', ""]],
+    edits: [
+      ['  if (/^aimem_/i.test(session)) throw usage("A session ID must not start with aimem_.");\n  scan([session]);\n', ""],
+      ["  scan([session, ...(paths ?? []), note ?? \"\"]);", "  scan([...(paths ?? []), note ?? \"\"]);"],
+    ],
     test: ["claims.test.ts", "bad bodies"],
   },
   {

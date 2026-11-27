@@ -41,7 +41,8 @@ export interface Outcome {
 }
 
 /** Every writer of one task takes this lock first (plan A9, QA W2). Exported for the lock test. */
-export const taskLockKey = (projectId: string, task: string) => `${projectId}\u0000${task}`;
+// PostgreSQL text cannot hold NUL; a project ID is digits and a task ref has no "/", so this is unambiguous.
+export const taskLockKey = (projectId: string, task: string) => `${projectId}/${task}`;
 
 const open = (r: Row): OpenClaim => ({
   userId: String(r.owner_user_id),
