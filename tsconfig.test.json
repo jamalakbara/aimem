@@ -4,6 +4,7 @@
     "composite": false,
     "declaration": false,
     "noEmit": true,
+    "allowImportingTsExtensions": true,
     "rootDir": ".",
     "paths": {
       "@aimem/schema": ["./packages/schema/src/index.ts"],
@@ -17,6 +18,7 @@
   },
   "include": [
     "packages/*/test/**/*.ts",
+    "packages/server/bench/**/*.ts",
     "vitest.config.ts",
     "vitest.global-setup.ts",
     "vitest.setup.ts",

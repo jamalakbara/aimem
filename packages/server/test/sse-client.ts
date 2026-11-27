@@ -5,6 +5,8 @@ export interface SseEvent {
   event: string;
   // biome-ignore lint/suspicious/noExplicitAny: tests read JSON of any shape
   data: any;
+  /** `performance.now()` when the event's last byte arrived (the p95 harness measures with it). */
+  receivedAt: number;
 }
 
 /** A test SSE client on raw HTTP: every event, every ping, the raw bytes, and when the server closed the stream. */
@@ -152,7 +154,12 @@ export function openStream(
               else if (k === "data") e.data = e.data === undefined ? v : `${e.data}\n${v}`;
             }
             if (e.data !== undefined)
-              s.events.push({ id: e.id ?? "", event: e.event ?? "message", data: JSON.parse(e.data) });
+              s.events.push({
+                id: e.id ?? "",
+                event: e.event ?? "message",
+                data: JSON.parse(e.data),
+                receivedAt: performance.now(),
+              });
             else if (comment) s.pings++;
           }
           notify();

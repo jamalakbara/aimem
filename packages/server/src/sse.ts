@@ -32,6 +32,8 @@ export interface StreamOptions {
   bufferBytes?: number;
   drainWaitMs?: number;
   hooks?: Hooks;
+  /** Extra response headers (the server's `Aimem-Instance`). */
+  headers?: Record<string, string>;
 }
 
 const CURSOR = /^(0|[1-9][0-9]{0,18})$/;
@@ -257,6 +259,7 @@ export class Streams {
       "X-Accel-Buffering": "no",
       "X-Content-Type-Options": "nosniff",
       Connection: "keep-alive",
+      ...this.o.headers,
     });
     res.flushHeaders();
     started = true;

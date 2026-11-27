@@ -54,9 +54,14 @@ export interface ServerOptions {
   /** One line per failure: status, code and error class. Never request data. */
   log?: (line: string) => void;
   /** SSE limits (tests shorten the ping); defaults from plan A12. */
-  streams?: Omit<StreamOptions, "hooks">;
+  streams?: Omit<StreamOptions, "hooks" | "headers">;
   /** LISTEN reconnect and fallback polling; defaults from plan §5. */
   listen?: HubOptions;
+  /**
+   * Name sent as `Aimem-Instance` on every response, so a measurement can prove which instance answered (plan §8).
+   * Letters, digits and `-`, at most 32; anything else is ignored.
+   */
+  instance?: string;
   /** Sweeper interval in ms (default 15 s); `false` runs it only through `sweep()` (tests). */
   sweepMs?: number | false;
 }
@@ -141,7 +146,13 @@ export async function startServer(o: ServerOptions): Promise<RunningServer> {
   const log = o.log ?? (() => undefined);
   const hub = new EventHub(pool, o.listen);
   await hub.start();
-  const streams = new Streams(pool, hub, { ...o.streams, ...(o.hooks ? { hooks: o.hooks } : {}) });
+  const instanceHeader: Record<string, string> =
+    o.instance && /^[A-Za-z0-9-]{1,32}$/.test(o.instance) ? { "Aimem-Instance": o.instance } : {};
+  const streams = new Streams(pool, hub, {
+    ...o.streams,
+    ...(o.hooks ? { hooks: o.hooks } : {}),
+    headers: instanceHeader,
+  });
   // The sweeper: one run at a time per instance; other instances may sweep too, the task lock keeps it once.
   let sweeping: Promise<number> | undefined;
   const sweep = () => {
@@ -169,6 +180,7 @@ export async function startServer(o: ServerOptions): Promise<RunningServer> {
         "Content-Type": type,
         "Cache-Control": "no-store",
         "X-Content-Type-Options": "nosniff",
+        ...instanceHeader,
         ...(body.tooLarge ? { Connection: "close" } : {}),
         ...headers,
       });

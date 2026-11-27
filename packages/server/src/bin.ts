@@ -42,12 +42,14 @@ async function main(argv: string[]): Promise<number> {
       process.stderr.write("--port must be 0–65535.\n");
       return 2;
     }
+    const instance = process.env.AIMEM_INSTANCE;
     const server = await startServer({
       databaseUrl: url,
       port,
+      ...(instance ? { instance } : {}),
       log: (line) => process.stderr.write(`${line}\n`),
     });
-    process.stdout.write(`aimem server listening on ${server.url}\n`);
+    process.stdout.write(`aimem server listening on ${server.url}${instance ? ` as ${instance}` : ""}\n`);
     await new Promise<void>((done) => {
       for (const s of ["SIGINT", "SIGTERM"] as const) process.once(s, () => done());
     });

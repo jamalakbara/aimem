@@ -56,3 +56,31 @@ describe("events route without a database (local)", () => {
     expect(srv.listening()).toBe(false);
   });
 });
+
+describe("Aimem-Instance header for the p95 measurement (plan §8)", () => {
+  it("names the instance on every answer, and ignores a name that is not plain", async () => {
+    const port = await closedPort();
+    const named = await startServer({
+      databaseUrl: `postgres://x:y@127.0.0.1:${port}/none`,
+      instance: "i2",
+      sweepMs: false,
+    });
+    const odd = await startServer({
+      databaseUrl: `postgres://x:y@127.0.0.1:${port}/none`,
+      instance: "i2\r\nX-Other: 1",
+      sweepMs: false,
+    });
+    try {
+      for (const path of ["/healthz", "/v1/projects/alpha/events", "/nowhere"])
+        expect((await call(named.url, { method: "GET", path })).headers.get("aimem-instance"), path).toBe(
+          "i2",
+        );
+      const r = await call(odd.url, { method: "GET", path: "/healthz" });
+      expect(r.headers.get("aimem-instance")).toBeNull();
+      expect(r.headers.get("x-other")).toBeNull();
+    } finally {
+      await named.close();
+      await odd.close();
+    }
+  });
+});
