@@ -93,12 +93,13 @@ const MUTATIONS = [
   {
     name: "task lock missing",
     file: `${S}claims.ts`,
-    edits: [['await c.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [taskLockKey(caller.projectId, task)]);', "void taskLockKey;"]],
+    edits: [['await c.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [', 'await c.query("SELECT $1::text", [']],
     test: ["concurrency.test.ts", "really wait on the task lock"],
   },
 ];
 
-const only = process.argv[2];
+const checkOnly = process.argv.includes("--check");
+const only = process.argv.slice(2).find((a) => !a.startsWith("--"));
 const rows = [];
 let bad = 0;
 for (const m of MUTATIONS.filter((x) => !only || x.name.includes(only))) {
@@ -112,6 +113,10 @@ for (const m of MUTATIONS.filter((x) => !only || x.name.includes(only))) {
   if (!applied) {
     rows.push([m.name, "patch did not apply", "FAIL"]);
     bad++;
+    continue;
+  }
+  if (checkOnly) {
+    rows.push([m.name, "patch applies", "ok"]);
     continue;
   }
   writeFileSync(m.file, text);

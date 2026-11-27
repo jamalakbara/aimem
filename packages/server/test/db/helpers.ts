@@ -233,9 +233,9 @@ export async function counts(pool: Pool) {
 /** Moves a claim's time back so that it is active, expired within the allowance, or past it (KL-4). */
 export async function age(pool: Pool, task: string, minutesAgo: number): Promise<void> {
   await pool.query(
-    `UPDATE claims SET started_at = clock_timestamp() - make_interval(secs => $2 * 60),
-                       heartbeat_at = clock_timestamp() - make_interval(secs => $2 * 60),
-                       expires_at = clock_timestamp() - make_interval(secs => $2 * 60) + make_interval(mins => ttl_minutes)
+    `UPDATE claims SET started_at = clock_timestamp() - make_interval(secs => $2::float8 * 60),
+                       heartbeat_at = clock_timestamp() - make_interval(secs => $2::float8 * 60),
+                       expires_at = clock_timestamp() - make_interval(secs => $2::float8 * 60) + make_interval(mins => ttl_minutes)
       WHERE task_ref = $1 AND released_at IS NULL`,
     [task, minutesAgo],
   );

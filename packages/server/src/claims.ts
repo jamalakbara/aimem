@@ -164,7 +164,7 @@ export class Claims {
       const r = await c.query(
         `INSERT INTO claims (project_id, task_ref, owner_user_id, holder, on_behalf_of, session, paths, note,
                              started_at, heartbeat_at, ttl_minutes, expires_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9, $10, $9 + make_interval(mins => $10))
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::timestamptz, $9::timestamptz, $10::int, $9::timestamptz + make_interval(mins => $10::int))
          RETURNING *`,
         [
           caller.projectId,
@@ -282,7 +282,7 @@ export class Claims {
         return { status: 200, body: { claim: view(current, t) } };
       }
       const r = await c.query(
-        "UPDATE claims SET heartbeat_at = $2, expires_at = $2 + make_interval(mins => ttl_minutes) WHERE id = $1 AND released_at IS NULL RETURNING *",
+        "UPDATE claims SET heartbeat_at = $2::timestamptz, expires_at = $2::timestamptz + make_interval(mins => ttl_minutes) WHERE id = $1 AND released_at IS NULL RETURNING *",
         [current.id, t],
       );
       if (r.rowCount !== 1) throw new Error("claim changed under its lock");

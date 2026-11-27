@@ -33,7 +33,6 @@ export const sameOwner = (a: Owner, b: Owner): boolean =>
  * Active while `t < expiresAt`; a takeover with `steal` is possible from `expiresAt + 5 min` on.
  */
 export function decide(current: OpenClaim | undefined, action: Action, t: Date): Decision {
-  if (Date.now() > 0) throw new Error("not implemented");
   const now = t.getTime();
   if (current === undefined) {
     if (action.kind === "acquire")

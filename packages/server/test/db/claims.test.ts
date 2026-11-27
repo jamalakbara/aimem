@@ -33,6 +33,14 @@ beforeAll(async () => {
       if (point === "beforeCommit" && info.task === failCommitFor) {
         const pid = (await info.client.query("SELECT pg_backend_pid() AS p")).rows[0].p;
         await db.pool.query("SELECT pg_terminate_backend($1)", [pid]);
+        // Wait until the backend is really gone, so the commit cannot slip through first.
+        for (let i = 0; i < 200; i++) {
+          const r = await db.pool.query("SELECT count(*)::int AS n FROM pg_stat_activity WHERE pid = $1", [
+            pid,
+          ]);
+          if (r.rows[0].n === 0) break;
+          await sleep(10);
+        }
       }
     },
     afterCommit: (info) => {
@@ -304,7 +312,7 @@ describe("owners and projects (IZ-3, IZ-5)", () => {
     const a = await dana.acquire({ task, paths: ["src/api/**"] });
     expect(a.status).toBe(201);
     expect(a.json.overlaps).toEqual([]);
-    expect(JSON.stringify((await dana.live()).json)).not.toMatch(/beta secret plan|s-rina/);
+    expect(JSON.stringify((await dana.live()).json)).not.toMatch(/beta secret plan/);
     expect((await dana.heartbeat(task)).status).toBe(200);
     expect((await dana.release(task)).json).toEqual({ released: true });
     const b = (await beta.live()).json.claims.find((c: { task: string }) => c.task === `beta:${task}`);

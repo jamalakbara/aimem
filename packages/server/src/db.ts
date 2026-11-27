@@ -14,6 +14,11 @@ export async function inTx<T>(
 ): Promise<T> {
   const client = await pool.connect();
   let broken = false;
+  // A connection that dies while checked out emits `error` on the client; unhandled, that would end the process.
+  const onError = () => {
+    broken = true;
+  };
+  client.on("error", onError);
   try {
     await client.query(mode);
     const out = await fn(client);
@@ -25,6 +30,7 @@ export async function inTx<T>(
     });
     throw e;
   } finally {
+    client.off("error", onError);
     // A client whose connection failed must not go back to the pool.
     client.release(broken ? true : undefined);
   }

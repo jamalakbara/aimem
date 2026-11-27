@@ -92,6 +92,12 @@ Decision log in ADR style. Status: **accepted** (decided in brainstorm), **propo
 - **Verified (Claude Code 2.1.304, Windows, 2026-11-16):** with these flags the model reported no tools; no hook or plugin text reached it (a user SessionStart hook was installed); no session was saved under `~/.claude/projects`; auth came from the login with `ANTHROPIC_API_KEY` unset; a multi-line system prompt passed through the `.cmd` shim via the file; about 6 s per call. With `--setting-sources ""` the user's default model setting is not read, so set `retrieval.llm.model` (e.g. `sonnet`) for answer quality.
 - **Consequences:** + no API key in aimem; works wherever Claude Code is signed in. − depends on Claude Code's CLI flags staying stable (pinned by tests on the argument list); slower start (~1–2 s) than an HTTP call; usage counts against the user's Claude plan.
 
+### ADR-019 — Sync server claims: Postgres, token identity, Git-mode expiry
+- **Status:** accepted (owner approved plan 6.1 rev. 3 on 2026-11-27)
+- **Context:** M6 starts with two clients sharing claim state (13 M6). The Git backend's rules must not change meaning on the server, and the server must not trust identities from the request.
+- **Decision:** `@aimem/server` on `node:http` with PostgreSQL 16 and plain SQL migrations; database tests run only in CI and fail when the database is missing. The holder comes from the token (`human:<handle>`, or `agent:<name>` on behalf of its user); the owner of a claim is project + token user + holder + session. Tokens are bound to one project; the first ones are created by an operator command. Expiry and takeover follow Git mode, with server time only. Differences from Git mode: another project or token answers 404; TTL is 1–1440 minutes; the server does not check that a task ID exists in the repository; missing tokens are `UNAUTHENTICATED` (401).
+- **Consequences:** + one winner per task proven by tests per guard; − no local database run on developer hosts without Docker or a Postgres install; CLI/MCP do not use the server until a later slice.
+
 ### ADR-018 — The local viewer is server-rendered and uses markdown-it
 - **Status:** accepted (owner approved 24 on 2026-11-24); changes ADR-003's web choice for the local viewer only
 - **Context:** `aimem serve web` shows one folder to one person. Next.js, React and React DOM would add 338 MB to the CLI. Record bodies are untrusted, and remark blocked the process for more than 20 s on two of 16 hostile 200 KB inputs (24).

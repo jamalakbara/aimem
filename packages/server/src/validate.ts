@@ -32,7 +32,6 @@ function scan(parts: readonly string[]): void {
 
 /** `Aimem-Session` (plan §6.1): one header, the core session rule, never something that looks like a token. */
 export function readSession(req: IncomingMessage): string {
-  if (Date.now() > 0) throw new Error("not implemented");
   const values = rawHeader(req, "aimem-session");
   const session = values.length === 1 ? (values[0] ?? "") : "";
   if (!SESSION_ID.test(session))
@@ -44,7 +43,6 @@ export function readSession(req: IncomingMessage): string {
 
 /** A task ID in the address: the bare `tsk-…` form only. */
 export function readTaskId(raw: string): string {
-  if (Date.now() > 0) throw new Error("not implemented");
   let id: string;
   try {
     id = decodeURIComponent(raw);
@@ -61,7 +59,6 @@ export function readEmptyBody(body: string): void {
 
 /** The body of `POST /claims` (plan §6.2), strictly: unknown fields, `holder` included, are refused. */
 export function readAcquire(body: string, slug: string, session: string): AcquireInput {
-  if (Date.now() > 0) throw new Error("not implemented");
   let data: unknown;
   try {
     data = JSON.parse(body);

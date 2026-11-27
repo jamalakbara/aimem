@@ -57,7 +57,7 @@ Sensitive content guidance: put it in a **separate private hub/repo** with narro
 
 ## 6. Tokens and credentials
 
-- Agent/human API tokens: random 256-bit, shown once, stored as SHA-256 hash; prefix (`aimem_...`) to allow secret scanners to find leaked ones.
+- Agent/human API tokens: `aimem_` followed by 32 random bytes as base64url without padding (43 characters), shown once, stored as SHA-256 hash. The built-in secret scanner finds the format, and the server refuses it in claim notes, paths and sessions. A token belongs to one project.
 - Scopes: `read`, `write:live`, `write:durable`, `admin`. Default agent token: `read`, `write:live`, `write:durable`.
 - Git access for the server: read-only deploy keys or a GitHub App with minimal permissions; PR creation uses the **editing user's** OAuth identity where possible.
 - Never in `project.yaml`, never in records. CLI stores tokens in the OS keychain or env.

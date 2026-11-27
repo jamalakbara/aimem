@@ -119,8 +119,6 @@ export async function startServer(o: ServerOptions): Promise<RunningServer> {
       res.end(payload);
     };
     try {
-      // RED PROOF (6.1a step 5): routes are not implemented yet.
-      if (url.pathname !== "/healthz") throw new HttpError(500, "SYNC_FAILED", "not implemented");
       if (url.pathname === "/healthz" && req.method === "GET") {
         const ok = await pool.query("SELECT 1").then(
           () => true,
