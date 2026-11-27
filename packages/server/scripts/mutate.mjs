@@ -79,7 +79,7 @@ const MUTATIONS = [
     name: "event written outside the claim transaction",
     file: `${S}claims.ts`,
     edits: [["    await c.query(\"INSERT INTO events (project_id, seq, type, payload, at) VALUES ($1, $2, $3, $4, $5)\", [", "    await this.pool.query(\"INSERT INTO events (project_id, seq, type, payload, at) VALUES ($1, $2, $3, $4, $5)\", ["]],
-    test: ["events.test.ts", "written with the change"],
+    test: ["events.test.ts", "takes the event back too"],
   },
   {
     name: "event number not locked until commit",

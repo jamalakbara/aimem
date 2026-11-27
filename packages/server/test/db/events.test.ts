@@ -15,6 +15,7 @@ import {
 let db: TestDb;
 let srv: RunningServer;
 let failBeforeEvent: string | undefined;
+let failBeforeCommit: string | undefined;
 let holdAtSeq: { task: string; reached: () => void; go: Promise<void> } | undefined;
 // biome-ignore lint/suspicious/noExplicitAny: test clients
 let dana: any, rina: any;
@@ -33,6 +34,7 @@ beforeAll(async () => {
     at: async (point, info) => {
       if (point === "beforeEvent" && info.task === failBeforeEvent)
         throw new Error("event write failed at /secret/path");
+      if (point === "beforeCommit" && info.task === failBeforeCommit) throw new Error("commit failed");
       if (point === "seq" && holdAtSeq && info.task === holdAtSeq.task) {
         holdAtSeq.reached();
         await holdAtSeq.go;
@@ -68,6 +70,23 @@ describe("events are written with the change, or not at all (EV-0)", () => {
       `alpha:${task}`,
     ]);
     expect(Number(ev.rows[0].seq)).toBe(seq + 1);
+  });
+
+  it("a failure after the event was written takes the event back too", async () => {
+    const before = await counts(db.pool);
+    const seq = await lastSeq();
+    const task = newTask();
+    failBeforeCommit = `alpha:${task}`;
+    const r = await dana.acquire({ task, note: "rolled back" });
+    failBeforeCommit = undefined;
+    expect(r.status).toBe(500);
+    expect(await counts(db.pool)).toEqual(before);
+    expect(await lastSeq()).toBe(seq);
+    const ev = await db.pool.query(
+      "SELECT count(*)::int AS n FROM events WHERE payload->'claim'->>'task' = $1",
+      [`alpha:${task}`],
+    );
+    expect(ev.rows[0].n).toBe(0);
   });
 
   it("also when the database itself refuses the event", async () => {
