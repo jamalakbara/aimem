@@ -18,4 +18,9 @@ export interface Hooks {
   commit?(client: Client): Promise<void>;
   /** After commit, before the response. `drop` closes the connection without an answer (a lost response). */
   afterCommit?(info: { op: HookInfo["op"]; task: string; drop(): void }): Promise<void> | void;
+  /**
+   * Points of an SSE stream: `registered` after it listens and before it reads anything, `backlog` after its first
+   * read of the table and before it sends that read (EV-4).
+   */
+  stream?(point: "registered" | "backlog", info: { projectId: string }): Promise<void> | void;
 }

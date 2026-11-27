@@ -1,4 +1,4 @@
-// Deliberate breakages of the 6.1a server (plan §7.2, CI-3). Each patch must apply, and the named tests must then
+// Deliberate breakages of the 6.1 server (plan §7.2, CI-3). Each patch must apply, and the named tests must then
 // fail. A patch that does not apply, or that the tests do not catch, fails the job. Run by the CI job
 // `server-mutation` with PostgreSQL; the source is restored after each patch.
 import { spawnSync } from "node:child_process";
@@ -98,6 +98,49 @@ const MUTATIONS = [
     file: `${S}auth.ts`,
     edits: [["if (row.slug !== slug || !row.member) throw notFound();", "if (row.slug !== slug) throw notFound();"]],
     test: ["auth.test.ts", "every refusal leaves the stored state"],
+  },
+  // 6.1b, SSE (CI-3: since wrong, NOTIFY dropped, access re-check in SSE dropped; plus the stream's own guards).
+  {
+    name: "since ignored (stream starts at the latest event)",
+    file: `${S}sse.ts`,
+    edits: [["      last = cursor ?? top;", "      last = top;"]],
+    test: ["stream.test.ts", "exactly the changes after that answer"],
+  },
+  {
+    name: "Last-Event-ID does not win over since",
+    file: `${S}sse.ts`,
+    edits: [["  return fromHeader ?? fromQuery;", "  return fromQuery ?? fromHeader;"]],
+    test: ["stream.test.ts", "resumes on another one with Last-Event-ID"],
+  },
+  {
+    name: "NOTIFY dropped",
+    file: `${S}claims.ts`,
+    edits: [["    await c.query(\"SELECT pg_notify('aimem_events', $1)\", [", "    await c.query(\"SELECT $1::text\", ["]],
+    test: ["stream.test.ts", "delivers created, heartbeat and released"],
+  },
+  {
+    name: "access re-check in SSE dropped",
+    file: `${S}sse.ts`,
+    edits: [["  return r.rows.length === 1;", "  return r.rows.length >= 0;"]],
+    test: ["stream.test.ts", "the next event is not sent and the stream closes"],
+  },
+  {
+    name: "project filter dropped from the stream",
+    file: `${S}sse.ts`,
+    edits: [["FROM events WHERE project_id = $1 AND seq > $2::bigint", "FROM events WHERE $1::bigint IS NOT NULL AND seq > $2::bigint"]],
+    test: ["stream.test.ts", "never gets an event of beta"],
+  },
+  {
+    name: "no reconnect after the LISTEN connection is cut",
+    file: `${S}events.ts`,
+    edits: [["      void this.connect();\n", ""]],
+    test: ["stream.test.ts", "still arrives within 3 s"],
+  },
+  {
+    name: "stream slot not returned",
+    file: `${S}sse.ts`,
+    edits: [["      this.open--;\n", ""]],
+    test: ["stream.test.ts", "frees its slot"],
   },
   {
     name: "unique index missing",
