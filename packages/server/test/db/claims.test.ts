@@ -308,8 +308,9 @@ describe("owners and projects (IZ-3, IZ-5)", () => {
 
   it("the same task ID in two projects never mixes (IZ-3)", async () => {
     const task = newTask();
-    expect((await beta.acquire({ task, paths: ["src/**"], note: "beta secret plan" })).status).toBe(201);
-    const a = await dana.acquire({ task, paths: ["src/api/**"] });
+    // Paths no other claim in this file uses: an overlap can only come from beta.
+    expect((await beta.acquire({ task, paths: ["iz3-zone/**"], note: "beta secret plan" })).status).toBe(201);
+    const a = await dana.acquire({ task, paths: ["iz3-zone/api/**"] });
     expect(a.status).toBe(201);
     expect(a.json.overlaps).toEqual([]);
     expect(JSON.stringify((await dana.live()).json)).not.toMatch(/beta secret plan/);
