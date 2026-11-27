@@ -11,7 +11,8 @@
       "aimem": ["./packages/cli/src/index.ts"],
       "@aimem/adapters": ["./packages/adapters/src/index.ts"],
       "@aimem/mcp": ["./packages/mcp/src/index.ts"],
-      "@aimem/viewer": ["./packages/viewer/src/index.ts"]
+      "@aimem/viewer": ["./packages/viewer/src/index.ts"],
+      "@aimem/server": ["./packages/server/src/index.ts"]
     }
   },
   "include": [
@@ -19,6 +20,7 @@
     "vitest.config.ts",
     "vitest.global-setup.ts",
     "vitest.setup.ts",
+    "vitest.server.config.ts",
     "playwright.config.ts"
   ]
 }

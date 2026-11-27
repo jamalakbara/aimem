@@ -15,6 +15,8 @@ const PLACEHOLDER = /^(<.*>|\$\{.*\}|\{\{.*|\$[A-Z_]+|x{4,}|\*{4,}|changeme|your
 
 const PATTERNS: [string, RegExp, ((m: RegExpExecArray) => boolean)?][] = [
   ["aws-access-key", /\b(?:AKIA|ASIA)[0-9A-Z]{16}\b/g],
+  // aimem server tokens (09 §6): the prefix makes leaked ones findable, whatever their characters.
+  ["aimem-token", /aimem_[A-Za-z0-9_-]{43}(?![A-Za-z0-9_-])/g],
   ["private-key", /-----BEGIN (?:RSA |EC |DSA |OPENSSH |PGP |ENCRYPTED )?PRIVATE KEY(?: BLOCK)?-----/g],
   ["github-token", /\b(?:gh[pousr]_[A-Za-z0-9]{36,}|github_pat_[A-Za-z0-9_]{50,})\b/g],
   ["slack-token", /\bxox[abprs]-[A-Za-z0-9-]{10,}/g],

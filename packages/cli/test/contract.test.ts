@@ -64,6 +64,7 @@ describe("exit codes (04 §1)", () => {
     expect(EXIT_CODES).toMatchObject({
       NOT_FOUND: 1,
       USAGE: 2,
+      UNAUTHENTICATED: 2,
       INVALID_RECORD: 2,
       NOT_INITIALIZED: 2,
       SECRET_DETECTED: 2,

@@ -31,6 +31,80 @@ jobs:
       - name: Validate this repo's own notebook (docs/11 §6)
         run: node packages/cli/dist/bin.js validate --strict
 
+  server:
+    # Database tests of the sync server (plan 6.1 §7.2). They never skip: without PostgreSQL they fail.
+    name: server (postgres 16 / node 24)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16.6
+        env:
+          POSTGRES_USER: aimem
+          POSTGRES_PASSWORD: aimem-ci-only
+          POSTGRES_DB: aimem
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U aimem" --health-interval 2s --health-timeout 5s --health-retries 30
+    env:
+      AIMEM_REQUIRE_TEST_DB: "1"
+      AIMEM_TEST_DATABASE_URL: postgres://aimem:aimem-ci-only@localhost:5432/aimem
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -s build
+      - name: Server database tests
+        run: pnpm exec vitest run --config vitest.server.config.ts --reporter=default --reporter=json --outputFile.json=server-report.json
+      - name: Fail unless the tests really ran (none skipped)
+        if: always()
+        run: node packages/server/scripts/check-report.mjs server-report.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: server-report
+          path: server-report.json
+          retention-days: 14
+
+  server-mutation:
+    # Deliberate breakages must each be caught (plan 6.1 §7.2, CI-3).
+    name: server mutations (postgres 16 / node 24)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    services:
+      postgres:
+        image: postgres:16.6
+        env:
+          POSTGRES_USER: aimem
+          POSTGRES_PASSWORD: aimem-ci-only
+          POSTGRES_DB: aimem
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U aimem" --health-interval 2s --health-timeout 5s --health-retries 30
+    env:
+      AIMEM_REQUIRE_TEST_DB: "1"
+      AIMEM_TEST_DATABASE_URL: postgres://aimem:aimem-ci-only@localhost:5432/aimem
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -s build
+      - run: node packages/server/scripts/mutate.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mutation-report
+          path: mutation-report.md
+          retention-days: 14
+
   viewer-browser:
     name: viewer in a browser (ubuntu-latest / node 24)
     runs-on: ubuntu-latest

@@ -11,6 +11,7 @@ export const EXIT_CODES: Record<ErrorCode, number> = {
   READONLY_EXTERNAL: 2,
   SOURCE_AUTH: 2,
   USAGE: 2,
+  UNAUTHENTICATED: 2,
   DUPLICATE_LIKELY: 3,
   CLAIM_CONFLICT: 3,
   SYNC_FAILED: 4,

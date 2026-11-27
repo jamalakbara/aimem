@@ -4,7 +4,7 @@ import type { Git } from "../git/git.js";
 import type { Clock, Fs, Random } from "../ports.js";
 import type { Notebook } from "../project/load.js";
 
-const SESSION_ID = /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/;
+export const SESSION_ID = /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/;
 const UTC_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/;
 
 export type ClaimDeps = { fs: Fs; clock: Clock; random: Random; git: Git };

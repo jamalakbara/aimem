@@ -15,8 +15,19 @@ export {
   readLiveClaims,
   releaseTaskClaim,
 } from "./claims/lifecycle.js";
-export type { LiveClaim, PathClaim, TaskClaim } from "./claims/model.js";
-export { normalizeClaimPaths, pathsOverlap, staticPrefix } from "./claims/paths.js";
+export {
+  claimOwner,
+  claimTarget,
+  cleanNote,
+  type LiveClaim,
+  MAX_NOTE_LENGTH,
+  type PathClaim,
+  readClaim,
+  SESSION_ID,
+  type TaskClaim,
+  validTtl,
+} from "./claims/model.js";
+export { anyPathOverlap, normalizeClaimPaths, pathsOverlap, staticPrefix } from "./claims/paths.js";
 export {
   listUnsyncedClaims,
   reconcileLocalClaims,
