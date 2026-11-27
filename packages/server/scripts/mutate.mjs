@@ -88,6 +88,18 @@ const MUTATIONS = [
     test: ["events.test.ts", "commit order"],
   },
   {
+    name: "lost COMMIT confirmation reported as nothing saved",
+    file: `${S}server.ts`,
+    edits: [["  if (e instanceof CommitUncertain)", "  if (e instanceof CommitUncertain && false)"]],
+    test: ["claims.test.ts", "confirmation is lost"],
+  },
+  {
+    name: "removed member still accepted",
+    file: `${S}auth.ts`,
+    edits: [["if (row.slug !== slug || !row.member) throw notFound();", "if (row.slug !== slug) throw notFound();"]],
+    test: ["auth.test.ts", "every refusal leaves the stored state"],
+  },
+  {
     name: "unique index missing",
     file: "packages/server/migrations/001_init.sql",
     edits: [["CREATE UNIQUE INDEX claims_one_open ON claims (project_id, task_ref) WHERE released_at IS NULL;", "CREATE INDEX claims_one_open ON claims (project_id, task_ref) WHERE released_at IS NULL;"]],
