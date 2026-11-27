@@ -67,6 +67,7 @@ const range = (from: number, to: number) => Array.from({ length: to - from + 1 }
 beforeAll(async () => {
   db = await freshDb();
   srv1 = await startServer({
+    sweepMs: false,
     pool: db.pool,
     hooks: {
       at: async (point, info) => {
@@ -453,7 +454,7 @@ describe("token and project (IZ-1/IZ-4/IZ-6 for events)", () => {
     });
 
   it("a quiet stream is closed at the next ping once access is gone (IZ-6, short ping)", async () => {
-    const quick = await startServer({ pool: db.pool, streams: { pingMs: 300 } });
+    const quick = await startServer({ sweepMs: false, pool: db.pool, streams: { pingMs: 300 } });
     try {
       for (const kind of ["revoked", "expired", "removed"] as const) {
         const v = await victim(kind);
@@ -490,7 +491,7 @@ describe("limits and cleanup (EV-8, EV-9, BR-2)", () => {
   });
 
   it("256 streams; the 257th gets 503 with Retry-After; a closed one frees its slot; claims still work (EV-9)", async () => {
-    const full = await startServer({ pool: db.pool });
+    const full = await startServer({ sweepMs: false, pool: db.pool });
     const open: SseStream[] = [];
     try {
       for (let i = 0; i < 256; i++) {

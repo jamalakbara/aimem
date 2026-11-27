@@ -10,6 +10,8 @@ import { readCursor, type StreamOptions, Streams } from "./sse.js";
 import { readAcquire, readEmptyBody, readSession, readTaskId } from "./validate.js";
 
 export const MAX_BODY_BYTES = 16 * 1024;
+/** How often each instance runs the sweeper (claim.expired is a notice, not a deadline). */
+export const SWEEP_MS = 15_000;
 
 /** The project routes. The permission tests are generated from this list, so a new route needs a row there. */
 export const ROUTES = [
@@ -55,6 +57,8 @@ export interface ServerOptions {
   streams?: Omit<StreamOptions, "hooks">;
   /** LISTEN reconnect and fallback polling; defaults from plan §5. */
   listen?: HubOptions;
+  /** Sweeper interval in ms (default 15 s); `false` runs it only through `sweep()` (tests). */
+  sweepMs?: number | false;
 }
 
 export interface RunningServer {
@@ -65,6 +69,8 @@ export interface RunningServer {
   streams(): number;
   /** True while this instance's LISTEN connection is up. */
   listening(): boolean;
+  /** One sweeper run now; resolves to the number of `claim.expired` events written. */
+  sweep(): Promise<number>;
   close(): Promise<void>;
 }
 
@@ -136,6 +142,24 @@ export async function startServer(o: ServerOptions): Promise<RunningServer> {
   const hub = new EventHub(pool, o.listen);
   await hub.start();
   const streams = new Streams(pool, hub, { ...o.streams, ...(o.hooks ? { hooks: o.hooks } : {}) });
+  // The sweeper: one run at a time per instance; other instances may sweep too, the task lock keeps it once.
+  let sweeping: Promise<number> | undefined;
+  const sweep = () => {
+    sweeping ??= claims.sweep().finally(() => {
+      sweeping = undefined;
+    });
+    return sweeping;
+  };
+  const sweepMs = o.sweepMs ?? SWEEP_MS;
+  const sweeper =
+    sweepMs === false
+      ? undefined
+      : setInterval(() => {
+          sweep().catch((e) =>
+            log(`sweep error ${(e as { code?: string })?.code ?? (e as Error)?.name ?? "unknown"}`),
+          );
+        }, sweepMs);
+  sweeper?.unref();
 
   async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> {
     const url = new URL(req.url ?? "/", "http://localhost");
@@ -229,7 +253,10 @@ export async function startServer(o: ServerOptions): Promise<RunningServer> {
     pool,
     streams: () => streams.count,
     listening: () => hub.listening,
+    sweep,
     close: async () => {
+      clearInterval(sweeper);
+      await sweeping?.catch(() => undefined);
       streams.closeAll();
       await hub.close();
       await new Promise<void>((done) => {

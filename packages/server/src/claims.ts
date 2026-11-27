@@ -1,7 +1,7 @@
 import { anyPathOverlap } from "@aimem/core";
 import type { Caller } from "./auth.js";
 import { type Client, inTx, type Pool } from "./db.js";
-import { type Decision, decide, expiresAt, type OpenClaim, type Owner } from "./decide.js";
+import { type Decision, decide, expireDue, expiresAt, type OpenClaim, type Owner } from "./decide.js";
 import type { HookInfo, HookPoint, Hooks } from "./hooks.js";
 import { HttpError } from "./problem.js";
 import type { AcquireInput } from "./validate.js";
@@ -33,7 +33,13 @@ interface Row {
   started_at: Date;
   heartbeat_at: Date;
   ttl_minutes: number;
+  expired_notified_at: Date | null;
 }
+
+/** The audit actor of the sweeper; it is no token holder. */
+export const SWEEPER_ACTOR = "system:sweeper";
+/** Claims the sweeper handles per run; the rest wait for the next run. */
+export const SWEEP_BATCH = 500;
 
 export interface Outcome {
   status: number;
@@ -316,6 +322,48 @@ export class Claims {
       await this.hook("beforeCommit", info);
       return { status: 200, body: { released: true } };
     });
+  }
+
+  /**
+   * One sweeper step for one claim, in its own transaction under the task lock (plan §5, A9): if the open claim is
+   * at or past its expiry and not reported yet, mark it and write one `claim.expired` with its audit row. The
+   * claim is not released, so the takeover rules stay as they are. Returns whether an event was written.
+   */
+  async expire(projectId: string, task: string): Promise<boolean> {
+    const system: Caller = { projectId, slug: "", userId: "", holder: SWEEPER_ACTOR, tokenId: "" };
+    return this.tx(async (c) => {
+      const info: HookInfo = { op: "expire", task, client: c };
+      const { t, current } = await this.begin(c, system, task, info);
+      if (!current || !expireDue(open(current), current.expired_notified_at, t)) {
+        await this.hook("beforeCommit", info);
+        return false;
+      }
+      const r = await c.query(
+        "UPDATE claims SET expired_notified_at = $2 WHERE id = $1 AND released_at IS NULL AND expired_notified_at IS NULL",
+        [current.id, t],
+      );
+      if (r.rowCount !== 1) throw new Error("claim changed under its lock");
+      await this.record(c, system, info, "claim.expired", view(current, t), t);
+      await this.hook("beforeCommit", info);
+      return true;
+    });
+  }
+
+  /**
+   * One sweeper run over every project: candidates are read without a lock, then each one is decided again under
+   * its task lock, so two instances sweeping at once still write one event per claim. Returns the events written.
+   */
+  async sweep(limit = SWEEP_BATCH): Promise<number> {
+    const due = await this.pool.query(
+      `SELECT project_id, task_ref FROM claims
+        WHERE released_at IS NULL AND expired_notified_at IS NULL AND expires_at <= clock_timestamp()
+        ORDER BY expires_at LIMIT $1`,
+      [limit],
+    );
+    let written = 0;
+    for (const row of due.rows)
+      if (await this.expire(String(row.project_id), String(row.task_ref))) written++;
+    return written;
   }
 
   /** Claims and the cursor from one snapshot: every change up to `cursor` is reflected (plan §5). */

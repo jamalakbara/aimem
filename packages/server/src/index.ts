@@ -1,9 +1,10 @@
 export { createToken, type NewTokenInput, revokeToken, SCOPES, type Scope } from "./admin.js";
-export { type ClaimView, taskLockKey } from "./claims.js";
+export { type ClaimView, SWEEP_BATCH, SWEEPER_ACTOR, taskLockKey } from "./claims.js";
 export { CommitUncertain, createPool, inTx, type Pool } from "./db.js";
 export {
   type Action,
   decide,
+  expireDue,
   expiresAt,
   type OpenClaim,
   type Owner,
@@ -19,7 +20,14 @@ export {
 } from "./events.js";
 export type { HookInfo, HookPoint, Hooks } from "./hooks.js";
 export { migrate } from "./migrate.js";
-export { MAX_BODY_BYTES, ROUTES, type RunningServer, type ServerOptions, startServer } from "./server.js";
+export {
+  MAX_BODY_BYTES,
+  ROUTES,
+  type RunningServer,
+  type ServerOptions,
+  SWEEP_MS,
+  startServer,
+} from "./server.js";
 export {
   BATCH,
   DRAIN_WAIT_MS,

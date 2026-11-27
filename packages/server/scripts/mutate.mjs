@@ -142,6 +142,29 @@ const MUTATIONS = [
     edits: [["      this.open--;\n", ""]],
     test: ["stream.test.ts", "frees its slot"],
   },
+  // 6.1b sweeper (todo 20): claim stays recorded, claim.expired once, decided again under the task lock.
+  {
+    name: "sweeper releases the claim",
+    file: `${S}claims.ts`,
+    edits: [["UPDATE claims SET expired_notified_at = $2 WHERE id = $1", "UPDATE claims SET expired_notified_at = $2, released_at = $2, released_status = 'released' WHERE id = $1"]],
+    test: ["sweeper.test.ts", "marks an expired claim once"],
+  },
+  {
+    name: "claim.expired written more than once",
+    file: `${S}claims.ts`,
+    edits: [
+      [" AND released_at IS NULL AND expired_notified_at IS NULL\",", " AND released_at IS NULL\","],
+      ["WHERE released_at IS NULL AND expired_notified_at IS NULL AND expires_at", "WHERE released_at IS NULL AND expires_at"],
+      ["if (!current || !expireDue(open(current), current.expired_notified_at, t))", "if (!current || !expireDue(open(current), null, t))"],
+    ],
+    test: ["sweeper.test.ts", "marks an expired claim once"],
+  },
+  {
+    name: "sweeper does not decide again under the lock",
+    file: `${S}claims.ts`,
+    edits: [["if (!current || !expireDue(open(current), current.expired_notified_at, t))", "if (!current || current.expired_notified_at)"]],
+    test: ["sweeper.test.ts", "heartbeat first"],
+  },
   {
     name: "unique index missing",
     file: "packages/server/migrations/001_init.sql",

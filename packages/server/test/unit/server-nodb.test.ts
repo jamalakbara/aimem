@@ -22,6 +22,8 @@ describe("events route without a database (local)", () => {
     const srv = await startServer({
       databaseUrl: `postgres://nobody:nothing@127.0.0.1:${port}/none`,
       listen: { reconnectMinMs: 20, reconnectMaxMs: 40, pollMs: 20 },
+      // The timer sweeper also runs and fails quietly against the missing database.
+      sweepMs: 20,
     });
     try {
       expect(srv.listening()).toBe(false);
@@ -45,6 +47,9 @@ describe("events route without a database (local)", () => {
       await new Promise((d) => setTimeout(d, 200));
       expect((await call(srv.url, { method: "GET", path: "/healthz" })).status).toBe(503);
       expect(srv.streams()).toBe(0);
+      // A sweeper run fails while the database is away; the server keeps answering.
+      await expect(srv.sweep()).rejects.toBeDefined();
+      expect((await call(srv.url, { method: "GET", path: "/healthz" })).status).toBe(503);
     } finally {
       await srv.close();
     }

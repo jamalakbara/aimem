@@ -1,4 +1,4 @@
-import { type Action, decide, type OpenClaim, type Owner, TAKEOVER_GRACE_MS } from "@aimem/server";
+import { type Action, decide, expireDue, type OpenClaim, type Owner, TAKEOVER_GRACE_MS } from "@aimem/server";
 import { describe, expect, it } from "vitest";
 
 const me: Owner = { userId: "1", holder: "agent:bot", session: "s1" };
@@ -160,5 +160,31 @@ describe("decide: plan §4 (QA W1, A8)", () => {
   it("a heartbeat at or before the stored one changes nothing", () => {
     expect(result(decide(claim, { kind: "heartbeat", me }, T0))).toBe("unchanged");
     expect(result(decide(claim, { kind: "heartbeat", me }, at(T0.getTime() - 5)))).toBe("unchanged");
+  });
+});
+
+describe("sweeper rule: claim.expired once, from the expiry on (plan §4, todo 20)", () => {
+  it("is due exactly from expiresAt, never before, and only while not reported", () => {
+    expect(expireDue(claim, null, states.active)).toBe(false);
+    expect(expireDue(claim, null, states.expiredAtBoundary)).toBe(true);
+    expect(expireDue(claim, null, states.inGrace)).toBe(true);
+    expect(expireDue(claim, null, states.later)).toBe(true);
+    expect(expireDue(claim, states.expiredAtBoundary, states.later)).toBe(false);
+  });
+
+  it("matches the table: once due, the claim is no longer active for anyone, and takeover waits 5 minutes", () => {
+    for (const t of Object.values(states)) {
+      const due = expireDue(claim, null, t);
+      const heartbeat = result(decide(claim, { kind: "heartbeat", me }, t));
+      // Due ⇔ the owner's heartbeat is refused: the sweeper reports exactly the claims that stopped being active.
+      expect(due).toBe(heartbeat === "conflict");
+    }
+    // Being reported does not change what steal may do: still the 5-minute allowance.
+    expect(result(decide(claim, { kind: "acquire", steal: true, me: other }, states.inGrace))).toBe(
+      "conflict",
+    );
+    expect(result(decide(claim, { kind: "acquire", steal: true, me: other }, states.graceBoundary))).toBe(
+      "takeover",
+    );
   });
 });

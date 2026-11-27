@@ -4,7 +4,7 @@ import type { Client } from "./db.js";
 export type HookPoint = "locked" | "read" | "seq" | "beforeEvent" | "beforeCommit";
 
 export interface HookInfo {
-  op: "acquire" | "heartbeat" | "release";
+  op: "acquire" | "heartbeat" | "release" | "expire";
   task: string;
   client: Client;
 }

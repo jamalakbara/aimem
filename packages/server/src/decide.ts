@@ -24,6 +24,16 @@ export type Decision =
 export const expiresAt = (c: Pick<OpenClaim, "heartbeat" | "ttlMinutes">): number =>
   c.heartbeat.getTime() + c.ttlMinutes * 60_000;
 
+/**
+ * The sweeper's rule (plan §4, 07 §4.3): an open claim at or past its expiry that was not reported yet gets one
+ * `claim.expired`. The claim stays recorded; the takeover rules above do not change.
+ */
+export const expireDue = (
+  c: Pick<OpenClaim, "heartbeat" | "ttlMinutes">,
+  notifiedAt: Date | null,
+  t: Date,
+): boolean => notifiedAt === null && t.getTime() >= expiresAt(c);
+
 /** Owner = project (implied) + the user of the token + holder + session (plan A4, QA W3). */
 export const sameOwner = (a: Owner, b: Owner): boolean =>
   a.userId === b.userId && a.holder === b.holder && a.session === b.session;
