@@ -72,10 +72,18 @@ export function summarize(values: readonly number[]): Stats {
  * Why a profile does not count, empty when it does. Nothing is discarded or retried: any failure, a wrong sample
  * count, a wrong instance, or (profile 3) a round trip or sample under 100 ms makes the run invalid or failed.
  */
-export function problems(r: ProfileResult): string[] {
+export interface Counts {
+  warmup: number;
+  measured: number;
+}
+const COUNTS: Counts = { warmup: WARMUP, measured: MEASURED };
+
+export function problems(r: ProfileResult, counts: Counts = COUNTS): string[] {
   const out: string[] = [];
-  if (r.warmup.length !== WARMUP) out.push(`${r.name}: ${r.warmup.length} warm-up samples, expected ${WARMUP}${INVALID}`);
-  if (r.samples.length !== MEASURED) out.push(`${r.name}: ${r.samples.length} samples, expected ${MEASURED}${INVALID}`);
+  if (r.warmup.length !== counts.warmup)
+    out.push(`${r.name}: ${r.warmup.length} warm-up samples, expected ${counts.warmup}${INVALID}`);
+  if (r.samples.length !== counts.measured)
+    out.push(`${r.name}: ${r.samples.length} samples, expected ${counts.measured}${INVALID}`);
   for (const f of r.failures) out.push(`${r.name}: sample ${f.sample} ${f.kind}: ${f.detail}`);
   const wrongA = r.instances.a.filter((x) => x !== r.expected.a);
   if (wrongA.length) out.push(`${r.name}: ${wrongA.length} POSTs answered by another instance than ${r.expected.a}${INVALID}`);
@@ -103,12 +111,12 @@ export interface Verdict {
 }
 
 /** All three profiles must be there and clean; a validity problem wins over a slow p95. */
-export function verdict(results: readonly ProfileResult[], error?: string): Verdict {
+export function verdict(results: readonly ProfileResult[], error?: string, counts: Counts = COUNTS): Verdict {
   const reasons: string[] = [];
   if (error) reasons.push(`run stopped: ${error}${INVALID}`);
   for (const name of PROFILES)
     if (!results.some((r) => r.name === name)) reasons.push(`${name}: profile did not run${INVALID}`);
-  for (const r of results) reasons.push(...problems(r));
+  for (const r of results) reasons.push(...problems(r, counts));
   if (reasons.length === 0) return { result: "passed in simulation", reasons };
   const invalid = reasons.some((x) => x.endsWith(INVALID));
   return { result: invalid ? "not valid" : "failed", reasons };
