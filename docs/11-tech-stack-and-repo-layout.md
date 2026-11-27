@@ -138,6 +138,7 @@ pnpm install
 pnpm -r build
 pnpm test                       # unit + integration (core, cli, mcp)
 # server database tests run in the CI job `server` (Postgres service); `AIMEM_TEST_DATABASE_URL` must point to a database
+# claim-visibility p95 simulation: CI job `p95`; DATABASE_URL=… node packages/server/bench/claim-visibility.ts --out p95-report.json
 pnpm --filter @aimem/web dev
 node packages/cli/dist/index.js --help
 ```

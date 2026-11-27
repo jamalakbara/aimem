@@ -64,7 +64,7 @@ Rules:
 - Branch protection must allow direct pushes to `aimem-live` by team members/agents (it is separate from main).
 
 ### 2.3 `sync: server` — claims in the sync server
-Section 4 below. Target visibility latency < 1 s (p95); slice 6.1 measures it only in a simulation (plan 6.1 §8), not yet on a LAN or the internet.
+Section 4 below. Target visibility latency < 1 s (p95); slice 6.1 measures it only in a simulation (plan 6.1 §8), not yet on a LAN or the internet. The CI job `p95` (`packages/server/bench/claim-visibility.ts`) runs three profiles on one machine: same instance, two instances, and two instances behind a proxy that delays data 50 ms each way. Its best result is "passed in simulation". The job is not a required check until it has been green 5 runs in a row on the same head, and no result has been recorded yet.
 
 ### 2.4 Failure semantics
 | Situation | Behaviour |
@@ -139,13 +139,20 @@ Constraints:
 - Every write to a task's claim (acquire, takeover, heartbeat, release, sweeper) runs in one transaction that first takes an advisory lock keyed on `(project_id, task_ref)`, then reads the time with `clock_timestamp()` (not `now()`, which is the start of the transaction) and the open claim. A concurrent loser waits for the lock and then sees the holder → HTTP 409 `CLAIM_CONFLICT`; the unique index is the second guard.
 - Expiry follows Git mode (§2.1): an expired claim **stays open** (`expired: true` in `live`). Acquire without `steal` is refused, also for its owner; `steal` succeeds from `expiresAt + 5 min` on and marks the old claim `released_status = 'taken_over'`; a heartbeat never revives it; its owner may still release it. A `steal` repeated by the owner of the active claim returns it (200) without a new event.
 - Each change writes one event and one audit row in the same transaction. Event numbers are per project, from a counter row that stays locked until commit, so a later number is never visible before an earlier one. `NOTIFY` carries only `{project_id, seq}`.
-- A periodic sweeper (slice 6.1b) emits `claim.expired` once per expired claim; it does not release claims.
+- A periodic sweeper (slice 6.1b; every 15 s on each instance) emits `claim.expired` once per expired claim; it does not release claims. Each claim is handled in its own transaction under the same task lock and decided again with the server time read after the lock. `expired_notified_at` records the report, so instances that sweep at the same time still report once. The audit actor is `system:sweeper`. Takeover rules do not change: `steal` still waits until `expiresAt + 5 min`.
 - `record_index` and `events` can be truncated and rebuilt/replayed.
 
 ### 4.4 Real-time delivery
 - Server-sent events as default (simple, proxy-friendly); WebSocket optional later.
 - Postgres `LISTEN/NOTIFY` fans events out across server instances; Redis only if a single node is outgrown.
 - Clients (CLI `aimem live --watch`, web app) resume with `since=<last event id>`.
+- `GET /projects/:slug/events` (slice 6.1b, scope `read`):
+  - **Cursor:** `Last-Event-ID` wins over `?since`; with neither, only new events are sent. The answer is 400 `USAGE` before any stream starts when a cursor is not a whole number ≥ 0, is ahead of the latest event, appears twice, or comes with another query parameter. `GET /live` returns the `cursor` to start from.
+  - **No gaps or repeats:** the stream registers for notifications first, then reads `seq > cursor` from the events table and drops any `seq` it already sent.
+  - **Missed notifications:** a notification only wakes readers of its project. While an instance's `LISTEN` connection is down, it reads the table every second and reconnects with backoff (250 ms doubling to 5 s); then every stream catches up from the table.
+  - **Access re-checks:** token, membership and `read` scope are checked again after each read from the table, after every wait for a slow reader, and at every `: ping` (15 s). When access is gone, the stream closes without sending more.
+  - **Limits:** at most 256 streams per instance; the next one gets 503 `SYNC_FAILED` with `Retry-After: 5`. When 1 MB is still unsent, the server waits up to 10 s for the reader; if the reader has not caught up, the stream is cut and the client resumes with `Last-Event-ID`. A stream the server closed but whose reader takes nothing is also cut after 10 s.
+  - **Response headers:** `Cache-Control: no-store` and `X-Accel-Buffering: no`. Each response names its instance in `Aimem-Instance` when the operator sets `AIMEM_INSTANCE`.
 - Agents do not hold open streams; they poll `GET /live` inside `context` (cheap) — streaming is for dashboards.
 
 ### 4.5 Deployment (self-hosted)
