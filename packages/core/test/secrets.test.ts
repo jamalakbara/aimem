@@ -76,3 +76,21 @@ describe("scanSecrets (09 §4)", () => {
     expect(scanSecrets(text, new Set([first?.fingerprint as string]))).toEqual([]);
   });
 });
+
+describe("aimem server tokens (09 §6, M6 6.1a)", () => {
+  it("finds every token standing alone, in text, with or without a label", async () => {
+    const { randomBytes } = await import("node:crypto");
+    for (let i = 0; i < 2000; i++) {
+      const token = `aimem_${randomBytes(32).toString("base64url")}`;
+      for (const text of [token, `note ${token} end`, `paths: src/${token}`, `"${token}"`])
+        expect(
+          scanSecrets(text).map((f) => f.kind),
+          text,
+        ).toContain("aimem-token");
+    }
+  });
+  it("does not flag the bare prefix or a shorter value", () => {
+    expect(scanSecrets("aimem_ tokens start with aimem_ and a 43 character value")).toEqual([]);
+    expect(scanSecrets(`aimem_${"a".repeat(42)}`).map((f) => f.kind)).not.toContain("aimem-token");
+  });
+});

@@ -91,6 +91,7 @@ describe("constants match 03", () => {
       "SOURCE_UNREACHABLE",
       "LLM_FAILED",
       "USAGE",
+      "UNAUTHENTICATED",
     ]);
   });
 });

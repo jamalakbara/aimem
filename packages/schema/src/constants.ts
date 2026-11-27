@@ -100,5 +100,6 @@ export const ERROR_CODES = [
   "SOURCE_UNREACHABLE",
   "LLM_FAILED",
   "USAGE",
+  "UNAUTHENTICATED",
 ] as const;
 export type ErrorCode = (typeof ERROR_CODES)[number];

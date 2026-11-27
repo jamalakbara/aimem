@@ -64,7 +64,7 @@ Rules:
 - Branch protection must allow direct pushes to `aimem-live` by team members/agents (it is separate from main).
 
 ### 2.3 `sync: server` — claims in the sync server
-Section 4 below. Typical visibility latency < 1 s.
+Section 4 below. Target visibility latency < 1 s (p95); slice 6.1 measures it only in a simulation (plan 6.1 §8), not yet on a LAN or the internet.
 
 ### 2.4 Failure semantics
 | Situation | Behaviour |
@@ -136,8 +136,10 @@ audit_log(id, project_id, actor, action, target, at, meta jsonb)
 ```
 Constraints:
 - Partial unique index `claims(project_id, task_ref) WHERE released_at IS NULL` guarantees one open claim per task. (Postgres cannot use `now()` in an index predicate, so expiry is handled in code.)
-- Acquire runs in one transaction: take an advisory lock keyed on `(project_id, task_ref)`; mark any open claim with `expires_at < now()` as released (`release_status = 'expired'`); then insert the new claim. A concurrent loser gets a unique-violation or sees the live holder → HTTP 409.
-- A periodic sweeper also releases expired claims and emits `claim.expired` events.
+- Every write to a task's claim (acquire, takeover, heartbeat, release, sweeper) runs in one transaction that first takes an advisory lock keyed on `(project_id, task_ref)`, then reads the time with `clock_timestamp()` (not `now()`, which is the start of the transaction) and the open claim. A concurrent loser waits for the lock and then sees the holder → HTTP 409 `CLAIM_CONFLICT`; the unique index is the second guard.
+- Expiry follows Git mode (§2.1): an expired claim **stays open** (`expired: true` in `live`). Acquire without `steal` is refused, also for its owner; `steal` succeeds from `expiresAt + 5 min` on and marks the old claim `released_status = 'taken_over'`; a heartbeat never revives it; its owner may still release it. A `steal` repeated by the owner of the active claim returns it (200) without a new event.
+- Each change writes one event and one audit row in the same transaction. Event numbers are per project, from a counter row that stays locked until commit, so a later number is never visible before an earlier one. `NOTIFY` carries only `{project_id, seq}`.
+- A periodic sweeper (slice 6.1b) emits `claim.expired` once per expired claim; it does not release claims.
 - `record_index` and `events` can be truncated and rebuilt/replayed.
 
 ### 4.4 Real-time delivery

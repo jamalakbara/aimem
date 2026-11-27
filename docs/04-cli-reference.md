@@ -371,7 +371,7 @@ Error codes (stable) and their exit codes:
 | `PERMISSION_DENIED` | 2 | `DUPLICATE_LIKELY` | 3 |
 | `SECRET_DETECTED` | 2 | `CLAIM_CONFLICT` | 3 |
 | `SPEC_TOO_NEW` | 2 | `SYNC_FAILED`, `SOURCE_UNREACHABLE` | 4 |
-| | | `LLM_FAILED` (LLM provider missing, not logged in, timed out or failed; ADR-017) | 4 |
+| `UNAUTHENTICATED` (sync server: missing, unknown, revoked or expired token; HTTP 401) | 2 | `LLM_FAILED` (LLM provider missing, not logged in, timed out or failed; ADR-017) | 4 |
 
 `aimem validate`: with errors it fails with `INVALID_RECORD` and `error.details = {errors, warnings, issues, unchecked?}` (exit 2); otherwise `ok: true` with the same `data`, exit 1 under `--strict` if there are warnings, else 0.
 

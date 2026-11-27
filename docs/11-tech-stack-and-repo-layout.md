@@ -22,7 +22,7 @@
 | Git | Shell out to the `git` binary via `execa` | Behaviour identical to the user's git; no re-implementation | `isomorphic-git` (rejected: gaps) |
 | CLI framework | `commander` or `cleye`; prompts via `@clack/prompts` | Small, typed | `oclif` |
 | MCP | `@modelcontextprotocol/sdk` | Official | |
-| Server | Fastify (or Hono) + Postgres (`pg`) + Drizzle ORM migrations | Light, fast, familiar | Go service |
+| Server | `node:http` + Postgres 16 (`pg`, pinned) + numbered SQL migrations (ADR-019) | Few routes, one runtime dependency | Fastify/Hono, Drizzle |
 | Realtime | SSE; Postgres LISTEN/NOTIFY | No extra infra | Redis pub/sub when scaling |
 | Web (team app, M6) | Next.js (App Router), Tailwind, Radix/shadcn | Fast to build, accessible | Vite + React Router |
 | Local viewer (M5) | `node:http`, HTML templates, `markdown-it` (ADR-018) | Small enough to ship in the CLI | Next.js |
@@ -137,7 +137,7 @@ All side effects (fs, git, network, clock, random) are injected for testing.
 pnpm install
 pnpm -r build
 pnpm test                       # unit + integration (core, cli, mcp)
-pnpm --filter @aimem/server dev # server with local Postgres via docker compose
+# server database tests run in the CI job `server` (Postgres service); `AIMEM_TEST_DATABASE_URL` must point to a database
 pnpm --filter @aimem/web dev
 node packages/cli/dist/index.js --help
 ```

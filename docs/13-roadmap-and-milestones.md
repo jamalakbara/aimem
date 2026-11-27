@@ -100,7 +100,7 @@ Solo level (M0–M2) is the first usable product and the fastest way to learn wh
 
 ## M6 — Sync server, realtime, web editing (L)
 **Deliverables**
-- Server: auth (GitHub OAuth, tokens), repo indexer + webhook, claims API with transactional acquire, SSE events, audit log, Docker image.
+- Server: auth (GitHub OAuth, tokens), repo indexer + webhook, claims API with transactional acquire, SSE events, audit log, Docker image. Status: slice 6.1a (claims API, token permissions, events and audit in the claim transaction) in review; 6.1b (SSE, sweeper, p95 simulation) next.
 - Shared semantic index (pgvector) and `ask` with citations: server API, CLI `aimem ask`, web Ask box (15 §10); LLM provider config and guardrails.
 - Scheduled connector workers (Google) running where the sources are reachable; Google/email sign-in for non-developers (16 §9).
 - CLI/MCP `sync: server` backend; `--local` fallback.

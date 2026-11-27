@@ -3,6 +3,8 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     include: ["packages/*/test/**/*.test.ts"],
+    // Server tests that need PostgreSQL run only in the CI job `server` (vitest.server.config.ts).
+    exclude: ["**/node_modules/**", "packages/server/test/db/**"],
     testTimeout: 30000,
     // Real-Git fixture setup in beforeEach can exceed the 10 s default on hosted Windows runners.
     hookTimeout: 30000,
@@ -18,6 +20,7 @@ export default defineConfig({
       "@aimem/adapters": new URL("./packages/adapters/src/index.ts", import.meta.url).pathname,
       "@aimem/mcp": new URL("./packages/mcp/src/index.ts", import.meta.url).pathname,
       "@aimem/viewer": new URL("./packages/viewer/src/index.ts", import.meta.url).pathname,
+      "@aimem/server": new URL("./packages/server/src/index.ts", import.meta.url).pathname,
       aimem: new URL("./packages/cli/src/index.ts", import.meta.url).pathname,
     },
   },
