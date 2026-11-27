@@ -185,12 +185,15 @@ export async function holdTaskLock(db: TestDb, key: string) {
   };
 }
 
-/** Waits until `n` sessions wait for an advisory lock: proof that requests really overlap. */
+/**
+ * Waits until `n` sessions of this test database wait for an advisory lock: proof that requests really overlap.
+ * pg_locks covers the whole cluster, and other test files run at the same time in other databases.
+ */
 export async function waitForLockWaiters(db: TestDb, n: number, timeoutMs = 10_000): Promise<void> {
   const end = Date.now() + timeoutMs;
   while (Date.now() < end) {
     const r = await db.pool.query(
-      "SELECT count(*)::int AS n FROM pg_locks WHERE locktype = 'advisory' AND NOT granted",
+      "SELECT count(*)::int AS n FROM pg_locks WHERE locktype = 'advisory' AND NOT granted AND database = (SELECT oid FROM pg_database WHERE datname = current_database())",
     );
     if (r.rows[0].n >= n) return;
     await new Promise((d) => setTimeout(d, 20));
