@@ -189,43 +189,47 @@ describe("delay proxy (profile 3)", () => {
 });
 
 describe("a run that cannot start still writes its report", () => {
-  it("SIGTERM stops a run that waits on a silent database: teardown, report, exit 1 (QA 6.1b P3)", async () => {
-    // A stand-in that accepts connections and never answers, as a database that hangs would.
-    const held: import("node:net").Socket[] = [];
-    const silent = createServer((c) => {
-      held.push(c);
-    });
-    await new Promise<void>((d) => silent.listen(0, "127.0.0.1", d));
-    const port = (silent.address() as { port: number }).port;
-    const dir = mkdtempSync(join(tmpdir(), "aimem-p95-"));
-    try {
-      const out = join(dir, "report.json");
-      const script = fileURLToPath(new URL("../../bench/claim-visibility.ts", import.meta.url));
-      const { spawn } = await import("node:child_process");
-      const child = spawn(process.execPath, [script, "--out", out], {
-        env: {
-          PATH: process.env.PATH ?? "",
-          DATABASE_URL: `postgres://bench:x@127.0.0.1:${port}/none`,
-          AIMEM_HEAD_SHA: "0123abc",
-        },
-        stdio: "ignore",
+  // Windows has no catchable SIGTERM (kill ends the process at once); the p95 job runs on Linux.
+  it.skipIf(process.platform === "win32")(
+    "SIGTERM stops a run that waits on a silent database: teardown, report, exit 1 (QA 6.1b P3)",
+    async () => {
+      // A stand-in that accepts connections and never answers, as a database that hangs would.
+      const held: import("node:net").Socket[] = [];
+      const silent = createServer((c) => {
+        held.push(c);
       });
-      const exited = new Promise<number | null>((d) => child.once("exit", (c) => d(c)));
-      await new Promise((d) => setTimeout(d, 1_500));
-      const t0 = Date.now();
-      child.kill("SIGTERM");
-      expect(await exited).toBe(1);
-      expect(Date.now() - t0).toBeLessThan(10_000);
-      const report = JSON.parse(readFileSync(out, "utf8"));
-      expect(report.verdict.result).toBe("not valid");
-      expect(report.verdict.reasons[0]).toMatch(/stopped by SIGTERM/);
-      expect(report.headSha).toBe("0123abc");
-    } finally {
-      for (const c of held) c.destroy();
-      silent.close();
-      rmSync(dir, { recursive: true, force: true });
-    }
-  });
+      await new Promise<void>((d) => silent.listen(0, "127.0.0.1", d));
+      const port = (silent.address() as { port: number }).port;
+      const dir = mkdtempSync(join(tmpdir(), "aimem-p95-"));
+      try {
+        const out = join(dir, "report.json");
+        const script = fileURLToPath(new URL("../../bench/claim-visibility.ts", import.meta.url));
+        const { spawn } = await import("node:child_process");
+        const child = spawn(process.execPath, [script, "--out", out], {
+          env: {
+            PATH: process.env.PATH ?? "",
+            DATABASE_URL: `postgres://bench:x@127.0.0.1:${port}/none`,
+            AIMEM_HEAD_SHA: "0123abc",
+          },
+          stdio: "ignore",
+        });
+        const exited = new Promise<number | null>((d) => child.once("exit", (c) => d(c)));
+        await new Promise((d) => setTimeout(d, 1_500));
+        const t0 = Date.now();
+        child.kill("SIGTERM");
+        expect(await exited).toBe(1);
+        expect(Date.now() - t0).toBeLessThan(10_000);
+        const report = JSON.parse(readFileSync(out, "utf8"));
+        expect(report.verdict.result).toBe("not valid");
+        expect(report.verdict.reasons[0]).toMatch(/stopped by SIGTERM/);
+        expect(report.headSha).toBe("0123abc");
+      } finally {
+        for (const c of held) c.destroy();
+        silent.close();
+        rmSync(dir, { recursive: true, force: true });
+      }
+    },
+  );
 
   it("exits 1 with verdict 'not valid' and a JSON report, without printing the database address", async () => {
     const port = await new Promise<number>((done) => {
