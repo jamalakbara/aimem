@@ -17,6 +17,7 @@ import { createPool, createToken, migrate } from "../dist/index.js";
 import { type Instance, startInstances } from "./instances.ts";
 import { startLatencyProxy } from "./latency-proxy.ts";
 import { runMeasurement } from "./measure.ts";
+import { stopOnSignals } from "./signals.ts";
 import { PROXY_DELAY_MS, summarize } from "./stats.ts";
 
 const BIN = fileURLToPath(new URL("../dist/bin.js", import.meta.url));
@@ -34,12 +35,10 @@ async function main(): Promise<number> {
   const { values } = parseArgs({ options: { out: { type: "string", default: "p95-report.json" } } });
   const out = values.out as string;
   // SIGTERM/SIGINT (a cancelled CI job) stop the run like its deadline: teardown, then the report.
-  const outside = new AbortController();
-  for (const sig of ["SIGTERM", "SIGINT"] as const)
-    process.once(sig, () => outside.abort(new Error(`stopped by ${sig}`)));
+  const stops = stopOnSignals();
   const { verdict: v, report } = await runMeasurement({
     out,
-    signal: outside.signal,
+    signal: stops.signal,
     meta: {
       kind: "aimem claim visibility (plan 6.1 §8)",
       label: "simulation on one machine; not a LAN or internet measurement",
@@ -104,6 +103,7 @@ async function main(): Promise<number> {
     );
   }
   process.stdout.write(`verdict: ${v.result}\n${v.reasons.map((x) => `  - ${x}\n`).join("")}report: ${out}\n`);
+  stops.dispose();
   return v.result === "passed in simulation" ? 0 : 1;
 }
 
