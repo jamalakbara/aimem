@@ -57,6 +57,15 @@ afterAll(() => {
   rmSync(dir, { recursive: true, force: true });
 });
 
+/** Waits until `pred` holds, checking every 20 ms, for at most `ms`. */
+async function until(pred: () => boolean, ms: number, what: string) {
+  const end = Date.now() + ms;
+  while (!pred()) {
+    if (Date.now() > end) throw new Error(`timed out after ${ms} ms waiting for ${what}`);
+    await new Promise((d) => setTimeout(d, 20));
+  }
+}
+
 /** The harness's setup path for the two instances, with the stand-in script. */
 async function run(
   modes: Record<string, "ok" | "exit" | "never" | "ignore-term">,
@@ -107,18 +116,23 @@ describe("no server process outlives the harness (QA 6.1b P3 recheck)", () => {
     expect(existsSync(r.out)).toBe(true);
   });
 
+  // The limit leaves instance 1 room for a normal start (also on a busy machine); instance 2 never gets ready.
   it("instance 2 never gets ready: both are stopped", async () => {
-    const r = await run({ i2: "never" }, { startTimeoutMs: 500 });
+    const r = await run({ i2: "never" }, { startTimeoutMs: 5_000 });
     expect(r.started).toBe(2);
-    expect(r.verdict.reasons[0]).toMatch(/did not start within 500 ms/);
+    expect(r.verdict.reasons[0]).toMatch(/did not start within 5000 ms/);
     expect(r.left).toEqual([]);
     expect(existsSync(r.out)).toBe(true);
   });
 
   it("the run is stopped (SIGTERM path) while the instances start: both are stopped", async () => {
     const stop = new AbortController();
-    setTimeout(() => stop.abort(new Error("stopped by SIGTERM")), 400);
+    // Stop once the first instance has really been spawned (its PID file), not after a fixed time.
+    const stopper = until(() => pids().length >= 1, 20_000, "the first instance").then(() =>
+      stop.abort(new Error("stopped by SIGTERM")),
+    );
     const r = await run({ i1: "never", i2: "never" }, { startTimeoutMs: 20_000, signal: stop.signal });
+    await stopper;
     expect(r.ms).toBeLessThan(10_000);
     expect(r.verdict.reasons[0]).toMatch(/stopped by SIGTERM/);
     expect(r.started).toBeGreaterThanOrEqual(1);
@@ -126,11 +140,12 @@ describe("no server process outlives the harness (QA 6.1b P3 recheck)", () => {
     expect(existsSync(r.out)).toBe(true);
   });
 
-  // As with the defaults (5 s grace, 10 s per teardown step): stopping one after the other does not fit the step.
+  // As with the defaults (5 s grace, 10 s per teardown step): stopping one after the other (2 s) does not fit the
+  // step (1.8 s); stopping both at once (about 1 s) does, with room for a busy machine.
   it("instances that ignore SIGTERM are killed and have ended when the harness returns", async () => {
     const r = await run(
       { i1: "ignore-term", i2: "ignore-term" },
-      { termGraceMs: 400, cleanupTimeoutMs: 700 },
+      { termGraceMs: 1_000, cleanupTimeoutMs: 1_800 },
     );
     expect(r.started).toBe(2);
     expect(r.left).toEqual([]);

@@ -214,7 +214,10 @@ describe("a run that cannot start still writes its report", () => {
           stdio: "ignore",
         });
         const exited = new Promise<number | null>((d) => child.once("exit", (c) => d(c)));
-        await new Promise((d) => setTimeout(d, 1_500));
+        // Ready when the harness has connected to the database: its signal handlers are set before that.
+        const end = Date.now() + 30_000;
+        while (held.length === 0 && Date.now() < end) await new Promise((d) => setTimeout(d, 20));
+        expect(held.length, "the harness never connected to the stand-in database").toBeGreaterThan(0);
         const t0 = Date.now();
         child.kill("SIGTERM");
         expect(await exited).toBe(1);

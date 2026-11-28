@@ -108,7 +108,8 @@ const outFile = () => {
 /** Resolves to the value, or to "did not finish" after `ms`: a hanging run fails the test instead of the suite. */
 const within = <T>(p: Promise<T>, ms: number) =>
   Promise.race([p, new Promise<"did not finish">((d) => setTimeout(() => d("did not finish"), ms))]);
-const SMALL = { warmup: 1, measured: 4, sampleTimeoutMs: 400, stepTimeoutMs: 400, runDeadlineMs: 20_000 };
+// Limits with room for stand-ins on a busy machine; the late cases are made late on purpose, well past them.
+const SMALL = { warmup: 1, measured: 4, sampleTimeoutMs: 2_000, stepTimeoutMs: 3_000, runDeadlineMs: 30_000 };
 
 describe("P1: replies on connections the server closes normally go through the delay queue", () => {
   it("every Connection: close request through the proxy gets its whole answer after ≥ 100 ms", async () => {
@@ -179,7 +180,7 @@ describe("P1: replies on connections the server closes normally go through the d
 describe("P2: one 5 s limit from sending the POST to receiving the event", () => {
   it("a POST answered after the limit fails the run, even when its event came early", async () => {
     const bus: Bus = { streams: new Set(), seq: 0 };
-    const i1 = await standIn("i1", bus, { postDelayMs: (i) => (i === 2 ? 600 : 0) });
+    const i1 = await standIn("i1", bus, { postDelayMs: (i) => (i === 2 ? 2_600 : 0) });
     const out = outFile();
     const run = await within(
       runMeasurement({
