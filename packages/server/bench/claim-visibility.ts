@@ -9,65 +9,17 @@
  * instances with both paths through a proxy that delays each chunk 50 ms. The JSON report is written also when the
  * run fails or stops. The verdict is at best "passed in simulation"; it says nothing about a LAN or the internet.
  */
-import { type ChildProcess, execFileSync, spawn } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import { arch, cpus, platform, release } from "node:os";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { createPool, createToken, migrate } from "../dist/index.js";
+import { type Instance, startInstances } from "./instances.ts";
 import { startLatencyProxy } from "./latency-proxy.ts";
 import { runMeasurement } from "./measure.ts";
 import { PROXY_DELAY_MS, summarize } from "./stats.ts";
 
 const BIN = fileURLToPath(new URL("../dist/bin.js", import.meta.url));
-
-interface Instance {
-  name: string;
-  url: string;
-  port: number;
-  proc: ChildProcess;
-  log: string[];
-}
-
-/** Starting an instance is bounded too (QA 6.1b P3): without its "listening" line in time, it is killed. */
-const START_TIMEOUT_MS = 30_000;
-
-function startInstance(name: string, databaseUrl: string): Promise<Instance> {
-  const proc = spawn(process.execPath, [BIN, "serve", "--port", "0"], {
-    env: { PATH: process.env.PATH ?? "", DATABASE_URL: databaseUrl, AIMEM_INSTANCE: name },
-    stdio: ["ignore", "pipe", "pipe"],
-  });
-  const log: string[] = [];
-  return new Promise((done, fail) => {
-    let out = "";
-    proc.stderr?.on("data", (d) => log.push(String(d).trim()));
-    proc.stdout?.on("data", (d) => {
-      out += d;
-      const m = /listening on (http:\/\/127\.0\.0\.1:(\d+)) as (\S+)/.exec(out);
-      if (m?.[1] && m[3] === name) {
-        log.push(`listening as ${m[3]}`);
-        done({ name, url: m[1], port: Number(m[2]), proc, log });
-      }
-    });
-    proc.on("exit", (c) => fail(new Error(`instance ${name} exited with ${c}`)));
-    const timer = setTimeout(() => {
-      proc.kill("SIGKILL");
-      fail(new Error(`instance ${name} did not start within ${START_TIMEOUT_MS} ms`));
-    }, START_TIMEOUT_MS);
-    proc.once("exit", () => clearTimeout(timer));
-    proc.stdout?.on("data", () => {
-      if (/listening on/.test(out)) clearTimeout(timer);
-    });
-  });
-}
-
-const stopInstance = (i: Instance) =>
-  new Promise<void>((done) => {
-    if (i.proc.exitCode !== null) return done();
-    i.proc.once("exit", () => done());
-    i.proc.kill("SIGTERM");
-    // An instance that does not stop within 5 s is killed, so teardown always ends.
-    setTimeout(() => i.proc.exitCode === null && i.proc.kill("SIGKILL"), 5_000).unref();
-  });
 
 function gitSha(): string {
   if (process.env.GITHUB_SHA) return process.env.GITHUB_SHA;
@@ -81,7 +33,6 @@ function gitSha(): string {
 async function main(): Promise<number> {
   const { values } = parseArgs({ options: { out: { type: "string", default: "p95-report.json" } } });
   const out = values.out as string;
-  const instances: Instance[] = [];
   // SIGTERM/SIGINT (a cancelled CI job) stop the run like its deadline: teardown, then the report.
   const outside = new AbortController();
   for (const sig of ["SIGTERM", "SIGINT"] as const)
@@ -119,13 +70,12 @@ async function main(): Promise<number> {
       const reader = (
         await createToken(pool, { project: slug, user: "bench-b", kind: "human", scopes: ["read"] })
       ).token;
-      report.instanceLogs = {};
-      onCleanup(async () => {
-        for (const i of instances) await stopInstance(i);
-        report.instanceLogs = Object.fromEntries(instances.map((i) => [i.name, i.log]));
-      });
-      instances.push(await startInstance("i1", databaseUrl), await startInstance("i2", databaseUrl));
-      const [i1, i2] = instances as [Instance, Instance];
+      const [i1, i2] = (await startInstances(["i1", "i2"], {
+        bin: BIN,
+        env: (name) => ({ PATH: process.env.PATH ?? "", DATABASE_URL: databaseUrl, AIMEM_INSTANCE: name }),
+        onCleanup,
+        report,
+      })) as [Instance, Instance];
       const proxyA = await startLatencyProxy({ targetPort: i1.port, delayMs: PROXY_DELAY_MS });
       onCleanup(proxyA.close);
       const proxyB = await startLatencyProxy({ targetPort: i2.port, delayMs: PROXY_DELAY_MS });
