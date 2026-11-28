@@ -8,6 +8,7 @@ import { randomBytes } from "node:crypto";
 import { openStream, type SseEvent, type SseStream } from "../test/sse-client.ts";
 import {
   type Failure,
+  INVALID,
   MEASURED,
   type ProfileName,
   type ProfileResult,
@@ -297,6 +298,7 @@ export async function runMeasurement(
   const outside = () => stop.abort(o.signal?.reason ?? new Error("run stopped from outside"));
   o.signal?.addEventListener("abort", outside, { once: true });
   let error: string | undefined;
+  const teardown: string[] = [];
   try {
     await untilAborted(
       (async () => {
@@ -318,15 +320,22 @@ export async function runMeasurement(
     // Stop the work that may still wait in the background, then tear down; no step of teardown may hang.
     if (!stop.signal.aborted) stop.abort(new Error("run finished"));
     for (const s of streams) s.close();
-    for (const c of cleanups.reverse()) {
+    // Each step is bounded; one that fails or does not finish is recorded, and the run cannot pass (QA 6.1b P3).
+    for (let n = cleanups.length - 1; n >= 0; n--) {
       let t: NodeJS.Timeout | undefined;
-      await Promise.race([
-        Promise.resolve().then(c),
-        new Promise((d) => {
-          t = setTimeout(d, L.cleanupTimeoutMs);
+      const outcome = await Promise.race([
+        Promise.resolve()
+          .then(cleanups[n])
+          .then(
+            () => "done" as const,
+            (e: unknown) => `teardown step ${n + 1} failed: ${e instanceof Error ? e.message : String(e)}`,
+          ),
+        new Promise<string>((d) => {
+          t = setTimeout(() => d(`teardown step ${n + 1} did not finish within ${L.cleanupTimeoutMs} ms`), L.cleanupTimeoutMs);
         }),
-      ]).catch(() => undefined);
+      ]);
       clearTimeout(t);
+      if (outcome !== "done") teardown.push(outcome);
     }
   }
   const counts = { warmup: L.warmup, measured: L.measured };
@@ -337,7 +346,12 @@ export async function runMeasurement(
     problems: problems(r, counts),
   }));
   report.finishedAt = new Date().toISOString();
-  const v = verdict(results, error, counts);
+  const base = verdict(results, error, counts);
+  // A run passes only when its teardown finished: nothing it started may still be running.
+  const v: Verdict = teardown.length
+    ? { result: "not valid", reasons: [...base.reasons, ...teardown.map((x) => `${x}${INVALID}`)] }
+    : base;
+  report.teardown = teardown;
   report.verdict = v;
   writeFileSync(o.out, `${JSON.stringify(report, null, 2)}\n`);
   return { verdict: v, report };

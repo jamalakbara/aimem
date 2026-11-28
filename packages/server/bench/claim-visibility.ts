@@ -55,7 +55,7 @@ async function main(): Promise<number> {
       postgres: null,
       proxyDelayMs: PROXY_DELAY_MS,
     },
-    setup: async ({ onCleanup, report }) => {
+    setup: async ({ onCleanup, report, signal }) => {
       const databaseUrl = process.env.DATABASE_URL;
       if (!databaseUrl) throw new Error("DATABASE_URL is not set");
       const pool = createPool(databaseUrl, 2);
@@ -75,6 +75,7 @@ async function main(): Promise<number> {
         env: (name) => ({ PATH: process.env.PATH ?? "", DATABASE_URL: databaseUrl, AIMEM_INSTANCE: name }),
         onCleanup,
         report,
+        signal,
       })) as [Instance, Instance];
       const proxyA = await startLatencyProxy({ targetPort: i1.port, delayMs: PROXY_DELAY_MS });
       onCleanup(proxyA.close);
