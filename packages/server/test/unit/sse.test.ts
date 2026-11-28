@@ -449,9 +449,8 @@ describe("access, limits and cleanup (IZ-6, EV-9, plan A12)", () => {
     expect(r.streams.count).toBe(0);
     const socket = r.sockets.at(-1) as Socket;
     expect(socket.destroyed).toBe(false);
-    // Cut, or nothing left to send. 38 MB do not fit the socket buffers of a paused reader, so in practice only the
-    // cut ends it; the bytes may be waiting in the response or (Windows) already in the socket.
-    await until(() => socket.destroyed || socket.writableLength === 0, 2_000);
+    // The connection itself must be gone: cut by the stream, wherever the unsent bytes wait (QA N1, CI #122).
+    await until(() => socket.destroyed, 2_000);
     s.close();
   });
 

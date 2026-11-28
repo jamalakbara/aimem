@@ -227,6 +227,19 @@ describe("cursor (plan §5, EV-3, EV-6, EV-7)", () => {
     s.close();
   });
 
+  it("sends the backlog in numeric order: 8 → 9, 10, 11 (EV-7)", async () => {
+    // As text, 9 sorts after 10 and 11, and the dedup would then drop it (the bug fixed in 9558cf9).
+    const d = client(srv1.url, "delta", await token(db.pool, "delta", "dora"), "s-d");
+    const reader = await token(db.pool, "delta", "dora", { scopes: ["read"] });
+    for (let i = 0; i < 11; i++) expect((await d.acquire({ task: newTask() })).status).toBe(201);
+    const s = await openStream(srv1.url, "/v1/projects/delta/events?since=8", { token: reader });
+    streams.push(s);
+    await s.waitForCount(3);
+    await sleep(100);
+    expect(ids(s.events)).toEqual([9, 10, 11]);
+    s.close();
+  });
+
   it("compares cursors as numbers: 9 → 10 → 11 (EV-7)", async () => {
     const g = client(srv1.url, "gamma", await token(db.pool, "gamma", "gil"), "s-g");
     const reader = await token(db.pool, "gamma", "gil", { scopes: ["read"] });
@@ -399,12 +412,17 @@ describe("token and project (IZ-1/IZ-4/IZ-6 for events)", () => {
       for (const t of betaTasks) expect(s.raw()).not.toContain(t);
       s.close();
     }
-    // A replay from a cursor just before the marker stays in alpha too (the marker's seq may be 1 when this test
-    // runs alone, so the cursor is taken from it).
-    const markerSeq = Number(live1.events.find((e) => e.data.claim?.task === `alpha:${marker}`)?.id ?? 1);
-    const replay = await events(srv2.url, "alpha", { since: String(markerSeq - 1) });
+    // A replay from cursor 0 covers every alpha event, also while beta's events sit between them in time: exactly
+    // alpha's events arrive, in order, and nothing of beta (alone or in the full suite).
+    const replay = await events(srv2.url, "alpha", { since: "0" });
     await replay.waitFor(forTask(marker), 5_000);
+    const markerSeq = Number(replay.events.find((e) => e.data.claim?.task === `alpha:${marker}`)?.id);
+    expect(ids(replay.events).filter((n) => n <= markerSeq)).toEqual(
+      (await tableSeqs("alpha")).filter((n) => n <= markerSeq),
+    );
+    expect(replay.events.every((e) => String(e.data.claim.task).startsWith("alpha:"))).toBe(true);
     expect(replay.raw()).not.toMatch(/beta:/);
+    for (const t of betaTasks) expect(replay.raw()).not.toContain(t);
     replay.close();
   });
 

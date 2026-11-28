@@ -131,6 +131,12 @@ const MUTATIONS = [
     test: ["stream.test.ts", "never gets an event of beta"],
   },
   {
+    name: "backlog ordered as text",
+    file: `${S}sse.ts`,
+    edits: [["ORDER BY e.seq LIMIT $3", "ORDER BY seq LIMIT $3"]],
+    test: ["stream.test.ts", "sends the backlog in numeric order"],
+  },
+  {
     name: "no reconnect after the LISTEN connection is cut",
     file: `${S}events.ts`,
     edits: [["      void this.connect();\n", ""]],
