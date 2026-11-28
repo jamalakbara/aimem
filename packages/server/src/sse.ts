@@ -140,12 +140,15 @@ export class Streams {
       if (!started || res.destroyed) return;
       res.end();
       // A reader that never takes the rest would keep the connection open: cut it after the same wait (QA N1).
-      if (!res.writableFinished) {
+      // Unsent bytes may sit in the response or, once it has finished (Windows), still in the socket.
+      const socket = res.socket;
+      const pending = () =>
+        !res.writableFinished || (socket !== null && !socket.destroyed && socket.writableLength > 0);
+      if (pending()) {
         const cut = setTimeout(() => {
-          if (!res.writableFinished) res.destroy();
+          if (pending()) res.destroy();
         }, this.drainWaitMs);
         cut.unref();
-        res.once("finish", () => clearTimeout(cut));
       }
     };
     const pump = () => {

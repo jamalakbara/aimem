@@ -399,8 +399,10 @@ describe("token and project (IZ-1/IZ-4/IZ-6 for events)", () => {
       for (const t of betaTasks) expect(s.raw()).not.toContain(t);
       s.close();
     }
-    // A replay with any cursor stays in alpha too.
-    const replay = await events(srv2.url, "alpha", { since: "1" });
+    // A replay from a cursor just before the marker stays in alpha too (the marker's seq may be 1 when this test
+    // runs alone, so the cursor is taken from it).
+    const markerSeq = Number(live1.events.find((e) => e.data.claim?.task === `alpha:${marker}`)?.id ?? 1);
+    const replay = await events(srv2.url, "alpha", { since: String(markerSeq - 1) });
     await replay.waitFor(forTask(marker), 5_000);
     expect(replay.raw()).not.toMatch(/beta:/);
     replay.close();
