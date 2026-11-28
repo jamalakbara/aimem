@@ -105,6 +105,45 @@ jobs:
           path: mutation-report.md
           retention-days: 14
 
+  p95:
+    # Claim visibility p95 in a simulation (plan 6.1 §8, P95-1). NOT a required check: it becomes one only after
+    # 5 green runs in a row on the same head, and its result is "passed in simulation" at best (docs/13 M6 stays
+    # unchecked). The JSON report is uploaded also when the run fails.
+    name: p95 simulation (postgres 16 / node 24)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:16.6
+        env:
+          POSTGRES_USER: aimem
+          POSTGRES_PASSWORD: aimem-ci-only
+          POSTGRES_DB: aimem
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U aimem" --health-interval 2s --health-timeout 5s --health-retries 30
+    env:
+      DATABASE_URL: postgres://aimem:aimem-ci-only@localhost:5432/aimem
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -s build
+      - name: Measure claim visibility (three profiles, 20 + 300 samples each)
+        env:
+          AIMEM_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: node packages/server/bench/claim-visibility.ts --out p95-report.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p95-report
+          path: p95-report.json
+          retention-days: 30
+
   viewer-browser:
     name: viewer in a browser (ubuntu-latest / node 24)
     runs-on: ubuntu-latest

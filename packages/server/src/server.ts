@@ -3,15 +3,20 @@ import type { Scope } from "./admin.js";
 import { authenticate, type Caller } from "./auth.js";
 import { Claims, type Outcome } from "./claims.js";
 import { CommitUncertain, createPool, type Pool, unavailable } from "./db.js";
+import { EventHub, type HubOptions } from "./events.js";
 import type { Hooks } from "./hooks.js";
 import { HttpError, notFound, problemBody, unauthenticated } from "./problem.js";
+import { readCursor, type StreamOptions, Streams } from "./sse.js";
 import { readAcquire, readEmptyBody, readSession, readTaskId } from "./validate.js";
 
 export const MAX_BODY_BYTES = 16 * 1024;
+/** How often each instance runs the sweeper (claim.expired is a notice, not a deadline). */
+export const SWEEP_MS = 15_000;
 
-/** The routes of 6.1a. The permission tests are generated from this list, so a new route needs a row there. */
+/** The project routes. The permission tests are generated from this list, so a new route needs a row there. */
 export const ROUTES = [
   { name: "live", method: "GET", scope: "read", path: (slug: string) => `/v1/projects/${slug}/live` },
+  { name: "events", method: "GET", scope: "read", path: (slug: string) => `/v1/projects/${slug}/events` },
   {
     name: "acquire",
     method: "POST",
@@ -48,16 +53,33 @@ export interface ServerOptions {
   hooks?: Hooks;
   /** One line per failure: status, code and error class. Never request data. */
   log?: (line: string) => void;
+  /** SSE limits (tests shorten the ping); defaults from plan A12. */
+  streams?: Omit<StreamOptions, "hooks" | "headers">;
+  /** LISTEN reconnect and fallback polling; defaults from plan §5. */
+  listen?: HubOptions;
+  /**
+   * Name sent as `Aimem-Instance` on every response, so a measurement can prove which instance answered (plan §8).
+   * Letters, digits and `-`, at most 32; anything else is ignored.
+   */
+  instance?: string;
+  /** Sweeper interval in ms (default 15 s); `false` runs it only through `sweep()` (tests). */
+  sweepMs?: number | false;
 }
 
 export interface RunningServer {
   url: string;
   port: number;
   pool: Pool;
+  /** Open SSE streams of this instance. */
+  streams(): number;
+  /** True while this instance's LISTEN connection is up. */
+  listening(): boolean;
+  /** One sweeper run now; resolves to the number of `claim.expired` events written. */
+  sweep(): Promise<number>;
   close(): Promise<void>;
 }
 
-const MATCH = /^\/v1\/projects\/([^/]+)\/(?:(live)|claims(?:\/([^/]+)(\/heartbeat)?)?)$/;
+const MATCH = /^\/v1\/projects\/([^/]+)\/(?:(live)|(events)|claims(?:\/([^/]+)(\/heartbeat)?)?)$/;
 
 interface Route {
   slug: string;
@@ -74,8 +96,9 @@ function route(method: string, path: string): Route | undefined {
   } catch {
     return undefined;
   }
-  const [, , live, task, heartbeat] = m;
+  const [, , live, events, task, heartbeat] = m;
   if (live) return method === "GET" ? { slug, name: "live" } : undefined;
+  if (events) return method === "GET" ? { slug, name: "events" } : undefined;
   if (task === undefined) return method === "POST" ? { slug, name: "acquire" } : undefined;
   if (heartbeat) return method === "PUT" ? { slug, name: "heartbeat", task } : undefined;
   return method === "DELETE" ? { slug, name: "release", task } : undefined;
@@ -121,6 +144,33 @@ export async function startServer(o: ServerOptions): Promise<RunningServer> {
   pool.on("error", () => undefined);
   const claims = new Claims(pool, o.hooks);
   const log = o.log ?? (() => undefined);
+  const hub = new EventHub(pool, o.listen);
+  await hub.start();
+  const instanceHeader: Record<string, string> =
+    o.instance && /^[A-Za-z0-9-]{1,32}$/.test(o.instance) ? { "Aimem-Instance": o.instance } : {};
+  const streams = new Streams(pool, hub, {
+    ...o.streams,
+    ...(o.hooks ? { hooks: o.hooks } : {}),
+    headers: instanceHeader,
+  });
+  // The sweeper: one run at a time per instance; other instances may sweep too, the task lock keeps it once.
+  let sweeping: Promise<number> | undefined;
+  const sweep = () => {
+    sweeping ??= claims.sweep().finally(() => {
+      sweeping = undefined;
+    });
+    return sweeping;
+  };
+  const sweepMs = o.sweepMs ?? SWEEP_MS;
+  const sweeper =
+    sweepMs === false
+      ? undefined
+      : setInterval(() => {
+          sweep().catch((e) =>
+            log(`sweep error ${(e as { code?: string })?.code ?? (e as Error)?.name ?? "unknown"}`),
+          );
+        }, sweepMs);
+  sweeper?.unref();
 
   async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> {
     const url = new URL(req.url ?? "/", "http://localhost");
@@ -130,6 +180,7 @@ export async function startServer(o: ServerOptions): Promise<RunningServer> {
         "Content-Type": type,
         "Cache-Control": "no-store",
         "X-Content-Type-Options": "nosniff",
+        ...instanceHeader,
         ...(body.tooLarge ? { Connection: "close" } : {}),
         ...headers,
       });
@@ -153,6 +204,11 @@ export async function startServer(o: ServerOptions): Promise<RunningServer> {
       if (body.tooLarge)
         throw new HttpError(413, "USAGE", `The body is larger than ${MAX_BODY_BYTES} bytes.`);
       let out: Outcome;
+      if (r.name === "events") {
+        readEmptyBody(body.text);
+        // Errors before the 200 are thrown and answered below; afterwards the stream owns the response.
+        return await streams.start(req, res, caller, readCursor(req, url));
+      }
       if (r.name === "live") {
         readEmptyBody(body.text);
         out = await claims.live(caller);
@@ -207,7 +263,14 @@ export async function startServer(o: ServerOptions): Promise<RunningServer> {
     url: `http://127.0.0.1:${port}`,
     port,
     pool,
+    streams: () => streams.count,
+    listening: () => hub.listening,
+    sweep,
     close: async () => {
+      clearInterval(sweeper);
+      await sweeping?.catch(() => undefined);
+      streams.closeAll();
+      await hub.close();
       await new Promise<void>((done) => {
         server.close(() => done());
         server.closeAllConnections();

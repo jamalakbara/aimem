@@ -1,6 +1,7 @@
 import { connect } from "node:net";
 import { createToken, newToken, ROUTES, type RunningServer } from "@aimem/server";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { openStream } from "../sse-client.js";
 import {
   assertInvariants,
   call,
@@ -117,7 +118,7 @@ async function refused(
 
 describe("permission matrix (IZ-1, plan §6.4)", () => {
   it("every refusal leaves the stored state as it was, also next to existing claims", async () => {
-    expect(ROUTES.map((r) => r.name)).toEqual(["live", "acquire", "heartbeat", "release"]);
+    expect(ROUTES.map((r) => r.name)).toEqual(["live", "events", "acquire", "heartbeat", "release"]);
     for (const route of ROUTES) {
       const at = (name: string) => `${route.name} ${name}`;
       // 401: the identity in brackets is the one the token would have, so its own claim is the target.
@@ -179,6 +180,16 @@ describe("permission matrix (IZ-1, plan §6.4)", () => {
         const task = await target(route, T.full);
         await new Promise((d) => setTimeout(d, 3));
         const before = await state(db.pool);
+        if (route.name === "events") {
+          // A stream does not end by itself: check that it started, then close it.
+          const s = await openStream(srv.url, route.path("alpha"), { token: tok });
+          expect([s.status, s.headers["content-type"]], `events ${name}`).toEqual([
+            200,
+            "text/event-stream; charset=utf-8",
+          ]);
+          s.close();
+          continue;
+        }
         const r = await call(srv.url, {
           method: route.method,
           path: route.path("alpha", task),

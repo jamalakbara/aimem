@@ -131,13 +131,17 @@ export async function token(
   ).token;
 }
 
+/**
+ * Test servers do not sweep on a timer, so no `claim.expired` appears in the middle of another test's event
+ * sequence; sweeper tests call `sweep()` themselves.
+ */
 export async function server(db: TestDb, hooks?: Hooks, log?: (l: string) => void): Promise<RunningServer> {
-  return startServer({ pool: db.pool, ...(hooks ? { hooks } : {}), ...(log ? { log } : {}) });
+  return startServer({ pool: db.pool, sweepMs: false, ...(hooks ? { hooks } : {}), ...(log ? { log } : {}) });
 }
 
 /** A second instance with its own pool on the same database. */
 export async function secondServer(db: TestDb, hooks?: Hooks): Promise<RunningServer> {
-  return startServer({ databaseUrl: db.url, poolMax: 6, ...(hooks ? { hooks } : {}) });
+  return startServer({ databaseUrl: db.url, poolMax: 6, sweepMs: false, ...(hooks ? { hooks } : {}) });
 }
 
 const BIN = fileURLToPath(new URL("../../dist/bin.js", import.meta.url));
