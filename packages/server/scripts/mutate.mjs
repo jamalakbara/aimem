@@ -127,7 +127,7 @@ const MUTATIONS = [
   {
     name: "project filter dropped from the stream",
     file: `${S}sse.ts`,
-    edits: [["FROM events WHERE project_id = $1 AND seq > $2::bigint", "FROM events WHERE $1::bigint IS NOT NULL AND seq > $2::bigint"]],
+    edits: [["FROM events e WHERE e.project_id = $1 AND e.seq > $2::bigint", "FROM events e WHERE $1::bigint IS NOT NULL AND e.seq > $2::bigint"]],
     test: ["stream.test.ts", "never gets an event of beta"],
   },
   {

@@ -195,7 +195,8 @@ export class Streams {
       for (;;) {
         if (closed) return;
         const r = await this.db.query(
-          "SELECT seq::text AS seq, type, payload FROM events WHERE project_id = $1 AND seq > $2::bigint ORDER BY seq LIMIT $3",
+          // Ordered by the bigint column of the table: ORDER BY "seq" would pick the text output column (1, 10, 100…).
+          "SELECT e.seq::text AS seq, e.type, e.payload FROM events e WHERE e.project_id = $1 AND e.seq > $2::bigint ORDER BY e.seq LIMIT $3",
           [caller.projectId, last.toString(), BATCH],
         );
         if (first) {
