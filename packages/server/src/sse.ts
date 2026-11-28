@@ -128,6 +128,8 @@ export class Streams {
     let first = true;
     let ping: NodeJS.Timeout | undefined;
     let retry: NodeJS.Timeout | undefined;
+    /** The stream's connection, taken at start: Node detaches it from the response once that has finished. */
+    let socket: import("node:net").Socket | null = null;
 
     const close = () => {
       if (closed) return;
@@ -139,17 +141,15 @@ export class Streams {
       clearTimeout(retry);
       if (!started || res.destroyed) return;
       res.end();
-      // A reader that never takes the rest would keep the connection open: cut it after the same wait (QA N1).
-      // Unsent bytes may sit in the response or, once it has finished (Windows), still in the socket.
-      const socket = res.socket;
-      const pending = () =>
-        !res.writableFinished || (socket !== null && !socket.destroyed && socket.writableLength > 0);
-      if (pending()) {
-        const cut = setTimeout(() => {
-          if (pending()) res.destroy();
-        }, this.drainWaitMs);
-        cut.unref();
-      }
+      // The connection must be gone after the same wait (QA N1). Once the response has finished, Node detaches the
+      // socket from it and res.destroy() no longer reaches it, so the socket taken at start is cut. It serves no
+      // other response: the stream is sent with Connection: close.
+      const cut = setTimeout(() => {
+        if (socket && !socket.destroyed) socket.destroy();
+        if (!res.destroyed) res.destroy();
+      }, this.drainWaitMs);
+      cut.unref();
+      socket?.once("close", () => clearTimeout(cut));
     };
     const pump = () => {
       if (closed || !started) return;
@@ -262,10 +262,12 @@ export class Streams {
       "Cache-Control": "no-store",
       "X-Accel-Buffering": "no",
       "X-Content-Type-Options": "nosniff",
-      Connection: "keep-alive",
+      // One stream per connection: nothing else is served on it, so closing the stream may cut it (QA N1).
+      Connection: "close",
       ...this.o.headers,
     });
     res.flushHeaders();
+    socket = res.socket;
     started = true;
     ping = setInterval(() => {
       void (async () => {
